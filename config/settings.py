@@ -61,7 +61,7 @@ class Settings(BaseSettings):
 # A common pattern for dynamic env file loading:
 
 def get_env_file():
-    env_state = os.getenv("ENV_STATE", "prod") # Default to dev
+    env_state = os.getenv("ENV_STATE", "dev") # Default to dev
     if env_state == "prod":
         return ".env.production"
     return ".env.development"
