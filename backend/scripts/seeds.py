@@ -199,53 +199,65 @@ def seed_neo4j():
 # 2. WEAVIATE: CONSISTENCIA DE NOMBRES
 # ==========================================
 def seed_weaviate():
-    print("🧩 [Weaviate] Configurando Schemas...")
+    print("🧩 [Weaviate] Configurando Schemas con Named Vectors...")
     client = get_weaviate_client()
-    # No need to explictly connect() as the v4 client returned by our factory is ready to use
     
     common_props = [
         wc.Property(name="neo4j_hash", data_type=wc.DataType.TEXT),
         wc.Property(name="inbox_id", data_type=wc.DataType.TEXT),
     ]
 
-    # TextSpace
+    # 1. TextSpace (Documentos) -> 1 Solo Vector (Semántico)
     if not client.collections.exists("TextSpace"):
         client.collections.create(
             name="TextSpace",
-            vector_config=wc.Configure.Vectorizer.none(),
-            properties=common_props + [wc.Property(name="content", data_type=wc.DataType.TEXT)]
+            properties=common_props + [wc.Property(name="content", data_type=wc.DataType.TEXT)],
+            # Solo un vector predeterminado para el texto
+            vectorizer_config=wc.Configure.Vectorizer.none() 
         )
 
-    # VisualSpace (Corrección: description -> description_ai)
+    # 2. VisualSpace (Memes/Imágenes) -> 2 Vectores (Visual + Semántico)
     if not client.collections.exists("VisualSpace"):
         client.collections.create(
             name="VisualSpace",
-            vector_config=wc.Configure.Vectorizer.none(),
-            properties=common_props + [wc.Property(name="description_ai", data_type=wc.DataType.TEXT)]
-        )
-
-    # AudioSpace (Corrección: Agregamos emotion si queremos buscar por emoción)
-    if not client.collections.exists("AudioSpace"):
-        client.collections.create(
-            name="AudioSpace",
-            vector_config=wc.Configure.Vectorizer.none(),
             properties=common_props + [
-                wc.Property(name="transcript", data_type=wc.DataType.TEXT),
-                wc.Property(name="emotion", data_type=wc.DataType.TEXT)
+                wc.Property(name="description_ai", data_type=wc.DataType.TEXT) # Texto explicativo
+            ],
+            # DEFINIMOS DOS VECTORES NOMBRADOS:
+            vectorizer_config=[
+                # Vector A: 'visual' (SigLIP - Píxeles)
+                wc.Configure.NamedVectors.none(name="visual"), 
+                # Vector B: 'semantic' (BGE-M3 - Descripción del texto)
+                wc.Configure.NamedVectors.none(name="semantic")
             ]
         )
 
-    # MemorySpace
+    # 3. AudioSpace (Música/Voz) -> 2 Vectores (Sonido + Letra)
+    if not client.collections.exists("AudioSpace"):
+        client.collections.create(
+            name="AudioSpace",
+            properties=common_props + [
+                wc.Property(name="transcript", data_type=wc.DataType.TEXT),
+                wc.Property(name="emotion", data_type=wc.DataType.TEXT)
+            ],
+            # DEFINIMOS DOS VECTORES NOMBRADOS:
+            vectorizer_config=[
+                # Vector A: 'audio_clap' (CLAP - Sonido puro/Vibración)
+                wc.Configure.NamedVectors.none(name="audio_clap"),
+                # Vector B: 'transcript_semantic' (BGE-M3 - Significado de la letra)
+                wc.Configure.NamedVectors.none(name="transcript_semantic")
+            ]
+        )
+
+    # 4. MemorySpace (Memorias) -> 1 Solo Vector
     if not client.collections.exists("MemorySpace"):
         client.collections.create(
             name="MemorySpace",
-            vector_config=wc.Configure.Vectorizer.none(),
-            properties=common_props + [wc.Property(name="text", data_type=wc.DataType.TEXT)]
+            properties=common_props + [wc.Property(name="text", data_type=wc.DataType.TEXT)],
+            vectorizer_config=wc.Configure.Vectorizer.none()
         )
     
-    print("   ✅ Weaviate: Colecciones listas.")
-    # Do not close shared client here as it might be used elsewhere, 
-    # but since this is a script, we will close it in main.
+    print("   ✅ Weaviate: Colecciones con soporte Multi-Vector listas.")
 
 # ==========================================
 # 3. MINIO: ESTRUCTURA MAESTRA
