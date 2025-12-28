@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from shared.database import create_db_and_tables
+from app.routers import router as ingest_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,6 +14,9 @@ app = FastAPI(
     title="Multimodal Graph RAG v2",
     lifespan=lifespan
 )
+
+# Register routers
+app.include_router(ingest_router)
 
 @app.get("/")
 def read_root():

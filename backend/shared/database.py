@@ -2,6 +2,9 @@ from sqlmodel import SQLModel, Session, create_engine
 from config.settings import get_settings
 from typing import Generator
 
+# Import models so SQLModel can register them
+from app.models import Asset, VectorStatus
+
 settings = get_settings()
 
 # Create the database engine
@@ -15,7 +18,7 @@ def get_session() -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session
 
-def init_db():
+def create_db_and_tables():
     """
     Utility to create tables if they don't exist.
     """

@@ -221,7 +221,8 @@ def seed_weaviate():
         client.collections.create(
             name="VisualSpace",
             properties=common_props + [
-                wc.Property(name="description_ai", data_type=wc.DataType.TEXT) # Texto explicativo
+                wc.Property(name="description_ai", data_type=wc.DataType.TEXT), # Texto explicativo
+                wc.Property(name="ocr_text", data_type=wc.DataType.TEXT)
             ],
             # DEFINIMOS DOS VECTORES NOMBRADOS:
             vectorizer_config=[
