@@ -11,8 +11,9 @@ import uuid
 import json
 from datetime import datetime
 
-from app.models import Asset, VectorStatus, JobStatus
+from app.models import Asset, VectorStatus, JobStatus, PrivacyLevel
 from app.schemas import UploadGroup, ProcessingOperation
+from app.schemas.sidecar import SidecarMetadata, PrivacyConfig, WorkflowState, DataLayers
 from shared.clients import get_minio_client
 
 
@@ -158,26 +159,35 @@ class IngestService:
             ContentType=mime_type
         )
         
-        # Generate sidecar
+        # Generate sidecar with new structure
         sidecar_path = f"master_records/sidecars/{file_hash}.json"
-        sidecar_data = {
-            "file_hash": file_hash,
-            "original_filename": file.filename,
-            "mime_type": mime_type,
-            "size_bytes": len(content),
-            "upload_timestamp": datetime.utcnow().isoformat(),
-            "operation": group.operation.value,
-            "user_notes": group.user_notes,
-            "discard_original": group.discard_original,
-            "vector_types": [vt.value for vt in group.vector_types],
-            "is_merged": False,
-            "source_files": [file.filename]
-        }
+        sidecar_data = SidecarMetadata(
+            file_hash=file_hash,
+            original_filename=file.filename,
+            mime_type=mime_type,
+            size_bytes=len(content),
+            upload_timestamp=datetime.utcnow(),
+            operation=group.operation.value,
+            user_notes=group.user_notes,
+            discard_original=group.discard_original,
+            vector_types=[vt.value for vt in group.vector_types],
+            is_merged=False,
+            source_files=[file.filename],
+            privacy_config=PrivacyConfig(
+                level=group.privacy_level,
+                locked=False
+            ),
+            workflow_state=WorkflowState(
+                steps_completed=["upload"],
+                current_status=JobStatus.ON_HOLD
+            ),
+            data_layers=DataLayers()
+        )
         
         self.s3.put_object(
             Bucket=self.BUCKET_NAME,
             Key=sidecar_path,
-            Body=json.dumps(sidecar_data, indent=2).encode('utf-8'),
+            Body=sidecar_data.model_dump_json(indent=2).encode('utf-8'),
             ContentType="application/json"
         )
         
@@ -190,6 +200,7 @@ class IngestService:
             file_hash=file_hash,
             is_merged=False,
             original_deleted=False,  # Will be updated by worker if discard_original=True
+            privacy_level=group.privacy_level,
             sidecar_path=sidecar_path
         )
         
@@ -255,25 +266,34 @@ class IngestService:
         
         # Create sidecar for merged asset
         sidecar_path = f"master_records/sidecars/{merged_hash}.json"
-        sidecar_data = {
-            "file_hash": merged_hash,
-            "original_filename": merged_filename,
-            "mime_type": "text/plain",  # Merged OCR will be text
-            "size_bytes": total_size,
-            "upload_timestamp": datetime.utcnow().isoformat(),
-            "operation": group.operation.value,
-            "user_notes": group.user_notes,
-            "discard_original": group.discard_original,
-            "vector_types": [vt.value for vt in group.vector_types],
-            "is_merged": True,
-            "source_files": uploaded_files,
-            "batch_uuid": batch_uuid
-        }
+        sidecar_data = SidecarMetadata(
+            file_hash=merged_hash,
+            original_filename=merged_filename,
+            mime_type="text/plain",  # Merged OCR will be text
+            size_bytes=total_size,
+            upload_timestamp=datetime.utcnow(),
+            operation=group.operation.value,
+            user_notes=group.user_notes,
+            discard_original=group.discard_original,
+            vector_types=[vt.value for vt in group.vector_types],
+            is_merged=True,
+            source_files=uploaded_files,
+            batch_uuid=batch_uuid,
+            privacy_config=PrivacyConfig(
+                level=group.privacy_level,
+                locked=False
+            ),
+            workflow_state=WorkflowState(
+                steps_completed=["upload", "file_grouping"],
+                current_status=JobStatus.ON_HOLD
+            ),
+            data_layers=DataLayers()
+        )
         
         self.s3.put_object(
             Bucket=self.BUCKET_NAME,
             Key=sidecar_path,
-            Body=json.dumps(sidecar_data, indent=2).encode('utf-8'),
+            Body=sidecar_data.model_dump_json(indent=2).encode('utf-8'),
             ContentType="application/json"
         )
         
@@ -286,6 +306,7 @@ class IngestService:
             file_hash=merged_hash,
             is_merged=True,
             original_deleted=False,  # Will be updated by worker after OCR
+            privacy_level=group.privacy_level,
             sidecar_path=sidecar_path
         )
         

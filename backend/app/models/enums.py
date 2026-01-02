@@ -1,6 +1,21 @@
 from enum import Enum
 
 # ==========================================
+# PRIVACY LEVEL ENUM
+# ==========================================
+class PrivacyLevel(str, Enum):
+    """
+    Data governance levels for asset handling.
+    
+    Controls where and how data can be processed:
+    - strict_local: Data never leaves local infrastructure (no cloud AI)
+    - public_cloud: Data can be sent to external APIs (OpenAI, etc.)
+    """
+    STRICT_LOCAL = "strict_local"       # Local processing only (sensitive data)
+    PUBLIC_CLOUD = "public_cloud"       # Allow external API calls (public data)
+
+
+# ==========================================
 # JOB STATUS ENUM
 # ==========================================
 class JobStatus(str, Enum):
@@ -12,6 +27,7 @@ class JobStatus(str, Enum):
     ON_HOLD = "on_hold"           # Initial state (Staging - awaiting manual trigger)
     PENDING = "pending"           # Queued in Redis for worker processing
     PROCESSING = "processing"     # Worker is actively processing
+    REVIEW_REQUIRED = "review_required" # IA finish, wait for human review
     COMPLETED = "completed"       # Successfully finished
     FAILED = "failed"             # Error during processing
     REJECTED = "rejected"         # Cancelled by user

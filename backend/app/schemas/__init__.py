@@ -8,7 +8,7 @@ from enum import Enum
 from datetime import datetime
 import uuid
 
-from app.models.enums import VectorType
+from app.models.enums import VectorType, PrivacyLevel
 
 # ==========================================
 # PROCESSING OPERATION ENUM
@@ -33,6 +33,7 @@ class UploadGroup(BaseModel):
         "file_indices": [0, 1, 2],
         "operation": "merge_ocr",
         "vector_types": ["text_chunk"],
+        "privacy_level": "strict_local",
         "user_notes": "Twitter thread about AI",
         "discard_original": true
     }
@@ -47,6 +48,10 @@ class UploadGroup(BaseModel):
     vector_types: List[VectorType] = Field(
         description="Which AI intelligences to apply to the resulting asset(s)",
         min_length=1
+    )
+    privacy_level: PrivacyLevel = Field(
+        default=PrivacyLevel.STRICT_LOCAL,
+        description="Data governance level for this group"
     )
     user_notes: Optional[str] = Field(
         default=None,

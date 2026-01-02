@@ -29,6 +29,13 @@ class Asset(SQLModel, table=True):
     is_merged: bool = Field(default=False, description="True if this asset is a fusion of multiple files")
     original_deleted: bool = Field(default=False, description="True if binary was deleted after data extraction")
     
+    # --- PRIVACY & GOVERNANCE ---
+    privacy_level: str = Field(
+        default="strict_local",
+        description="Data governance level controlling processing location (strict_local or public_cloud)",
+        sa_column_kwargs={"server_default": "strict_local"}
+    )
+    
     # --- SIDECAR REFERENCE ---
     sidecar_path: str = Field(description="Path to JSON sidecar in MinIO (master_records/sidecars/)")
     
