@@ -16,6 +16,10 @@ from typing import List, Dict, Any, Optional
 import json
 from datetime import datetime
 
+# Task management components
+from tasks import render_task_matrix, render_dispatch_button
+from tasks.sidecar_viewer import render_sidecar_sidebar
+
 # ==========================================
 # CONFIGURACIÓN
 # ==========================================
@@ -59,6 +63,9 @@ def init_session_state():
     
     if 'next_group_id' not in st.session_state:
         st.session_state.next_group_id = 1
+    
+    if 'viewing_sidecar' not in st.session_state:
+        st.session_state.viewing_sidecar = None
 
 
 # ==========================================
@@ -146,60 +153,61 @@ def send_files_to_server(files_to_send: List, upload_map: List[Dict]) -> Optiona
         return None
 
 
-def get_on_hold_tasks() -> Optional[pd.DataFrame]:
+def get_on_hold_tasks() -> Optional[List[Dict]]:
     """
-    Obtiene las tareas en estado ON_HOLD desde el backend.
+    Obtiene assets con sus VectorStatus desde el backend.
     
     Returns:
-        DataFrame con las tareas o None si falla.
+        Lista de assets con vector_statuses nested o None si falla.
     """
     try:
-        # Nota: Necesitarás crear este endpoint en el backend
-        # Por ahora, simulamos la respuesta
         response = requests.get(
-            f"{API_BASE_URL}/tasks/on-hold",
+            f"{API_BASE_URL}/tasks/assets-with-tasks",
             timeout=10
         )
         
         if response.status_code == 404:
-            st.warning("⚠️ El endpoint /tasks/on-hold aún no está implementado en el backend.")
+            st.warning("⚠️ El endpoint /tasks/assets-with-tasks aún no está disponible.")
             return None
         
         response.raise_for_status()
-        tasks = response.json()
+        assets = response.json()
         
-        # Convertir a DataFrame
-        if tasks:
-            df = pd.DataFrame(tasks)
-            return df
-        else:
-            return pd.DataFrame(columns=['id', 'filename', 'vector_type', 'status', 'created_at'])
+        return assets if assets else []
         
     except requests.exceptions.RequestException as e:
         st.error(f"❌ Error al obtener tareas: {str(e)}")
         return None
 
 
-def trigger_processing(task_ids: List[str]) -> bool:
+def trigger_processing(vector_status_ids: List[str]) -> bool:
     """
-    Envía tareas seleccionadas al endpoint POST /process/start.
+    Envía vector status IDs al endpoint POST /tasks/dispatch.
+    
+    Args:
+        vector_status_ids: Lista de VectorStatus UUIDs
     
     Returns:
         True si el envío fue exitoso, False en caso contrario.
     """
     try:
         response = requests.post(
-            f"{API_BASE_URL}/process/start",
-            json={"task_ids": task_ids},
+            f"{API_BASE_URL}/tasks/dispatch",
+            json={"vector_status_ids": vector_status_ids},
             timeout=30
         )
         
         if response.status_code == 404:
-            st.warning("⚠️ El endpoint /process/start aún no está implementado en el backend.")
+            st.warning("⚠️ El endpoint /tasks/dispatch aún no está implementado en el backend.")
             return False
         
         response.raise_for_status()
-        return True
+        result = response.json()
+        
+        if result.get("success"):
+            st.info(f"✅ {result.get('message', 'Tasks dispatched')}")
+            return True
+        return False
         
     except requests.exceptions.RequestException as e:
         st.error(f"❌ Error al activar procesamiento: {str(e)}")
@@ -506,70 +514,39 @@ def render_send_button():
 
 
 def render_task_dashboard():
-    """Renderiza el dashboard de tareas en staging."""
+    """Renderiza el dashboard de tareas en staging con matriz mejorada."""
     st.subheader("📊 Dashboard de Tareas ON_HOLD")
     
-    # Botón de refrescar
-    if st.button("🔄 Refrescar", key="refresh_tasks"):
-        st.rerun()
+    # Controles superiores
+    cols = st.columns([4, 1])
     
-    # Obtener tareas
-    with st.spinner("Cargando tareas..."):
-        df = get_on_hold_tasks()
+    with cols[0]:
+        st.markdown("Vista en matriz de assets y sus estados de procesamiento de vectores.")
     
-    if df is None:
-        st.error("❌ No se pudieron cargar las tareas.")
-        return
-    
-    if df.empty:
-        st.info("✨ No hay tareas en estado ON_HOLD.")
-        return
-    
-    # Mostrar tabla
-    st.markdown(f"**Total de tareas:** {len(df)}")
-    
-    # Tabla interactiva con selección
-    st.markdown("##### Selecciona tareas para procesar:")
-    
-    # Configurar editor
-    edited_df = st.data_editor(
-        df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "id": st.column_config.TextColumn("ID", width="small"),
-            "filename": st.column_config.TextColumn("Archivo", width="medium"),
-            "vector_type": st.column_config.TextColumn("Vector Type", width="medium"),
-            "status": st.column_config.TextColumn("Estado", width="small"),
-            "created_at": st.column_config.TextColumn("Creado", width="medium")
-        },
-        disabled=True,  # No editable
-        key="task_table"
-    )
-    
-    # Selector manual (alternativa si data_editor no soporta selección múltiple)
-    st.markdown("##### O ingresa IDs manualmente:")
-    task_ids_input = st.text_input(
-        "IDs de tareas (separados por comas)",
-        placeholder="ej: 123e4567-e89b-12d3-a456-426614174000, 987fcdeb-51a2-...",
-        help="Copia y pega los IDs de las tareas que deseas procesar"
-    )
-    
-    if st.button("▶️ Procesar Seleccionados", type="primary"):
-        # Parsear IDs
-        if task_ids_input:
-            task_ids = [tid.strip() for tid in task_ids_input.split(',') if tid.strip()]
-        else:
-            st.warning("⚠️ Ingresa al menos un ID de tarea.")
-            return
-        
-        # Enviar al backend
-        with st.spinner(f"Activando procesamiento de {len(task_ids)} tarea(s)..."):
-            success = trigger_processing(task_ids)
-        
-        if success:
-            st.success(f"✅ {len(task_ids)} tarea(s) enviadas a procesamiento.")
+    with cols[1]:
+        if st.button("🔄 Refresh", key="refresh_tasks", use_container_width=True):
             st.rerun()
+    
+    st.markdown("---")
+    
+    # Obtener datos del backend
+    with st.spinner("Cargando tareas desde el backend..."):
+        assets = get_on_hold_tasks()
+    
+    if assets is None:
+        st.error("❌ No se pudo conectar al backend. Verifica que el servidor esté corriendo.")
+        st.code(f"Backend URL: {API_BASE_URL}/tasks/assets-with-tasks")
+        return
+    
+    if not assets:
+        st.info("✨ No hay assets con tareas en estado ON_HOLD.")
+        return
+    
+    # Renderizar matriz
+    render_task_matrix(assets)
+    
+    # Botón de dispatch
+    render_dispatch_button(assets)
 
 
 # ==========================================
@@ -624,6 +601,13 @@ def main():
         st.header("Control de Tareas en Staging")
         
         render_task_dashboard()
+    
+    # Sidecar viewer (sidebar)
+    if st.session_state.viewing_sidecar:
+        render_sidecar_sidebar(
+            sidecar_data=st.session_state.viewing_sidecar["sidecar_data"],
+            asset_filename=st.session_state.viewing_sidecar["filename"]
+        )
     
     # Footer
     st.markdown("---")
