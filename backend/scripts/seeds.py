@@ -212,8 +212,8 @@ def seed_weaviate():
         client.collections.create(
             name="TextSpace",
             properties=common_props + [wc.Property(name="content", data_type=wc.DataType.TEXT)],
-            # Solo un vector predeterminado para el texto
-            vectorizer_config=wc.Configure.Vectorizer.none() 
+            # Solo un vector predeterminado para el texto (Named Vector 'default')
+            vector_config=[wc.Configure.Vectors.self_provided(name="default")]
         )
 
     # 2. VisualSpace (Memes/Imágenes) -> 2 Vectores (Visual + Semántico)
@@ -225,11 +225,11 @@ def seed_weaviate():
                 wc.Property(name="ocr_text", data_type=wc.DataType.TEXT)
             ],
             # DEFINIMOS DOS VECTORES NOMBRADOS:
-            vectorizer_config=[
+            vector_config=[
                 # Vector A: 'visual' (SigLIP - Píxeles)
-                wc.Configure.NamedVectors.none(name="visual"), 
+                wc.Configure.Vectors.self_provided(name="visual"), 
                 # Vector B: 'semantic' (BGE-M3 - Descripción del texto)
-                wc.Configure.NamedVectors.none(name="semantic")
+                wc.Configure.Vectors.self_provided(name="semantic")
             ]
         )
 
@@ -242,11 +242,11 @@ def seed_weaviate():
                 wc.Property(name="emotion", data_type=wc.DataType.TEXT)
             ],
             # DEFINIMOS DOS VECTORES NOMBRADOS:
-            vectorizer_config=[
+            vector_config=[
                 # Vector A: 'audio_clap' (CLAP - Sonido puro/Vibración)
-                wc.Configure.NamedVectors.none(name="audio_clap"),
+                wc.Configure.Vectors.self_provided(name="audio_clap"),
                 # Vector B: 'transcript_semantic' (BGE-M3 - Significado de la letra)
-                wc.Configure.NamedVectors.none(name="transcript_semantic")
+                wc.Configure.Vectors.self_provided(name="transcript_semantic")
             ]
         )
 
@@ -255,7 +255,7 @@ def seed_weaviate():
         client.collections.create(
             name="MemorySpace",
             properties=common_props + [wc.Property(name="text", data_type=wc.DataType.TEXT)],
-            vectorizer_config=wc.Configure.Vectorizer.none()
+            vector_config=[wc.Configure.Vectors.self_provided(name="default")]
         )
     
     print("   ✅ Weaviate: Colecciones con soporte Multi-Vector listas.")
