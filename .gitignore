@@ -49,3 +49,4 @@ dist/
 # Add any specific data or temp directories here
 graph-rag/
 frontend/.streamlit/secrets.toml.template
+backend/poetry.lock
