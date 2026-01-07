@@ -23,14 +23,16 @@ class JobStatus(str, Enum):
     Lifecycle states for asset processing tasks.
     
     Flow: ON_HOLD → PENDING → PROCESSING → COMPLETED/FAILED/REJECTED
+    
+    NOTE: Values must match PostgreSQL enum 'jobstatus' exactly (UPPERCASE).
     """
-    ON_HOLD = "on_hold"           # Initial state (Staging - awaiting manual trigger)
-    PENDING = "pending"           # Queued in Redis for worker processing
-    PROCESSING = "processing"     # Worker is actively processing
-    REVIEW_REQUIRED = "review_required" # IA finish, wait for human review
-    COMPLETED = "completed"       # Successfully finished
-    FAILED = "failed"             # Error during processing
-    REJECTED = "rejected"         # Cancelled by user
+    ON_HOLD = "ON_HOLD"                     # Initial state (Staging - awaiting manual trigger)
+    PENDING = "PENDING"                     # Queued in Redis for worker processing
+    PROCESSING = "PROCESSING"               # Worker is actively processing
+    REVIEW_REQUIRED = "REVIEW_REQUIRED"     # AI finished, wait for human review
+    COMPLETED = "COMPLETED"                 # Successfully finished
+    FAILED = "FAILED"                       # Error during processing
+    REJECTED = "REJECTED"                   # Cancelled by user
 
 
 # ==========================================

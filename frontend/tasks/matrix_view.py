@@ -26,13 +26,13 @@ ALL_VECTOR_TYPES = [
 ]
 
 STATUS_ICONS = {
-    "on_hold": "⏸️",
-    "pending": "⏳",
-    "processing": "⚙️",
-    "review_required": "👁️",
-    "completed": "✅",
-    "failed": "❌",
-    "rejected": "🚫"
+    "ON_HOLD": "⏸️",
+    "PENDING": "⏳",
+    "PROCESSING": "⚙️",
+    "REVIEW_REQUIRED": "👁️",
+    "COMPLETED": "✅",
+    "FAILED": "❌",
+    "REJECTED": "🚫"
 }
 
 MIME_TYPE_ICONS = {
@@ -217,13 +217,16 @@ def render_task_matrix(assets: List[Dict[str, Any]]) -> None:
                     st.rerun()
 
 
-def render_dispatch_button(assets: List[Dict[str, Any]]) -> None:
+def render_dispatch_button(assets: List[Dict[str, Any]], api_base_url: str = "http://localhost:8000") -> None:
     """
     Renderiza el botón para despachar jobs pendientes.
     
     Args:
         assets: Lista de assets con vector_statuses
+        api_base_url: Base URL del backend API
     """
+    import requests
+    
     st.markdown("---")
     st.markdown("### 🚀 Dispatch Jobs")
     
@@ -260,10 +263,232 @@ def render_dispatch_button(assets: List[Dict[str, Any]]) -> None:
             disabled=not dispatch_all  # Por ahora solo soporta "all"
         ):
             with st.spinner(f"Dispatching {on_hold_count} task(s)..."):
-                # TODO: Implementar llamada al backend /tasks/dispatch
-                # For now, simulate success
-                st.success(f"✅ {on_hold_count} task(s) dispatched successfully!")
-                st.info("🔄 Refresh to see updated statuses.")
+                try:
+                    # Prepare payload
+                    if dispatch_all:
+                        payload = {"dispatch_all": True}
+                    else:
+                        payload = {"vector_status_ids": on_hold_ids}
+                    
+                    # Call backend API
+                    response = requests.post(
+                        f"{api_base_url}/tasks/dispatch",
+                        json=payload,
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        dispatched_count = result.get("tasks_updated", 0)
+                        celery_task_ids = result.get("celery_task_ids", [])
+                        
+                        st.success(f"✅ {dispatched_count} task(s) dispatched successfully!")
+                        
+                        # Show Celery task IDs in expander
+                        if celery_task_ids:
+                            with st.expander("🔍 Ver Celery Task IDs"):
+                                for i, task_id in enumerate(celery_task_ids, 1):
+                                    st.code(f"Task {i}: {task_id}")
+                        
+                        st.info("🔄 Refresh to see updated statuses.")
+                        st.balloons()
+                    else:
+                        st.error(f"❌ Error {response.status_code}: {response.text}")
+                        
+                except requests.exceptions.ConnectionError:
+                    st.error("❌ No se pudo conectar al backend. Verifica que esté corriendo en http://localhost:8000")
+                except requests.exceptions.Timeout:
+                    st.error("❌ Timeout: El backend tardó demasiado en responder.")
+                except Exception as e:
+                    st.error(f"❌ Error inesperado: {str(e)}")
+
+
+def render_task_status_summary(assets: List[Dict[str, Any]]) -> None:
+    """
+    Render a summary of task statuses with counts and failed task details.
+    
+    Args:
+        assets: Lista de assets con vector_statuses
+    """
+    st.markdown("---")
+    st.markdown("### 📊 Resumen de Estados")
+    
+    # Count tasks by status
+    status_counts = {
+        "ON_HOLD": 0,
+        "PENDING": 0,
+        "PROCESSING": 0,
+        "REVIEW_REQUIRED": 0,
+        "COMPLETED": 0,
+        "FAILED": 0,
+        "REJECTED": 0
+    }
+    
+    failed_tasks = []
+    completed_tasks = []
+    
+    for asset in assets:
+        for vs in asset.get("vector_statuses", []):
+            status = vs.get("status", "unknown")
+            if status in status_counts:
+                status_counts[status] += 1
+            
+            # Collect failed tasks with details
+            if status == "FAILED":
+                failed_tasks.append({
+                    "asset": asset.get("filename", "Unknown"),
+                    "vector_type": vs.get("vector_type", "Unknown"),
+                    "error": vs.get("error_message", "No error message"),
+                    "id": vs.get("id", "")
+                })
+            
+            # Collect completed tasks
+            if status == "COMPLETED":
+                completed_tasks.append({
+                    "asset": asset.get("filename", "Unknown"),
+                    "vector_type": vs.get("vector_type", "Unknown"),
+                    "weaviate_uuid": vs.get("weaviate_uuid", "-")
+                })
+    
+    # Display status metrics
+    cols = st.columns(7)
+    status_colors = {
+        "ON_HOLD": "🔵",
+        "PENDING": "🟡",
+        "PROCESSING": "🟠",
+        "REVIEW_REQUIRED": "🟣",
+        "COMPLETED": "🟢",
+        "FAILED": "🔴",
+        "REJECTED": "⚫"
+    }
+    
+    for i, (status, count) in enumerate(status_counts.items()):
+        with cols[i]:
+            icon = status_colors.get(status, "⚪")
+            st.metric(
+                label=f"{icon} {status.replace('_', ' ').title()}",
+                value=count
+            )
+    
+    # Show failed tasks detail with retry functionality
+    if failed_tasks:
+        st.markdown("---")
+        st.markdown("### ❌ Tareas Fallidas")
+        st.warning(f"⚠️ {len(failed_tasks)} tarea(s) fallaron. Ver detalles para diagnóstico.")
+        
+        # Initialize session state for selections
+        if "selected_failed_tasks" not in st.session_state:
+            st.session_state.selected_failed_tasks = set()
+        
+        # Retry controls
+        col1, col2, col3 = st.columns([2, 2, 4])
+        
+        with col1:
+            select_all = st.checkbox(
+                "Seleccionar todos",
+                key="select_all_failed",
+                value=len(st.session_state.selected_failed_tasks) == len(failed_tasks)
+            )
+            
+            if select_all:
+                st.session_state.selected_failed_tasks = {t['id'] for t in failed_tasks}
+            elif len(st.session_state.selected_failed_tasks) == len(failed_tasks):
+                st.session_state.selected_failed_tasks = set()
+        
+        with col2:
+            selected_count = len(st.session_state.selected_failed_tasks)
+            if st.button(
+                f"🔄 Retry Seleccionados ({selected_count})",
+                disabled=selected_count == 0,
+                key="retry_selected_failed"
+            ):
+                _retry_failed_tasks(list(st.session_state.selected_failed_tasks))
+        
+        with col3:
+            if st.button("🔄 Retry TODOS los Fallidos", key="retry_all_failed"):
+                _retry_failed_tasks([t['id'] for t in failed_tasks])
+        
+        # List failed tasks with checkboxes
+        for i, task in enumerate(failed_tasks):
+            col_check, col_info = st.columns([1, 11])
+            
+            with col_check:
+                is_selected = st.checkbox(
+                    "",
+                    value=task['id'] in st.session_state.selected_failed_tasks,
+                    key=f"failed_task_{task['id']}",
+                    label_visibility="collapsed"
+                )
+                
+                if is_selected:
+                    st.session_state.selected_failed_tasks.add(task['id'])
+                else:
+                    st.session_state.selected_failed_tasks.discard(task['id'])
+            
+            with col_info:
+                with st.expander(f"🔴 {task['asset']} - {task['vector_type']}", expanded=False):
+                    st.markdown(f"**Asset:** `{task['asset']}`")
+                    st.markdown(f"**Vector Type:** `{task['vector_type']}`")
+                    st.markdown(f"**Task ID:** `{task['id']}`")
+                    st.markdown("**Error Message:**")
+                    st.code(task['error'] or "No error message captured", language="text")
+                    
+                    # Individual retry button
+                    if st.button(f"🔄 Retry esta tarea", key=f"retry_single_{task['id']}"):
+                        _retry_failed_tasks([task['id']])
+                    
+                    # Hint for common errors
+                    error_lower = (task['error'] or "").lower()
+                    if "connection" in error_lower or "refused" in error_lower:
+                        st.info("💡 **Hint:** Error de conexión. Verifica que el LLM Gateway esté corriendo en localhost:8765")
+                    elif "minio" in error_lower or "s3" in error_lower:
+                        st.info("💡 **Hint:** Error de MinIO. Verifica que MinIO esté corriendo y el bucket exista.")
+                    elif "not found" in error_lower:
+                        st.info("💡 **Hint:** Recurso no encontrado. Verifica que el asset y su archivo existan.")
+
+
+def _retry_failed_tasks(task_ids: List[str], api_base_url: str = "http://localhost:8000") -> None:
+    """
+    Call backend to retry failed tasks.
+    
+    Args:
+        task_ids: List of VectorStatus IDs to retry
+        api_base_url: Backend API base URL
+    """
+    import requests
+    
+    try:
+        with st.spinner(f"🔄 Retrying {len(task_ids)} task(s)..."):
+            response = requests.post(
+                f"{api_base_url}/tasks/retry-failed",
+                json={"vector_status_ids": task_ids},
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                st.success(f"✅ {data.get('tasks_retried', len(task_ids))} tarea(s) en cola para retry!")
+                st.session_state.selected_failed_tasks = set()
+                st.rerun()
+            else:
+                st.error(f"❌ Error {response.status_code}: {response.text}")
+                
+    except requests.exceptions.ConnectionError:
+        st.error("❌ No se pudo conectar al backend.")
+    except Exception as e:
+        st.error(f"❌ Error: {str(e)}")
+    
+    # Show completed tasks summary
+    if completed_tasks:
+        st.markdown("---")
+        st.markdown("### ✅ Tareas Completadas")
+        
+        with st.expander(f"Ver {len(completed_tasks)} tarea(s) completada(s)", expanded=False):
+            for task in completed_tasks[:20]:  # Limit to 20
+                st.markdown(f"- **{task['asset']}** → {task['vector_type']} (Weaviate: `{task['weaviate_uuid']}`)")
+            
+            if len(completed_tasks) > 20:
+                st.info(f"... y {len(completed_tasks) - 20} más")
 
 
 # ==========================================
@@ -274,14 +499,6 @@ if __name__ == "__main__":
     # This would be run as a Streamlit app for testing
     st.set_page_config(page_title="Task Matrix Test", layout="wide")
     
-    from mock_data import generate_mock_assets
-    
     st.title("Task Matrix Test")
-    
-    # Generate mock data
-    if 'mock_assets' not in st.session_state:
-        st.session_state.mock_assets = generate_mock_assets(5)
-    
-    # Render matrix
-    render_task_matrix(st.session_state.mock_assets)
-    render_dispatch_button(st.session_state.mock_assets)
+    st.warning("⚠️ Testing mode requires backend connection. Please run the full app instead.")
+    st.info("Run `streamlit run app.py` to test with real backend data.")

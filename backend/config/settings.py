@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str
     MINIO_SECRET_KEY: str
     MINIO_SECURE: bool = False
+    MINIO_BUCKET: str = "rag-dataset"  # Default bucket name
+    
+    # LLM Gateway
+    LLM_GATEWAY_URL: str = "http://localhost:8765"  # LLM Gateway base URL (without /v1)
 
     @property
     def DATABASE_URL(self) -> str:
@@ -47,7 +51,8 @@ class Settings(BaseSettings):
     
     @property
     def CELERY_RESULT_BACKEND(self) -> str:
-        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        """Redis backend for task results (using db=1 to separate from broker)"""
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
 
     model_config = SettingsConfigDict(
         env_file=f".env.{os.getenv('ENV_STATE', 'dev') if os.getenv('ENV_STATE') != 'prod' else 'production'}",

@@ -57,16 +57,30 @@ class AssetWithTasksResponse(BaseModel):
 # ==========================================
 
 class DispatchTasksRequest(BaseModel):
-    """Request to dispatch vector status tasks to processing."""
-    vector_status_ids: List[str]
+    """
+    Request to dispatch vector status tasks to processing.
+    
+    Supports three dispatch modes:
+    1. By specific vector_status_ids (original behavior)
+    2. By asset_ids (dispatch all ON_HOLD tasks for specific assets)
+    3. dispatch_all=True (dispatch ALL ON_HOLD tasks in system)
+    
+    Args:
+        vector_status_ids: Optional list of specific VectorStatus UUIDs to dispatch
+        asset_ids: Optional list of Asset UUIDs (dispatches all ON_HOLD tasks for these assets)
+        dispatch_all: If True, dispatches ALL ON_HOLD tasks (ignores other fields)
+    """
+    vector_status_ids: Optional[List[str]] = None
+    asset_ids: Optional[List[str]] = None
+    dispatch_all: bool = False
 
 
 class DispatchTasksResponse(BaseModel):
     """Response from dispatching tasks."""
-    success: bool
-    message: str
     tasks_updated: int
     celery_task_ids: List[str] = []
+    success: bool = True
+    message: str = ""
 
 
 class UpdatePrivacyRequest(BaseModel):

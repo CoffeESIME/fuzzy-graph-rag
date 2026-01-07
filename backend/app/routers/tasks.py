@@ -6,12 +6,17 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from typing import List
 from pydantic import BaseModel
+from datetime import datetime
 import uuid
+import logging
 
 from app.models.vector_status import VectorStatus
 from app.models.asset import Asset
-from app.models.enums import JobStatus
+from app.models.enums import JobStatus, VectorType
 from shared.database import get_session
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/tasks",
@@ -249,11 +254,10 @@ async def get_assets_with_tasks(
     **Returns:**
     - List of assets with nested vector_statuses and sidecar_data
     """
-    # Query all assets with at least one ON_HOLD vector status
+    # Query all assets that have ANY vector status (not just ON_HOLD)
     statement = (
         select(Asset)
         .join(VectorStatus, Asset.id == VectorStatus.asset_id)
-        .where(VectorStatus.status == JobStatus.ON_HOLD)
         .distinct()
         .order_by(Asset.created_at.desc())
     )
@@ -262,7 +266,7 @@ async def get_assets_with_tasks(
     
     # MinIO client for sidecar retrieval
     minio_client = get_minio_client()
-    bucket_name = "graphrag-storage"  # Adjust to your bucket name
+    bucket_name = "rag-dataset"  # Must match bucket in shared/clients.py
     
     # Build response
     assets_response = []
@@ -287,10 +291,10 @@ async def get_assets_with_tasks(
             for vs in vector_statuses
         ]
         
-        # Fetch sidecar data from MinIO
+        # Fetch sidecar data from MinIO (boto3 style)
         try:
-            response = minio_client.get_object(bucket_name, asset.sidecar_path)
-            sidecar_data = json_lib.loads(response.read().decode('utf-8'))
+            response = minio_client.get_object(Bucket=bucket_name, Key=asset.sidecar_path)
+            sidecar_data = json_lib.loads(response['Body'].read().decode('utf-8'))
         except Exception as e:
             # If sidecar not found, create minimal structure
             sidecar_data = {
@@ -321,69 +325,275 @@ async def get_assets_with_tasks(
     return assets_response
 
 
+# ==========================================
+# RETRY FAILED TASKS
+# ==========================================
+
+class RetryFailedRequest(BaseModel):
+    """Request to retry failed tasks."""
+    vector_status_ids: List[str]
+
+
+class RetryFailedResponse(BaseModel):
+    """Response from retrying failed tasks."""
+    tasks_retried: int
+    celery_task_ids: List[str]
+
+
+@router.post("/retry-failed", response_model=RetryFailedResponse)
+async def retry_failed_tasks(
+    request: RetryFailedRequest,
+    session: Session = Depends(get_session)
+):
+    """
+    Retry failed tasks by resetting them to ON_HOLD and dispatching to Celery.
+    
+    This endpoint:
+    1. Finds the specified VectorStatus entries with status=FAILED
+    2. Resets them to ON_HOLD (clears error_message)
+    3. Updates status to PENDING
+    4. Dispatches to appropriate Celery queue
+    
+    Returns:
+        RetryFailedResponse with count and Celery task IDs
+    """
+    logger.info(f"📤 RETRY-FAILED ENDPOINT: {len(request.vector_status_ids)} task(s)")
+    
+    # Helper for queue assignment
+    def get_queue_for_vector_type(vector_type: VectorType) -> str:
+        if vector_type in [VectorType.VISUAL_SEMANTIC, VectorType.TEXT_OCR]:
+            return "heavy_gpu"
+        return "fast_cpu"
+    
+    # Query the failed tasks
+    statement = (
+        select(VectorStatus, Asset)
+        .join(Asset, VectorStatus.asset_id == Asset.id)
+        .where(
+            VectorStatus.id.in_(request.vector_status_ids),
+            VectorStatus.status == JobStatus.FAILED
+        )
+    )
+    
+    results = session.exec(statement).all()
+    logger.info(f"✅ Found {len(results)} FAILED task(s) to retry")
+    
+    if not results:
+        return RetryFailedResponse(tasks_retried=0, celery_task_ids=[])
+    
+    celery_task_ids = []
+    retried_count = 0
+    
+    for vector_status, asset in results:
+        # Reset status and clear error
+        vector_status.status = JobStatus.PENDING
+        vector_status.error_message = None
+        vector_status.updated_at = datetime.utcnow()
+        
+        # Dispatch to Celery
+        queue_name = get_queue_for_vector_type(vector_status.vector_type)
+        
+        try:
+            from app.core.celery_app import app as celery_app
+            
+            celery_task = celery_app.send_task(
+                'worker.tasks.process_vector_task',
+                args=[str(vector_status.id)],
+                queue=queue_name
+            )
+            
+            celery_task_ids.append(celery_task.id)
+            retried_count += 1
+            logger.info(f"🔄 Retrying {asset.filename} / {vector_status.vector_type.value} → {queue_name}")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to dispatch retry: {e}")
+            continue
+    
+    session.commit()
+    
+    logger.info(f"✅ RETRY-FAILED COMPLETED: {retried_count} task(s)")
+    
+    return RetryFailedResponse(
+        tasks_retried=retried_count,
+        celery_task_ids=celery_task_ids
+    )
+
+
 @router.post("/dispatch", response_model=DispatchTasksResponse)
 async def dispatch_tasks(
     request: DispatchTasksRequest,
     session: Session = Depends(get_session)
 ):
     """
-    Dispatch selected vector status tasks to processing queue.
-    
-    Changes status from ON_HOLD → PENDING and triggers Celery workers.
+    2. JOIN with Asset table to retrieve privacy_level
+    3. Update status from ON_HOLD → PENDING in database
+    4. Determine appropriate queue based on vector_type (heavy_gpu vs fast_cpu)
+    5. Simulate queue assignment (mock Celery dispatch with logging)
+    6. Return count and Celery task IDs
     
     **Args:**
-    - vector_status_ids: List of VectorStatus UUIDs to dispatch
+    - request: DispatchTasksRequest with one of: vector_status_ids, asset_ids, or dispatch_all
     
     **Returns:**
-    - DispatchTasksResponse with success status and Celery task IDs
+    - DispatchTasksResponse with count and Celery task IDs
+    
+    Dispatch vector status tasks from ON_HOLD to PENDING and send to Celery workers.
+    
+    Supports three modes:
+    1. vector_status_ids: Dispatch specific VectorStatus IDs
+    2. asset_ids: Dispatch all ON_HOLD tasks for specific assets
+    3. dispatch_all: Dispatch ALL ON_HOLD tasks in the system
+    
+    Returns:
+        DispatchTasksResponse with count of dispatched tasks and Celery task IDs
     """
-    if not request.vector_status_ids:
+    logger.info("=" * 80)
+    logger.info("📤 DISPATCH ENDPOINT CALLED")
+    logger.info("=" * 80)
+    logger.info(f"Request payload: {request.model_dump()}")
+    
+    # Helper function for queue assignment
+    def get_queue_for_vector_type(vector_type: VectorType) -> str:
+        """Determine queue based on vector type."""
+        if vector_type in [VectorType.VISUAL_SEMANTIC, VectorType.TEXT_OCR]:
+            return "heavy_gpu"
+        elif vector_type in [VectorType.VISUAL_SIGLIP, VectorType.TEXT_CHUNK]:
+            return "fast_cpu"
+        else:
+            return "fast_cpu"  # Default for audio, memory, etc.
+    
+    # Validate request - at least one dispatch mode must be provided
+    if not request.dispatch_all and not request.vector_status_ids and not request.asset_ids:
         raise HTTPException(
             status_code=400,
-            detail="No vector status IDs provided"
+            detail="Must provide either 'dispatch_all=True', 'vector_status_ids', or 'asset_ids'"
         )
     
-    # Convert to UUIDs
-    try:
-        task_uuids = [uuid.UUID(vid) for vid in request.vector_status_ids]
-    except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid UUID format: {str(e)}"
-        )
-    
-    # Fetch tasks
-    statement = select(VectorStatus).where(
-        VectorStatus.id.in_(task_uuids),
-        VectorStatus.status == JobStatus.ON_HOLD
-    )
-    tasks = session.exec(statement).all()
-    
-    if not tasks:
-        raise HTTPException(
-            status_code=404,
-            detail="No ON_HOLD tasks found with provided IDs"
-        )
-    
-    # Update to PENDING and dispatch
     celery_task_ids = []
-    for task in tasks:
-        task.status = JobStatus.PENDING
-        session.add(task)
-        
-        # TODO: Trigger Celery task
-        # from worker.tasks import process_vector_task
-        # celery_result = process_vector_task.delay(str(task.id))
-        # celery_task_ids.append(celery_result.id)
-        
-        celery_task_ids.append(f"celery-{task.id}")
+    dispatched_count = 0
     
+    # Determine which dispatch mode
+    if request.vector_status_ids:
+        logger.info(f"🎯 Mode: SPECIFIC IDs - {len(request.vector_status_ids)} task(s)")
+        logger.debug(f"   IDs: {request.vector_status_ids}")
+        
+        # Query specific VectorStatus by IDs
+        statement = (
+            select(VectorStatus, Asset)
+            .join(Asset, VectorStatus.asset_id == Asset.id)
+            .where(
+                VectorStatus.id.in_(request.vector_status_ids),
+                VectorStatus.status == JobStatus.ON_HOLD
+            )
+        )
+    elif request.asset_ids:
+        logger.info(f"🎯 Mode: BY ASSETS - {len(request.asset_ids)} asset(s)")
+        logger.debug(f"   Asset IDs: {request.asset_ids}")
+        
+        # Query all ON_HOLD tasks for specific assets
+        statement = (
+            select(VectorStatus, Asset)
+            .join(Asset, VectorStatus.asset_id == Asset.id)
+            .where(
+                VectorStatus.asset_id.in_(request.asset_ids),
+                VectorStatus.status == JobStatus.ON_HOLD
+            )
+        )
+    elif request.dispatch_all:
+        logger.info(f"🎯 Mode: DISPATCH ALL")
+        
+        # Query ALL ON_HOLD tasks
+        statement = (
+            select(VectorStatus, Asset)
+            .join(Asset, VectorStatus.asset_id == Asset.id)
+            .where(VectorStatus.status == JobStatus.ON_HOLD)
+        )
+    else:
+        logger.error("❌ No dispatch mode specified")
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide vector_status_ids, asset_ids, or dispatch_all=True"
+        )
+    
+    # Execute query
+    logger.debug("🔍 Executing database query...")
+    results = session.exec(statement).all()
+    logger.info(f"✅ Found {len(results)} ON_HOLD task(s) in database")
+    
+    if not results:
+        logger.warning("⚠️  No tasks found to dispatch")
+        return DispatchTasksResponse(
+            tasks_updated=0,
+            celery_task_ids=[]
+        )
+    
+    # Process each VectorStatus
+    logger.info(f"🔄 Processing {len(results)} task(s)...")
+    
+    for vector_status, asset in results:
+        logger.info("-" * 60)
+        logger.info(f"📋 Task {dispatched_count + 1}/{len(results)}")
+        logger.info(f"   VectorStatus ID: {vector_status.id}")
+        logger.info(f"   Asset: {asset.filename}")
+        logger.info(f"   VectorType: {vector_status.vector_type}")
+        logger.info(f"   Privacy: {asset.privacy_level}")
+        
+        # Update status to PENDING
+        logger.debug(f"   → Updating status: ON_HOLD → PENDING")
+        vector_status.status = JobStatus.PENDING
+        vector_status.updated_at = datetime.utcnow()
+        
+        # Determine queue based on vector type
+        queue_name = get_queue_for_vector_type(vector_status.vector_type)
+        logger.info(f"   → Queue assigned: {queue_name}")
+        
+        # Dispatch to Celery worker
+        try:
+            logger.info(f"   → Importing celery_app...")
+            from app.core.celery_app import app as celery_app
+            logger.debug(f"   ✅ Celery app imported: {celery_app.main}")
+            
+            logger.info(f"   → Sending task to Celery...")
+            logger.debug(f"      Task name: worker.tasks.process_vector_task")
+            logger.debug(f"      Args: ['{vector_status.id}']")
+            logger.debug(f"      Queue: {queue_name}")
+            
+            celery_task = celery_app.send_task(
+                'worker.tasks.process_vector_task',
+                args=[str(vector_status.id)],
+                queue=queue_name
+            )
+            
+            logger.info(f"   ✅ Task sent to Celery!")
+            logger.info(f"      Celery Task ID: {celery_task.id}")
+            logger.info(f"      State: {celery_task.state}")
+            
+            celery_task_ids.append(celery_task.id)
+            dispatched_count += 1
+            
+        except Exception as e:
+            logger.error(f"   ❌ Failed to send task to Celery:")
+            logger.error(f"      Error: {type(e).__name__}: {str(e)}")
+            import traceback
+            logger.error(f"      Traceback: {traceback.format_exc()}")
+            # Continue with next task
+            continue
+    
+    # Commit all status updates
+    logger.info("-" * 60)
+    logger.info(f"💾 Committing {dispatched_count} status update(s) to database...")
     session.commit()
+    logger.info(f"✅ Database committed")
+    
+    logger.info("=" * 80)
+    logger.info(f"✅ DISPATCH COMPLETED")
+    logger.info(f"   Total dispatched: {dispatched_count}")
+    logger.info(f"   Celery task IDs: {len(celery_task_ids)}")
+    logger.info("=" * 80)
     
     return DispatchTasksResponse(
-        success=True,
-        message=f"Successfully dispatched {len(tasks)} task(s) to processing queue",
-        tasks_updated=len(tasks),
+        tasks_updated=dispatched_count,
         celery_task_ids=celery_task_ids
     )
 

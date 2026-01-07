@@ -42,13 +42,14 @@ def test_enum_values():
     """Test that enums have correct values"""
     print("🧪 Testing Enum Values...")
     
-    # JobStatus
-    assert JobStatus.ON_HOLD == "on_hold"
-    assert JobStatus.PENDING == "pending"
-    assert JobStatus.PROCESSING == "processing"
-    assert JobStatus.COMPLETED == "completed"
-    assert JobStatus.FAILED == "failed"
-    assert JobStatus.REJECTED == "rejected"
+    # JobStatus (values must match PostgreSQL enum - UPPERCASE)
+    assert JobStatus.ON_HOLD == "ON_HOLD"
+    assert JobStatus.PENDING == "PENDING"
+    assert JobStatus.PROCESSING == "PROCESSING"
+    assert JobStatus.REVIEW_REQUIRED == "REVIEW_REQUIRED"
+    assert JobStatus.COMPLETED == "COMPLETED"
+    assert JobStatus.FAILED == "FAILED"
+    assert JobStatus.REJECTED == "REJECTED"
     print("   ✅ JobStatus enum values are correct")
     
     # VectorType

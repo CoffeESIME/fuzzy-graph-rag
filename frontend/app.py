@@ -17,7 +17,7 @@ import json
 from datetime import datetime
 
 # Task management components
-from tasks import render_task_matrix, render_dispatch_button
+from tasks import render_task_matrix, render_dispatch_button, render_task_status_summary
 from tasks.sidecar_viewer import render_sidecar_sidebar
 
 # ==========================================
@@ -542,11 +542,14 @@ def render_task_dashboard():
         st.info("✨ No hay assets con tareas en estado ON_HOLD.")
         return
     
+    # Resumen de estados (métricas + fallidas + completadas)
+    render_task_status_summary(assets)
+    
     # Renderizar matriz
     render_task_matrix(assets)
     
     # Botón de dispatch
-    render_dispatch_button(assets)
+    render_dispatch_button(assets, api_base_url=API_BASE_URL)
 
 
 # ==========================================
