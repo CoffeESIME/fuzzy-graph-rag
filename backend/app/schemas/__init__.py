@@ -91,3 +91,48 @@ class UploadResponse(BaseModel):
     message: str
     assets_created: List[AssetResponse]
     total_files_processed: int
+
+
+# ==========================================
+# TEXT INGEST SCHEMA
+# ==========================================
+class TextIngestRequest(BaseModel):
+    """
+    Request schema for raw text ingestion (no file upload).
+    
+    Example:
+    {
+        "content": "Este es el texto que quiero guardar y analizar...",
+        "title": "Notas de reunión",
+        "vector_types": ["text_chunk", "user_memory"],
+        "privacy_level": "strict_local",
+        "user_notes": "Notas de la reunión del lunes"
+    }
+    """
+    content: str = Field(
+        description="The raw text content to ingest",
+        min_length=1
+    )
+    title: Optional[str] = Field(
+        default=None,
+        description="Optional title for the text (used for filename)"
+    )
+    vector_types: List[VectorType] = Field(
+        default=[VectorType.TEXT_CHUNK],
+        description="Which AI intelligences to apply (text_chunk, user_memory, text_summary)"
+    )
+    privacy_level: PrivacyLevel = Field(
+        default=PrivacyLevel.STRICT_LOCAL,
+        description="Data governance level"
+    )
+    user_notes: Optional[str] = Field(
+        default=None,
+        description="Optional user notes/context for this text"
+    )
+
+
+class TextIngestResponse(BaseModel):
+    """Response schema for the text ingest endpoint"""
+    success: bool
+    message: str
+    asset: AssetResponse

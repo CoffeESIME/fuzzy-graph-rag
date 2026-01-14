@@ -236,7 +236,7 @@ def render_dispatch_button(assets: List[Dict[str, Any]], api_base_url: str = "ht
     
     for asset in assets:
         for vs in asset.get("vector_statuses", []):
-            if vs["status"] == "on_hold":
+            if vs["status"] == "ON_HOLD":
                 on_hold_count += 1
                 on_hold_ids.append(vs["id"])
     

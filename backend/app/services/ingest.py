@@ -13,7 +13,7 @@ from datetime import datetime
 
 from app.models import Asset, VectorStatus, JobStatus, PrivacyLevel
 from app.schemas import UploadGroup, ProcessingOperation
-from app.schemas.sidecar import SidecarMetadata, PrivacyConfig, WorkflowState, DataLayers
+from app.schemas.sidecar import SidecarMetadata, PrivacyConfig, WorkflowState, DataLayers, IntermediateResults
 from shared.clients import get_minio_client
 
 

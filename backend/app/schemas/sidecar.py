@@ -2,23 +2,107 @@
 Pydantic schemas for Sidecar JSON metadata stored in MinIO.
 
 The sidecar is the source of truth for all metadata about an asset.
-It contains privacy config, workflow state, and layered data (AI drafts + human curation).
+It reflects the Multimodal Pipeline: 
+Intermediate Results (OCR/Whisper + User Context) -> AI Synthesis (LLM JSON) -> Human Curation.
 """
 
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
-from app.models.enums import PrivacyLevel, JobStatus, VectorType
+from app.models.enums import PrivacyLevel, JobStatus
 
 
 # ==========================================
-# PRIVACY CONFIGURATION
+# 0. AI EXTRACTION SCHEMAS (The LLM Output Structure)
+# ==========================================
+class GraphEntity(BaseModel):
+    name: str
+    type: Optional[str] = None
+    domain: Optional[str] = None
+    definition: Optional[str] = None
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+
+class GraphCore(BaseModel):
+    summary: str
+    entities: Dict[str, List[GraphEntity]]  # Key: "persons", "concepts", etc.
+    tags: List[str] = []
+
+class VisualSpecifics(BaseModel):
+    image_type: str
+    composition: Optional[str] = None
+    lighting: Optional[str] = None
+    dominant_colors: List[str] = []
+    art_style: Optional[str] = None
+    ocr_text: Optional[str] = None
+    visual_mood: Optional[str] = None
+
+class AudioSpecifics(BaseModel):
+    audio_type: str
+    genre: Optional[str] = None
+    tempo: Optional[str] = None
+    instruments: List[str] = []
+    lyrics_summary: Optional[str] = None
+    emotional_tone: Optional[str] = None
+
+class TextSpecifics(BaseModel):
+    document_type: str
+    rhetorical_tone: Optional[str] = None
+    key_arguments: List[str] = []
+    language: Optional[str] = None
+    requires_action: bool = False
+
+class AIExtractionResult(BaseModel):
+    """
+    The unified structured output from the LLM analysis.
+    """
+    graph_core: GraphCore
+    visual_specifics: Optional[VisualSpecifics] = None
+    audio_specifics: Optional[AudioSpecifics] = None
+    text_specifics: Optional[TextSpecifics] = None
+    
+    # Technical Metadata
+    model_name: str = Field(description="Name of the model used (e.g. 'gemini-2.5')")
+    processing_time: float = Field(default=0.0)
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+# ==========================================
+# 1. INTERMEDIATE RESULTS (The Ingredients)
+# ==========================================
+class IntermediateResults(BaseModel):
+    """
+    Raw data extracted by 'blind' tools before LLM synthesis.
+    Acts as a cache to avoid re-processing heavy tasks like OCR/Whisper.
+    """
+    ocr_text: Optional[str] = Field(
+        default=None, 
+        description="Raw text from Tesseract/EasyOCR or Vision Model pre-pass"
+    )
+    audio_transcript: Optional[str] = Field(
+        default=None, 
+        description="Literal transcription (Whisper) of the file content (lyrics/speech)"
+    )
+    # --- CAMPO AGREGADO PARA EL CONTEXTO DEL USUARIO ---
+    user_context_transcript: Optional[str] = Field(
+        default=None,
+        description="User's voice note or text description provided at upload time."
+    )
+    # ---------------------------------------------------
+    frame_captions: List[str] = Field(
+        default_factory=list,
+        description="Brief captions of individual frames (for video)"
+    )
+    raw_tools_output: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Any other raw output from helper tools"
+    )
+
+
+# ==========================================
+# 2. PRIVACY CONFIGURATION
 # ==========================================
 class PrivacyConfig(BaseModel):
-    """
-    Privacy and governance configuration for an asset.
-    """
     level: PrivacyLevel = Field(
         description="Governance level controlling where data can be processed"
     )
@@ -33,15 +117,12 @@ class PrivacyConfig(BaseModel):
 
 
 # ==========================================
-# WORKFLOW STATE
+# 3. WORKFLOW STATE
 # ==========================================
 class WorkflowState(BaseModel):
-    """
-    Tracks the processing pipeline state for this asset.
-    """
     steps_completed: List[str] = Field(
         default_factory=list,
-        description="List of pipeline steps completed (e.g., 'upload', 'ocr', 'embedding')"
+        description="List of pipeline steps completed (e.g., 'upload', 'ocr', 'llm_synthesis')"
     )
     current_status: JobStatus = Field(
         description="Current overall status of asset processing"
@@ -57,44 +138,54 @@ class WorkflowState(BaseModel):
 
 
 # ==========================================
-# DATA LAYERS
+# 4. DATA LAYERS (The Core Logic)
 # ==========================================
 class DataLayers(BaseModel):
     """
-    Multi-layer data storage for AI-generated and human-curated content.
-    
-    Philosophy:
-    - raw_ai_drafts: Workers write here (OCR text, image captions, etc.)
-    - human_curated: Users validate and edit AI drafts, moving to this layer
-    - vectors_generated: List of vector embeddings created and stored in Weaviate
+    Multi-layer data storage reflecting the processing pipeline.
     """
-    raw_ai_drafts: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="AI-generated content awaiting human review (e.g., {'ocr_text': '...', 'caption': '...'})"
+    
+    # LAYER 1: INGREDIENTS (Raw inputs + User Context)
+    intermediate_results: IntermediateResults = Field(
+        default_factory=IntermediateResults,
+        description="Raw text/data extracted to feed the LLM context"
     )
-    human_curated: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Human-validated/edited content (source of truth for final data)"
+
+    # LAYER 2: SYNTHESIS (AI Structured Output)
+    ai_synthesis: Optional[AIExtractionResult] = Field(
+        default=None,
+        description="The final structured knowledge graph extracted by the LLM"
     )
+
+    # LAYER 3: HUMAN TRUTH (Curated)
+    human_curated: Optional[AIExtractionResult] = Field(
+        default=None,
+        description="Human-approved version of the synthesis (Source of Truth)"
+    )
+    
+    # FALLBACK: Debug Data
+    raw_debug_data: Dict[str, Any] = Field(
+        default_factory=dict, 
+        description="Raw JSON responses from LLM in case of parsing errors"
+    )
+
+    # LAYER 4: INDEX (Vectors)
     vectors_generated: List[str] = Field(
         default_factory=list,
-        description="List of vector types successfully embedded (e.g., ['visual_siglip', 'text_chunk'])"
+        description="List of vector types successfully embedded and stored"
     )
 
 
 # ==========================================
-# COMPLETE SIDECAR METADATA
+# 5. COMPLETE SIDECAR METADATA
 # ==========================================
 class SidecarMetadata(BaseModel):
     """
     Complete sidecar JSON structure stored in MinIO.
-    
-    This is the master record for all metadata about an asset.
-    PostgreSQL Asset table contains minimal fields; sidecar has the full details.
     """
     # --- CORE IDENTITY ---
     file_hash: str = Field(description="SHA256 hash of the file(s)")
-    original_filename: str = Field(description="Original filename or generated name for merged assets")
+    original_filename: str = Field(description="Original filename or generated name")
     mime_type: str = Field(description="MIME type (e.g., image/jpeg, text/plain)")
     size_bytes: int = Field(description="Total file size in bytes")
     
@@ -105,15 +196,12 @@ class SidecarMetadata(BaseModel):
     discard_original: bool = Field(default=False, description="Whether to delete binary after extraction")
     
     # --- VECTORIZATION CONFIG ---
-    vector_types: List[str] = Field(description="List of vector types to generate (e.g., ['visual_siglip', 'text_chunk'])")
+    vector_types: List[str] = Field(description="List of vector types to generate")
     
     # --- MERGE METADATA (if applicable) ---
     is_merged: bool = Field(default=False, description="True if this is a logical merged asset")
-    source_files: List[Any] = Field(
-        default_factory=list,
-        description="List of source file metadata (for merge_ocr: [{'filename': ..., 'path': ..., 'hash': ...}])"
-    )
-    batch_uuid: Optional[str] = Field(default=None, description="Batch UUID for merged assets")
+    source_files: List[Any] = Field(default_factory=list)
+    batch_uuid: Optional[str] = Field(default=None)
     
     # --- PRIVACY & GOVERNANCE ---
     privacy_config: PrivacyConfig = Field(description="Privacy and compliance configuration")
@@ -122,44 +210,44 @@ class SidecarMetadata(BaseModel):
     workflow_state: WorkflowState = Field(description="Processing pipeline state tracking")
     
     # --- DATA LAYERS ---
-    data_layers: DataLayers = Field(description="Multi-layer data storage (AI drafts + human curation)")
+    data_layers: DataLayers = Field(description="Multi-layer data storage")
     
     class Config:
         json_schema_extra = {
             "example": {
-                "file_hash": "a3f5d8e9c2b1...",
-                "original_filename": "screenshot_merge_001.txt",
-                "mime_type": "text/plain",
-                "size_bytes": 15420,
-                "upload_timestamp": "2025-12-28T17:00:00Z",
-                "operation": "merge_ocr",
-                "user_notes": "Twitter thread about AI",
-                "discard_original": True,
-                "vector_types": ["text_chunk"],
-                "is_merged": True,
-                "source_files": [
-                    {"filename": "tweet1.jpg", "path": "raw/temp/batch_uuid/...", "hash": "..."},
-                    {"filename": "tweet2.jpg", "path": "raw/temp/batch_uuid/...", "hash": "..."}
-                ],
-                "batch_uuid": "550e8400-e29b-41d4-a716-446655440000",
-                "privacy_config": {
-                    "level": "strict_local",
-                    "locked": False,
-                    "locked_reason": None
-                },
+                "file_hash": "a3f5...",
+                "original_filename": "meme.jpg",
+                "mime_type": "image/jpeg",
+                "size_bytes": 10240,
+                "upload_timestamp": "2026-01-01T12:00:00Z",
+                "operation": "standard",
+                "user_notes": "Funny meme about coding",
+                "vector_types": ["visual_siglip"],
+                "privacy_config": {"level": "strict_local", "locked": False},
                 "workflow_state": {
-                    "steps_completed": ["upload", "ocr"],
-                    "current_status": "review_required",
-                    "last_updated": "2025-12-28T17:05:00Z",
-                    "error_log": []
+                    "steps_completed": ["upload", "ocr", "llm_synthesis"],
+                    "current_status": "COMPLETED",
+                    "last_updated": "2026-01-01T12:05:00Z"
                 },
                 "data_layers": {
-                    "raw_ai_drafts": {
-                        "ocr_text": "This is the extracted text from the screenshots...",
-                        "detected_language": "en"
+                    "intermediate_results": {
+                        "ocr_text": "When code compiles first try",
+                        "user_context_transcript": "This reminds me of my first project"
                     },
-                    "human_curated": {},
-                    "vectors_generated": ["text_chunk"]
+                    "ai_synthesis": {
+                        "graph_core": {
+                            "summary": "Meme about success",
+                            "entities": {"concepts": [{"name": "Success", "confidence": 0.9}]},
+                            "tags": ["meme", "coding"]
+                        },
+                        "visual_specifics": {
+                            "image_type": "meme",
+                            "visual_mood": "Triumphant"
+                        },
+                        "model_name": "gemini-2.5",
+                        "processing_time": 1.2
+                    },
+                    "vectors_generated": ["visual_siglip"]
                 }
             }
         }

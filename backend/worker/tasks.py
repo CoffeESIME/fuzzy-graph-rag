@@ -22,6 +22,7 @@ from app.models.vector_status import VectorStatus
 from app.models.asset import Asset
 from shared.database import get_session
 from shared.clients import get_minio_client
+from worker.prompts import build_specialized_prompt
 
 # ==========================================
 # LOGGING CONFIGURATION
@@ -102,14 +103,24 @@ def download_file_from_minio(asset: Asset) -> bytes:
         raise Exception(f"MinIO download failed: {str(e)}")
 
 
-def update_sidecar_metadata(asset: Asset, field: str, value: Any) -> None:
+def update_sidecar_metadata(
+    asset: Asset, 
+    field_path: str, 
+    value: Any,
+    add_workflow_step: Optional[str] = None
+) -> None:
     """
     Update sidecar JSON metadata in MinIO.
     
+    Supports nested path updates using dot notation:
+    - 'data_layers.intermediate_results.ocr_text'
+    - 'data_layers.raw_debug_data.llm_response'
+    
     Args:
         asset: Asset with sidecar_path
-        field: Field name to update
+        field_path: Dot-separated path to field (e.g., 'data_layers.intermediate_results.ocr_text')
         value: Value to set
+        add_workflow_step: Optional step name to add to workflow_state.steps_completed
     """
     minio_client = get_minio_client()
     
@@ -118,12 +129,29 @@ def update_sidecar_metadata(asset: Asset, field: str, value: Any) -> None:
         response = minio_client.get_object(Bucket=MINIO_BUCKET, Key=asset.sidecar_path)
         sidecar_data = json.loads(response['Body'].read().decode('utf-8'))
         
-        # Update field
-        sidecar_data[field] = value
-        sidecar_data['updated_at'] = datetime.utcnow().isoformat()
+        # Navigate to nested field using dot notation
+        keys = field_path.split('.')
+        target = sidecar_data
+        for key in keys[:-1]:
+            if key not in target:
+                target[key] = {}
+            target = target[key]
+        
+        # Set the value
+        target[keys[-1]] = value
+        
+        # Update workflow state
+        if add_workflow_step:
+            if 'workflow_state' not in sidecar_data:
+                sidecar_data['workflow_state'] = {'steps_completed': []}
+            if 'steps_completed' not in sidecar_data['workflow_state']:
+                sidecar_data['workflow_state']['steps_completed'] = []
+            if add_workflow_step not in sidecar_data['workflow_state']['steps_completed']:
+                sidecar_data['workflow_state']['steps_completed'].append(add_workflow_step)
+            sidecar_data['workflow_state']['last_updated'] = datetime.utcnow().isoformat()
         
         # Upload updated sidecar (boto3 style)
-        sidecar_bytes = json.dumps(sidecar_data, indent=2).encode('utf-8')
+        sidecar_bytes = json.dumps(sidecar_data, indent=2, default=str).encode('utf-8')
         minio_client.put_object(
             Bucket=MINIO_BUCKET,
             Key=asset.sidecar_path,
@@ -131,7 +159,9 @@ def update_sidecar_metadata(asset: Asset, field: str, value: Any) -> None:
             ContentType='application/json'
         )
         
-        logger.info(f"Updated sidecar {asset.sidecar_path}: {field}")
+        logger.info(f"Updated sidecar {asset.sidecar_path}: {field_path}")
+        if add_workflow_step:
+            logger.info(f"   Added workflow step: {add_workflow_step}")
     except Exception as e:
         logger.error(f"Failed to update sidecar: {asset.sidecar_path} - {e}")
         raise
@@ -232,7 +262,7 @@ def call_chat_completions_api(
     Call LLM Gateway chat completions endpoint for vision/OCR tasks.
     
     Uses multipart/form-data format with:
-    - messages as JSON string
+    - messages as JSON string (system + user)
     - files as file uploads
     - file_index to reference uploaded files in messages
     
@@ -241,7 +271,7 @@ def call_chat_completions_api(
         filename: Original filename
         task_type: "ocr" or "vision"
         privacy_mode: "strict" or "flexible"
-        prompt: User prompt for the model
+        prompt: System prompt with instructions for the model
         
     Returns:
         API response dict with generated text
@@ -251,12 +281,25 @@ def call_chat_completions_api(
     """
     url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
     
-    # Build messages with file_index reference
+    # Build messages with system prompt + user image
+    # System message contains the instructions/schema
+    # User message contains the image to analyze
+    
+    # Different user message based on task type
+    if task_type == "ocr":
+        user_text = "Extract all visible text from this image."
+    else:
+        user_text = "Analyze this image and return the structured JSON."
+    
     messages = [
+        {
+            "role": "system",
+            "content": prompt
+        },
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": prompt},
+                {"type": "text", "text": user_text},
                 {"type": "image", "file_index": 0}  # Reference first file
             ]
         }
@@ -267,8 +310,12 @@ def call_chat_completions_api(
         "task": task_type,
         "privacy_mode": privacy_mode,
         "messages": json.dumps(messages),
-        "temperature": 0.0 if task_type == "ocr" else 0.7
+        "temperature": 0.0 if task_type == "ocr" else 0.3  # Lower temp for more consistent JSON
     }
+    
+    # Only request JSON format for vision tasks, not OCR
+    if task_type == "vision":
+        data["response_format"] = json.dumps({"type": "json_object"})
     
     # Determine mime type from filename
     ext = filename.lower().split('.')[-1]
@@ -286,13 +333,42 @@ def call_chat_completions_api(
         ("files", (filename, file_content, mime_type))
     ]
     
+    # ==========================================
+    # DEBUG LOGGING - Detailed request info
+    # ==========================================
     logger.info(f"📡 Calling Chat Completions API: {url}")
     logger.info(f"   Task: {task_type}, Privacy: {privacy_mode}")
-    logger.debug(f"   Prompt: {prompt[:100]}...")
+    logger.info(f"   Temperature: {data.get('temperature')}")
+    logger.info(f"   Response Format: {data.get('response_format', 'None')}")
+    logger.info(f"   File: {filename} ({len(file_content)} bytes, {mime_type})")
+    
+    # Log prompt details
+    logger.info(f"   📝 PROMPT LENGTH: {len(prompt)} characters")
+    logger.info(f"   📝 PROMPT FIRST 200 CHARS: {prompt[:200]}...")
+    logger.info(f"   📝 PROMPT LAST 100 CHARS: ...{prompt[-100:]}")
+    
+    # Parse messages to verify structure
+    parsed_messages = json.loads(data["messages"])
+    logger.info(f"   📨 MESSAGES COUNT: {len(parsed_messages)}")
+    for i, msg in enumerate(parsed_messages):
+        role = msg.get("role", "unknown")
+        content = msg.get("content", "")
+        if isinstance(content, str):
+            content_preview = content[:150] + "..." if len(content) > 150 else content
+            logger.info(f"   📨 MESSAGE[{i}] role={role}, content_length={len(content)}")
+            logger.info(f"      Content preview: {content_preview}")
+        elif isinstance(content, list):
+            logger.info(f"   📨 MESSAGE[{i}] role={role}, content_type=multimodal, parts={len(content)}")
+            for j, part in enumerate(content):
+                logger.info(f"      Part[{j}]: {part}")
+    
+    # Log full data dict (except messages which we already logged)
+    logger.debug(f"   📦 FULL DATA KEYS: {list(data.keys())}")
+    # ==========================================
     
     try:
         response = requests.post(url, data=data, files=files, timeout=120)
-        logger.debug(f"   Response status: {response.status_code}")
+        logger.info(f"   Response status: {response.status_code}")
         
         if response.status_code != 200:
             error_detail = response.text[:500] if response.text else "No response body"
@@ -301,7 +377,13 @@ def call_chat_completions_api(
             raise Exception(f"Chat completions API returned {response.status_code}: {error_detail}")
         
         result = response.json()
+        
+        # Log response details
+        response_content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
         logger.info(f"✅ Chat completions API success")
+        logger.info(f"   📥 RESPONSE LENGTH: {len(response_content)} chars")
+        logger.info(f"   📥 RESPONSE FIRST 300 CHARS: {response_content[:300]}...")
+        
         return result
     except requests.exceptions.ConnectionError as e:
         logger.error(f"❌ Cannot connect to LLM Gateway at {url}")
@@ -586,7 +668,8 @@ def process_visual_semantic_task(asset: Asset, vector_status: VectorStatus, sess
     """
     Process visual semantic understanding using multimodal LLM via LLM Gateway.
     
-    Flow: HUMAN-IN-THE-LOOP - Generation → Sidecar (ai_draft) → REVIEW_REQUIRED
+    Uses specialized vision prompt for structured JSON extraction.
+    Flow: VISION ANALYSIS → Sidecar (raw_debug_data) → REVIEW_REQUIRED
     """
     logger.info(f"Processing VISUAL_SEMANTIC for {asset.filename}")
     
@@ -596,8 +679,52 @@ def process_visual_semantic_task(asset: Asset, vector_status: VectorStatus, sess
     # Download file from MinIO
     file_content = download_file_from_minio(asset)
     
+    # Get user context from sidecar (if available)
+    minio_client = get_minio_client()
+    external_context = None
+    try:
+        response = minio_client.get_object(Bucket=MINIO_BUCKET, Key=asset.sidecar_path)
+        sidecar_data = json.loads(response['Body'].read().decode('utf-8'))
+        
+        # Build external context from sidecar data
+        user_notes = sidecar_data.get('user_notes')
+        user_transcript = sidecar_data.get('data_layers', {}).get('intermediate_results', {}).get('user_context_transcript')
+        
+        if user_notes or user_transcript:
+            external_context = {}
+            if user_notes:
+                external_context['user_notes'] = user_notes
+            if user_transcript:
+                external_context['user_voice_description'] = user_transcript
+            logger.info(f"   Found user context: {list(external_context.keys())}")
+    except Exception as e:
+        logger.warning(f"   Could not read sidecar for context: {e}")
+    
+    # Build specialized vision prompt
+    logger.info(f"   🔧 Building specialized prompt...")
+    logger.info(f"   🔧 external_context = {external_context}")
+    
+    prompt = build_specialized_prompt(
+        task_type="vision",
+        external_context=external_context
+    )
+    
+    logger.info(f"   ✅ PROMPT BUILT: {len(prompt)} chars")
+    logger.info(f"   🔍 PROMPT TYPE: {type(prompt)}")
+    logger.info(f"   🔍 PROMPT IS EMPTY: {len(prompt) == 0}")
+    if len(prompt) > 0:
+        logger.info(f"   🔍 PROMPT STARTS WITH: '{prompt[:100]}'")
+    else:
+        logger.error(f"   ❌ PROMPT IS EMPTY! This is the bug!")
+    
     # Call LLM Gateway chat completions API
-    prompt = "Describe esta imagen detalladamente para indexación. Incluye objetos, personas, acciones, contexto y cualquier texto visible."
+    logger.info(f"   📤 Calling call_chat_completions_api with:")
+    logger.info(f"      - file_content: {len(file_content)} bytes")
+    logger.info(f"      - filename: {asset.filename}")
+    logger.info(f"      - task_type: vision")
+    logger.info(f"      - privacy_mode: {privacy_mode}")
+    logger.info(f"      - prompt length: {len(prompt)}")
+    
     result = call_chat_completions_api(
         file_content=file_content,
         filename=asset.filename,
@@ -606,16 +733,34 @@ def process_visual_semantic_task(asset: Asset, vector_status: VectorStatus, sess
         prompt=prompt
     )
     
-    # Extract generated text
+    # Extract generated text (should be JSON)
     generated_text = result.get('choices', [{}])[0].get('message', {}).get('content', '')
     
     if not generated_text:
         raise Exception("No content generated by LLM")
     
-    # Update sidecar with AI draft
-    update_sidecar_metadata(asset, 'ai_draft_visual_semantic', generated_text)
+    # Try to parse as JSON for validation
+    try:
+        parsed_json = json.loads(generated_text)
+        logger.info(f"   ✅ LLM returned valid JSON with keys: {list(parsed_json.keys())}")
+        # Store parsed JSON in raw_debug_data for now
+        update_sidecar_metadata(
+            asset, 
+            'data_layers.raw_debug_data.visual_semantic_json', 
+            parsed_json,
+            add_workflow_step='visual_semantic'
+        )
+    except json.JSONDecodeError:
+        logger.warning(f"   ⚠️ LLM returned non-JSON text, storing as raw")
+        # Store raw text if not valid JSON
+        update_sidecar_metadata(
+            asset, 
+            'data_layers.raw_debug_data.visual_semantic_raw', 
+            generated_text,
+            add_workflow_step='visual_semantic'
+        )
     
-    logger.info(f"Stored AI draft in sidecar for Asset {asset.id} - awaiting human review")
+    logger.info(f"Stored visual semantic result in sidecar for Asset {asset.id} - awaiting human review")
     
     return {
         'status': 'REVIEW_REQUIRED',
@@ -705,10 +850,15 @@ def process_text_ocr_task(asset: Asset, vector_status: VectorStatus, session) ->
     if not extracted_text:
         raise Exception("No text extracted by OCR")
     
-    # Update sidecar with AI draft
-    update_sidecar_metadata(asset, 'ai_draft_ocr', extracted_text)
+    # Update sidecar with OCR text in intermediate_results layer
+    update_sidecar_metadata(
+        asset, 
+        'data_layers.intermediate_results.ocr_text', 
+        extracted_text,
+        add_workflow_step='ocr'
+    )
     
-    logger.info(f"Stored OCR draft in sidecar for Asset {asset.id} - awaiting human review")
+    logger.info(f"Stored OCR text in intermediate_results for Asset {asset.id} - awaiting LLM synthesis")
     
     return {
         'status': 'REVIEW_REQUIRED',
@@ -730,27 +880,41 @@ def call_chat_completions_api_multi_file(
         files_data: List of dicts with 'filename' and 'content' keys
         task_type: "ocr" or "vision"
         privacy_mode: "strict" or "flexible"
-        prompt: User prompt for the model
+        prompt: System prompt with instructions
         
     Returns:
         API response dict
     """
     url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
     
-    # Build messages with multiple file_index references
-    content = [{"type": "text", "text": prompt}]
-    for i in range(len(files_data)):
-        content.append({"type": "image", "file_index": i})
+    # Different user message based on task type
+    if task_type == "ocr":
+        user_text = "Extract all visible text from these images."
+    else:
+        user_text = "Analyze these images and return the structured JSON."
     
-    messages = [{"role": "user", "content": content}]
+    # Build user content with multiple file_index references
+    user_content = [{"type": "text", "text": user_text}]
+    for i in range(len(files_data)):
+        user_content.append({"type": "image", "file_index": i})
+    
+    # System message for instructions, user message for images
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": user_content}
+    ]
     
     # Form data
     data = {
         "task": task_type,
         "privacy_mode": privacy_mode,
         "messages": json.dumps(messages),
-        "temperature": 0.0 if task_type == "ocr" else 0.7
+        "temperature": 0.0 if task_type == "ocr" else 0.3
     }
+    
+    # Only request JSON format for vision tasks, not OCR
+    if task_type == "vision":
+        data["response_format"] = json.dumps({"type": "json_object"})
     
     # Files as list of tuples
     files = []
@@ -811,8 +975,46 @@ def process_audio_clap_task(asset: Asset, vector_status: VectorStatus, session) 
 
 
 def process_audio_transcript_task(asset: Asset, vector_status: VectorStatus, session) -> dict:
-    """Transcribe audio to text (PLACEHOLDER)."""
+    """
+    Transcribe audio to text and analyze using specialized audio prompt.
+    
+    When implemented, will:
+    1. Call Whisper API for transcription -> intermediate_results.audio_transcript
+    2. Call LLM with audio prompt for semantic analysis -> raw_debug_data / ai_synthesis
+    3. Return REVIEW_REQUIRED for human curation
+    """
     logger.info(f"[PLACEHOLDER] Processing AUDIO_TRANSCRIPT for {asset.filename}")
+    
+    # TODO: When Whisper integration is ready:
+    # 
+    # Step 1: Transcribe audio
+    # transcribed_text = call_whisper_api(file_content)
+    # update_sidecar_metadata(
+    #     asset,
+    #     'data_layers.intermediate_results.audio_transcript',
+    #     transcribed_text,
+    #     add_workflow_step='audio_transcript'
+    # )
+    # 
+    # Step 2: Analyze with specialized audio prompt
+    # external_context = {'lyrics_or_speech': transcribed_text}
+    # if user_notes:
+    #     external_context['user_notes'] = user_notes
+    # 
+    # prompt = build_specialized_prompt(
+    #     task_type="audio",
+    #     external_context=external_context
+    # )
+    # 
+    # result = call_llm_for_audio_analysis(prompt, transcribed_text)
+    # parsed_json = json.loads(result)
+    # 
+    # update_sidecar_metadata(
+    #     asset,
+    #     'data_layers.raw_debug_data.audio_analysis_json',
+    #     parsed_json,
+    #     add_workflow_step='audio_analysis'
+    # )
     
     return {
         'status': 'completed',
