@@ -19,6 +19,9 @@ from datetime import datetime
 # Task management components
 from tasks import render_task_matrix, render_dispatch_button, render_task_status_summary
 from tasks.sidecar_viewer import render_sidecar_sidebar
+from tasks.task_metadata_editor import render_task_metadata_editor
+from tasks.review_queue import render_review_queue
+from tasks.graph_generator import render_graph_generator
 
 # ==========================================
 # CONFIGURACIÓN
@@ -661,6 +664,9 @@ def render_task_dashboard():
     # Renderizar matriz
     render_task_matrix(assets)
     
+    # Editor de metadatos para tareas seleccionadas
+    render_task_metadata_editor(assets)
+    
     # Botón de dispatch
     render_dispatch_button(assets, api_base_url=API_BASE_URL)
 
@@ -685,7 +691,7 @@ def main():
     st.markdown("Sistema de gestión para ingesta y procesamiento de datos multimodales.")
     
     # Tabs principales
-    tab1, tab2 = st.tabs(["📤 Ingesta y Agrupación", "⚙️ Control de Tareas"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📤 Ingesta y Agrupación", "⚙️ Control de Tareas", "👁️ Cola de Revisión", "🔗 Generador de Nodos"])
     
     # --- TAB 1: INGESTA ---
     with tab1:
@@ -726,6 +732,14 @@ def main():
         st.header("Control de Tareas en Staging")
         
         render_task_dashboard()
+    
+    # --- TAB 3: COLA DE REVISIÓN ---
+    with tab3:
+        render_review_queue(api_base_url=API_BASE_URL)
+    
+    # --- TAB 4: GENERADOR DE NODOS ---
+    with tab4:
+        render_graph_generator(api_base_url=API_BASE_URL)
     
     # Sidecar viewer (sidebar)
     if st.session_state.viewing_sidecar:

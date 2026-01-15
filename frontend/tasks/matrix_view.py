@@ -219,13 +219,16 @@ def render_task_matrix(assets: List[Dict[str, Any]]) -> None:
 
 def render_dispatch_button(assets: List[Dict[str, Any]], api_base_url: str = "http://localhost:8000") -> None:
     """
-    Renderiza el botón para despachar jobs pendientes.
+    Renderiza el botón para despachar jobs pendientes con metadatos.
+    
+    Uses the selected tasks from task_metadata_editor and sends metadata with dispatch.
     
     Args:
         assets: Lista de assets con vector_statuses
         api_base_url: Base URL del backend API
     """
     import requests
+    from .task_metadata_editor import get_selected_tasks_with_metadata, clear_metadata_state
     
     st.markdown("---")
     st.markdown("### 🚀 Dispatch Jobs")
@@ -246,29 +249,72 @@ def render_dispatch_button(assets: List[Dict[str, Any]], api_base_url: str = "ht
     
     st.markdown(f"**Tareas en ON_HOLD:** {on_hold_count}")
     
-    cols = st.columns([2, 1])
+    # Get selected tasks from metadata editor
+    selected_tasks = get_selected_tasks_with_metadata()
+    selected_count = len(selected_tasks)
+    
+    cols = st.columns([2, 1, 1])
     
     with cols[0]:
         dispatch_all = st.checkbox(
-            "Dispatch all ON_HOLD tasks",
+            "Dispatch TODAS las ON_HOLD (sin selección)",
             value=False,
-            help="Send all ON_HOLD vector statuses to processing queue"
+            help="Ignorar selección y enviar todas las tareas ON_HOLD"
         )
     
     with cols[1]:
+        st.markdown(f"**Seleccionadas:** {selected_count}")
+    
+    with cols[2]:
+        # Determine what to dispatch
+        if dispatch_all:
+            button_text = f"▶️ Dispatch {on_hold_count} (todas)"
+            can_dispatch = True
+        elif selected_count > 0:
+            button_text = f"▶️ Dispatch {selected_count} seleccionadas"
+            can_dispatch = True
+        else:
+            button_text = "▶️ Selecciona tareas arriba"
+            can_dispatch = False
+        
         if st.button(
-            f"▶️ Dispatch {on_hold_count if dispatch_all else 'Selected'}", 
+            button_text, 
             type="primary",
             use_container_width=True,
-            disabled=not dispatch_all  # Por ahora solo soporta "all"
+            disabled=not can_dispatch
         ):
-            with st.spinner(f"Dispatching {on_hold_count} task(s)..."):
+            with st.spinner(f"Dispatching task(s)..."):
                 try:
                     # Prepare payload
                     if dispatch_all:
                         payload = {"dispatch_all": True}
                     else:
-                        payload = {"vector_status_ids": on_hold_ids}
+                        # Build payload with metadata
+                        vector_status_ids = [t["vector_status_id"] for t in selected_tasks]
+                        
+                        # Build task_metadata list
+                        task_metadata = []
+                        for t in selected_tasks:
+                            meta_entry = {"vector_status_id": t["vector_status_id"]}
+                            
+                            if "user_context" in t:
+                                meta_entry["user_context"] = t["user_context"]
+                            
+                            if "audio_processing_options" in t:
+                                meta_entry["audio_processing_options"] = t["audio_processing_options"]
+                            
+                            task_metadata.append(meta_entry)
+                        
+                        payload = {
+                            "vector_status_ids": vector_status_ids,
+                            "task_metadata": task_metadata if any(
+                                "user_context" in t or "audio_processing_options" in t 
+                                for t in selected_tasks
+                            ) else None
+                        }
+                    
+                    # Log payload for debugging
+                    st.write("📤 Payload:", payload)
                     
                     # Call backend API
                     response = requests.post(
@@ -283,6 +329,9 @@ def render_dispatch_button(assets: List[Dict[str, Any]], api_base_url: str = "ht
                         celery_task_ids = result.get("celery_task_ids", [])
                         
                         st.success(f"✅ {dispatched_count} task(s) dispatched successfully!")
+                        
+                        # Clear metadata state after successful dispatch
+                        clear_metadata_state()
                         
                         # Show Celery task IDs in expander
                         if celery_task_ids:

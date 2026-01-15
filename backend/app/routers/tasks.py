@@ -233,7 +233,9 @@ from app.schemas.task_schemas import (
     DispatchTasksRequest,
     DispatchTasksResponse,
     UpdatePrivacyRequest,
-    UpdatePrivacyResponse
+    UpdatePrivacyResponse,
+    ResetToHoldRequest,
+    ResetToHoldResponse
 )
 from shared.clients import get_minio_client
 import json as json_lib
@@ -528,6 +530,60 @@ async def dispatch_tasks(
             celery_task_ids=[]
         )
     
+    # Build metadata lookup for quick access
+    metadata_lookup = {}
+    if request.task_metadata:
+        for tm in request.task_metadata:
+            metadata_lookup[tm.vector_status_id] = tm
+        logger.info(f"📝 Task metadata provided for {len(metadata_lookup)} task(s)")
+    
+    # Helper function to save metadata to sidecar
+    def save_metadata_to_sidecar(asset: Asset, task_meta) -> None:
+        """Save user context and audio options to sidecar in MinIO."""
+        if not task_meta:
+            return
+        
+        try:
+            minio_client = get_minio_client()
+            bucket_name = "rag-dataset"
+            
+            # Download existing sidecar
+            response = minio_client.get_object(Bucket=bucket_name, Key=asset.sidecar_path)
+            sidecar_data = json_lib.loads(response['Body'].read().decode('utf-8'))
+            
+            # Add user_context if provided
+            if task_meta.user_context:
+                sidecar_data['user_context'] = {
+                    'content': task_meta.user_context.content,
+                    'convert_to_memory': task_meta.user_context.convert_to_memory
+                }
+                logger.info(f"      → Added user_context to sidecar")
+            
+            # Add audio_processing_options if provided
+            if task_meta.audio_processing_options:
+                sidecar_data['audio_processing_options'] = {
+                    'is_voice_note': task_meta.audio_processing_options.is_voice_note,
+                    'is_song': task_meta.audio_processing_options.is_song,
+                    'has_provided_lyrics': task_meta.audio_processing_options.has_provided_lyrics,
+                    'provided_lyrics_text': task_meta.audio_processing_options.provided_lyrics_text,
+                    'use_whisper': task_meta.audio_processing_options.use_whisper
+                }
+                logger.info(f"      → Added audio_processing_options to sidecar")
+            
+            # Upload updated sidecar
+            sidecar_bytes = json_lib.dumps(sidecar_data, indent=2, default=str).encode('utf-8')
+            minio_client.put_object(
+                Bucket=bucket_name,
+                Key=asset.sidecar_path,
+                Body=sidecar_bytes,
+                ContentType='application/json'
+            )
+            logger.info(f"      ✅ Sidecar updated: {asset.sidecar_path}")
+            
+        except Exception as e:
+            logger.warning(f"      ⚠️ Failed to update sidecar with metadata: {e}")
+            # Don't fail the dispatch, just log the warning
+    
     # Process each VectorStatus
     logger.info(f"🔄 Processing {len(results)} task(s)...")
     
@@ -538,6 +594,12 @@ async def dispatch_tasks(
         logger.info(f"   Asset: {asset.filename}")
         logger.info(f"   VectorType: {vector_status.vector_type}")
         logger.info(f"   Privacy: {asset.privacy_level}")
+        
+        # Check if we have metadata for this task
+        task_meta = metadata_lookup.get(str(vector_status.id))
+        if task_meta:
+            logger.info(f"   📝 Metadata found for this task")
+            save_metadata_to_sidecar(asset, task_meta)
         
         # Update status to PENDING
         logger.debug(f"   → Updating status: ON_HOLD → PENDING")
@@ -649,3 +711,138 @@ async def update_asset_privacy(
         new_privacy_level=request.privacy_level.value
     )
 
+
+# ==========================================
+# REVIEW QUEUE ENDPOINTS
+# ==========================================
+
+@router.get("/review-queue", response_model=List[AssetWithTasksResponse])
+async def get_review_queue(
+    session: Session = Depends(get_session)
+):
+    """
+    Get all assets that have tasks requiring review or that failed.
+    
+    Returns assets with tasks in REVIEW_REQUIRED or FAILED status.
+    User can review these and decide to:
+    - Accept/reject REVIEW_REQUIRED tasks
+    - Reset FAILED tasks back to ON_HOLD for retry
+    """
+    logger.info("📋 Fetching review queue (REVIEW_REQUIRED + FAILED tasks)")
+    
+    # Get all assets that have at least one task in REVIEW_REQUIRED or FAILED status
+    statement = (
+        select(Asset)
+        .where(
+            Asset.id.in_(
+                select(VectorStatus.asset_id).where(
+                    VectorStatus.status.in_([JobStatus.REVIEW_REQUIRED, JobStatus.FAILED])
+                )
+            )
+        )
+        .order_by(Asset.created_at.desc())
+    )
+    
+    assets = session.exec(statement).all()
+    logger.info(f"   Found {len(assets)} assets with review/failed tasks")
+    
+    result = []
+    minio_client = get_minio_client()
+    bucket_name = "rag-dataset"
+    
+    for asset in assets:
+        # Get all vector statuses for this asset (only REVIEW_REQUIRED and FAILED)
+        vs_statement = select(VectorStatus).where(
+            VectorStatus.asset_id == asset.id,
+            VectorStatus.status.in_([JobStatus.REVIEW_REQUIRED, JobStatus.FAILED])
+        )
+        vector_statuses = session.exec(vs_statement).all()
+        
+        # Get sidecar data
+        sidecar_data = {}
+        try:
+            response = minio_client.get_object(Bucket=bucket_name, Key=asset.sidecar_path)
+            sidecar_data = json_lib.loads(response['Body'].read().decode('utf-8'))
+        except Exception as e:
+            logger.warning(f"   Could not read sidecar for {asset.filename}: {e}")
+        
+        result.append(AssetWithTasksResponse(
+            id=str(asset.id),
+            filename=asset.filename,
+            minio_path=asset.minio_path,
+            mime_type=asset.mime_type,
+            size_bytes=asset.size_bytes,
+            file_hash=asset.file_hash,
+            is_merged=asset.is_merged,
+            original_deleted=asset.original_deleted,
+            privacy_level=asset.privacy_level,
+            sidecar_path=asset.sidecar_path,
+            created_at=asset.created_at.isoformat() if asset.created_at else "",
+            updated_at=asset.updated_at.isoformat() if asset.updated_at else "",
+            vector_statuses=[
+                VectorStatusDetail(
+                    id=str(vs.id),
+                    vector_type=vs.vector_type.value if hasattr(vs.vector_type, 'value') else str(vs.vector_type),
+                    status=vs.status.value if hasattr(vs.status, 'value') else str(vs.status),
+                    weaviate_uuid=str(vs.weaviate_uuid) if vs.weaviate_uuid else None,
+                    error_message=vs.error_message,
+                    created_at=vs.created_at.isoformat() if vs.created_at else "",
+                    updated_at=vs.updated_at.isoformat() if vs.updated_at else ""
+                )
+                for vs in vector_statuses
+            ],
+            sidecar_data=sidecar_data
+        ))
+    
+    logger.info(f"   Returning {len(result)} assets for review queue")
+    return result
+
+
+@router.post("/reset-to-hold", response_model=ResetToHoldResponse)
+async def reset_tasks_to_hold(
+    request: ResetToHoldRequest,
+    session: Session = Depends(get_session)
+):
+    """
+    Reset tasks from REVIEW_REQUIRED, FAILED, or REJECTED status back to ON_HOLD.
+    
+    This allows users to:
+    - Re-process failed tasks after fixing issues
+    - Re-send tasks that didn't pass review for re-processing
+    - Clear error_message for fresh retry
+    """
+    logger.info(f"🔄 Resetting {len(request.vector_status_ids)} task(s) to ON_HOLD")
+    
+    reset_count = 0
+    
+    for vs_id in request.vector_status_ids:
+        try:
+            vs_uuid = uuid.UUID(vs_id)
+            vector_status = session.get(VectorStatus, vs_uuid)
+            
+            if not vector_status:
+                logger.warning(f"   VectorStatus {vs_id} not found")
+                continue
+            
+            # Only reset if in allowed states
+            if vector_status.status in [JobStatus.REVIEW_REQUIRED, JobStatus.FAILED, JobStatus.REJECTED]:
+                old_status = vector_status.status
+                vector_status.status = JobStatus.ON_HOLD
+                vector_status.error_message = None  # Clear error message for fresh retry
+                vector_status.updated_at = datetime.utcnow()
+                reset_count += 1
+                logger.info(f"   ✅ Reset {vs_id}: {old_status} → ON_HOLD")
+            else:
+                logger.warning(f"   ⚠️ Skipping {vs_id}: status={vector_status.status} (not resettable)")
+                
+        except Exception as e:
+            logger.error(f"   ❌ Error resetting {vs_id}: {e}")
+    
+    session.commit()
+    logger.info(f"   Reset {reset_count} task(s) to ON_HOLD")
+    
+    return ResetToHoldResponse(
+        tasks_reset=reset_count,
+        success=True,
+        message=f"Successfully reset {reset_count} task(s) to ON_HOLD"
+    )

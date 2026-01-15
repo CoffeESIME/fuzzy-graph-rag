@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     
     # LLM Gateway
     LLM_GATEWAY_URL: str = "http://localhost:8765"  # LLM Gateway base URL (without /v1)
+    
+    # Whisper API (speaches)
+    WHISPER_API_URL: str = "http://localhost:8778"  # Speaches Whisper API
 
     @property
     def DATABASE_URL(self) -> str:

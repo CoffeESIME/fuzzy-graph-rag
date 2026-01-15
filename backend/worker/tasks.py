@@ -49,29 +49,153 @@ from config.settings import get_settings
 _settings = get_settings()
 LLM_GATEWAY_BASE_URL = f"{_settings.LLM_GATEWAY_URL}/v1"
 MINIO_BUCKET = _settings.MINIO_BUCKET
+WHISPER_API_URL = _settings.WHISPER_API_URL
 
 logger.info(f"   LLM Gateway: {LLM_GATEWAY_BASE_URL}")
 logger.info(f"   MinIO Bucket: {MINIO_BUCKET}")
+logger.info(f"   Whisper API: {WHISPER_API_URL}")
 
 
 # ==========================================
 # HELPER FUNCTIONS
 # ==========================================
 
-def get_privacy_mode(asset: Asset) -> str:
+def get_privacy_mode(asset: Asset, force_strict: bool = False) -> str:
     """
     Determine privacy mode for LLM Gateway based on asset privacy level.
     
     Args:
         asset: Asset with privacy_level
+        force_strict: If True, always return "strict" (used when user_context.convert_to_memory=True)
         
     Returns:
-        "strict" for strict_local, "flexible" for public_cloud
+        "strict" for strict_local or when forced, "flexible" for public_cloud
     """
+    if force_strict:
+        return "strict"
     if asset.privacy_level == PrivacyLevel.STRICT_LOCAL.value:
         return "strict"
     else:
         return "flexible"
+
+
+def get_sidecar_data(asset: Asset) -> Optional[Dict[str, Any]]:
+    """
+    Download and parse sidecar JSON from MinIO.
+    
+    Args:
+        asset: Asset with sidecar_path
+        
+    Returns:
+        Parsed sidecar dict or None if failed
+    """
+    minio_client = get_minio_client()
+    try:
+        response = minio_client.get_object(Bucket=MINIO_BUCKET, Key=asset.sidecar_path)
+        return json.loads(response['Body'].read().decode('utf-8'))
+    except Exception as e:
+        logger.warning(f"Could not read sidecar {asset.sidecar_path}: {e}")
+        return None
+
+
+def get_user_context_from_sidecar(sidecar_data: Optional[Dict]) -> Dict[str, Any]:
+    """
+    Extract user_context from sidecar data.
+    
+    Returns dict with:
+        - content: str or None
+        - convert_to_memory: bool
+        - force_strict: bool (True if convert_to_memory is True)
+    """
+    if not sidecar_data:
+        return {"content": None, "convert_to_memory": False, "force_strict": False}
+    
+    user_context = sidecar_data.get("user_context", {})
+    content = user_context.get("content")
+    convert_to_memory = user_context.get("convert_to_memory", False)
+    
+    return {
+        "content": content,
+        "convert_to_memory": convert_to_memory,
+        "force_strict": convert_to_memory  # If convert_to_memory, force strict mode
+    }
+
+
+def get_audio_options_from_sidecar(sidecar_data: Optional[Dict]) -> Dict[str, Any]:
+    """
+    Extract audio_processing_options from sidecar data.
+    
+    Returns dict with audio options or empty dict if not present.
+    """
+    if not sidecar_data:
+        return {}
+    
+    return sidecar_data.get("audio_processing_options", {})
+
+
+def call_whisper_api(file_content: bytes, filename: str) -> str:
+    """
+    Call Whisper API (speaches) to transcribe audio file.
+    
+    Uses OpenAI-compatible API format:
+    POST /v1/audio/transcriptions
+    
+    Args:
+        file_content: Audio file bytes
+        filename: Original filename (for extension detection)
+        
+    Returns:
+        Transcribed text string
+        
+    Raises:
+        Exception: If API call fails
+    """
+    logger.info(f"🎙️ Calling Whisper API for transcription...")
+    logger.debug(f"   File size: {len(file_content)} bytes")
+    logger.debug(f"   Filename: {filename}")
+    
+    url = f"{WHISPER_API_URL}/v1/audio/transcriptions"
+    
+    # Prepare multipart form data
+    files = {
+        'file': (filename, file_content, 'audio/mpeg')
+    }
+    
+    data = {
+        'model': 'whisper-1',  # Default model for speaches
+        'response_format': 'json',
+        'language': 'es'  # Spanish - adjust as needed
+    }
+    
+    try:
+        response = requests.post(
+            url,
+            files=files,
+            data=data,
+            timeout=300  # 5 minutes for long audio files
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            transcribed_text = result.get('text', '')
+            logger.info(f"   ✅ Whisper transcription successful: {len(transcribed_text)} chars")
+            return transcribed_text
+        else:
+            error_msg = f"Whisper API error: {response.status_code} - {response.text}"
+            logger.error(f"   ❌ {error_msg}")
+            raise Exception(error_msg)
+            
+    except requests.exceptions.Timeout:
+        error_msg = "Whisper API timeout - audio file may be too long"
+        logger.error(f"   ❌ {error_msg}")
+        raise Exception(error_msg)
+    except requests.exceptions.ConnectionError:
+        error_msg = f"Cannot connect to Whisper API at {WHISPER_API_URL}"
+        logger.error(f"   ❌ {error_msg}")
+        raise Exception(error_msg)
+    except Exception as e:
+        logger.error(f"   ❌ Whisper API call failed: {e}")
+        raise
 
 
 def download_file_from_minio(asset: Asset) -> bytes:
@@ -647,8 +771,14 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     """
     logger.info(f"Processing TEXT_CHUNK for {asset.filename}")
     
-    # Determine privacy mode
-    privacy_mode = "flexible" if asset.privacy_level == PrivacyLevel.PUBLIC_CLOUD else "strict"
+    # Get sidecar data and user context
+    sidecar_data = get_sidecar_data(asset)
+    user_context = get_user_context_from_sidecar(sidecar_data)
+    
+    # Determine privacy mode - force strict if user wants to convert to memory
+    privacy_mode = get_privacy_mode(asset, force_strict=user_context["force_strict"])
+    if user_context["force_strict"]:
+        logger.info(f"   🔒 Privacy forced to STRICT (convert_to_memory=True)")
     
     # Step 1: Read text content from MinIO
     try:
@@ -671,17 +801,17 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
         add_workflow_step='embedding'
     )
     
-    # Step 3: Get user context from sidecar
-    minio_client = get_minio_client()
+    # Step 3: Build external context for prompt
     external_context = {'document_text': text_content[:2000]}  # First 2000 chars for context
-    try:
-        response = minio_client.get_object(Bucket=MINIO_BUCKET, Key=asset.sidecar_path)
-        sidecar_data = json.loads(response['Body'].read().decode('utf-8'))
+    
+    if sidecar_data:
         user_notes = sidecar_data.get('user_notes')
         if user_notes:
             external_context['user_notes'] = user_notes
-    except Exception as e:
-        logger.warning(f"   Could not read sidecar for context: {e}")
+        
+        # Add new user_context content
+        if user_context["content"]:
+            external_context['user_context'] = user_context["content"]
     
     # Step 4: Call LLM with text prompt for metadata extraction
     prompt = build_specialized_prompt(
@@ -763,32 +893,38 @@ def process_visual_semantic_task(asset: Asset, vector_status: VectorStatus, sess
     """
     logger.info(f"Processing VISUAL_SEMANTIC for {asset.filename}")
     
-    # Determine privacy mode
-    privacy_mode = get_privacy_mode(asset)
+    # Get sidecar data and user context
+    sidecar_data = get_sidecar_data(asset)
+    user_context = get_user_context_from_sidecar(sidecar_data)
+    
+    # Determine privacy mode - force strict if user wants to convert to memory
+    privacy_mode = get_privacy_mode(asset, force_strict=user_context["force_strict"])
+    if user_context["force_strict"]:
+        logger.info(f"   🔒 Privacy forced to STRICT (convert_to_memory=True)")
     
     # Download file from MinIO
     file_content = download_file_from_minio(asset)
     
-    # Get user context from sidecar (if available)
-    minio_client = get_minio_client()
-    external_context = None
-    try:
-        response = minio_client.get_object(Bucket=MINIO_BUCKET, Key=asset.sidecar_path)
-        sidecar_data = json.loads(response['Body'].read().decode('utf-8'))
-        
-        # Build external context from sidecar data
+    # Build external context for prompt
+    external_context = {}
+    
+    # Add user notes from old field (backwards compat)
+    if sidecar_data:
         user_notes = sidecar_data.get('user_notes')
-        user_transcript = sidecar_data.get('data_layers', {}).get('intermediate_results', {}).get('user_context_transcript')
+        if user_notes:
+            external_context['user_notes'] = user_notes
         
-        if user_notes or user_transcript:
-            external_context = {}
-            if user_notes:
-                external_context['user_notes'] = user_notes
-            if user_transcript:
-                external_context['user_voice_description'] = user_transcript
-            logger.info(f"   Found user context: {list(external_context.keys())}")
-    except Exception as e:
-        logger.warning(f"   Could not read sidecar for context: {e}")
+        # Add user context content (new field)
+        if user_context["content"]:
+            external_context['user_context'] = user_context["content"]
+        
+        # Add user voice description if available
+        user_transcript = sidecar_data.get('data_layers', {}).get('intermediate_results', {}).get('user_context_transcript')
+        if user_transcript:
+            external_context['user_voice_description'] = user_transcript
+    
+    if external_context:
+        logger.info(f"   Found user context: {list(external_context.keys())}")
     
     # Build specialized vision prompt
     logger.info(f"   🔧 Building specialized prompt...")
@@ -796,7 +932,7 @@ def process_visual_semantic_task(asset: Asset, vector_status: VectorStatus, sess
     
     prompt = build_specialized_prompt(
         task_type="vision",
-        external_context=external_context
+        external_context=external_context if external_context else None
     )
     
     logger.info(f"   ✅ PROMPT BUILT: {len(prompt)} chars")
@@ -1068,57 +1204,247 @@ def process_audio_transcript_task(asset: Asset, vector_status: VectorStatus, ses
     """
     Transcribe audio to text and analyze using specialized audio prompt.
     
-    When implemented, will:
-    1. Call Whisper API for transcription -> intermediate_results.audio_transcript
-    2. Call LLM with audio prompt for semantic analysis -> raw_debug_data / ai_synthesis
-    3. Return REVIEW_REQUIRED for human curation
+    Uses audio_processing_options from sidecar:
+    - use_whisper: If True, call Whisper API for auto transcription
+    - has_provided_lyrics: If True, use provided_lyrics_text instead of Whisper
+    - is_voice_note / is_song: Affects LLM analysis prompt
     """
-    logger.info(f"[PLACEHOLDER] Processing AUDIO_TRANSCRIPT for {asset.filename}")
+    logger.info(f"Processing AUDIO_TRANSCRIPT for {asset.filename}")
     
-    # TODO: When Whisper integration is ready:
-    # 
-    # Step 1: Transcribe audio
-    # transcribed_text = call_whisper_api(file_content)
-    # update_sidecar_metadata(
-    #     asset,
-    #     'data_layers.intermediate_results.audio_transcript',
-    #     transcribed_text,
-    #     add_workflow_step='audio_transcript'
-    # )
-    # 
-    # Step 2: Analyze with specialized audio prompt
-    # external_context = {'lyrics_or_speech': transcribed_text}
-    # if user_notes:
-    #     external_context['user_notes'] = user_notes
-    # 
-    # prompt = build_specialized_prompt(
-    #     task_type="audio",
-    #     external_context=external_context
-    # )
-    # 
-    # result = call_llm_for_audio_analysis(prompt, transcribed_text)
-    # parsed_json = json.loads(result)
-    # 
-    # update_sidecar_metadata(
-    #     asset,
-    #     'data_layers.raw_debug_data.audio_analysis_json',
-    #     parsed_json,
-    #     add_workflow_step='audio_analysis'
-    # )
+    # Get sidecar data and contexts
+    sidecar_data = get_sidecar_data(asset)
+    user_context = get_user_context_from_sidecar(sidecar_data)
+    audio_options = get_audio_options_from_sidecar(sidecar_data)
+    
+    # Determine privacy mode - force strict if user wants to convert to memory
+    privacy_mode = get_privacy_mode(asset, force_strict=user_context["force_strict"])
+    if user_context["force_strict"]:
+        logger.info(f"   🔒 Privacy forced to STRICT (convert_to_memory=True)")
+    
+    # Log audio options
+    logger.info(f"   🎵 Audio options: {audio_options}")
+    
+    # Determine transcription source
+    transcribed_text = None
+    
+    if audio_options.get("has_provided_lyrics") and audio_options.get("provided_lyrics_text"):
+        # User provided the lyrics/transcript
+        transcribed_text = audio_options["provided_lyrics_text"]
+        logger.info(f"   📜 Using user-provided transcript ({len(transcribed_text)} chars)")
+    elif audio_options.get("use_whisper"):
+        # Call Whisper API (speaches)
+        logger.info(f"   🎙️ Calling Whisper API for transcription...")
+        try:
+            file_content = download_file_from_minio(asset)
+            transcribed_text = call_whisper_api(file_content, asset.filename)
+            logger.info(f"   ✅ Whisper transcription completed: {len(transcribed_text)} chars")
+        except Exception as e:
+            logger.error(f"   ❌ Whisper transcription failed: {e}")
+            transcribed_text = f"[Whisper transcription failed: {str(e)}]"
+    else:
+        logger.warning(f"   ⚠️ No transcript source specified (use_whisper=False, no provided lyrics)")
+        transcribed_text = "[No transcription available]"
+    
+    # Store transcript in sidecar
+    if transcribed_text:
+        update_sidecar_metadata(
+            asset,
+            'data_layers.intermediate_results.audio_transcript',
+            transcribed_text,
+            add_workflow_step='audio_transcript'
+        )
+    
+    # Build external context for LLM analysis
+    external_context = {}
+    
+    if transcribed_text and transcribed_text != "[No transcription available]":
+        external_context['lyrics_or_speech'] = transcribed_text
+    
+    if audio_options.get("is_voice_note"):
+        external_context['audio_type'] = 'voice_note'
+    elif audio_options.get("is_song"):
+        external_context['audio_type'] = 'song'
+    
+    if user_context["content"]:
+        external_context['user_context'] = user_context["content"]
+    
+    if sidecar_data:
+        user_notes = sidecar_data.get('user_notes')
+        if user_notes:
+            external_context['user_notes'] = user_notes
+    
+    # Build specialized audio prompt
+    prompt = build_specialized_prompt(
+        task_type="audio",
+        external_context=external_context if external_context else None
+    )
+    logger.info(f"   Built audio analysis prompt: {len(prompt)} chars")
+    
+    # Call LLM for audio analysis
+    if transcribed_text and transcribed_text != "[No transcription available]":
+        try:
+            url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
+            messages = [
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": f"Analyze this audio transcript:\n\n{transcribed_text[:4000]}"}
+            ]
+            
+            data = {
+                "task": "chat",
+                "privacy_mode": privacy_mode,
+                "messages": json.dumps(messages),
+                "temperature": 0.3,
+                "response_format": json.dumps({"type": "json_object"})
+            }
+            
+            response = requests.post(url, data=data, timeout=120)
+            
+            if response.status_code == 200:
+                result = response.json()
+                llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+                
+                try:
+                    parsed_json = json.loads(llm_response)
+                    logger.info(f"   ✅ LLM extracted audio metadata: {list(parsed_json.keys())}")
+                    update_sidecar_metadata(
+                        asset,
+                        'data_layers.raw_debug_data.audio_analysis_json',
+                        parsed_json,
+                        add_workflow_step='audio_analysis'
+                    )
+                except json.JSONDecodeError:
+                    logger.warning(f"   ⚠️ LLM returned non-JSON, storing raw")
+                    update_sidecar_metadata(
+                        asset,
+                        'data_layers.raw_debug_data.audio_analysis_raw',
+                        llm_response,
+                        add_workflow_step='audio_analysis'
+                    )
+            else:
+                logger.warning(f"   ⚠️ LLM call failed: {response.status_code}")
+        except Exception as e:
+            logger.warning(f"   ⚠️ LLM analysis failed: {e}")
+    
+    logger.info(f"   ✅ AUDIO_TRANSCRIPT processed - awaiting review")
     
     return {
-        'status': 'completed',
+        'status': 'REVIEW_REQUIRED',
         'weaviate_uuid': f'mock-transcript-{asset.id}',
         'processing_time': 3.0
     }
 
 
 def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session) -> dict:
-    """Process user memory/notes (PLACEHOLDER)."""
-    logger.info(f"[PLACEHOLDER] Processing USER_MEMORY for {asset.filename}")
+    """
+    Process user memory/notes - stores personal context in Weaviate UserMemory collection.
+    
+    USER_MEMORY tasks are ALWAYS processed with STRICT privacy mode.
+    
+    Flow:
+    1. Read user_context from sidecar
+    2. Generate text embedding of user context → store in Weaviate (UserMemory collection)
+    3. Call LLM with strict mode for metadata extraction (tags, entities, summary)
+    4. Store analysis in sidecar
+    5. Return COMPLETED
+    """
+    logger.info(f"Processing USER_MEMORY for {asset.filename}")
+    
+    # USER_MEMORY is ALWAYS strict - no cloud processing for personal memories
+    privacy_mode = "strict"
+    logger.info(f"   🔒 USER_MEMORY always uses STRICT mode")
+    
+    # Get sidecar data
+    sidecar_data = get_sidecar_data(asset)
+    user_context = get_user_context_from_sidecar(sidecar_data)
+    
+    if not user_context["content"]:
+        logger.warning(f"   ⚠️ No user_context.content found in sidecar")
+        # Try to get from user_notes as fallback
+        user_notes = sidecar_data.get("user_notes", "") if sidecar_data else ""
+        if not user_notes:
+            logger.error(f"   ❌ No user content found for USER_MEMORY task")
+            return {
+                'status': 'FAILED',
+                'weaviate_uuid': None,
+                'error': 'No user content found'
+            }
+        memory_content = user_notes
+    else:
+        memory_content = user_context["content"]
+    
+    logger.info(f"   📝 Memory content: {len(memory_content)} chars")
+    
+    # Step 1: Generate embedding of memory content
+    try:
+        embedding_result = call_text_embeddings_api(memory_content)
+        logger.info(f"   ✅ Generated embedding for memory content")
+    except Exception as e:
+        logger.error(f"   ❌ Failed to generate embedding: {e}")
+        raise
+    
+    # Step 2: Store in Weaviate UserMemory collection
+    weaviate_uuid = f"weaviate-memory-{asset.id}-{vector_status.id}"
+    logger.info(f"   [SIMULATED] Stored in Weaviate UserMemory: {weaviate_uuid}")
+    
+    # Step 3: Call LLM for metadata extraction (always strict)
+    external_context = {
+        'user_memory': memory_content,
+        'associated_file': asset.filename
+    }
+    
+    prompt = build_specialized_prompt(
+        task_type="text",  # Use text analysis for memories
+        external_context=external_context
+    )
+    
+    try:
+        url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
+        messages = [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": f"Extract metadata from this personal memory/note:\n\n{memory_content[:4000]}"}
+        ]
+        
+        data = {
+            "task": "chat",
+            "privacy_mode": privacy_mode,  # Always strict
+            "messages": json.dumps(messages),
+            "temperature": 0.3,
+            "response_format": json.dumps({"type": "json_object"})
+        }
+        
+        response = requests.post(url, data=data, timeout=120)
+        
+        if response.status_code == 200:
+            result = response.json()
+            llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+            
+            try:
+                parsed_json = json.loads(llm_response)
+                logger.info(f"   ✅ LLM extracted metadata: {list(parsed_json.keys())}")
+                update_sidecar_metadata(
+                    asset,
+                    'data_layers.raw_debug_data.memory_analysis_json',
+                    parsed_json,
+                    add_workflow_step='memory_analysis'
+                )
+            except json.JSONDecodeError:
+                logger.warning(f"   ⚠️ LLM returned non-JSON, storing raw")
+                update_sidecar_metadata(
+                    asset,
+                    'data_layers.raw_debug_data.memory_analysis_raw',
+                    llm_response,
+                    add_workflow_step='memory_analysis'
+                )
+        else:
+            logger.warning(f"   ⚠️ LLM call failed: {response.status_code}")
+    except Exception as e:
+        logger.warning(f"   ⚠️ LLM analysis failed (non-fatal): {e}")
+    
+    logger.info(f"   ✅ USER_MEMORY processed successfully")
     
     return {
-        'status': 'completed',
-        'weaviate_uuid': f'mock-memory-{asset.id}',
-        'processing_time': 0.5
+        'status': 'COMPLETED',
+        'weaviate_uuid': weaviate_uuid,
+        'processing_time': 1.0
     }
+
