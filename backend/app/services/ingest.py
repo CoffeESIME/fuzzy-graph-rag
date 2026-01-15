@@ -340,3 +340,115 @@ class IngestService:
             self.session.add(status)
         
         self.session.commit()
+    
+    def ingest_text(
+        self,
+        content: str,
+        title: str = None,
+        vector_types: List = None,
+        privacy_level: PrivacyLevel = PrivacyLevel.STRICT_LOCAL,
+        user_notes: str = None
+    ) -> Asset:
+        """
+        Ingest raw text content (no file upload).
+        
+        Flow:
+        1. Hash the content for deduplication
+        2. Save text to master_records/texts/{hash}.txt
+        3. Create sidecar in master_records/sidecars/{hash}.json
+        4. Create Asset record
+        5. Create VectorStatus records in ON_HOLD
+        
+        Args:
+            content: The raw text content
+            title: Optional title (used for filename)
+            vector_types: List of VectorType enums (default: [TEXT_CHUNK])
+            privacy_level: Privacy level for governance
+            user_notes: Optional user notes/context
+            
+        Returns:
+            Created Asset instance
+        """
+        from app.models.enums import VectorType
+        
+        # Default vector types
+        if vector_types is None:
+            vector_types = [VectorType.TEXT_CHUNK]
+        
+        # Calculate hash of content
+        content_bytes = content.encode('utf-8')
+        content_hash = hashlib.sha256(content_bytes).hexdigest()
+        
+        # Generate filename
+        if title:
+            # Sanitize title for filename
+            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).strip()
+            safe_title = safe_title.replace(' ', '_')[:50]
+            filename = f"{safe_title}_{content_hash[:8]}.txt"
+        else:
+            filename = f"text_{content_hash[:8]}.txt"
+        
+        # Save text to MinIO: master_records/texts/{hash}.txt
+        text_path = f"master_records/texts/{content_hash}.txt"
+        self.s3.put_object(
+            Bucket=self.BUCKET_NAME,
+            Key=text_path,
+            Body=content_bytes,
+            ContentType="text/plain; charset=utf-8"
+        )
+        
+        # Create sidecar
+        sidecar_path = f"master_records/sidecars/{content_hash}.json"
+        sidecar_data = SidecarMetadata(
+            file_hash=content_hash,
+            original_filename=filename,
+            mime_type="text/plain",
+            size_bytes=len(content_bytes),
+            upload_timestamp=datetime.utcnow(),
+            operation="text_ingest",
+            user_notes=user_notes,
+            discard_original=False,
+            vector_types=[vt.value for vt in vector_types],
+            is_merged=False,
+            source_files=[],
+            privacy_config=PrivacyConfig(
+                level=privacy_level,
+                locked=False
+            ),
+            workflow_state=WorkflowState(
+                steps_completed=["upload"],
+                current_status=JobStatus.ON_HOLD
+            ),
+            data_layers=DataLayers(
+                intermediate_results=IntermediateResults()
+            )
+        )
+        
+        self.s3.put_object(
+            Bucket=self.BUCKET_NAME,
+            Key=sidecar_path,
+            Body=sidecar_data.model_dump_json(indent=2).encode('utf-8'),
+            ContentType="application/json"
+        )
+        
+        # Create Asset record
+        asset = Asset(
+            filename=filename,
+            minio_path=text_path,
+            mime_type="text/plain",
+            size_bytes=len(content_bytes),
+            file_hash=content_hash,
+            is_merged=False,
+            original_deleted=False,
+            privacy_level=privacy_level,
+            sidecar_path=sidecar_path
+        )
+        
+        self.session.add(asset)
+        self.session.commit()
+        self.session.refresh(asset)
+        
+        # Create VectorStatus records
+        self._create_vector_statuses(asset, vector_types)
+        
+        return asset

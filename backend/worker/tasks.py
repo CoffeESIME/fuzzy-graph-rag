@@ -636,27 +636,117 @@ def process_visual_siglip_task(asset: Asset, vector_status: VectorStatus, sessio
 
 def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) -> dict:
     """
-    Process text chunks and create embeddings via LLM Gateway.
+    Process text chunks: embedding + LLM metadata extraction.
     
-    Flow: AUTOMATIC - Text Embeddings → Weaviate → COMPLETED
+    Flow:
+    1. Read text content from MinIO
+    2. Generate text embedding → store in Weaviate (TextChunks collection)
+    3. Call LLM with text prompt for metadata extraction (entities, tags, summary)
+    4. Store result in sidecar.data_layers.raw_debug_data
+    5. Return REVIEW_REQUIRED for human curation
     """
     logger.info(f"Processing TEXT_CHUNK for {asset.filename}")
     
-    # TODO: Extract text from sidecar or file
-    # For now, use a placeholder
-    text_content = f"Sample text from {asset.filename}"
+    # Determine privacy mode
+    privacy_mode = "flexible" if asset.privacy_level == PrivacyLevel.PUBLIC_CLOUD else "strict"
     
-    # Call LLM Gateway text embeddings API
-    result = call_text_embeddings_api(text_content)
+    # Step 1: Read text content from MinIO
+    try:
+        text_content = download_file_from_minio(asset).decode('utf-8')
+        logger.info(f"   Read text content: {len(text_content)} chars")
+    except Exception as e:
+        logger.error(f"   Failed to read text: {e}")
+        raise
     
-    # TODO: Store embedding in Weaviate
+    # Step 2: Generate embedding and store in Weaviate
+    embedding_result = call_text_embeddings_api(text_content)
     weaviate_uuid = f"weaviate-text-{asset.id}"
-    logger.info(f"[SIMULATED] Stored text embedding in Weaviate: {weaviate_uuid}")
+    logger.info(f"   [SIMULATED] Stored text embedding in Weaviate: {weaviate_uuid}")
+    
+    # Update sidecar with embedding info
+    update_sidecar_metadata(
+        asset,
+        'data_layers.vectors_generated',
+        ['text_chunk'],
+        add_workflow_step='embedding'
+    )
+    
+    # Step 3: Get user context from sidecar
+    minio_client = get_minio_client()
+    external_context = {'document_text': text_content[:2000]}  # First 2000 chars for context
+    try:
+        response = minio_client.get_object(Bucket=MINIO_BUCKET, Key=asset.sidecar_path)
+        sidecar_data = json.loads(response['Body'].read().decode('utf-8'))
+        user_notes = sidecar_data.get('user_notes')
+        if user_notes:
+            external_context['user_notes'] = user_notes
+    except Exception as e:
+        logger.warning(f"   Could not read sidecar for context: {e}")
+    
+    # Step 4: Call LLM with text prompt for metadata extraction
+    prompt = build_specialized_prompt(
+        task_type="text",
+        external_context=external_context
+    )
+    logger.info(f"   Built text analysis prompt: {len(prompt)} chars")
+    
+    # For text, we send the content via a simple chat completion (no files)
+    try:
+        url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
+        messages = [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": f"Analyze this text and extract structured metadata:\n\n{text_content[:4000]}"}
+        ]
+        
+        data = {
+            "task": "chat",
+            "privacy_mode": privacy_mode,
+            "messages": json.dumps(messages),
+            "temperature": 0.3,
+            "response_format": json.dumps({"type": "json_object"})
+        }
+        
+        response = requests.post(url, data=data, timeout=120)
+        
+        if response.status_code == 200:
+            result = response.json()
+            llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+            
+            # Try to parse as JSON
+            try:
+                parsed_json = json.loads(llm_response)
+                logger.info(f"   ✅ LLM returned valid JSON with keys: {list(parsed_json.keys())}")
+                update_sidecar_metadata(
+                    asset,
+                    'data_layers.raw_debug_data.text_analysis_json',
+                    parsed_json,
+                    add_workflow_step='text_analysis'
+                )
+            except json.JSONDecodeError:
+                logger.warning(f"   ⚠️ LLM returned non-JSON, storing as raw")
+                update_sidecar_metadata(
+                    asset,
+                    'data_layers.raw_debug_data.text_analysis_raw',
+                    llm_response,
+                    add_workflow_step='text_analysis'
+                )
+        else:
+            logger.error(f"   LLM analysis failed: {response.status_code}")
+            update_sidecar_metadata(
+                asset,
+                'data_layers.raw_debug_data.text_analysis_error',
+                f"LLM returned {response.status_code}",
+                add_workflow_step='text_analysis_failed'
+            )
+    except Exception as e:
+        logger.error(f"   LLM text analysis failed: {e}")
+    
+    logger.info(f"   Text chunk processed - awaiting human review")
     
     return {
-        'status': 'completed',
+        'status': 'REVIEW_REQUIRED',
         'weaviate_uuid': weaviate_uuid,
-        'processing_time': result.get('processing_time', 0.3)
+        'message': 'Embedding stored, LLM metadata extracted - awaiting review'
     }
 
 

@@ -513,6 +513,119 @@ def render_send_button():
                 st.error("❌ Error al enviar archivos. Revisa los logs.")
 
 
+def render_text_ingest():
+    """Renderiza el formulario de ingesta de texto puro."""
+    st.subheader("📝 Ingesta de Texto")
+    st.markdown("""
+    Ingresa texto directamente al sistema. El texto se guardará en MinIO,
+    se creará un sidecar y las tareas quedarán en **ON_HOLD**.
+    """)
+    
+    # Formulario
+    with st.form("text_ingest_form"):
+        # Título
+        title = st.text_input(
+            "📌 Título (opcional)",
+            placeholder="Ej: Notas de la reunión, Ideas del proyecto...",
+            help="Se usará para generar el nombre del archivo"
+        )
+        
+        # Contenido principal
+        content = st.text_area(
+            "📄 Contenido del texto",
+            height=250,
+            placeholder="Escribe o pega aquí el texto que deseas guardar y analizar...",
+            help="El texto se guardará en master_records/texts/"
+        )
+        
+        # Notas adicionales
+        user_notes = st.text_area(
+            "💬 Notas adicionales (opcional)",
+            height=80,
+            placeholder="Contexto adicional, recordatorios, por qué es importante..."
+        )
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Vectores a aplicar
+            text_vectors = st.multiselect(
+                "🎯 Tipos de Vectorización",
+                options=["text_chunk", "user_memory"],
+                default=["text_chunk"],
+                format_func=lambda x: {
+                    "text_chunk": "📝 Fragmento de Texto - Búsqueda semántica",
+                    "user_memory": "🧠 Memoria de Usuario - Notas personales"
+                }.get(x, x),
+                help="Ambos tipos generarán un embedding y análisis LLM para metadatos"
+            )
+        
+        with col2:
+            # Nivel de privacidad
+            text_privacy = st.selectbox(
+                "🔐 Nivel de Privacidad",
+                options=PRIVACY_OPTS,
+                format_func=lambda x: "🔒 Estricto Local" if x == "strict_local" else "☁️ Nube Pública"
+            )
+        
+        # Contador de caracteres
+        if content:
+            st.caption(f"📊 {len(content):,} caracteres | {len(content.split()):,} palabras")
+        
+        # Botón de envío
+        submit_text = st.form_submit_button("🚀 Guardar Texto", type="primary", use_container_width=True)
+        
+        if submit_text:
+            # Validaciones
+            if not content or not content.strip():
+                st.error("❌ El contenido del texto no puede estar vacío.")
+            elif not text_vectors:
+                st.error("❌ Selecciona al menos un tipo de vectorización.")
+            else:
+                # Enviar al backend
+                with st.spinner("Guardando texto en el sistema..."):
+                    try:
+                        payload = {
+                            "content": content,
+                            "vector_types": text_vectors,
+                            "privacy_level": text_privacy
+                        }
+                        
+                        if title:
+                            payload["title"] = title
+                        if user_notes:
+                            payload["user_notes"] = user_notes
+                        
+                        response = requests.post(
+                            f"{API_BASE_URL}/ingest/text",
+                            json=payload,
+                            timeout=30
+                        )
+                        
+                        if response.status_code == 200:
+                            result = response.json()
+                            st.success(f"✅ {result.get('message', 'Texto guardado exitosamente!')}")
+                            
+                            # Mostrar detalles
+                            with st.expander("📋 Ver detalles del asset creado"):
+                                asset = result.get("asset", {})
+                                st.markdown(f"**ID:** `{asset.get('id')}`")
+                                st.markdown(f"**Archivo:** `{asset.get('filename')}`")
+                                st.markdown(f"**Ruta MinIO:** `{asset.get('minio_path')}`")
+                                st.markdown(f"**Sidecar:** `{asset.get('sidecar_path')}`")
+                                st.markdown(f"**Tareas creadas:** {asset.get('vector_tasks_created')}")
+                            
+                            st.info("💡 Las tareas están en ON_HOLD. Ve a 'Control de Tareas' para iniciar el procesamiento.")
+                        else:
+                            error_detail = response.json().get("detail", response.text)
+                            st.error(f"❌ Error del servidor: {error_detail}")
+                            
+                    except requests.exceptions.ConnectionError:
+                        st.error("❌ No se puede conectar al servidor. ¿Está corriendo el backend?")
+                    except Exception as e:
+                        st.error(f"❌ Error inesperado: {str(e)}")
+
+
 def render_task_dashboard():
     """Renderiza el dashboard de tareas en staging con matriz mejorada."""
     st.subheader("📊 Dashboard de Tareas ON_HOLD")
@@ -578,26 +691,35 @@ def main():
     with tab1:
         st.header("Ingesta y Agrupación de Archivos")
         
-        # Cargador
-        render_file_uploader()
+        # Subtabs para diferentes tipos de ingesta
+        ingest_subtab1, ingest_subtab2 = st.tabs(["📁 Archivos", "📝 Texto"])
         
-        st.markdown("---")
+        # --- SUBTAB: Archivos ---
+        with ingest_subtab1:
+            # Cargador
+            render_file_uploader()
+            
+            st.markdown("---")
+            
+            # Archivos sin asignar
+            render_ungrouped_files()
+            
+            st.markdown("---")
+            
+            # Constructor de grupos
+            render_group_builder()
+            
+            st.markdown("---")
+            
+            # Grupos listos
+            render_ready_groups()
+            
+            # Botón de envío
+            render_send_button()
         
-        # Archivos sin asignar
-        render_ungrouped_files()
-        
-        st.markdown("---")
-        
-        # Constructor de grupos
-        render_group_builder()
-        
-        st.markdown("---")
-        
-        # Grupos listos
-        render_ready_groups()
-        
-        # Botón de envío
-        render_send_button()
+        # --- SUBTAB: Texto ---
+        with ingest_subtab2:
+            render_text_ingest()
     
     # --- TAB 2: CONTROL DE TAREAS ---
     with tab2:

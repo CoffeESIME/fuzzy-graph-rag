@@ -126,3 +126,76 @@ async def health_check():
         "status": "healthy",
         "service": "ingestion"
     }
+
+
+# Import text ingest schemas
+from app.schemas import TextIngestRequest, TextIngestResponse
+
+
+@router.post("/text", response_model=TextIngestResponse)
+async def ingest_text(
+    request: TextIngestRequest,
+    session: Session = Depends(get_session)
+):
+    """
+    Ingest raw text content without file upload.
+    
+    **Philosophy:**
+    - For notes, ideas, text copied from other sources
+    - Text is stored in master_records/texts/{hash}.txt
+    - Sidecar created in master_records/sidecars/{hash}.json
+    - All tasks start in ON_HOLD state
+    
+    **Example request:**
+    ```json
+    {
+        "content": "Este es el texto que quiero guardar...",
+        "title": "Notas de reunión",
+        "vector_types": ["text_chunk", "user_memory"],
+        "privacy_level": "strict_local",
+        "user_notes": "Importante: contiene info confidencial"
+    }
+    ```
+    
+    **Args:**
+    - content: The raw text to ingest (required)
+    - title: Optional title (used for filename)
+    - vector_types: Which vectorizations to apply (default: text_chunk)
+    - privacy_level: Data governance level (default: strict_local)
+    - user_notes: Optional context notes
+    
+    **Returns:**
+    - TextIngestResponse with created asset info
+    """
+    # Process text ingestion
+    service = IngestService(session)
+    try:
+        asset = service.ingest_text(
+            content=request.content,
+            title=request.title,
+            vector_types=request.vector_types,
+            privacy_level=request.privacy_level,
+            user_notes=request.user_notes
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error ingesting text: {str(e)}"
+        )
+    
+    # Count vector tasks
+    vector_tasks_count = len(request.vector_types)
+    
+    return TextIngestResponse(
+        success=True,
+        message=f"Text ingested successfully as '{asset.filename}'",
+        asset=AssetResponse(
+            id=asset.id,
+            filename=asset.filename,
+            minio_path=asset.minio_path,
+            sidecar_path=asset.sidecar_path,
+            is_merged=False,
+            vector_tasks_created=vector_tasks_count,
+            created_at=asset.created_at
+        )
+    )

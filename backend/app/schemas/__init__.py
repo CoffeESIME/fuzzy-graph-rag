@@ -119,7 +119,7 @@ class TextIngestRequest(BaseModel):
     )
     vector_types: List[VectorType] = Field(
         default=[VectorType.TEXT_CHUNK],
-        description="Which AI intelligences to apply (text_chunk, user_memory, text_summary)"
+        description="Which AI intelligences to apply (text_chunk, user_memory). Both will generate embeddings and LLM metadata extraction."
     )
     privacy_level: PrivacyLevel = Field(
         default=PrivacyLevel.STRICT_LOCAL,
