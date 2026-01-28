@@ -11,8 +11,9 @@ import logging
 import requests
 import json
 import io
+import re
 from celery import Task
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
 from pathlib import Path
 
@@ -78,6 +79,95 @@ def get_privacy_mode(asset: Asset, force_strict: bool = False) -> str:
     else:
         return "flexible"
 
+
+def extract_json_from_llm_response(response: str) -> Tuple[Optional[Dict], str]:
+    """
+    Extract JSON from LLM response, handling common formatting issues.
+    
+    Many LLMs wrap their JSON responses in markdown code blocks or add
+    explanatory text before/after the JSON. This function cleans that up.
+    
+    Handles:
+    - Markdown code blocks (```json ... ``` or ``` ... ```)
+    - Leading/trailing whitespace
+    - Text before/after JSON object
+    - Nested JSON objects (finds the outermost one)
+    
+    Args:
+        response: Raw LLM response text
+        
+    Returns:
+        Tuple of (parsed_dict, status_message):
+        - If successful: (dict, "success")
+        - If failed: (None, "error description")
+    """
+    if not response or not response.strip():
+        return None, "Empty response"
+    
+    original_response = response
+    
+    # Step 1: Remove markdown code blocks
+    # Pattern: ```json\n...\n``` or ```\n...\n```
+    cleaned = response.strip()
+    
+    # Remove opening code block with optional language specifier
+    cleaned = re.sub(r'^```(?:json|JSON)?\s*\n?', '', cleaned)
+    # Remove closing code block
+    cleaned = re.sub(r'\n?```\s*$', '', cleaned)
+    cleaned = cleaned.strip()
+    
+    # Step 2: Try direct parse
+    try:
+        parsed = json.loads(cleaned)
+        if isinstance(parsed, dict):
+            logger.debug("   ✅ JSON parsed after markdown cleanup")
+            return parsed, "success"
+    except json.JSONDecodeError:
+        pass
+    
+    # Step 3: Try to extract JSON object from text
+    # Find the first { and last } to extract potential JSON
+    first_brace = cleaned.find('{')
+    last_brace = cleaned.rfind('}')
+    
+    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+        potential_json = cleaned[first_brace:last_brace + 1]
+        try:
+            parsed = json.loads(potential_json)
+            if isinstance(parsed, dict):
+                logger.debug("   ✅ JSON extracted from surrounding text")
+                return parsed, "success"
+        except json.JSONDecodeError:
+            pass
+    
+    # Step 4: Try regex to find JSON object pattern (handles nested braces)
+    # This is more aggressive - finds content between first { and matching }
+    try:
+        # Use a more sophisticated approach: count braces
+        depth = 0
+        start_idx = None
+        for i, char in enumerate(cleaned):
+            if char == '{':
+                if depth == 0:
+                    start_idx = i
+                depth += 1
+            elif char == '}':
+                depth -= 1
+                if depth == 0 and start_idx is not None:
+                    potential_json = cleaned[start_idx:i + 1]
+                    try:
+                        parsed = json.loads(potential_json)
+                        if isinstance(parsed, dict):
+                            logger.debug("   ✅ JSON extracted via brace matching")
+                            return parsed, "success"
+                    except json.JSONDecodeError:
+                        continue
+    except Exception as e:
+        logger.debug(f"   Brace matching failed: {e}")
+    
+    # Step 5: Return failure with context
+    preview = original_response[:200] + "..." if len(original_response) > 200 else original_response
+    return None, f"Could not extract valid JSON. Response preview: {preview}"
 
 def get_sidecar_data(asset: Asset) -> Optional[Dict[str, Any]]:
     """
@@ -289,6 +379,145 @@ def update_sidecar_metadata(
     except Exception as e:
         logger.error(f"Failed to update sidecar: {asset.sidecar_path} - {e}")
         raise
+
+
+def spawn_memory_asset(
+    memory_content: str,
+    parent_asset: Asset,
+    session
+) -> Optional[Asset]:
+    """
+    Create a new text Asset for user memory content.
+    
+    Replicates the `ingest_text` pattern from IngestService:
+    1. Hash the content for deduplication
+    2. Save text to master_records/texts/{hash}.txt
+    3. Create sidecar in master_records/sidecars/{hash}.json
+    4. Create Asset record
+    5. Create VectorStatus records (TEXT_SUMMARY, USER_MEMORY) in ON_HOLD
+    
+    Args:
+        memory_content: The user's note/memory text
+        parent_asset: The original asset this memory is associated with
+        session: Database session
+        
+    Returns:
+        Created Asset or None if content already exists
+    """
+    import hashlib
+    from datetime import datetime
+    from sqlmodel import select
+    from app.models import Asset, VectorStatus
+    from app.models.enums import VectorType, JobStatus, PrivacyLevel
+    
+    logger.info(f"   🧠 Spawning memory asset from {parent_asset.filename}")
+    
+    # Calculate hash of content
+    content_bytes = memory_content.encode('utf-8')
+    content_hash = hashlib.sha256(content_bytes).hexdigest()
+    
+    # Check for duplicate content
+    existing_asset = session.exec(
+        select(Asset).where(Asset.file_hash == content_hash)
+    ).first()
+    
+    if existing_asset:
+        logger.info(f"   ⚠️ Memory content already exists as asset {existing_asset.id}")
+        return None
+    
+    # Generate filename (with memory prefix and hash)
+    safe_parent_name = "".join(c for c in parent_asset.filename if c.isalnum() or c in (' ', '-', '_')).strip()
+    safe_parent_name = safe_parent_name.replace(' ', '_')[:30]
+    filename = f"memory_{safe_parent_name}_{content_hash[:8]}.txt"
+    
+    # Save to MinIO
+    minio_client = get_minio_client()
+    text_path = f"master_records/texts/{content_hash}.txt"
+    
+    minio_client.put_object(
+        Bucket=MINIO_BUCKET,
+        Key=text_path,
+        Body=content_bytes,
+        ContentType="text/plain; charset=utf-8"
+    )
+    logger.info(f"   ✅ Saved memory text to MinIO: {text_path}")
+    
+    # Create sidecar JSON
+    sidecar_path = f"master_records/sidecars/{content_hash}.json"
+    sidecar_data = {
+        "file_hash": content_hash,
+        "original_filename": filename,
+        "mime_type": "text/plain",
+        "size_bytes": len(content_bytes),
+        "upload_timestamp": datetime.utcnow().isoformat(),
+        "operation": "memory_spawn",
+        "user_notes": None,
+        "discard_original": False,
+        "vector_types": [VectorType.TEXT_SUMMARY.value, VectorType.USER_MEMORY.value],
+        "is_merged": False,
+        "source_files": [],
+        "parent_asset_id": str(parent_asset.id),
+        "parent_filename": parent_asset.filename,
+        "privacy_config": {
+            "level": PrivacyLevel.STRICT_LOCAL.value,
+            "locked": True,
+            "locked_reason": "User memory - always strict"
+        },
+        "workflow_state": {
+            "steps_completed": ["memory_spawned"],
+            "current_status": JobStatus.ON_HOLD.value
+        },
+        "data_layers": {
+            "intermediate_results": {},
+            "raw_debug_data": {}
+        },
+        "user_context": {
+            "content": memory_content,
+            "convert_to_memory": True
+        }
+    }
+    
+    sidecar_bytes = json.dumps(sidecar_data, indent=2, default=str).encode('utf-8')
+    minio_client.put_object(
+        Bucket=MINIO_BUCKET,
+        Key=sidecar_path,
+        Body=sidecar_bytes,
+        ContentType="application/json"
+    )
+    logger.info(f"   ✅ Created sidecar: {sidecar_path}")
+    
+    # Create Asset record
+    memory_asset = Asset(
+        filename=filename,
+        minio_path=text_path,
+        mime_type="text/plain",
+        size_bytes=len(content_bytes),
+        file_hash=content_hash,
+        is_merged=False,
+        original_deleted=False,
+        privacy_level=PrivacyLevel.STRICT_LOCAL.value,
+        sidecar_path=sidecar_path
+    )
+    
+    session.add(memory_asset)
+    session.commit()
+    session.refresh(memory_asset)
+    logger.info(f"   ✅ Created Asset record: {memory_asset.id}")
+    
+    # Create VectorStatus records in ON_HOLD
+    for vt in [VectorType.TEXT_SUMMARY, VectorType.USER_MEMORY]:
+        vs = VectorStatus(
+            asset_id=memory_asset.id,
+            vector_type=vt,
+            status=JobStatus.ON_HOLD
+        )
+        session.add(vs)
+    session.commit()
+    
+    logger.info(f"   ✅ Created VectorStatus records (TEXT_SUMMARY, USER_MEMORY) in ON_HOLD")
+    logger.info(f"   🧠 Memory asset spawned successfully: {memory_asset.filename}")
+    
+    return memory_asset
 
 
 # ==========================================
@@ -842,9 +1071,9 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
             result = response.json()
             llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
             
-            # Try to parse as JSON
-            try:
-                parsed_json = json.loads(llm_response)
+            # Try to parse as JSON using the helper function
+            parsed_json, status = extract_json_from_llm_response(llm_response)
+            if parsed_json:
                 logger.info(f"   ✅ LLM returned valid JSON with keys: {list(parsed_json.keys())}")
                 update_sidecar_metadata(
                     asset,
@@ -852,8 +1081,8 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
                     parsed_json,
                     add_workflow_step='text_analysis'
                 )
-            except json.JSONDecodeError:
-                logger.warning(f"   ⚠️ LLM returned non-JSON, storing as raw")
+            else:
+                logger.warning(f"   ⚠️ LLM: {status}")
                 update_sidecar_metadata(
                     asset,
                     'data_layers.raw_debug_data.text_analysis_raw',
@@ -965,9 +1194,9 @@ def process_visual_semantic_task(asset: Asset, vector_status: VectorStatus, sess
     if not generated_text:
         raise Exception("No content generated by LLM")
     
-    # Try to parse as JSON for validation
-    try:
-        parsed_json = json.loads(generated_text)
+    # Try to parse as JSON for validation using helper function
+    parsed_json, status = extract_json_from_llm_response(generated_text)
+    if parsed_json:
         logger.info(f"   ✅ LLM returned valid JSON with keys: {list(parsed_json.keys())}")
         # Store parsed JSON in raw_debug_data for now
         update_sidecar_metadata(
@@ -976,8 +1205,8 @@ def process_visual_semantic_task(asset: Asset, vector_status: VectorStatus, sess
             parsed_json,
             add_workflow_step='visual_semantic'
         )
-    except json.JSONDecodeError:
-        logger.warning(f"   ⚠️ LLM returned non-JSON text, storing as raw")
+    else:
+        logger.warning(f"   ⚠️ LLM: {status}")
         # Store raw text if not valid JSON
         update_sidecar_metadata(
             asset, 
@@ -1249,14 +1478,15 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
             generated_text = result.get('choices', [{}])[0].get('message', {}).get('content', '')
             
             if generated_text:
-                try:
-                    analysis_result = json.loads(generated_text)
+                parsed_json, status = extract_json_from_llm_response(generated_text)
+                if parsed_json:
+                    analysis_result = parsed_json
                     summary_text = analysis_result.get('summary', analysis_result.get('description', str(analysis_result)[:200]))
                     logger.info(f"   ✅ Vision LLM returned JSON with keys: {list(analysis_result.keys())}")
-                except json.JSONDecodeError:
+                else:
                     analysis_result = {"raw_response": generated_text}
                     summary_text = generated_text[:200]
-                    logger.warning(f"   ⚠️ Vision LLM returned non-JSON, storing raw")
+                    logger.warning(f"   ⚠️ Vision LLM: {status}")
             else:
                 raise Exception("No content generated by Vision LLM")
         
@@ -1307,14 +1537,15 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                 result = response.json()
                 llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
                 
-                try:
-                    analysis_result = json.loads(llm_response)
+                parsed_json, status = extract_json_from_llm_response(llm_response)
+                if parsed_json:
+                    analysis_result = parsed_json
                     summary_text = analysis_result.get('summary', analysis_result.get('description', str(analysis_result)[:200]))
                     logger.info(f"   ✅ Text LLM returned JSON with keys: {list(analysis_result.keys())}")
-                except json.JSONDecodeError:
+                else:
                     analysis_result = {"raw_response": llm_response}
                     summary_text = llm_response[:200]
-                    logger.warning(f"   ⚠️ Text LLM returned non-JSON")
+                    logger.warning(f"   ⚠️ Text LLM: {status}")
             else:
                 raise Exception(f"Text analysis LLM returned {response.status_code}")
         
@@ -1404,14 +1635,16 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                     result = response.json()
                     llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
                     
-                    try:
-                        analysis_result = json.loads(llm_response)
+                    parsed_json, status = extract_json_from_llm_response(llm_response)
+                    if parsed_json:
+                        analysis_result = parsed_json
                         # No longer duplicating transcript here
                         summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:200])
                         logger.info(f"   ✅ Audio LLM returned JSON with keys: {list(analysis_result.keys())}")
-                    except json.JSONDecodeError:
+                    else:
                         analysis_result = {"raw_response": llm_response}
                         summary_text = llm_response[:200]
+                        logger.warning(f"   ⚠️ Audio LLM: {status}")
                 else:
                     analysis_result = {"error": f"LLM returned {response.status_code}"}
                     summary_text = transcribed_text[:200]
@@ -1462,6 +1695,32 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
         )
         
         logger.info(f"   ✅ TEXT_SUMMARY completed: {summary_text[:100]}...")
+        
+        # ============================================
+        # SPAWN MEMORY ASSET (if convert_to_memory=True)
+        # ============================================
+        if user_context.get("convert_to_memory") and user_context.get("content"):
+            logger.info(f"   🧠 convert_to_memory=True - spawning memory asset...")
+            try:
+                memory_asset = spawn_memory_asset(
+                    memory_content=user_context["content"],
+                    parent_asset=asset,
+                    session=session
+                )
+                if memory_asset:
+                    logger.info(f"   🧠 Memory asset created: {memory_asset.filename}")
+                    # Record the spawned memory in parent sidecar
+                    update_sidecar_metadata(
+                        asset,
+                        'data_layers.spawned_memory_asset_id',
+                        str(memory_asset.id),
+                        add_workflow_step='memory_spawned'
+                    )
+                else:
+                    logger.info(f"   🧠 Memory already exists (duplicate content)")
+            except Exception as spawn_error:
+                logger.error(f"   ❌ Failed to spawn memory asset: {spawn_error}")
+                # Non-fatal - continue with main task
         
     except Exception as e:
         logger.error(f"   ❌ TEXT_SUMMARY processing error: {e}")
@@ -1612,8 +1871,8 @@ def process_audio_transcript_task(asset: Asset, vector_status: VectorStatus, ses
                 result = response.json()
                 llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
                 
-                try:
-                    parsed_json = json.loads(llm_response)
+                parsed_json, status = extract_json_from_llm_response(llm_response)
+                if parsed_json:
                     logger.info(f"   ✅ LLM extracted audio metadata: {list(parsed_json.keys())}")
                     update_sidecar_metadata(
                         asset,
@@ -1621,8 +1880,8 @@ def process_audio_transcript_task(asset: Asset, vector_status: VectorStatus, ses
                         parsed_json,
                         add_workflow_step='audio_analysis'
                     )
-                except json.JSONDecodeError:
-                    logger.warning(f"   ⚠️ LLM returned non-JSON, storing raw")
+                else:
+                    logger.warning(f"   ⚠️ LLM: {status}")
                     update_sidecar_metadata(
                         asset,
                         'data_layers.raw_debug_data.audio_analysis_raw',
@@ -1716,8 +1975,9 @@ def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session)
             result = response.json()
             llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
             
-            try:
-                analysis_result = json.loads(llm_response)
+            parsed_json, status = extract_json_from_llm_response(llm_response)
+            if parsed_json:
+                analysis_result = parsed_json
                 # Extract summary from graph_core or fall back to description
                 summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:500])
                 
@@ -1730,8 +1990,8 @@ def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session)
                     analysis_result,
                     add_workflow_step='memory_analysis'
                 )
-            except json.JSONDecodeError:
-                logger.warning(f"   ⚠️ LLM returned non-JSON, storing raw")
+            else:
+                logger.warning(f"   ⚠️ LLM: {status}")
                 analysis_result = {"raw_response": llm_response}
                 summary_text = llm_response[:500]
                 
