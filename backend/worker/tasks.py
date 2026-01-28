@@ -1354,9 +1354,16 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                 add_workflow_step='audio_transcript'
             )
             
+            # Check if transcription/lyrics are valid (not a system error message)
+            is_valid_transcript = (
+                transcribed_text 
+                and not transcribed_text.startswith("[Transcription failed") 
+                and not transcribed_text.startswith("[No transcription available")
+            )
+
             # Build context for audio analysis
             external_context = {}
-            if transcribed_text and not transcribed_text.startswith("["):
+            if is_valid_transcript:
                 external_context['lyrics_or_speech'] = transcribed_text
             
             if audio_options.get("is_voice_note"):
@@ -1376,7 +1383,7 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
             )
             logger.info(f"   Built audio analysis prompt: {len(prompt)} chars")
             
-            if transcribed_text and not transcribed_text.startswith("["):
+            if is_valid_transcript:
                 url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
                 messages = [
                     {"role": "system", "content": prompt},
@@ -1399,17 +1406,17 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                     
                     try:
                         analysis_result = json.loads(llm_response)
-                        analysis_result['transcript'] = transcribed_text
-                        summary_text = analysis_result.get('summary', transcribed_text[:200])
+                        # No longer duplicating transcript here
+                        summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:200])
                         logger.info(f"   ✅ Audio LLM returned JSON with keys: {list(analysis_result.keys())}")
                     except json.JSONDecodeError:
-                        analysis_result = {"raw_response": llm_response, "transcript": transcribed_text}
+                        analysis_result = {"raw_response": llm_response}
                         summary_text = llm_response[:200]
                 else:
-                    analysis_result = {"transcript": transcribed_text, "error": f"LLM returned {response.status_code}"}
+                    analysis_result = {"error": f"LLM returned {response.status_code}"}
                     summary_text = transcribed_text[:200]
             else:
-                analysis_result = {"transcript": transcribed_text}
+                analysis_result = {}
                 summary_text = transcribed_text[:200] if transcribed_text else "Audio file (no transcript)"
         
         # ============================================
@@ -1638,16 +1645,14 @@ def process_audio_transcript_task(asset: Asset, vector_status: VectorStatus, ses
 
 def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session) -> dict:
     """
-    Process user memory/notes - stores personal context in Weaviate UserMemory collection.
+    Process user memory/notes - extracts insights for UserMemory.
     
-    USER_MEMORY tasks are ALWAYS processed with STRICT privacy mode.
-    
-    Flow:
-    1. Read user_context from sidecar
-    2. Generate text embedding of user context → store in Weaviate (UserMemory collection)
-    3. Call LLM with strict mode for metadata extraction (tags, entities, summary)
+    Flow (Modified):
+    1. Read user_context/notes
+    2. Call LLM (STRICT mode) for metadata extraction & summary
+    3. Save generated summary/insight to MinIO as .txt
     4. Store analysis in sidecar
-    5. Return COMPLETED
+    5. Return REVIEW_REQUIRED (Human must approve before Weaviate storage)
     """
     logger.info(f"Processing USER_MEMORY for {asset.filename}")
     
@@ -1674,21 +1679,9 @@ def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session)
     else:
         memory_content = user_context["content"]
     
-    logger.info(f"   📝 Memory content: {len(memory_content)} chars")
+    logger.info(f"   📝 Memory content source: {len(memory_content)} chars")
     
-    # Step 1: Generate embedding of memory content
-    try:
-        embedding_result = call_text_embeddings_api(memory_content)
-        logger.info(f"   ✅ Generated embedding for memory content")
-    except Exception as e:
-        logger.error(f"   ❌ Failed to generate embedding: {e}")
-        raise
-    
-    # Step 2: Store in Weaviate UserMemory collection
-    weaviate_uuid = f"weaviate-memory-{asset.id}-{vector_status.id}"
-    logger.info(f"   [SIMULATED] Stored in Weaviate UserMemory: {weaviate_uuid}")
-    
-    # Step 3: Call LLM for metadata extraction (always strict)
+    # Step 1: Call LLM for metadata extraction & Summary (always strict)
     external_context = {
         'user_memory': memory_content,
         'associated_file': asset.filename
@@ -1699,11 +1692,14 @@ def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session)
         external_context=external_context
     )
     
+    analysis_result = {}
+    summary_text = ""
+    
     try:
         url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
         messages = [
             {"role": "system", "content": prompt},
-            {"role": "user", "content": f"Extract metadata from this personal memory/note:\n\n{memory_content[:4000]}"}
+            {"role": "user", "content": f"Extract structured metadata and a clear summary from this personal memory/note:\n\n{memory_content[:4000]}"}
         ]
         
         data = {
@@ -1721,16 +1717,24 @@ def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session)
             llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
             
             try:
-                parsed_json = json.loads(llm_response)
-                logger.info(f"   ✅ LLM extracted metadata: {list(parsed_json.keys())}")
+                analysis_result = json.loads(llm_response)
+                # Extract summary from graph_core or fall back to description
+                summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:500])
+                
+                logger.info(f"   ✅ LLM extracted metadata: {list(analysis_result.keys())}")
+                
+                # Update sidecar with JSON analysis
                 update_sidecar_metadata(
                     asset,
                     'data_layers.raw_debug_data.memory_analysis_json',
-                    parsed_json,
+                    analysis_result,
                     add_workflow_step='memory_analysis'
                 )
             except json.JSONDecodeError:
                 logger.warning(f"   ⚠️ LLM returned non-JSON, storing raw")
+                analysis_result = {"raw_response": llm_response}
+                summary_text = llm_response[:500]
+                
                 update_sidecar_metadata(
                     asset,
                     'data_layers.raw_debug_data.memory_analysis_raw',
@@ -1739,14 +1743,44 @@ def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session)
                 )
         else:
             logger.warning(f"   ⚠️ LLM call failed: {response.status_code}")
+            analysis_result = {"error": f"LLM returned {response.status_code}"}
+            summary_text = f"Error processing memory: LLM {response.status_code}"
+            
     except Exception as e:
         logger.warning(f"   ⚠️ LLM analysis failed (non-fatal): {e}")
-    
-    logger.info(f"   ✅ USER_MEMORY processed successfully")
+        summary_text = f"Error analyzing memory: {str(e)}"
+
+    # Step 2: Save generated summary to MinIO (as requested)
+    if summary_text:
+        try:
+            minio_client = get_minio_client()
+            memory_filename = f"processed/memories/memory_{asset.file_hash[:8]}.txt"
+            
+            minio_client.put_object(
+                Bucket=MINIO_BUCKET,
+                Key=memory_filename,
+                Body=summary_text.encode('utf-8'),
+                ContentType='text/plain'
+            )
+            logger.info(f"   ✅ Saved memory summary to MinIO: {memory_filename}")
+            
+            # Link this file in sidecar
+            update_sidecar_metadata(
+                asset,
+                'data_layers.intermediate_results.memory_summary_path',
+                memory_filename,
+                add_workflow_step='memory_file_generated'
+            )
+        except Exception as e:
+            logger.error(f"   ❌ Failed to save memory summary to MinIO: {e}")
+
+    # Step 3: Return REVIEW_REQUIRED (Deferring Weaviate embedding/storage)
+    logger.info(f"   ✅ USER_MEMORY analyzed - awaiting human review")
     
     return {
-        'status': 'COMPLETED',
-        'weaviate_uuid': weaviate_uuid,
-        'processing_time': 1.0
+        'status': 'REVIEW_REQUIRED',
+        'weaviate_uuid': None,
+        'processing_time': 3.0,
+        'message': 'Memory analyzed and drafted. Review required before storage.'
     }
 

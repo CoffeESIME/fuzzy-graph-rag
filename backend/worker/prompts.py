@@ -49,7 +49,7 @@ def build_specialized_prompt(
         "type": "Micro-Category (English preferred, e.g., 'Genre', 'Emotion')",
         "domain": "Macro-Area (English preferred, e.g., 'Arts', 'Math')",
         "definition": "Breve contexto para desambiguar",
-        "confidence": "<float 0.0-1.0>"
+        "confidence": "<float 0.0-1.0>",
         "reasoning": "Breve explicación de por qué se eligió este concepto y esta confianza (Español)"
     }
 
