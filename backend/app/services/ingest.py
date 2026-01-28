@@ -327,11 +327,22 @@ class IngestService:
         """
         Create VectorStatus records for each vector type in ON_HOLD state.
         
+        TEXT_SUMMARY is ALWAYS added as the first task (mandatory prerequisite).
+        Other tasks cannot be dispatched until TEXT_SUMMARY is COMPLETED.
+        
         Args:
             asset: The asset to create statuses for
-            vector_types: List of VectorType enums
+            vector_types: List of VectorType enums (user-selected)
         """
-        for vector_type in vector_types:
+        from app.models.enums import VectorType
+        
+        # TEXT_SUMMARY is ALWAYS required as the first task
+        all_types = [VectorType.TEXT_SUMMARY]
+        for vt in vector_types:
+            if vt != VectorType.TEXT_SUMMARY:  # Avoid duplicates
+                all_types.append(vt)
+        
+        for vector_type in all_types:
             status = VectorStatus(
                 asset_id=asset.id,
                 vector_type=vector_type,
@@ -370,6 +381,7 @@ class IngestService:
             Created Asset instance
         """
         from app.models.enums import VectorType
+        from sqlmodel import select
         
         # Default vector types
         if vector_types is None:
@@ -378,6 +390,15 @@ class IngestService:
         # Calculate hash of content
         content_bytes = content.encode('utf-8')
         content_hash = hashlib.sha256(content_bytes).hexdigest()
+        
+        # Check for duplicate content BEFORE uploading to MinIO
+        existing_asset = self.session.exec(
+            select(Asset).where(Asset.file_hash == content_hash)
+        ).first()
+        
+        if existing_asset:
+            # Content already exists, return existing asset
+            return existing_asset
         
         # Generate filename
         if title:

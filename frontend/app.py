@@ -38,7 +38,6 @@ VECTOR_OPTS = [
     "audio_clap",
     "audio_transcript",
     "text_chunk",
-    "text_summary",
     "user_memory"
 ]
 

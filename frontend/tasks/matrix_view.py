@@ -21,7 +21,6 @@ ALL_VECTOR_TYPES = [
     "audio_clap",
     "audio_transcript",
     "text_chunk",
-    "text_summary",
     "user_memory"
 ]
 

@@ -50,6 +50,7 @@ def build_specialized_prompt(
         "domain": "Macro-Area (English preferred, e.g., 'Arts', 'Math')",
         "definition": "Breve contexto para desambiguar",
         "confidence": "<float 0.0-1.0>"
+        "reasoning": "Breve explicación de por qué se eligió este concepto y esta confianza (Español)"
     }
 
     # Core Graph Data (Neo4j Nodes)
@@ -141,11 +142,13 @@ RULES FOR INTERPRETING USER CONTEXT:
     prompt = f"""You are a GraphRAG Data Extractor.
 Analyze the {task_type.upper()} input and output a valid JSON.
 
-LANGUAGE RULES (STRICT):
-1. **JSON KEYS:** Must be in **ENGLISH** (e.g., use "lighting", NOT "iluminacion").
-2. **JSON VALUES:** Must be in **SPANISH** (or the file's original language) to preserve semantic meaning.
-   - Exception: 'type' and 'domain' in concepts should preferably be in English for standardization.
-
+LANGUAGE & FORMAT RULES (STRICT):
+1. **JSON KEYS:** Must be strictly **ENGLISH**.
+2. **STRUCTURAL VALUES (Types/Domains):** Must be **ENGLISH** (Standardized Taxonomy).
+   - BAD: "type": "Sentimiento", "domain": "Psicología"
+   - GOOD: "type": "Sentiment", "domain": "Psychology"
+3. **CONTENT VALUES (Names, Descriptions, Summaries):** Must be **SPANISH** (or original language).
+   - This allows you to capture the nuance of the user's native language.
 OUTPUT SCHEMA (Follow this structure exactly):
 {json.dumps(target_schema, indent=2)}
 

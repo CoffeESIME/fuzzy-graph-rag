@@ -172,7 +172,6 @@ def seed_neo4j():
     # Constraints (Integridad de Datos)
     constraints = [
         "CREATE CONSTRAINT asset_hash_unique IF NOT EXISTS FOR (n:DigitalAsset) REQUIRE n.file_hash IS UNIQUE",
-        "CREATE CONSTRAINT person_name_unique IF NOT EXISTS FOR (n:Person) REQUIRE n.name IS UNIQUE",
         "CREATE CONSTRAINT location_name_unique IF NOT EXISTS FOR (n:Location) REQUIRE n.name IS UNIQUE",
         "CREATE CONSTRAINT tag_name_unique IF NOT EXISTS FOR (n:Tag) REQUIRE n.name IS UNIQUE",
         "CREATE CONSTRAINT concept_name_unique IF NOT EXISTS FOR (n:Concept) REQUIRE n.name IS UNIQUE",

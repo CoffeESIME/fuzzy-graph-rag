@@ -14,7 +14,8 @@ from typing import List, Dict, Any, Callable, Optional
 # CONSTANTS
 # ==========================================
 
-AUDIO_TRANSCRIPT_TYPES = ["audio_transcript"]
+# TEXT_SUMMARY is the mandatory first task that handles audio analysis
+TEXT_SUMMARY_TYPES = ["text_summary"]
 
 STATUS_ICONS = {
     "ON_HOLD": "⏸️",
@@ -152,7 +153,7 @@ def _render_single_task_editor(task: Dict[str, Any]) -> None:
     """
     vs_id = task["vector_status_id"]
     vector_type = task["vector_type"]
-    is_audio_transcript = vector_type in AUDIO_TRANSCRIPT_TYPES
+    is_text_summary = vector_type in TEXT_SUMMARY_TYPES
     
     # Initialize state for this task
     if vs_id not in st.session_state.task_metadata_state:
@@ -215,7 +216,9 @@ def _render_single_task_editor(task: Dict[str, Any]) -> None:
             # ==========================================
             # AUDIO PROCESSING OPTIONS (only for AUDIO_TRANSCRIPT)
             # ==========================================
-            if is_audio_transcript:
+            # Show audio options for text_summary if the asset is an audio file
+            is_audio_file = task.get("mime_type", "").startswith("audio/")
+            if is_text_summary and is_audio_file:
                 st.markdown("---")
                 st.markdown("##### 🎵 Opciones de Procesamiento de Audio")
                 

@@ -465,6 +465,21 @@ async def dispatch_tasks(
         else:
             return "fast_cpu"  # Default for audio, memory, etc.
     
+    # Helper: Check if TEXT_SUMMARY is approved (COMPLETED) for an asset
+    # TEXT_SUMMARY is a mandatory prerequisite for all other tasks
+    # It starts as REVIEW_REQUIRED after LLM analysis, then user approves → COMPLETED
+    def is_text_summary_approved(asset_id) -> bool:
+        """Check if TEXT_SUMMARY task has been approved (COMPLETED) for the given asset."""
+        stmt = select(VectorStatus).where(
+            VectorStatus.asset_id == asset_id,
+            VectorStatus.vector_type == VectorType.TEXT_SUMMARY,
+            VectorStatus.status == JobStatus.COMPLETED
+        )
+        return session.exec(stmt).first() is not None
+    
+    # Cache for TEXT_SUMMARY status per asset to avoid repeated DB queries
+    text_summary_status_cache = {}
+    
     # Validate request - at least one dispatch mode must be provided
     if not request.dispatch_all and not request.vector_status_ids and not request.asset_ids:
         raise HTTPException(
@@ -594,6 +609,18 @@ async def dispatch_tasks(
         logger.info(f"   Asset: {asset.filename}")
         logger.info(f"   VectorType: {vector_status.vector_type}")
         logger.info(f"   Privacy: {asset.privacy_level}")
+        
+        # TEXT_SUMMARY prerequisite check for non-TEXT_SUMMARY tasks
+        if vector_status.vector_type != VectorType.TEXT_SUMMARY:
+            # Check cache first
+            asset_id_str = str(asset.id)
+            if asset_id_str not in text_summary_status_cache:
+                text_summary_status_cache[asset_id_str] = is_text_summary_approved(asset.id)
+            
+            if not text_summary_status_cache[asset_id_str]:
+                logger.warning(f"   ⚠️ SKIPPING: TEXT_SUMMARY not approved for this asset")
+                logger.warning(f"      → TEXT_SUMMARY must be reviewed and approved before other tasks")
+                continue
         
         # Check if we have metadata for this task
         task_meta = metadata_lookup.get(str(vector_status.id))
