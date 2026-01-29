@@ -28,6 +28,10 @@ class Asset(SQLModel, table=True):
     # --- CONTROL FLAGS ---
     is_merged: bool = Field(default=False, description="True if this asset is a fusion of multiple files")
     original_deleted: bool = Field(default=False, description="True if binary was deleted after data extraction")
+    requires_user_memory: bool = Field(
+        default=False, 
+        description="True if asset requires user memory context before TEXT_SUMMARY can complete"
+    )
     
     # --- PRIVACY & GOVERNANCE ---
     privacy_level: str = Field(

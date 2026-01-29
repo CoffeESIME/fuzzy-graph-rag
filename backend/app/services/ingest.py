@@ -11,7 +11,7 @@ import uuid
 import json
 from datetime import datetime
 
-from app.models import Asset, VectorStatus, JobStatus, PrivacyLevel
+from app.models import Asset, VectorStatus, JobStatus, PrivacyLevel, VectorType
 from app.schemas import UploadGroup, ProcessingOperation
 from app.schemas.sidecar import SidecarMetadata, PrivacyConfig, WorkflowState, DataLayers, IntermediateResults
 from shared.clients import get_minio_client
@@ -181,7 +181,8 @@ class IngestService:
                 steps_completed=["upload"],
                 current_status=JobStatus.ON_HOLD
             ),
-            data_layers=DataLayers()
+            data_layers=DataLayers(),
+            requires_user_memory=VectorType.USER_MEMORY_REQUIRED in group.vector_types
         )
         
         self.s3.put_object(
@@ -200,6 +201,7 @@ class IngestService:
             file_hash=file_hash,
             is_merged=False,
             original_deleted=False,  # Will be updated by worker if discard_original=True
+            requires_user_memory=VectorType.USER_MEMORY_REQUIRED in group.vector_types,
             privacy_level=group.privacy_level,
             sidecar_path=sidecar_path
         )
@@ -287,7 +289,8 @@ class IngestService:
                 steps_completed=["upload", "file_grouping"],
                 current_status=JobStatus.ON_HOLD
             ),
-            data_layers=DataLayers()
+            data_layers=DataLayers(),
+            requires_user_memory=VectorType.USER_MEMORY_REQUIRED in group.vector_types
         )
         
         self.s3.put_object(
@@ -306,6 +309,7 @@ class IngestService:
             file_hash=merged_hash,
             is_merged=True,
             original_deleted=False,  # Will be updated by worker after OCR
+            requires_user_memory=VectorType.USER_MEMORY_REQUIRED in group.vector_types,
             privacy_level=group.privacy_level,
             sidecar_path=sidecar_path
         )

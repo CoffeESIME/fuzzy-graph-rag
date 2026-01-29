@@ -200,7 +200,7 @@ def get_user_context_from_sidecar(sidecar_data: Optional[Dict]) -> Dict[str, Any
     if not sidecar_data:
         return {"content": None, "convert_to_memory": False, "force_strict": False}
     
-    user_context = sidecar_data.get("user_context", {})
+    user_context = sidecar_data.get("user_context") or {}
     content = user_context.get("content")
     convert_to_memory = user_context.get("convert_to_memory", False)
     
@@ -894,6 +894,12 @@ def process_vector_task(self, vector_status_id: str):
             vector_status.status = JobStatus.REVIEW_REQUIRED
             logger.info(f"✅ VectorStatus {vector_status_id} moved to REVIEW_REQUIRED")
             logger.info(f"   → Human review needed before Weaviate insertion")
+        elif final_status == 'waiting_user_input':
+            # Asset requires user memory but none provided
+            vector_status.status = JobStatus.REVIEW_REQUIRED
+            vector_status.error_message = result.get('message', 'User memory input required')
+            logger.info(f"⏸️ VectorStatus {vector_status_id} WAITING FOR USER INPUT")
+            logger.info(f"   → User must provide memory context to continue")
         else:
             vector_status.status = JobStatus.COMPLETED
             vector_status.weaviate_uuid = result.get('weaviate_uuid')
@@ -1427,6 +1433,16 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
     # Get sidecar data and user context
     sidecar_data = get_sidecar_data(asset)
     user_context = get_user_context_from_sidecar(sidecar_data)
+    
+    # Check if this asset requires mandatory user memory but none provided
+    # Read from Asset model (SQL database)
+    if asset.requires_user_memory and not user_context.get("content"):
+        logger.info(f"   ⏸️ Asset requires user memory but none provided - setting to REVIEW_REQUIRED")
+        return {
+            "status": "waiting_user_input",
+            "requires_user_memory_input": True,
+            "message": "Asset requires user memory context before processing can continue"
+        }
     
     # Determine privacy mode
     privacy_mode = get_privacy_mode(asset, force_strict=user_context["force_strict"])

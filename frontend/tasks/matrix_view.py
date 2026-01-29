@@ -15,13 +15,15 @@ from typing import List, Dict, Any, Optional
 # ==========================================
 
 ALL_VECTOR_TYPES = [
+    "text_summary",  # Mandatory first task for all assets
     "visual_siglip",
     "visual_semantic", 
     "text_ocr",
     "audio_clap",
     "audio_transcript",
     "text_chunk",
-    "user_memory"
+    "user_memory",  # For text-based memories
+    "user_memory_required"  # Marker: File requires user memory context
 ]
 
 STATUS_ICONS = {

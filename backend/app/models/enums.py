@@ -58,3 +58,5 @@ class VectorType(str, Enum):
     TEXT_CHUNK = "text_chunk"               # TextSpace (Documents, articles)
     TEXT_SUMMARY = "text_summary"           # Summary text (Property, not vector)
     USER_MEMORY = "user_memory"             # MemorySpace (User notes, context)
+    USER_MEMORY_REQUIRED = "user_memory_required"  # Marker: File requires user memory context (ON_HOLD until provided)
+

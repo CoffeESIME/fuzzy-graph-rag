@@ -38,7 +38,7 @@ VECTOR_OPTS = [
     "audio_clap",
     "audio_transcript",
     "text_chunk",
-    "user_memory"
+    "user_memory_required"  # Marks file as requiring user memory context
 ]
 
 OPERATION_OPTS = ["standard", "merge_ocr"]
