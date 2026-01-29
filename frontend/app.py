@@ -525,6 +525,22 @@ def render_text_ingest():
     
     # Formulario
     with st.form("text_ingest_form"):
+        # Selector de modo: Texto normal vs Memoria de usuario
+        st.markdown("##### Tipo de Contenido")
+        is_user_memory = st.toggle(
+            "🧠 Memoria de Usuario",
+            value=False,
+            help="Activa para notas personales. Fuerza privacidad STRICT_LOCAL y usa prefijo 'memory_'"
+        )
+        
+        # Mostrar modo actual
+        if is_user_memory:
+            st.info("🧠 **Modo Memoria:** Archivo con prefijo `memory_`, privacidad STRICT_LOCAL, tipo USER_MEMORY")
+        else:
+            st.info("📝 **Modo Texto:** Archivo con prefijo `text_`, tipo TEXT_CHUNK para búsqueda semántica")
+        
+        st.markdown("---")
+        
         # Título
         title = st.text_input(
             "📌 Título (opcional)",
@@ -547,28 +563,16 @@ def render_text_ingest():
             placeholder="Contexto adicional, recordatorios, por qué es importante..."
         )
         
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Vectores a aplicar
-            text_vectors = st.multiselect(
-                "🎯 Tipos de Vectorización",
-                options=["text_chunk", "user_memory"],
-                default=["text_chunk"],
-                format_func=lambda x: {
-                    "text_chunk": "📝 Fragmento de Texto - Búsqueda semántica",
-                    "user_memory": "🧠 Memoria de Usuario - Notas personales"
-                }.get(x, x),
-                help="Ambos tipos generarán un embedding y análisis LLM para metadatos"
-            )
-        
-        with col2:
-            # Nivel de privacidad
+        # Nivel de privacidad (solo para texto normal)
+        if not is_user_memory:
             text_privacy = st.selectbox(
                 "🔐 Nivel de Privacidad",
                 options=PRIVACY_OPTS,
                 format_func=lambda x: "🔒 Estricto Local" if x == "strict_local" else "☁️ Nube Pública"
             )
+        else:
+            st.caption("🔒 Privacidad forzada a **Estricto Local** para memorias de usuario")
+            text_privacy = "strict_local"
         
         # Contador de caracteres
         if content:
@@ -581,15 +585,13 @@ def render_text_ingest():
             # Validaciones
             if not content or not content.strip():
                 st.error("❌ El contenido del texto no puede estar vacío.")
-            elif not text_vectors:
-                st.error("❌ Selecciona al menos un tipo de vectorización.")
             else:
                 # Enviar al backend
                 with st.spinner("Guardando texto en el sistema..."):
                     try:
                         payload = {
                             "content": content,
-                            "vector_types": text_vectors,
+                            "is_user_memory": is_user_memory,
                             "privacy_level": text_privacy
                         }
                         

@@ -358,10 +358,15 @@ class IngestService:
         title: str = None,
         vector_types: List = None,
         privacy_level: PrivacyLevel = PrivacyLevel.STRICT_LOCAL,
-        user_notes: str = None
+        user_notes: str = None,
+        is_user_memory: bool = False
     ) -> Asset:
         """
         Ingest raw text content (no file upload).
+        
+        Supports two modes:
+        - Regular text (is_user_memory=False): prefix 'text_', default vector [TEXT_CHUNK]
+        - User memory (is_user_memory=True): prefix 'memory_', vector [USER_MEMORY], STRICT_LOCAL
         
         Flow:
         1. Hash the content for deduplication
@@ -373,9 +378,10 @@ class IngestService:
         Args:
             content: The raw text content
             title: Optional title (used for filename)
-            vector_types: List of VectorType enums (default: [TEXT_CHUNK])
-            privacy_level: Privacy level for governance
+            vector_types: List of VectorType enums (default based on is_user_memory)
+            privacy_level: Privacy level for governance (overridden to STRICT_LOCAL for memories)
             user_notes: Optional user notes/context
+            is_user_memory: If True, treat as user memory with stricter handling
             
         Returns:
             Created Asset instance
@@ -383,9 +389,23 @@ class IngestService:
         from app.models.enums import VectorType
         from sqlmodel import select
         
-        # Default vector types
+        # Determine vector types based on memory flag
         if vector_types is None:
-            vector_types = [VectorType.TEXT_CHUNK]
+            if is_user_memory:
+                vector_types = [VectorType.USER_MEMORY]
+            else:
+                vector_types = [VectorType.TEXT_CHUNK]
+        
+        # Force privacy for user memories
+        if is_user_memory:
+            privacy_level = PrivacyLevel.STRICT_LOCAL
+            privacy_locked = True
+            privacy_reason = "User memory - always strict"
+            operation = "memory_ingest"
+        else:
+            privacy_locked = False
+            privacy_reason = None
+            operation = "text_ingest"
         
         # Calculate hash of content
         content_bytes = content.encode('utf-8')
@@ -400,14 +420,15 @@ class IngestService:
             # Content already exists, return existing asset
             return existing_asset
         
-        # Generate filename
+        # Generate filename with appropriate prefix
+        prefix = "memory_" if is_user_memory else "text_"
         if title:
             # Sanitize title for filename
             safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).strip()
             safe_title = safe_title.replace(' ', '_')[:50]
-            filename = f"{safe_title}_{content_hash[:8]}.txt"
+            filename = f"{prefix}{safe_title}_{content_hash[:8]}.txt"
         else:
-            filename = f"text_{content_hash[:8]}.txt"
+            filename = f"{prefix}{content_hash[:8]}.txt"
         
         # Save text to MinIO: master_records/texts/{hash}.txt
         text_path = f"master_records/texts/{content_hash}.txt"
@@ -426,7 +447,7 @@ class IngestService:
             mime_type="text/plain",
             size_bytes=len(content_bytes),
             upload_timestamp=datetime.utcnow(),
-            operation="text_ingest",
+            operation=operation,
             user_notes=user_notes,
             discard_original=False,
             vector_types=[vt.value for vt in vector_types],
@@ -434,7 +455,8 @@ class IngestService:
             source_files=[],
             privacy_config=PrivacyConfig(
                 level=privacy_level,
-                locked=False
+                locked=privacy_locked,
+                locked_reason=privacy_reason
             ),
             workflow_state=WorkflowState(
                 steps_completed=["upload"],
@@ -442,7 +464,8 @@ class IngestService:
             ),
             data_layers=DataLayers(
                 intermediate_results=IntermediateResults()
-            )
+            ),
+            user_context={"content": content, "convert_to_memory": True} if is_user_memory else None
         )
         
         self.s3.put_object(
@@ -473,3 +496,4 @@ class IngestService:
         self._create_vector_statuses(asset, vector_types)
         
         return asset
+

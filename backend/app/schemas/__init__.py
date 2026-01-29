@@ -100,11 +100,16 @@ class TextIngestRequest(BaseModel):
     """
     Request schema for raw text ingestion (no file upload).
     
+    Two modes:
+    - Regular text (is_user_memory=False): prefix 'text_', default vector [TEXT_CHUNK]
+    - User memory (is_user_memory=True): prefix 'memory_', vector [USER_MEMORY], STRICT_LOCAL
+    
     Example:
     {
         "content": "Este es el texto que quiero guardar y analizar...",
         "title": "Notas de reunión",
-        "vector_types": ["text_chunk", "user_memory"],
+        "is_user_memory": false,
+        "vector_types": ["text_chunk"],
         "privacy_level": "strict_local",
         "user_notes": "Notas de la reunión del lunes"
     }
@@ -117,13 +122,17 @@ class TextIngestRequest(BaseModel):
         default=None,
         description="Optional title for the text (used for filename)"
     )
-    vector_types: List[VectorType] = Field(
-        default=[VectorType.TEXT_CHUNK],
-        description="Which AI intelligences to apply (text_chunk, user_memory). Both will generate embeddings and LLM metadata extraction."
+    is_user_memory: bool = Field(
+        default=False,
+        description="If True, treat as user memory (memory_ prefix, USER_MEMORY vector, STRICT_LOCAL privacy)"
+    )
+    vector_types: Optional[List[VectorType]] = Field(
+        default=None,
+        description="Which AI intelligences to apply. Default: TEXT_CHUNK for texts, USER_MEMORY for memories."
     )
     privacy_level: PrivacyLevel = Field(
         default=PrivacyLevel.STRICT_LOCAL,
-        description="Data governance level"
+        description="Data governance level (overridden to STRICT_LOCAL for memories)"
     )
     user_notes: Optional[str] = Field(
         default=None,

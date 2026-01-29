@@ -175,7 +175,8 @@ async def ingest_text(
             title=request.title,
             vector_types=request.vector_types,
             privacy_level=request.privacy_level,
-            user_notes=request.user_notes
+            user_notes=request.user_notes,
+            is_user_memory=request.is_user_memory
         )
     except Exception as e:
         raise HTTPException(
@@ -183,8 +184,8 @@ async def ingest_text(
             detail=f"Error ingesting text: {str(e)}"
         )
     
-    # Count vector tasks
-    vector_tasks_count = len(request.vector_types)
+    # Count vector tasks (if None, defaults are applied in service: 1 type + TEXT_SUMMARY)
+    vector_tasks_count = len(request.vector_types) + 1 if request.vector_types else 2
     
     return TextIngestResponse(
         success=True,

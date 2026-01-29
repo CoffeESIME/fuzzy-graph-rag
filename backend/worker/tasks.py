@@ -1481,7 +1481,8 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                 parsed_json, status = extract_json_from_llm_response(generated_text)
                 if parsed_json:
                     analysis_result = parsed_json
-                    summary_text = analysis_result.get('summary', analysis_result.get('description', str(analysis_result)[:200]))
+                    # Summary is inside graph_core as per our prompt schema
+                    summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:200])
                     logger.info(f"   ✅ Vision LLM returned JSON with keys: {list(analysis_result.keys())}")
                 else:
                     analysis_result = {"raw_response": generated_text}
@@ -1540,7 +1541,8 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                 parsed_json, status = extract_json_from_llm_response(llm_response)
                 if parsed_json:
                     analysis_result = parsed_json
-                    summary_text = analysis_result.get('summary', analysis_result.get('description', str(analysis_result)[:200]))
+                    # Summary is inside graph_core as per our prompt schema
+                    summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:200])
                     logger.info(f"   ✅ Text LLM returned JSON with keys: {list(analysis_result.keys())}")
                 else:
                     analysis_result = {"raw_response": llm_response}

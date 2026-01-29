@@ -212,6 +212,12 @@ class SidecarMetadata(BaseModel):
     # --- DATA LAYERS ---
     data_layers: DataLayers = Field(description="Multi-layer data storage")
     
+    # --- USER CONTEXT (for memory assets) ---
+    user_context: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="User context for memory assets (content, convert_to_memory flag)"
+    )
+    
     class Config:
         json_schema_extra = {
             "example": {
