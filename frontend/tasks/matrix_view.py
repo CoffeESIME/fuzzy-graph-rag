@@ -229,7 +229,7 @@ def render_dispatch_button(assets: List[Dict[str, Any]], api_base_url: str = "ht
         api_base_url: Base URL del backend API
     """
     import requests
-    from .task_metadata_editor import get_selected_tasks_with_metadata, clear_metadata_state
+    from .task_metadata_editor import get_selected_tasks_with_metadata, clear_metadata_state, validate_required_memory_tasks
     
     st.markdown("---")
     st.markdown("### 🚀 Dispatch Jobs")
@@ -266,14 +266,28 @@ def render_dispatch_button(assets: List[Dict[str, Any]], api_base_url: str = "ht
     with cols[1]:
         st.markdown(f"**Seleccionadas:** {selected_count}")
     
+    # Validate required memory tasks before showing dispatch button
+    is_valid, validation_errors = validate_required_memory_tasks()
+    
+    # Show validation errors if any
+    if not dispatch_all and not is_valid:
+        st.error(f"⚠️ **No se puede enviar:** {len(validation_errors)} tarea(s) requieren contexto de usuario obligatorio")
+        for err in validation_errors:
+            st.warning(f"  • {err}")
+    
     with cols[2]:
         # Determine what to dispatch
         if dispatch_all:
             button_text = f"▶️ Dispatch {on_hold_count} (todas)"
             can_dispatch = True
         elif selected_count > 0:
-            button_text = f"▶️ Dispatch {selected_count} seleccionadas"
-            can_dispatch = True
+            # Block dispatch if validation fails (unless dispatch_all)
+            if not is_valid:
+                button_text = "⚠️ Completa los campos requeridos"
+                can_dispatch = False
+            else:
+                button_text = f"▶️ Dispatch {selected_count} seleccionadas"
+                can_dispatch = True
         else:
             button_text = "▶️ Selecciona tareas arriba"
             can_dispatch = False

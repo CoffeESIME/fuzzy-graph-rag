@@ -54,6 +54,7 @@ def get_tasks_for_editing(assets: List[Dict[str, Any]], only_on_hold: bool = Tru
                 "asset_id": asset["id"],
                 "filename": asset["filename"],
                 "mime_type": asset["mime_type"],
+                "requires_user_memory": asset.get("requires_user_memory", False),  # From SQL
             })
     return tasks
 
@@ -119,6 +120,7 @@ def render_task_metadata_editor(
             tasks_by_asset[asset_id] = {
                 "filename": task["filename"],
                 "mime_type": task["mime_type"],
+                "requires_user_memory": task.get("requires_user_memory", False),
                 "tasks": []
             }
         tasks_by_asset[asset_id]["tasks"].append(task)
@@ -130,7 +132,13 @@ def render_task_metadata_editor(
                     "🎬" if asset_data["mime_type"].startswith("video/") else \
                     "📝" if asset_data["mime_type"].startswith("text/") else "📎"
         
-        with st.expander(f"{mime_icon} **{asset_data['filename']}** ({len(asset_data['tasks'])} tareas)", expanded=True):
+        # Add indicator if requires_user_memory
+        memory_badge = " 🧠⚠️" if asset_data.get("requires_user_memory") else ""
+        
+        with st.expander(f"{mime_icon} **{asset_data['filename']}**{memory_badge} ({len(asset_data['tasks'])} tareas)", expanded=True):
+            if asset_data.get("requires_user_memory"):
+                st.warning("⚠️ **Este archivo requiere contexto de usuario obligatorio.** Debes proporcionar notas y marcar 'Convertir a memoria personal' antes de procesar.")
+            
             for task in asset_data["tasks"]:
                 _render_single_task_editor(task)
     
@@ -187,22 +195,45 @@ def _render_single_task_editor(task: Dict[str, Any]) -> None:
             # ==========================================
             # USER CONTEXT (applies to all types)
             # ==========================================
-            st.markdown("##### 💬 Contexto del Usuario (Opcional)")
+            # Check if this is a TEXT_SUMMARY task that requires user memory
+            requires_user_memory = task.get("requires_user_memory", False)
+            is_memory_required_here = is_text_summary and requires_user_memory
+            
+            # Determine if context is optional or required
+            if is_memory_required_here:
+                st.markdown("##### 💬 Contexto del Usuario (**OBLIGATORIO**)")
+                st.error("⚠️ Este asset requiere contexto de memoria antes de procesar")
+            else:
+                st.markdown("##### 💬 Contexto del Usuario (Opcional)")
             
             user_context_content = st.text_area(
                 "Notas o contexto adicional",
                 value=st.session_state.task_metadata_state[vs_id].get("user_context", {}).get("content", ""),
                 key=f"user_context_{vs_id}",
-                placeholder="Ej: Esta imagen es de mi viaje a París en 2020...",
+                placeholder="Ej: Esta imagen es de mi viaje a París en 2020..." if not is_memory_required_here else "⚠️ REQUERIDO: Proporciona el contexto para este archivo...",
                 height=80
             )
             
-            convert_to_memory = st.checkbox(
-                "🧠 Convertir a memoria personal",
-                value=st.session_state.task_metadata_state[vs_id].get("user_context", {}).get("convert_to_memory", False),
-                key=f"convert_memory_{vs_id}",
-                help="Si se activa, el contexto se guardará como memoria personal accesible en búsquedas"
-            )
+            # For required memory: always checked and disabled
+            # For optional: user can toggle
+            if is_memory_required_here:
+                # Force checkbox to be checked and disabled
+                convert_to_memory = st.checkbox(
+                    "🧠 Convertir a memoria personal (OBLIGATORIO)",
+                    value=True,
+                    key=f"convert_memory_{vs_id}",
+                    disabled=True,
+                    help="Este archivo requiere memoria de usuario, esta opción es obligatoria"
+                )
+                # Always True for required
+                convert_to_memory = True
+            else:
+                convert_to_memory = st.checkbox(
+                    "🧠 Convertir a memoria personal",
+                    value=st.session_state.task_metadata_state[vs_id].get("user_context", {}).get("convert_to_memory", False),
+                    key=f"convert_memory_{vs_id}",
+                    help="Si se activa, el contexto se guardará como memoria personal accesible en búsquedas"
+                )
             
             # Update state for user_context
             if user_context_content or convert_to_memory:
@@ -212,6 +243,9 @@ def _render_single_task_editor(task: Dict[str, Any]) -> None:
                 }
             elif "user_context" in st.session_state.task_metadata_state[vs_id]:
                 del st.session_state.task_metadata_state[vs_id]["user_context"]
+            
+            # Store the requires_user_memory flag for validation during dispatch
+            st.session_state.task_metadata_state[vs_id]["_requires_user_memory"] = is_memory_required_here
             
             # ==========================================
             # AUDIO PROCESSING OPTIONS (only for AUDIO_TRANSCRIPT)
@@ -310,3 +344,29 @@ def clear_metadata_state():
     """Clear all metadata and selection state after successful dispatch."""
     st.session_state.task_metadata_state = {}
     st.session_state.selected_tasks_for_dispatch = set()
+
+
+def validate_required_memory_tasks() -> tuple[bool, List[str]]:
+    """
+    Validate that all selected tasks requiring user memory have content provided.
+    
+    Returns:
+        tuple: (is_valid, list_of_error_messages)
+    """
+    init_metadata_state()
+    
+    errors = []
+    
+    for vs_id in st.session_state.selected_tasks_for_dispatch:
+        meta = st.session_state.task_metadata_state.get(vs_id, {})
+        
+        # Check if this task requires user memory
+        if meta.get("_requires_user_memory", False):
+            user_context = meta.get("user_context", {})
+            content = user_context.get("content", "")
+            
+            # Must have non-empty content
+            if not content or not content.strip():
+                errors.append(f"La tarea {vs_id[:8]}... requiere contexto de usuario pero no se proporcionó")
+    
+    return (len(errors) == 0, errors)

@@ -42,6 +42,7 @@ class AssetWithTasksResponse(BaseModel):
     file_hash: str
     is_merged: bool
     original_deleted: bool
+    requires_user_memory: bool = False  # If True, TEXT_SUMMARY cannot complete without user memory
     privacy_level: str
     sidecar_path: str
     created_at: str
