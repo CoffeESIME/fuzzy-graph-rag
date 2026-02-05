@@ -22,8 +22,17 @@ from app.models.enums import VectorType, JobStatus, PrivacyLevel
 from app.models.vector_status import VectorStatus
 from app.models.asset import Asset
 from shared.database import get_session
-from shared.clients import get_minio_client
+from shared.clients import get_minio_client, get_neo4j_driver, get_weaviate_client
 from worker.prompts import build_specialized_prompt
+from worker.utils import (
+    build_vector_content,
+    generate_collection_uuid,
+    determine_collection,
+    determine_vector_name,
+    ensure_digital_asset_node,
+    stage_suggestions_in_inbox,
+    upsert_to_weaviate
+)
 
 # ==========================================
 # LOGGING CONFIGURATION
@@ -520,95 +529,6 @@ def spawn_memory_asset(
     return memory_asset
 
 
-# ==========================================
-# VECTOR FACTORY - BUILD EMBEDDING CONTENT
-# ==========================================
-
-def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> str:
-    """
-    Recibe el JSON analizado por el LLM y devuelve el 'Super String' 
-    listo para ser vectorizado por BGE-M3.
-    
-    Args:
-        task_type: One of "vision", "audio", "text"
-        llm_json: The structured JSON from previous LLM analysis
-        raw_text: Original raw text content (for text tasks)
-        
-    Returns:
-        Optimized string for embedding generation
-    """
-    
-    # 1. CASO VISUAL (Memes, Fotos, Arte)
-    if task_type == "vision":
-        specs = llm_json.get("visual_specifics", {})
-        core = llm_json.get("graph_core", {})
-        
-        # Prioridad 1: El OCR (Vital para memes)
-        ocr_segment = f"Text in image: '{specs.get('ocr_text')}'." if specs.get("ocr_text") else ""
-        
-        # Prioridad 2: Descripción y Atmósfera
-        desc_segment = f"Visual Description: {core.get('summary', '')}."
-        mood_segment = f"Mood: {specs.get('visual_mood', '')}."
-        
-        # Prioridad 3: Estilo y Tipo
-        style_segment = f"Type: {specs.get('image_type')} style {specs.get('art_style')}."
-        
-        # Juntamos todo. BGE-M3 ama el contexto denso.
-        return f"{style_segment} {desc_segment} {ocr_segment} {mood_segment}"
-
-    # 2. CASO AUDIO (Música, Voz)
-    elif task_type == "audio":
-        specs = llm_json.get("audio_specifics", {})
-        core = llm_json.get("graph_core", {})
-        
-        # Prioridad 1: Clasificación
-        meta_segment = f"Audio Type: {specs.get('audio_type')} Genre: {specs.get('genre')}."
-        
-        # Prioridad 2: Emoción e Instrumentos (Para búsquedas por 'vibe')
-        vibe_segment = f"Emotion: {specs.get('emotional_tone')}. Instruments: {', '.join(specs.get('instruments', []))}."
-        
-        # Prioridad 3: Contenido Lírico o Temático
-        content_segment = f"Topic: {specs.get('lyrics_summary', '')}."
-        
-        return f"{meta_segment} {vibe_segment} {content_segment} Description: {core.get('summary')}"
-
-    # 3. CASO TEXTO (Notas, Artículos) - SIN ser memoria
-    elif task_type == "text" and "memory_analysis" not in llm_json:
-        specs = llm_json.get("text_specifics", {})
-        core = llm_json.get("graph_core", {})
-        
-        # Prioridad 1: Metadatos
-        meta_segment = f"Document: {specs.get('document_type')} Tone: {specs.get('rhetorical_tone')}."
-        
-        # Prioridad 2: Resumen Inteligente
-        summary_segment = f"Summary: {core.get('summary')}."
-        
-        # Prioridad 3: El Texto Original (Chunk)
-        # BGE-M3 tiene una ventana grande (8k tokens), úsala. 
-        original_segment = f"Content: {raw_text}" 
-        
-        return f"{meta_segment} {summary_segment} {original_segment}"
-
-    # 4. CASO USER MEMORY (Con o Sin Archivo)
-    elif task_type == "text" and "memory_analysis" in llm_json:
-        mem_specs = llm_json.get("memory_analysis", {})
-        
-        # LA CLAVE: Usamos 'enriched_text'
-        enriched_narrative = mem_specs.get("enriched_text", raw_text)
-        
-        # Agregamos la emoción explícita para ayudar a la búsqueda por sentimiento
-        sentiment_segment = f"Sentiment: {mem_specs.get('sentiment')}."
-        
-        # Si hay conexión con archivo, agregamos el POR QUÉ explícito
-        conn_segment = ""
-        if "file_connection" in mem_specs:
-            conn = mem_specs["file_connection"]
-            conn_segment = f"Relation to file: {conn.get('relation_type')} ({conn.get('reasoning')})."
-            
-        return f"User Memory: {enriched_narrative} {sentiment_segment} {conn_segment}"
-
-    return raw_text  # Fallback
-
 
 # ==========================================
 # LLM GATEWAY API CALLS
@@ -940,34 +860,48 @@ def process_vector_task(self, vector_status_id: str):
             handler_name = "process_visual_siglip_task"
             logger.info(f"→ Calling {handler_name}")
             result = process_visual_siglip_task(asset, vector_status, session)
+        
         elif vector_status.vector_type == VectorType.VISUAL_SEMANTIC:
-            handler_name = "process_visual_semantic_task"
-            logger.info(f"→ Calling {handler_name}")
-            result = process_visual_semantic_task(asset, vector_status, session)
+            # VISUAL_SEMANTIC consumes TEXT_SUMMARY analysis to create semantic embeddings
+            handler_name = "process_text_chunk_task (via VISUAL_SEMANTIC)"
+            logger.info(f"→ Routing VISUAL_SEMANTIC to process_text_chunk_task")
+            result = process_text_chunk_task(asset, vector_status, session)
+        
         elif vector_status.vector_type == VectorType.TEXT_OCR:
             handler_name = "process_text_ocr_task"
             logger.info(f"→ Calling {handler_name}")
             result = process_text_ocr_task(asset, vector_status, session)
+        
         elif vector_status.vector_type == VectorType.TEXT_CHUNK:
             handler_name = "process_text_chunk_task"
             logger.info(f"→ Calling {handler_name}")
             result = process_text_chunk_task(asset, vector_status, session)
+        
         elif vector_status.vector_type == VectorType.TEXT_SUMMARY:
             handler_name = "process_text_summary_task"
             logger.info(f"→ Calling {handler_name}")
             result = process_text_summary_task(asset, vector_status, session)
+        
         elif vector_status.vector_type == VectorType.AUDIO_CLAP:
             handler_name = "process_audio_clap_task"
             logger.info(f"→ Calling {handler_name}")
             result = process_audio_clap_task(asset, vector_status, session)
+        
         elif vector_status.vector_type == VectorType.AUDIO_TRANSCRIPT:
-            handler_name = "process_audio_transcript_task"
-            logger.info(f"→ Calling {handler_name}")
-            result = process_audio_transcript_task(asset, vector_status, session)
+            # AUDIO_TRANSCRIPT: Not implemented yet - keep ON_HOLD for future processing
+            handler_name = "AUDIO_TRANSCRIPT (not implemented)"
+            logger.warning(f"⏭️ AUDIO_TRANSCRIPT not implemented yet - keeping ON_HOLD")
+            result = {
+                'status': 'ON_HOLD',
+                'message': 'AUDIO_TRANSCRIPT not implemented - kept on hold for future'
+            }
+        
         elif vector_status.vector_type == VectorType.USER_MEMORY:
-            handler_name = "process_user_memory_task"
-            logger.info(f"→ Calling {handler_name}")
-            result = process_user_memory_task(asset, vector_status, session)
+            # USER_MEMORY consumes TEXT_SUMMARY analysis to create memory embeddings
+            handler_name = "process_text_chunk_task (via USER_MEMORY)"
+            logger.info(f"→ Routing USER_MEMORY to process_text_chunk_task")
+            result = process_text_chunk_task(asset, vector_status, session)
+        
         else:
             logger.error(f"❌ Unknown VectorType: {vector_status.vector_type}")
             raise ValueError(f"Unknown VectorType: {vector_status.vector_type}")
@@ -990,6 +924,17 @@ def process_vector_task(self, vector_status_id: str):
             vector_status.error_message = result.get('message', 'User memory input required')
             logger.info(f"⏸️ VectorStatus {vector_status_id} WAITING FOR USER INPUT")
             logger.info(f"   → User must provide memory context to continue")
+        elif final_status == 'ON_HOLD':
+            # Keep in ON_HOLD (e.g., AUDIO_TRANSCRIPT not implemented yet)
+            vector_status.status = JobStatus.ON_HOLD
+            vector_status.error_message = result.get('message', 'Task kept on hold')
+            logger.info(f"⏸️ VectorStatus {vector_status_id} kept ON_HOLD")
+            logger.info(f"   → {result.get('message', 'Not implemented yet')}")
+        elif final_status == 'FAILED':
+            vector_status.status = JobStatus.FAILED
+            vector_status.error_message = result.get('error_message', 'Task failed')
+            logger.error(f"❌ VectorStatus {vector_status_id} FAILED")
+            logger.error(f"   → {result.get('error_message')}")
         else:
             vector_status.status = JobStatus.COMPLETED
             vector_status.weaviate_uuid = result.get('weaviate_uuid')
@@ -1055,31 +1000,103 @@ def process_visual_siglip_task(asset: Asset, vector_status: VectorStatus, sessio
     """
     Process visual embeddings using SigLIP model via LLM Gateway.
     
-    Flow: AUTOMATIC - Embeddings → Weaviate → COMPLETED
+    This is a PURE EMBEDDING task - no LLM analysis, no entity extraction.
+    SigLIP generates visual embeddings directly from the image bytes.
+    
+    Flow:
+    A. Download image from MinIO
+    B. Neo4j MERGE: Ensure DigitalAsset node exists
+    C. Call SigLIP embedding API
+    D. Weaviate UPSERT with deterministic UUID (VisualSpace, vector: 'visual')
+    E. Return COMPLETED
     """
     logger.info(f"📸 Processing VISUAL_SIGLIP for {asset.filename}")
     
-    # Download file from MinIO
+    # ========================================
+    # STEP A: DOWNLOAD IMAGE FROM MINIO
+    # ========================================
     logger.debug(f"   → Downloading from MinIO: {asset.minio_path}")
     file_content = download_file_from_minio(asset)
     logger.info(f"   ✅ Downloaded {len(file_content)} bytes")
     
-    # Call LLM Gateway image embeddings API
+    # ========================================
+    # STEP B: NEO4J MERGE - ENSURE DIGITAL ASSET NODE EXISTS
+    # ========================================
+    try:
+        neo4j_driver = get_neo4j_driver()
+        asset_metadata = {
+            "filename": asset.filename,
+            "mime_type": asset.mime_type,
+            "inbox_id": str(asset.id)
+        }
+        ensure_digital_asset_node(neo4j_driver, asset.file_hash, asset_metadata)
+    except Exception as e:
+        logger.warning(f"   ⚠️ Neo4j sync failed (non-fatal): {e}")
+        # Continue processing even if Neo4j fails
+    
+    # ========================================
+    # STEP C: CALL SIGLIP EMBEDDING API
+    # ========================================
     logger.info(f"   → Calling LLM Gateway: POST /v1/embeddings/image")
     result = call_image_embeddings_api(file_content, asset.filename)
-    logger.info(f"   ✅ API call successful")
-    logger.debug(f"   Response: {result}")
+    embedding_vector = result.get('embedding', [])
     
-    # TODO: Store embedding in Weaviate
-    # For now, simulate Weaviate storage
-    weaviate_uuid = f"weaviate-siglip-{asset.id}"
-    logger.info(f"   [SIMULATED] Storing in Weaviate...")
-    logger.info(f"   ✅ Stored SigLIP embedding: {weaviate_uuid}")
+    if not embedding_vector:
+        logger.error(f"   ❌ No embedding returned from SigLIP API")
+        return {
+            'status': 'FAILED',
+            'error_message': 'SigLIP API returned empty vector'
+        }
+    
+    logger.info(f"   ✅ SigLIP embedding generated: {len(embedding_vector)} dimensions")
+    
+    # ========================================
+    # STEP D: WEAVIATE UPSERT WITH DETERMINISTIC UUID
+    # ========================================
+    collection_name = "VisualSpace"
+    weaviate_uuid = generate_collection_uuid(asset.file_hash, collection_name)
+    vector_name = "visual"  # Named vector for SigLIP embeddings
+    
+    try:
+        weaviate_client = get_weaviate_client()
+        
+        properties = {
+            "neo4j_hash": asset.file_hash,
+            "inbox_id": str(asset.id),
+            "filename": asset.filename,
+            "mime_type": asset.mime_type,
+            "file_size": len(file_content)
+        }
+        
+        upsert_success = upsert_to_weaviate(
+            client=weaviate_client,
+            collection_name=collection_name,
+            weaviate_uuid=weaviate_uuid,
+            properties=properties,
+            vector=embedding_vector,
+            vector_name=vector_name
+        )
+        
+        if upsert_success:
+            logger.info(f"   💾 Weaviate UPSERT successful: {collection_name}/{weaviate_uuid[:8]}...")
+        else:
+            logger.warning(f"   ⚠️ Weaviate UPSERT returned False")
+            
+    except Exception as e:
+        logger.error(f"   ❌ Weaviate upsert failed: {e}")
+        return {
+            'status': 'FAILED',
+            'error_message': f'Weaviate upsert failed: {e}'
+        }
+    
+    logger.info(f"   ✅ VISUAL_SIGLIP completed successfully")
     
     return {
-        'status': 'completed',
+        'status': 'COMPLETED',
         'weaviate_uuid': weaviate_uuid,
-        'processing_time': result.get('processing_time', 0.5)
+        'collection': collection_name,
+        'vector_dimensions': len(embedding_vector),
+        'message': f'SigLIP embedding stored in {collection_name}'
     }
 
 
@@ -1091,17 +1108,20 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     (TEXT_SUMMARY) already generated the analysis JSON in the sidecar.
     
     Flow:
-    1. Read sidecar and validate that analysis_json exists
-    2. Read raw text content from MinIO
-    3. Use build_vector_content() to create Super String
-    4. Generate embedding from Super String → store in Weaviate
-    5. Route to MemorySpace or TextSpace based on sidecar content
-    6. Return COMPLETED
+    A. Validate sidecar has analysis_json (dependency check)
+    B. Read raw text content from MinIO
+    C. Neo4j MERGE: Ensure DigitalAsset node exists
+    D. Build Super String with Vector Factory
+    E. Generate embedding from Super String
+    F. Weaviate UPSERT with deterministic UUID
+    G. Neo4j: Link extracted entities to asset
+    H. Update sidecar with vector info
+    I. Return COMPLETED
     """
     logger.info(f"Processing TEXT_CHUNK for {asset.filename}")
     
     # ========================================
-    # STEP 0: DEPENDENCY VALIDATION
+    # STEP A: DEPENDENCY VALIDATION
     # ========================================
     sidecar_data = get_sidecar_data(asset)
     
@@ -1131,7 +1151,7 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     logger.info(f"   ✅ Found prior analysis with keys: {list(analysis_json.keys())}")
     
     # ========================================
-    # STEP 1: READ RAW TEXT FROM MINIO
+    # STEP B: READ RAW TEXT FROM MINIO
     # ========================================
     try:
         text_content = download_file_from_minio(asset).decode('utf-8')
@@ -1141,22 +1161,28 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
         raise
     
     # ========================================
-    # STEP 2: DETERMINE TASK TYPE & COLLECTION
+    # STEP C: NEO4J MERGE - ENSURE DIGITAL ASSET NODE EXISTS
     # ========================================
-    is_memory = (
-        "memory_analysis" in analysis_json or
-        sidecar_data.get("is_user_memory", False) or
-        sidecar_data.get("operation") == "memory_spawn"
-    )
-    
-    task_type = "text"  # build_vector_content will check for memory_analysis internally
-    collection_name = "MemorySpace" if is_memory else "TextSpace"
-    
-    logger.info(f"   🎯 Target Collection: {collection_name} (is_memory={is_memory})")
+    try:
+        neo4j_driver = get_neo4j_driver()
+        asset_metadata = {
+            "filename": asset.filename,
+            "mime_type": asset.mime_type,
+            "inbox_id": str(asset.id)  # Using asset ID as inbox reference
+        }
+        ensure_digital_asset_node(neo4j_driver, asset.file_hash, asset_metadata)
+    except Exception as e:
+        logger.warning(f"   ⚠️ Neo4j sync failed (non-fatal): {e}")
+        # Continue processing even if Neo4j fails
     
     # ========================================
-    # STEP 3: BUILD SUPER STRING WITH VECTOR FACTORY
+    # STEP D: DETERMINE COLLECTION & BUILD SUPER STRING
     # ========================================
+    task_type = "text"
+    collection_name = determine_collection(task_type, analysis_json, sidecar_data)
+    
+    logger.info(f"   🎯 Target Collection: {collection_name}")
+    
     vector_string = build_vector_content(
         task_type=task_type,
         llm_json=analysis_json,
@@ -1165,19 +1191,76 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     
     # Debug logging - critical for verification
     preview = vector_string[:150].replace('\n', ' ')
-    logger.info(f"   🧬 [VECTOR FACTORY] Source: Sidecar | Target: {collection_name} | Content Preview: {preview}...")
+    logger.info(f"   🧬 [VECTOR FACTORY] Super String built ({len(vector_string)} chars)")
+    logger.debug(f"   Preview: {preview}...")
     
     # ========================================
-    # STEP 4: GENERATE EMBEDDING FROM SUPER STRING
+    # STEP E: GENERATE EMBEDDING FROM SUPER STRING
     # ========================================
     embedding_result = call_text_embeddings_api(vector_string)
-    weaviate_uuid = f"weaviate-{collection_name.lower()}-{asset.id}"
+    embedding_vector = embedding_result.get('embedding', [])
     
-    logger.info(f"   ✅ Embedding generated from Super String ({len(vector_string)} chars)")
-    logger.info(f"   💾 [SIMULATED] Stored in Weaviate {collection_name}: {weaviate_uuid}")
+    if not embedding_vector:
+        logger.error(f"   ❌ No embedding returned from API")
+        return {
+            'status': 'FAILED',
+            'error_message': 'Embedding API returned empty vector'
+        }
+    
+    logger.info(f"   ✅ Embedding generated: {len(embedding_vector)} dimensions")
     
     # ========================================
-    # STEP 5: UPDATE SIDECAR WITH VECTOR INFO
+    # STEP F: WEAVIATE UPSERT WITH DETERMINISTIC UUID
+    # ========================================
+    weaviate_uuid = generate_collection_uuid(asset.file_hash, collection_name)
+    vector_name = determine_vector_name(task_type, vector_status.vector_type.value)
+    
+    try:
+        weaviate_client = get_weaviate_client()
+        
+        properties = {
+            "neo4j_hash": asset.file_hash,
+            "inbox_id": str(asset.id),
+            "filename": asset.filename,
+            "content_preview": text_content[:500],
+            "super_string_length": len(vector_string)
+        }
+        
+        upsert_success = upsert_to_weaviate(
+            client=weaviate_client,
+            collection_name=collection_name,
+            weaviate_uuid=weaviate_uuid,
+            properties=properties,
+            vector=embedding_vector,
+            vector_name=vector_name
+        )
+        
+        if upsert_success:
+            logger.info(f"   💾 Weaviate UPSERT successful: {collection_name}/{weaviate_uuid[:8]}...")
+        else:
+            logger.warning(f"   ⚠️ Weaviate UPSERT returned False")
+            
+    except Exception as e:
+        logger.error(f"   ❌ Weaviate upsert failed: {e}")
+        # Continue to update sidecar even if Weaviate fails
+    
+    # ========================================
+    # STEP G: NEO4J - STAGE SUGGESTIONS FOR HUMAN REVIEW (HITL SAFETY)
+    # ========================================
+    staged_count = 0
+    try:
+        # Stage entities/concepts in InboxItem for human review
+        # This keeps the graph clean until approval
+        stage_success = stage_suggestions_in_inbox(neo4j_driver, asset.file_hash, analysis_json)
+        if stage_success:
+            graph_core = analysis_json.get('graph_core', {})
+            entities = graph_core.get('entities', {})
+            staged_count = sum(len(v) for v in entities.values() if isinstance(v, list))
+    except Exception as e:
+        logger.warning(f"   ⚠️ Neo4j inbox staging failed (non-fatal): {e}")
+    
+    # ========================================
+    # STEP H: UPDATE SIDECAR WITH VECTOR INFO
     # ========================================
     update_sidecar_metadata(
         asset,
@@ -1186,9 +1269,19 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
             'vector_type': 'text_chunk',
             'collection': collection_name,
             'weaviate_uuid': weaviate_uuid,
-            'super_string_length': len(vector_string)
+            'vector_dimensions': len(embedding_vector),
+            'super_string_length': len(vector_string),
+            'vector_name': vector_name
         },
         add_workflow_step='text_chunk_embedding'
+    )
+    
+    # Save debug vector string for verification (optional but useful)
+    update_sidecar_metadata(
+        asset,
+        'data_layers.vectors.semantic_debug',
+        vector_string[:2000],  # Limit for storage
+        add_workflow_step='vector_debug_saved'
     )
     
     logger.info(f"   ✅ TEXT_CHUNK completed successfully")
@@ -1197,7 +1290,8 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
         'status': 'COMPLETED',
         'weaviate_uuid': weaviate_uuid,
         'collection': collection_name,
-        'message': f'Embedding stored in {collection_name} using Super String from prior analysis'
+        'suggestions_staged': staged_count,
+        'message': f'Embedding stored in {collection_name}. {staged_count} suggestions staged for review.'
     }
 
 
