@@ -4,6 +4,7 @@ from shared.database import create_db_and_tables
 from app.routers import router as ingest_router
 from app.routers.tasks import router as tasks_router
 from app.routers.graph import router as graph_router
+from app.routers.sidecar import router as sidecar_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,6 +22,7 @@ app = FastAPI(
 app.include_router(ingest_router)
 app.include_router(tasks_router)
 app.include_router(graph_router)
+app.include_router(sidecar_router)
 
 @app.get("/")
 def read_root():

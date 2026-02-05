@@ -117,6 +117,13 @@ def build_specialized_prompt(
     # ==========================================
     # 4. NUANCE-AWARE CONTEXT INSTRUCTION
     # ==========================================
+    ocr_instruction = ""
+    if task_type == "vision":
+        ocr_instruction = """
+VISION TASK SPECIFIC RULES:
+1. **MEMES & SCREENSHOTS:** If the image contains text (e.g., subtitles, code, chat logs), you MUST transcribe it VERBATIM into the 'ocr_text' field.
+2. **CONTEXTUALIZATION:** Use the 'ocr_text' to inform the 'visual_mood' and 'summary'. (e.g., If the text is a joke, the mood is 'Humorous').
+"""
     context_instruction = ""
     if external_context:
         context_instruction = f"""
@@ -134,6 +141,8 @@ RULES FOR INTERPRETING USER CONTEXT:
 3. **Arrays as Distributions:** For fields like 'dominant_colors', 'genres', or 'instruments':
    - ORDER MATTERS. Place the most dominant/prominent elements FIRST.
    - Example: "Mucho amarillo, menos café" -> ["Yellow", "Brown"].
+   4. **ANECDOTAL SEPARATION (CRITICAL):** - If the user provides personal anecdotes (e.g., "I heard this at a wedding", "My cat loves this"), use this ONLY to infer the **Mood** or **Atmosphere** (e.g., 'Celebratory', 'Cozy').
+   - Do NOT include personal nouns (Wedding, Cat, Pizza) as factual entities of the file content unless they literally appear in the image/audio.
 """
 
     # ==========================================
@@ -149,6 +158,7 @@ LANGUAGE & FORMAT RULES (STRICT):
    - GOOD: "type": "Sentiment", "domain": "Psychology"
 3. **CONTENT VALUES (Names, Descriptions, Summaries):** Must be **SPANISH** (or original language).
    - This allows you to capture the nuance of the user's native language.
+   {ocr_instruction}
 OUTPUT SCHEMA (Follow this structure exactly):
 {json.dumps(target_schema, indent=2)}
 

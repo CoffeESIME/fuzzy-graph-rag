@@ -141,3 +141,15 @@ class ResetToHoldResponse(BaseModel):
     tasks_reset: int
     success: bool = True
     message: str = ""
+
+
+class ApproveTaskRequest(BaseModel):
+    """Request to approve tasks in REVIEW_REQUIRED status."""
+    vector_status_ids: List[str]
+
+
+class ApproveTaskResponse(BaseModel):
+    """Response from approving tasks."""
+    tasks_approved: int
+    success: bool = True
+    message: str = ""

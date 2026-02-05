@@ -521,6 +521,96 @@ def spawn_memory_asset(
 
 
 # ==========================================
+# VECTOR FACTORY - BUILD EMBEDDING CONTENT
+# ==========================================
+
+def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> str:
+    """
+    Recibe el JSON analizado por el LLM y devuelve el 'Super String' 
+    listo para ser vectorizado por BGE-M3.
+    
+    Args:
+        task_type: One of "vision", "audio", "text"
+        llm_json: The structured JSON from previous LLM analysis
+        raw_text: Original raw text content (for text tasks)
+        
+    Returns:
+        Optimized string for embedding generation
+    """
+    
+    # 1. CASO VISUAL (Memes, Fotos, Arte)
+    if task_type == "vision":
+        specs = llm_json.get("visual_specifics", {})
+        core = llm_json.get("graph_core", {})
+        
+        # Prioridad 1: El OCR (Vital para memes)
+        ocr_segment = f"Text in image: '{specs.get('ocr_text')}'." if specs.get("ocr_text") else ""
+        
+        # Prioridad 2: Descripción y Atmósfera
+        desc_segment = f"Visual Description: {core.get('summary', '')}."
+        mood_segment = f"Mood: {specs.get('visual_mood', '')}."
+        
+        # Prioridad 3: Estilo y Tipo
+        style_segment = f"Type: {specs.get('image_type')} style {specs.get('art_style')}."
+        
+        # Juntamos todo. BGE-M3 ama el contexto denso.
+        return f"{style_segment} {desc_segment} {ocr_segment} {mood_segment}"
+
+    # 2. CASO AUDIO (Música, Voz)
+    elif task_type == "audio":
+        specs = llm_json.get("audio_specifics", {})
+        core = llm_json.get("graph_core", {})
+        
+        # Prioridad 1: Clasificación
+        meta_segment = f"Audio Type: {specs.get('audio_type')} Genre: {specs.get('genre')}."
+        
+        # Prioridad 2: Emoción e Instrumentos (Para búsquedas por 'vibe')
+        vibe_segment = f"Emotion: {specs.get('emotional_tone')}. Instruments: {', '.join(specs.get('instruments', []))}."
+        
+        # Prioridad 3: Contenido Lírico o Temático
+        content_segment = f"Topic: {specs.get('lyrics_summary', '')}."
+        
+        return f"{meta_segment} {vibe_segment} {content_segment} Description: {core.get('summary')}"
+
+    # 3. CASO TEXTO (Notas, Artículos) - SIN ser memoria
+    elif task_type == "text" and "memory_analysis" not in llm_json:
+        specs = llm_json.get("text_specifics", {})
+        core = llm_json.get("graph_core", {})
+        
+        # Prioridad 1: Metadatos
+        meta_segment = f"Document: {specs.get('document_type')} Tone: {specs.get('rhetorical_tone')}."
+        
+        # Prioridad 2: Resumen Inteligente
+        summary_segment = f"Summary: {core.get('summary')}."
+        
+        # Prioridad 3: El Texto Original (Chunk)
+        # BGE-M3 tiene una ventana grande (8k tokens), úsala. 
+        original_segment = f"Content: {raw_text}" 
+        
+        return f"{meta_segment} {summary_segment} {original_segment}"
+
+    # 4. CASO USER MEMORY (Con o Sin Archivo)
+    elif task_type == "text" and "memory_analysis" in llm_json:
+        mem_specs = llm_json.get("memory_analysis", {})
+        
+        # LA CLAVE: Usamos 'enriched_text'
+        enriched_narrative = mem_specs.get("enriched_text", raw_text)
+        
+        # Agregamos la emoción explícita para ayudar a la búsqueda por sentimiento
+        sentiment_segment = f"Sentiment: {mem_specs.get('sentiment')}."
+        
+        # Si hay conexión con archivo, agregamos el POR QUÉ explícito
+        conn_segment = ""
+        if "file_connection" in mem_specs:
+            conn = mem_specs["file_connection"]
+            conn_segment = f"Relation to file: {conn.get('relation_type')} ({conn.get('reasoning')})."
+            
+        return f"User Memory: {enriched_narrative} {sentiment_segment} {conn_segment}"
+
+    return raw_text  # Fallback
+
+
+# ==========================================
 # LLM GATEWAY API CALLS
 # ==========================================
 
@@ -995,123 +1085,119 @@ def process_visual_siglip_task(asset: Asset, vector_status: VectorStatus, sessio
 
 def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) -> dict:
     """
-    Process text chunks: embedding + LLM metadata extraction.
+    Process text chunks: PURE CONSUMER of pre-existing LLM analysis.
+    
+    IMPORTANT: This task does NOT call the LLM. It assumes a prior task 
+    (TEXT_SUMMARY) already generated the analysis JSON in the sidecar.
     
     Flow:
-    1. Read text content from MinIO
-    2. Generate text embedding → store in Weaviate (TextChunks collection)
-    3. Call LLM with text prompt for metadata extraction (entities, tags, summary)
-    4. Store result in sidecar.data_layers.raw_debug_data
-    5. Return REVIEW_REQUIRED for human curation
+    1. Read sidecar and validate that analysis_json exists
+    2. Read raw text content from MinIO
+    3. Use build_vector_content() to create Super String
+    4. Generate embedding from Super String → store in Weaviate
+    5. Route to MemorySpace or TextSpace based on sidecar content
+    6. Return COMPLETED
     """
     logger.info(f"Processing TEXT_CHUNK for {asset.filename}")
     
-    # Get sidecar data and user context
+    # ========================================
+    # STEP 0: DEPENDENCY VALIDATION
+    # ========================================
     sidecar_data = get_sidecar_data(asset)
-    user_context = get_user_context_from_sidecar(sidecar_data)
     
-    # Determine privacy mode - force strict if user wants to convert to memory
-    privacy_mode = get_privacy_mode(asset, force_strict=user_context["force_strict"])
-    if user_context["force_strict"]:
-        logger.info(f"   🔒 Privacy forced to STRICT (convert_to_memory=True)")
+    if not sidecar_data:
+        logger.error(f"   ❌ No sidecar found for asset {asset.id}")
+        return {
+            'status': 'FAILED',
+            'error_message': 'Missing sidecar - cannot process without metadata'
+        }
     
-    # Step 1: Read text content from MinIO
+    # Look for analysis JSON in common locations
+    data_layers = sidecar_data.get('data_layers', {})
+    analysis_json = (
+        data_layers.get('analysis_json') or 
+        data_layers.get('text_summary_analysis') or
+        data_layers.get('raw_debug_data', {}).get('text_analysis_json')
+    )
+    
+    if not analysis_json:
+        logger.error(f"   ❌ No prior analysis found in sidecar for asset {asset.id}")
+        logger.error(f"   💡 TEXT_SUMMARY must run before TEXT_CHUNK")
+        return {
+            'status': 'FAILED',
+            'error_message': 'Missing dependency: No analysis_json in sidecar. Run TEXT_SUMMARY first.'
+        }
+    
+    logger.info(f"   ✅ Found prior analysis with keys: {list(analysis_json.keys())}")
+    
+    # ========================================
+    # STEP 1: READ RAW TEXT FROM MINIO
+    # ========================================
     try:
         text_content = download_file_from_minio(asset).decode('utf-8')
-        logger.info(f"   Read text content: {len(text_content)} chars")
+        logger.info(f"   📄 Read text content: {len(text_content)} chars")
     except Exception as e:
-        logger.error(f"   Failed to read text: {e}")
+        logger.error(f"   ❌ Failed to read text: {e}")
         raise
     
-    # Step 2: Generate embedding and store in Weaviate
-    embedding_result = call_text_embeddings_api(text_content)
-    weaviate_uuid = f"weaviate-text-{asset.id}"
-    logger.info(f"   [SIMULATED] Stored text embedding in Weaviate: {weaviate_uuid}")
+    # ========================================
+    # STEP 2: DETERMINE TASK TYPE & COLLECTION
+    # ========================================
+    is_memory = (
+        "memory_analysis" in analysis_json or
+        sidecar_data.get("is_user_memory", False) or
+        sidecar_data.get("operation") == "memory_spawn"
+    )
     
-    # Update sidecar with embedding info
+    task_type = "text"  # build_vector_content will check for memory_analysis internally
+    collection_name = "MemorySpace" if is_memory else "TextSpace"
+    
+    logger.info(f"   🎯 Target Collection: {collection_name} (is_memory={is_memory})")
+    
+    # ========================================
+    # STEP 3: BUILD SUPER STRING WITH VECTOR FACTORY
+    # ========================================
+    vector_string = build_vector_content(
+        task_type=task_type,
+        llm_json=analysis_json,
+        raw_text=text_content
+    )
+    
+    # Debug logging - critical for verification
+    preview = vector_string[:150].replace('\n', ' ')
+    logger.info(f"   🧬 [VECTOR FACTORY] Source: Sidecar | Target: {collection_name} | Content Preview: {preview}...")
+    
+    # ========================================
+    # STEP 4: GENERATE EMBEDDING FROM SUPER STRING
+    # ========================================
+    embedding_result = call_text_embeddings_api(vector_string)
+    weaviate_uuid = f"weaviate-{collection_name.lower()}-{asset.id}"
+    
+    logger.info(f"   ✅ Embedding generated from Super String ({len(vector_string)} chars)")
+    logger.info(f"   💾 [SIMULATED] Stored in Weaviate {collection_name}: {weaviate_uuid}")
+    
+    # ========================================
+    # STEP 5: UPDATE SIDECAR WITH VECTOR INFO
+    # ========================================
     update_sidecar_metadata(
         asset,
         'data_layers.vectors_generated',
-        ['text_chunk'],
-        add_workflow_step='embedding'
+        {
+            'vector_type': 'text_chunk',
+            'collection': collection_name,
+            'weaviate_uuid': weaviate_uuid,
+            'super_string_length': len(vector_string)
+        },
+        add_workflow_step='text_chunk_embedding'
     )
     
-    # Step 3: Build external context for prompt
-    external_context = {'document_text': text_content[:2000]}  # First 2000 chars for context
-    
-    if sidecar_data:
-        user_notes = sidecar_data.get('user_notes')
-        if user_notes:
-            external_context['user_notes'] = user_notes
-        
-        # Add new user_context content
-        if user_context["content"]:
-            external_context['user_context'] = user_context["content"]
-    
-    # Step 4: Call LLM with text prompt for metadata extraction
-    prompt = build_specialized_prompt(
-        task_type="text",
-        external_context=external_context
-    )
-    logger.info(f"   Built text analysis prompt: {len(prompt)} chars")
-    
-    # For text, we send the content via a simple chat completion (no files)
-    try:
-        url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
-        messages = [
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": f"Analyze this text and extract structured metadata:\n\n{text_content[:4000]}"}
-        ]
-        
-        data = {
-            "task": "chat",
-            "privacy_mode": privacy_mode,
-            "messages": json.dumps(messages),
-            "temperature": 0.3,
-            "response_format": json.dumps({"type": "json_object"})
-        }
-        
-        response = requests.post(url, data=data, timeout=120)
-        
-        if response.status_code == 200:
-            result = response.json()
-            llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-            
-            # Try to parse as JSON using the helper function
-            parsed_json, status = extract_json_from_llm_response(llm_response)
-            if parsed_json:
-                logger.info(f"   ✅ LLM returned valid JSON with keys: {list(parsed_json.keys())}")
-                update_sidecar_metadata(
-                    asset,
-                    'data_layers.raw_debug_data.text_analysis_json',
-                    parsed_json,
-                    add_workflow_step='text_analysis'
-                )
-            else:
-                logger.warning(f"   ⚠️ LLM: {status}")
-                update_sidecar_metadata(
-                    asset,
-                    'data_layers.raw_debug_data.text_analysis_raw',
-                    llm_response,
-                    add_workflow_step='text_analysis'
-                )
-        else:
-            logger.error(f"   LLM analysis failed: {response.status_code}")
-            update_sidecar_metadata(
-                asset,
-                'data_layers.raw_debug_data.text_analysis_error',
-                f"LLM returned {response.status_code}",
-                add_workflow_step='text_analysis_failed'
-            )
-    except Exception as e:
-        logger.error(f"   LLM text analysis failed: {e}")
-    
-    logger.info(f"   Text chunk processed - awaiting human review")
+    logger.info(f"   ✅ TEXT_CHUNK completed successfully")
     
     return {
-        'status': 'REVIEW_REQUIRED',
+        'status': 'COMPLETED',
         'weaviate_uuid': weaviate_uuid,
-        'message': 'Embedding stored, LLM metadata extracted - awaiting review'
+        'collection': collection_name,
+        'message': f'Embedding stored in {collection_name} using Super String from prior analysis'
     }
 
 
@@ -1456,56 +1542,115 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
     
     try:
         # ============================================
-        # IMAGE FILES - Use Vision LLM
+        # IMAGE FILES - Check for OCR first, then Vision
         # ============================================
         if asset.mime_type and asset.mime_type.startswith("image/"):
-            logger.info("   🖼️ Image file detected - calling Vision LLM")
-            
-            # Download file from MinIO
-            file_content = download_file_from_minio(asset)
-            logger.info(f"   Downloaded {len(file_content)} bytes")
-            
-            # Build external context
-            external_context = {}
+            # Check if OCR text is available in sidecar
+            ocr_text = None
             if sidecar_data:
+                ocr_text = sidecar_data.get('data_layers', {}).get('intermediate_results', {}).get('ocr_text')
+            
+            if ocr_text:
+                # OCR text exists - use TEXT analysis (chat) instead of vision
+                logger.info("   📄 Image with OCR text - using Chat LLM (text analysis)")
+                logger.info(f"   OCR text length: {len(ocr_text)} chars")
+                
+                # Build external context with OCR text
+                external_context = {'document_text': ocr_text[:4000]}
+                if user_context["content"]:
+                    external_context['user_context'] = user_context["content"]
                 user_notes = sidecar_data.get('user_notes')
                 if user_notes:
                     external_context['user_notes'] = user_notes
-                if user_context["content"]:
-                    external_context['user_context'] = user_context["content"]
-            
-            # Build specialized vision prompt
-            prompt = build_specialized_prompt(
-                task_type="vision",
-                external_context=external_context if external_context else None
-            )
-            logger.info(f"   Built vision prompt: {len(prompt)} chars")
-            
-            # Call LLM Gateway with vision task
-            result = call_chat_completions_api(
-                file_content=file_content,
-                filename=asset.filename,
-                task_type="vision",
-                privacy_mode=privacy_mode,
-                prompt=prompt
-            )
-            
-            # Extract response
-            generated_text = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-            
-            if generated_text:
-                parsed_json, status = extract_json_from_llm_response(generated_text)
-                if parsed_json:
-                    analysis_result = parsed_json
-                    # Summary is inside graph_core as per our prompt schema
-                    summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:200])
-                    logger.info(f"   ✅ Vision LLM returned JSON with keys: {list(analysis_result.keys())}")
+                
+                # Build specialized text prompt
+                prompt = build_specialized_prompt(
+                    task_type="text",
+                    external_context=external_context
+                )
+                logger.info(f"   Built text analysis prompt: {len(prompt)} chars")
+                
+                # Call LLM for text analysis (chat, not vision)
+                url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
+                messages = [
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": f"Analyze this OCR-extracted text and return structured JSON:\n\n{ocr_text[:4000]}"}
+                ]
+                
+                data = {
+                    "task": "chat",  # TEXT task, not vision!
+                    "privacy_mode": privacy_mode,
+                    "messages": json.dumps(messages),
+                    "temperature": 0.3,
+                    "response_format": json.dumps({"type": "json_object"})
+                }
+                
+                response = requests.post(url, data=data, timeout=120)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+                    
+                    parsed_json, status = extract_json_from_llm_response(llm_response)
+                    if parsed_json:
+                        analysis_result = parsed_json
+                        summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:200])
+                        logger.info(f"   ✅ OCR+Text LLM returned JSON with keys: {list(analysis_result.keys())}")
+                    else:
+                        analysis_result = {"raw_response": llm_response}
+                        summary_text = llm_response[:200]
+                        logger.warning(f"   ⚠️ OCR+Text LLM: {status}")
                 else:
-                    analysis_result = {"raw_response": generated_text}
-                    summary_text = generated_text[:200]
-                    logger.warning(f"   ⚠️ Vision LLM: {status}")
+                    raise Exception(f"OCR text analysis LLM returned {response.status_code}")
             else:
-                raise Exception("No content generated by Vision LLM")
+                # No OCR text - use Vision LLM
+                logger.info("   🖼️ Image file (no OCR) - calling Vision LLM")
+                
+                # Download file from MinIO
+                file_content = download_file_from_minio(asset)
+                logger.info(f"   Downloaded {len(file_content)} bytes")
+                
+                # Build external context
+                external_context = {}
+                if sidecar_data:
+                    user_notes = sidecar_data.get('user_notes')
+                    if user_notes:
+                        external_context['user_notes'] = user_notes
+                    if user_context["content"]:
+                        external_context['user_context'] = user_context["content"]
+                
+                # Build specialized vision prompt
+                prompt = build_specialized_prompt(
+                    task_type="vision",
+                    external_context=external_context if external_context else None
+                )
+                logger.info(f"   Built vision prompt: {len(prompt)} chars")
+                
+                # Call LLM Gateway with vision task
+                result = call_chat_completions_api(
+                    file_content=file_content,
+                    filename=asset.filename,
+                    task_type="vision",
+                    privacy_mode=privacy_mode,
+                    prompt=prompt
+                )
+                
+                # Extract response
+                generated_text = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+                
+                if generated_text:
+                    parsed_json, status = extract_json_from_llm_response(generated_text)
+                    if parsed_json:
+                        analysis_result = parsed_json
+                        # Summary is inside graph_core as per our prompt schema
+                        summary_text = analysis_result.get('graph_core', {}).get('summary', str(analysis_result)[:200])
+                        logger.info(f"   ✅ Vision LLM returned JSON with keys: {list(analysis_result.keys())}")
+                    else:
+                        analysis_result = {"raw_response": generated_text}
+                        summary_text = generated_text[:200]
+                        logger.warning(f"   ⚠️ Vision LLM: {status}")
+                else:
+                    raise Exception("No content generated by Vision LLM")
         
         # ============================================
         # TEXT FILES - Use Text Analysis LLM

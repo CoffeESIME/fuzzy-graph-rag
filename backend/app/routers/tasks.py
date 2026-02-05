@@ -235,7 +235,9 @@ from app.schemas.task_schemas import (
     UpdatePrivacyRequest,
     UpdatePrivacyResponse,
     ResetToHoldRequest,
-    ResetToHoldResponse
+    ResetToHoldResponse,
+    ApproveTaskRequest,
+    ApproveTaskResponse
 )
 from shared.clients import get_minio_client
 import json as json_lib
@@ -466,8 +468,27 @@ async def dispatch_tasks(
         else:
             return "fast_cpu"  # Default for audio, memory, etc.
     
+    # Helper: Check if TEXT_OCR is completed for an asset (if OCR task exists)
+    def is_text_ocr_completed(asset_id) -> bool:
+        """Check if TEXT_OCR task exists and is COMPLETED for the given asset."""
+        stmt = select(VectorStatus).where(
+            VectorStatus.asset_id == asset_id,
+            VectorStatus.vector_type == VectorType.TEXT_OCR,
+            VectorStatus.status == JobStatus.COMPLETED
+        )
+        return session.exec(stmt).first() is not None
+    
+    # Helper: Check if TEXT_OCR task exists for an asset
+    def has_text_ocr_task(asset_id) -> bool:
+        """Check if TEXT_OCR task exists for the given asset."""
+        stmt = select(VectorStatus).where(
+            VectorStatus.asset_id == asset_id,
+            VectorStatus.vector_type == VectorType.TEXT_OCR
+        )
+        return session.exec(stmt).first() is not None
+    
     # Helper: Check if TEXT_SUMMARY is approved (COMPLETED) for an asset
-    # TEXT_SUMMARY is a mandatory prerequisite for all other tasks
+    # TEXT_SUMMARY is a mandatory prerequisite for all other tasks (except OCR)
     # It starts as REVIEW_REQUIRED after LLM analysis, then user approves → COMPLETED
     def is_text_summary_approved(asset_id) -> bool:
         """Check if TEXT_SUMMARY task has been approved (COMPLETED) for the given asset."""
@@ -478,8 +499,10 @@ async def dispatch_tasks(
         )
         return session.exec(stmt).first() is not None
     
-    # Cache for TEXT_SUMMARY status per asset to avoid repeated DB queries
-    text_summary_status_cache = {}
+    # Caches to avoid repeated DB queries
+    text_summary_status_cache = {}  # asset_id -> bool (TEXT_SUMMARY approved?)
+    ocr_exists_cache = {}           # asset_id -> bool (has TEXT_OCR task?)
+    ocr_completed_cache = {}        # asset_id -> bool (TEXT_OCR completed?)
     
     # Validate request - at least one dispatch mode must be provided
     if not request.dispatch_all and not request.vector_status_ids and not request.asset_ids:
@@ -611,10 +634,43 @@ async def dispatch_tasks(
         logger.info(f"   VectorType: {vector_status.vector_type}")
         logger.info(f"   Privacy: {asset.privacy_level}")
         
-        # TEXT_SUMMARY prerequisite check for non-TEXT_SUMMARY tasks
-        if vector_status.vector_type != VectorType.TEXT_SUMMARY:
-            # Check cache first
-            asset_id_str = str(asset.id)
+        # ============================================
+        # PREREQUISITE CHECKS
+        # ============================================
+        # Order: TEXT_OCR → TEXT_SUMMARY → Other tasks
+        # - TEXT_OCR: Can run anytime (no prerequisites)
+        # - TEXT_SUMMARY: Must wait for TEXT_OCR if OCR exists
+        # - Other tasks: Must wait for TEXT_SUMMARY approval
+        
+        asset_id_str = str(asset.id)
+        
+        # 1. TEXT_OCR - No prerequisites, can run immediately
+        if vector_status.vector_type == VectorType.TEXT_OCR:
+            logger.info("   ✅ TEXT_OCR has no prerequisites - can dispatch")
+            # No blocking, continue to dispatch
+        
+        # 2. TEXT_SUMMARY - Must wait for OCR to complete (if OCR task exists)
+        elif vector_status.vector_type == VectorType.TEXT_SUMMARY:
+            # Check if this asset has an OCR task
+            if asset_id_str not in ocr_exists_cache:
+                ocr_exists_cache[asset_id_str] = has_text_ocr_task(asset.id)
+            
+            if ocr_exists_cache[asset_id_str]:
+                # OCR task exists, check if it's completed
+                if asset_id_str not in ocr_completed_cache:
+                    ocr_completed_cache[asset_id_str] = is_text_ocr_completed(asset.id)
+                
+                if not ocr_completed_cache[asset_id_str]:
+                    logger.warning(f"   ⚠️ SKIPPING: TEXT_OCR not completed for this asset")
+                    logger.warning(f"      → TEXT_OCR must complete before TEXT_SUMMARY can run")
+                    continue
+                else:
+                    logger.info("   ✅ TEXT_OCR completed - TEXT_SUMMARY can proceed")
+            else:
+                logger.info("   ✅ No OCR task - TEXT_SUMMARY can proceed directly")
+        
+        # 3. All other tasks - Must wait for TEXT_SUMMARY to be approved
+        else:
             if asset_id_str not in text_summary_status_cache:
                 text_summary_status_cache[asset_id_str] = is_text_summary_approved(asset.id)
             
@@ -874,4 +930,51 @@ async def reset_tasks_to_hold(
         tasks_reset=reset_count,
         success=True,
         message=f"Successfully reset {reset_count} task(s) to ON_HOLD"
+    )
+
+
+@router.post("/approve", response_model=ApproveTaskResponse)
+async def approve_tasks(
+    request: ApproveTaskRequest,
+    session: Session = Depends(get_session)
+):
+    """
+    Approve tasks in REVIEW_REQUIRED status, moving them to COMPLETED.
+    
+    This is used for Human-in-the-Loop workflows (OCR, Vision, etc.)
+    where the user validates the AI output.
+    """
+    logger.info(f"✅ Approving {len(request.vector_status_ids)} task(s)")
+    
+    approved_count = 0
+    
+    for vs_id in request.vector_status_ids:
+        try:
+            vs_uuid = uuid.UUID(vs_id)
+            vector_status = session.get(VectorStatus, vs_uuid)
+            
+            if not vector_status:
+                logger.warning(f"   VectorStatus {vs_id} not found")
+                continue
+            
+            # Only approve if in REVIEW_REQUIRED
+            if vector_status.status == JobStatus.REVIEW_REQUIRED:
+                old_status = vector_status.status
+                vector_status.status = JobStatus.COMPLETED
+                vector_status.updated_at = datetime.utcnow()
+                approved_count += 1
+                logger.info(f"   ✅ Approved {vs_id}: {old_status} → COMPLETED")
+            else:
+                logger.warning(f"   ⚠️ Skipping {vs_id}: status={vector_status.status} (must be REVIEW_REQUIRED)")
+                
+        except Exception as e:
+            logger.error(f"   ❌ Error approving {vs_id}: {e}")
+    
+    session.commit()
+    logger.info(f"   Approved {approved_count} task(s)")
+    
+    return ApproveTaskResponse(
+        tasks_approved=approved_count,
+        success=True,
+        message=f"Successfully approved {approved_count} task(s)"
     )

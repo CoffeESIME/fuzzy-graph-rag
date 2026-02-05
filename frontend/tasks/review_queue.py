@@ -8,6 +8,7 @@ Allows users to view error details and reset tasks back to ON_HOLD for retry.
 
 import streamlit as st
 import requests
+import json
 from typing import List, Dict, Any, Optional
 
 
@@ -70,6 +71,46 @@ def reset_tasks_to_hold(api_base_url: str, vector_status_ids: List[str]) -> bool
         return False
 
 
+def approve_tasks(api_base_url: str, vector_status_ids: List[str]) -> bool:
+    """Approve selected tasks (mark as COMPLETED)."""
+    try:
+        response = requests.post(
+            f"{api_base_url}/tasks/approve",
+            json={"vector_status_ids": vector_status_ids},
+            timeout=30
+        )
+        if response.status_code == 200:
+            result = response.json()
+            st.success(f"✅ {result.get('tasks_approved', 0)} tarea(s) marcadas como DONE")
+            return True
+        else:
+            st.error(f"Error: {response.status_code} - {response.text}")
+            return False
+    except Exception as e:
+        st.error(f"Error approving tasks: {e}")
+        return False
+
+
+
+def update_sidecar(api_base_url: str, asset_id: str, updates: Dict[str, Any]) -> bool:
+    """Update sidecar metadata."""
+    try:
+        response = requests.post(
+            f"{api_base_url}/sidecar/update/{asset_id}",
+            json={"updates": updates},
+            timeout=10
+        )
+        if response.status_code == 200:
+            st.success("✅ Sidecar actualizado correctamente")
+            return True
+        else:
+            st.error(f"Error actualizando sidecar: {response.status_code} - {response.text}")
+            return False
+    except Exception as e:
+        st.error(f"Error de conexión: {e}")
+        return False
+
+
 # ==========================================
 # MAIN COMPONENT
 # ==========================================
@@ -86,6 +127,12 @@ def render_review_queue(api_base_url: str = "http://localhost:8000") -> None:
     """
     st.subheader("👁️ Cola de Revisión")
     st.markdown("Tareas que requieren revisión humana o que fallaron.")
+    
+    # Initialize session state for editing if not exists
+    if "editing_sidecar_id" not in st.session_state:
+        st.session_state.editing_sidecar_id = None
+    if "editing_sidecar_content" not in st.session_state:
+        st.session_state.editing_sidecar_content = ""
     
     # Refresh button
     col1, col2 = st.columns([8, 2])
@@ -169,7 +216,7 @@ def render_review_queue(api_base_url: str = "http://localhost:8000") -> None:
     
     selected_count = len(st.session_state.selected_review_tasks)
     
-    col1, col2, col3 = st.columns([2, 2, 4])
+    col1, col2, col3, col4 = st.columns([2, 3, 3, 2])
     
     with col1:
         st.markdown(f"**Seleccionadas:** {selected_count}")
@@ -179,20 +226,34 @@ def render_review_queue(api_base_url: str = "http://localhost:8000") -> None:
             "🔄 Reset a ON_HOLD",
             disabled=selected_count == 0,
             use_container_width=True,
-            type="primary"
+            help="Resetear tareas fallidas o en revisión para intentarlo de nuevo"
         ):
             if reset_tasks_to_hold(api_base_url, list(st.session_state.selected_review_tasks)):
                 st.session_state.selected_review_tasks = set()
                 st.rerun()
     
     with col3:
-        if st.button("Seleccionar Todas", key="select_all_review"):
+        if st.button(
+            "✅ Marcar como Done",
+            disabled=selected_count == 0,
+            use_container_width=True,
+            type="primary",
+            help="Aprobar tareas en revisión (REVIEW_REQUIRED) como completadas"
+        ):
+            if approve_tasks(api_base_url, list(st.session_state.selected_review_tasks)):
+                st.session_state.selected_review_tasks = set()
+                st.rerun()
+
+    with col4:
+        if st.button("Seleccionar Todas", key="select_all_review", use_container_width=True):
             st.session_state.selected_review_tasks = {t["vector_status_id"] for t in all_tasks}
             st.rerun()
 
 
 def _render_task_list(tasks: List[Dict], key_prefix: str) -> None:
     """Render a list of tasks with selection and details."""
+    
+    api_base_url = "http://localhost:8000" # TODO: Pass this as arg or config
     
     for i, task in enumerate(tasks):
         vs_id = task["vector_status_id"]
@@ -238,16 +299,54 @@ def _render_task_list(tasks: List[Dict], key_prefix: str) -> None:
                     elif "timeout" in error_lower:
                         st.info("💡 Timeout. El archivo puede ser demasiado grande o el servidor lento.")
                 
-                # Show sidecar data for debugging
+                # Show sidecar data for debugging and editing
                 sidecar = task.get("sidecar_data", {})
                 if sidecar:
-                    with st.expander("🔍 Ver Sidecar (Debug)", expanded=False):
-                        # Show raw_debug_data if available
-                        debug_data = sidecar.get("data_layers", {}).get("raw_debug_data", {})
-                        if debug_data:
-                            st.json(debug_data)
-                        else:
+                    with st.expander("📝 Ver/Editar Sidecar", expanded=False):
+                        asset_id = task["asset_id"]
+                        
+                        # Check if we are editing this specific asset
+                        is_editing = st.session_state.editing_sidecar_id == asset_id
+                        
+                        col_view, col_edit = st.columns([1, 1])
+                        
+                        # View Mode
+                        if not is_editing:
                             st.json(sidecar)
+                            if st.button("✏️ Editar JSON", key=f"{key_prefix}_edit_btn_{vs_id}"):
+                                st.session_state.editing_sidecar_id = asset_id
+                                st.session_state.editing_sidecar_content = json.dumps(sidecar, indent=2, ensure_ascii=False)
+                                st.rerun()
+                        
+                        # Edit Mode
+                        else:
+                            st.info("⚠️ Edita con cuidado. El formato debe ser JSON válido.")
+                            new_content = st.text_area(
+                                "Editor JSON",
+                                value=st.session_state.editing_sidecar_content,
+                                height=400,
+                                key=f"{key_prefix}_json_editor_{vs_id}"
+                            )
+                            
+                            col_save, col_cancel = st.columns(2)
+                            with col_save:
+                                if st.button("💾 Guardar Cambios", key=f"{key_prefix}_save_btn_{vs_id}", type="primary"):
+                                    try:
+                                        # Validate JSON
+                                        updated_json = json.loads(new_content)
+                                        
+                                        # Call backend to update
+                                        if update_sidecar(api_base_url, asset_id, updated_json):
+                                            st.session_state.editing_sidecar_id = None
+                                            st.rerun()
+                                            
+                                    except json.JSONDecodeError as e:
+                                        st.error(f"❌ JSON Inválido: {e}")
+                            
+                            with col_cancel:
+                                if st.button("❌ Cancelar", key=f"{key_prefix}_cancel_btn_{vs_id}"):
+                                    st.session_state.editing_sidecar_id = None
+                                    st.rerun()
 
 
 # ==========================================
