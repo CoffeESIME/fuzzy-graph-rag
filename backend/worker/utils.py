@@ -290,6 +290,57 @@ def ensure_digital_asset_node(driver, file_hash: str, asset_metadata: dict) -> b
         return False
 
 
+def link_memory_to_parent(driver, memory_hash: str, parent_hash: str, memory_filename: str) -> bool:
+    """
+    Create a [:MEMORY_OF] relationship between a spawned memory and its parent asset.
+    
+    When a user adds a memory/note to an existing file (audio, image, etc.),
+    we spawn a new memory asset. This function creates the Neo4j relationship
+    connecting them.
+    
+    Args:
+        driver: Neo4j driver instance
+        memory_hash: The memory asset's file hash
+        parent_hash: The parent asset's file hash (the original file)
+        memory_filename: Filename of the memory for logging
+        
+    Returns:
+        True if relationship created/exists, False on error
+    """
+    query = """
+    MATCH (parent:DigitalAsset {file_hash: $parent_hash})
+    MERGE (memory:DigitalAsset {file_hash: $memory_hash})
+    ON CREATE SET
+        memory.created_at = datetime(),
+        memory.is_memory = true
+    MERGE (memory)-[r:MEMORY_OF]->(parent)
+    ON CREATE SET
+        r.created_at = datetime()
+    SET 
+        memory.last_seen = datetime(),
+        r.last_seen = datetime()
+    RETURN parent.file_hash as parent, memory.file_hash as memory
+    """
+    
+    try:
+        with driver.session() as session:
+            result = session.run(
+                query,
+                parent_hash=parent_hash,
+                memory_hash=memory_hash
+            )
+            record = result.single()
+            if record:
+                logger.info(f"   🔗 Neo4j: Linked memory '{memory_filename[:20]}...' → parent {parent_hash[:8]}...")
+                return True
+            else:
+                logger.warning(f"   ⚠️ Neo4j: Parent asset {parent_hash[:8]}... not found in graph")
+                return False
+    except Exception as e:
+        logger.error(f"   ❌ Neo4j link_memory_to_parent failed: {e}")
+        return False
+
+
 
 def stage_suggestions_in_inbox(driver, file_hash: str, llm_json: dict) -> bool:
     """

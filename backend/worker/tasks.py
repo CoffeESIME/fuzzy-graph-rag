@@ -30,6 +30,7 @@ from worker.utils import (
     determine_collection,
     determine_vector_name,
     ensure_digital_asset_node,
+    link_memory_to_parent,
     stage_suggestions_in_inbox,
     upsert_to_weaviate
 )
@@ -1183,6 +1184,7 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     # ========================================
     # STEP C: NEO4J MERGE - ENSURE DIGITAL ASSET NODE EXISTS
     # ========================================
+    neo4j_driver = None
     try:
         neo4j_driver = get_neo4j_driver()
         asset_metadata = {
@@ -1191,6 +1193,33 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
             "inbox_id": str(asset.id)  # Using asset ID as inbox reference
         }
         ensure_digital_asset_node(neo4j_driver, asset.file_hash, asset_metadata)
+        
+        # Check if this is a spawned memory with a parent asset
+        is_memory_spawn = sidecar_data.get("operation") == "memory_spawn"
+        parent_hash = None
+        
+        if is_memory_spawn:
+            # Get parent asset hash from sidecar
+            parent_asset_id = sidecar_data.get("parent_asset_id")
+            if parent_asset_id:
+                # Fetch parent asset to get its file_hash
+                from sqlmodel import select
+                parent_asset = session.exec(
+                    select(Asset).where(Asset.id == parent_asset_id)
+                ).first()
+                
+                if parent_asset:
+                    parent_hash = parent_asset.file_hash
+                    # Link memory to parent in Neo4j
+                    link_memory_to_parent(
+                        neo4j_driver, 
+                        memory_hash=asset.file_hash, 
+                        parent_hash=parent_hash,
+                        memory_filename=asset.filename
+                    )
+                else:
+                    logger.warning(f"   ⚠️ Parent asset {parent_asset_id} not found in DB")
+                    
     except Exception as e:
         logger.warning(f"   ⚠️ Neo4j sync failed (non-fatal): {e}")
         # Continue processing even if Neo4j fails
