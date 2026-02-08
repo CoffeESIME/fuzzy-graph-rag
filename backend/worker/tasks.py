@@ -888,13 +888,10 @@ def process_vector_task(self, vector_status_id: str):
             result = process_audio_clap_task(asset, vector_status, session)
         
         elif vector_status.vector_type == VectorType.AUDIO_TRANSCRIPT:
-            # AUDIO_TRANSCRIPT: Not implemented yet - keep ON_HOLD for future processing
-            handler_name = "AUDIO_TRANSCRIPT (not implemented)"
-            logger.warning(f"⏭️ AUDIO_TRANSCRIPT not implemented yet - keeping ON_HOLD")
-            result = {
-                'status': 'ON_HOLD',
-                'message': 'AUDIO_TRANSCRIPT not implemented - kept on hold for future'
-            }
+            # AUDIO_TRANSCRIPT consumes TEXT_SUMMARY analysis to create transcript embeddings
+            handler_name = "process_text_chunk_task (via AUDIO_TRANSCRIPT)"
+            logger.info(f"→ Routing AUDIO_TRANSCRIPT to process_text_chunk_task")
+            result = process_text_chunk_task(asset, vector_status, session)
         
         elif vector_status.vector_type == VectorType.USER_MEMORY:
             # USER_MEMORY consumes TEXT_SUMMARY analysis to create memory embeddings
@@ -925,11 +922,11 @@ def process_vector_task(self, vector_status_id: str):
             logger.info(f"⏸️ VectorStatus {vector_status_id} WAITING FOR USER INPUT")
             logger.info(f"   → User must provide memory context to continue")
         elif final_status == 'ON_HOLD':
-            # Keep in ON_HOLD (e.g., AUDIO_TRANSCRIPT not implemented yet)
+            # Keep in ON_HOLD (e.g., dependency not yet ready)
             vector_status.status = JobStatus.ON_HOLD
             vector_status.error_message = result.get('message', 'Task kept on hold')
             logger.info(f"⏸️ VectorStatus {vector_status_id} kept ON_HOLD")
-            logger.info(f"   → {result.get('message', 'Not implemented yet')}")
+            logger.info(f"   → {result.get('message', 'Waiting for dependencies')}")
         elif final_status == 'FAILED':
             vector_status.status = JobStatus.FAILED
             vector_status.error_message = result.get('error_message', 'Task failed')
@@ -2150,140 +2147,6 @@ def process_audio_clap_task(asset: Asset, vector_status: VectorStatus, session) 
         'status': 'completed',
         'weaviate_uuid': f'mock-clap-{asset.id}',
         'processing_time': 2.0
-    }
-
-
-def process_audio_transcript_task(asset: Asset, vector_status: VectorStatus, session) -> dict:
-    """
-    Transcribe audio to text and analyze using specialized audio prompt.
-    
-    Uses audio_processing_options from sidecar:
-    - use_whisper: If True, call Whisper API for auto transcription
-    - has_provided_lyrics: If True, use provided_lyrics_text instead of Whisper
-    - is_voice_note / is_song: Affects LLM analysis prompt
-    """
-    logger.info(f"Processing AUDIO_TRANSCRIPT for {asset.filename}")
-    
-    # Get sidecar data and contexts
-    sidecar_data = get_sidecar_data(asset)
-    user_context = get_user_context_from_sidecar(sidecar_data)
-    audio_options = get_audio_options_from_sidecar(sidecar_data)
-    
-    # Determine privacy mode - force strict if user wants to convert to memory
-    privacy_mode = get_privacy_mode(asset, force_strict=user_context["force_strict"])
-    if user_context["force_strict"]:
-        logger.info(f"   🔒 Privacy forced to STRICT (convert_to_memory=True)")
-    
-    # Log audio options
-    logger.info(f"   🎵 Audio options: {audio_options}")
-    
-    # Determine transcription source
-    transcribed_text = None
-    
-    if audio_options.get("has_provided_lyrics") and audio_options.get("provided_lyrics_text"):
-        # User provided the lyrics/transcript
-        transcribed_text = audio_options["provided_lyrics_text"]
-        logger.info(f"   📜 Using user-provided transcript ({len(transcribed_text)} chars)")
-    elif audio_options.get("use_whisper"):
-        # Call Whisper API (speaches)
-        logger.info(f"   🎙️ Calling Whisper API for transcription...")
-        try:
-            file_content = download_file_from_minio(asset)
-            transcribed_text = call_whisper_api(file_content, asset.filename)
-            logger.info(f"   ✅ Whisper transcription completed: {len(transcribed_text)} chars")
-        except Exception as e:
-            logger.error(f"   ❌ Whisper transcription failed: {e}")
-            transcribed_text = f"[Whisper transcription failed: {str(e)}]"
-    else:
-        logger.warning(f"   ⚠️ No transcript source specified (use_whisper=False, no provided lyrics)")
-        transcribed_text = "[No transcription available]"
-    
-    # Store transcript in sidecar
-    if transcribed_text:
-        update_sidecar_metadata(
-            asset,
-            'data_layers.intermediate_results.audio_transcript',
-            transcribed_text,
-            add_workflow_step='audio_transcript'
-        )
-    
-    # Build external context for LLM analysis
-    external_context = {}
-    
-    if transcribed_text and transcribed_text != "[No transcription available]":
-        external_context['lyrics_or_speech'] = transcribed_text
-    
-    if audio_options.get("is_voice_note"):
-        external_context['audio_type'] = 'voice_note'
-    elif audio_options.get("is_song"):
-        external_context['audio_type'] = 'song'
-    
-    if user_context["content"]:
-        external_context['user_context'] = user_context["content"]
-    
-    if sidecar_data:
-        user_notes = sidecar_data.get('user_notes')
-        if user_notes:
-            external_context['user_notes'] = user_notes
-    
-    # Build specialized audio prompt
-    prompt = build_specialized_prompt(
-        task_type="audio",
-        external_context=external_context if external_context else None
-    )
-    logger.info(f"   Built audio analysis prompt: {len(prompt)} chars")
-    
-    # Call LLM for audio analysis
-    if transcribed_text and transcribed_text != "[No transcription available]":
-        try:
-            url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
-            messages = [
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": f"Analyze this audio transcript:\n\n{transcribed_text[:4000]}"}
-            ]
-            
-            data = {
-                "task": "chat",
-                "privacy_mode": privacy_mode,
-                "messages": json.dumps(messages),
-                "temperature": 0.3,
-                "response_format": json.dumps({"type": "json_object"})
-            }
-            
-            response = requests.post(url, data=data, timeout=120)
-            
-            if response.status_code == 200:
-                result = response.json()
-                llm_response = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-                
-                parsed_json, status = extract_json_from_llm_response(llm_response)
-                if parsed_json:
-                    logger.info(f"   ✅ LLM extracted audio metadata: {list(parsed_json.keys())}")
-                    update_sidecar_metadata(
-                        asset,
-                        'data_layers.raw_debug_data.audio_analysis_json',
-                        parsed_json,
-                        add_workflow_step='audio_analysis'
-                    )
-                else:
-                    logger.warning(f"   ⚠️ LLM: {status}")
-                    update_sidecar_metadata(
-                        asset,
-                        'data_layers.raw_debug_data.audio_analysis_raw',
-                        llm_response,
-                        add_workflow_step='audio_analysis'
-                    )
-            else:
-                logger.warning(f"   ⚠️ LLM call failed: {response.status_code}")
-        except Exception as e:
-            logger.warning(f"   ⚠️ LLM analysis failed: {e}")
-    
-    logger.info(f"   ✅ AUDIO_TRANSCRIPT processed - awaiting review")
-    
-    return {
-        'status': 'REVIEW_REQUIRED',
-        'weaviate_uuid': f'mock-transcript-{asset.id}',
-        'processing_time': 3.0
     }
 
 

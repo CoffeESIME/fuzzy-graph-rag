@@ -88,6 +88,16 @@ def inspect_latest_asset(target_hash=None):
                 except:
                     console.print("[yellow]⚠️ Could not parse suggested_entities JSON[/yellow]")
 
+            # 2. MOSTRAR CONCEPTOS (¡LO QUE FALTABA!)
+            if inbox and inbox.get("suggested_concepts"):
+                try:
+                    json_str = inbox["suggested_concepts"]
+                    if len(json_str) > 5:
+                        console.print(Panel(JSON(json_str), title="💡 Staged Concepts (Abstract/Fictional)", border_style="magenta"))
+                    else:
+                        console.print("[dim]   (No concepts detected)[/dim]")
+                except:
+                    pass
         # =====================================================
         # 2. WEAVIATE: BUSCAR EN TODAS LAS COLECCIONES
         # =====================================================
