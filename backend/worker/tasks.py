@@ -1151,14 +1151,37 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     logger.info(f"   ✅ Found prior analysis with keys: {list(analysis_json.keys())}")
     
     # ========================================
-    # STEP B: READ RAW TEXT FROM MINIO
+    # STEP B: READ RAW CONTENT (TEXT ONLY)
     # ========================================
-    try:
-        text_content = download_file_from_minio(asset).decode('utf-8')
-        logger.info(f"   📄 Read text content: {len(text_content)} chars")
-    except Exception as e:
-        logger.error(f"   ❌ Failed to read text: {e}")
-        raise
+    # For images/audio, we don't need the raw file - just the analysis_json
+    # Only text files need to be read and decoded
+    text_content = ""
+    
+    # Detect content type from analysis_json to decide if we need raw text
+    is_text_content = "text_specifics" in analysis_json or "memory_analysis" in analysis_json
+    is_audio_with_transcript = "audio_specifics" in analysis_json
+    
+    if is_text_content:
+        # Text files: decode as UTF-8
+        try:
+            text_content = download_file_from_minio(asset).decode('utf-8')
+            logger.info(f"   📄 Read text content: {len(text_content)} chars")
+        except Exception as e:
+            logger.error(f"   ❌ Failed to read text: {e}")
+            raise
+    elif is_audio_with_transcript:
+        # Audio files: try to get transcript from sidecar or intermediate results
+        data_layers = sidecar_data.get('data_layers', {})
+        text_content = (
+            data_layers.get('intermediate_results', {}).get('audio_transcript', '') or
+            analysis_json.get('audio_specifics', {}).get('lyrics_summary', '')
+        )
+        logger.info(f"   🎵 Using transcript from sidecar: {len(text_content)} chars")
+    else:
+        # Images: no raw text needed - use OCR if available
+        ocr_text = analysis_json.get('visual_specifics', {}).get('ocr_text', '')
+        text_content = ocr_text or ""
+        logger.info(f"   🖼️ Image file - using OCR text: {len(text_content)} chars")
     
     # ========================================
     # STEP C: NEO4J MERGE - ENSURE DIGITAL ASSET NODE EXISTS
@@ -1176,12 +1199,19 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
         # Continue processing even if Neo4j fails
     
     # ========================================
-    # STEP D: DETERMINE COLLECTION & BUILD SUPER STRING
+    # STEP D: DETERMINE TASK TYPE, COLLECTION & BUILD SUPER STRING
     # ========================================
-    task_type = "text"
+    # Auto-detect task_type from analysis_json structure
+    if "visual_specifics" in analysis_json:
+        task_type = "vision"
+    elif "audio_specifics" in analysis_json:
+        task_type = "audio"
+    else:
+        task_type = "text"  # Includes text_specifics and memory_analysis
+    
     collection_name = determine_collection(task_type, analysis_json, sidecar_data)
     
-    logger.info(f"   🎯 Target Collection: {collection_name}")
+    logger.info(f"   🎯 Detected: task_type={task_type}, collection={collection_name}")
     
     vector_string = build_vector_content(
         task_type=task_type,
@@ -1210,21 +1240,96 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     logger.info(f"   ✅ Embedding generated: {len(embedding_vector)} dimensions")
     
     # ========================================
-    # STEP F: WEAVIATE UPSERT WITH DETERMINISTIC UUID
+    # STEP F: WEAVIATE UPSERT WITH CONDITIONAL METADATA MAPPING
     # ========================================
     weaviate_uuid = generate_collection_uuid(asset.file_hash, collection_name)
-    vector_name = determine_vector_name(task_type, vector_status.vector_type.value)
     
+    # === LÓGICA DE MAPEO DE METADATOS (Hybrid Search Ready) ===
+    
+    # 1. Datos Comunes (Base properties)
+    graph_core = analysis_json.get("graph_core", {})
+    properties = {
+        "neo4j_hash": asset.file_hash,
+        "inbox_id": str(asset.id),
+        "tags": graph_core.get("tags", [])
+    }
+    
+    # 2. Selección de Vector Name y Campos Específicos
+    target_vector_name = "default"
+    
+    # CASO A: MEMORIA DE USUARIO
+    if "memory_analysis" in analysis_json:
+        specs = analysis_json.get("memory_analysis", {})
+        conn = specs.get("file_connection", {})
+        
+        properties.update({
+            "text": specs.get("enriched_text", text_content[:2000]),
+            "sentiment": specs.get("sentiment", "neutral"),
+            "emotional_intensity": float(specs.get("emotional_intensity", 0.0)),
+            "connection_type": conn.get("relation_type", "NONE"),
+            "related_file_uuids": [asset.file_hash]  # Self-reference for now
+        })
+        target_vector_name = "default"
+        logger.info(f"   📝 Mapped as MEMORY: sentiment={properties['sentiment']}")
+
+    # CASO B: VISUAL (Si la tarea es para VisualSpace con semantic)
+    elif "visual_specifics" in analysis_json:
+        specs = analysis_json.get("visual_specifics", {})
+        
+        properties.update({
+            "description_ai": graph_core.get("summary", ""),
+            "ocr_text": specs.get("ocr_text") or "",
+            "image_type": specs.get("image_type", "unknown"),
+            "art_style": specs.get("art_style", ""),
+            "visual_mood": specs.get("visual_mood", ""),
+            "dominant_colors": specs.get("dominant_colors", [])
+        })
+        target_vector_name = "semantic"  # BGE-M3 goes to "semantic" named vector
+        logger.info(f"   🖼️ Mapped as VISUAL: type={properties['image_type']}")
+
+    # CASO C: AUDIO
+    elif "audio_specifics" in analysis_json:
+        specs = analysis_json.get("audio_specifics", {})
+        
+        properties.update({
+            "transcript": text_content[:5000],  # Full transcript
+            "lyrics_summary": specs.get("lyrics_summary") or "",
+            "audio_type": specs.get("audio_type", "unknown"),
+            "genre": specs.get("genre", ""),
+            "emotion": specs.get("emotional_tone", ""),
+            "instruments": specs.get("instruments", []),
+            "tempo": specs.get("tempo", "")
+        })
+        target_vector_name = "transcript_semantic"  # BGE-M3 goes here
+        logger.info(f"   🎵 Mapped as AUDIO: type={properties['audio_type']}")
+
+    # CASO D: DOCUMENTO DE TEXTO (Default)
+    elif "text_specifics" in analysis_json:
+        specs = analysis_json.get("text_specifics", {})
+        
+        properties.update({
+            "content": text_content[:5000],
+            "ai_summary": graph_core.get("summary", ""),
+            "document_type": specs.get("document_type", "unknown"),
+            "rhetorical_tone": specs.get("rhetorical_tone", "neutral")
+        })
+        target_vector_name = "default"
+        logger.info(f"   📄 Mapped as TEXT: type={properties['document_type']}")
+    
+    # FALLBACK: Unknown content type
+    else:
+        properties.update({
+            "content": text_content[:5000],
+            "ai_summary": graph_core.get("summary", "")
+        })
+        target_vector_name = "default"
+        logger.warning(f"   ⚠️ Fallback mapping - no specific schema found")
+    
+    logger.info(f"   🎯 Target: {collection_name}/{target_vector_name}")
+    
+    # === WEAVIATE UPSERT ===
     try:
         weaviate_client = get_weaviate_client()
-        
-        properties = {
-            "neo4j_hash": asset.file_hash,
-            "inbox_id": str(asset.id),
-            "filename": asset.filename,
-            "content_preview": text_content[:500],
-            "super_string_length": len(vector_string)
-        }
         
         upsert_success = upsert_to_weaviate(
             client=weaviate_client,
@@ -1232,7 +1337,7 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
             weaviate_uuid=weaviate_uuid,
             properties=properties,
             vector=embedding_vector,
-            vector_name=vector_name
+            vector_name=target_vector_name
         )
         
         if upsert_success:
@@ -1262,18 +1367,27 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     # ========================================
     # STEP H: UPDATE SIDECAR WITH VECTOR INFO
     # ========================================
+    # Detect content type for logging
+    content_type = "text"
+    if "memory_analysis" in analysis_json:
+        content_type = "memory"
+    elif "visual_specifics" in analysis_json:
+        content_type = "visual"
+    elif "audio_specifics" in analysis_json:
+        content_type = "audio"
+    
     update_sidecar_metadata(
         asset,
         'data_layers.vectors_generated',
         {
-            'vector_type': 'text_chunk',
+            'vector_type': content_type,
             'collection': collection_name,
             'weaviate_uuid': weaviate_uuid,
             'vector_dimensions': len(embedding_vector),
             'super_string_length': len(vector_string),
-            'vector_name': vector_name
+            'vector_name': target_vector_name
         },
-        add_workflow_step='text_chunk_embedding'
+        add_workflow_step=f'{content_type}_embedding'
     )
     
     # Save debug vector string for verification (optional but useful)
@@ -1756,6 +1870,19 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
             text_content = download_file_from_minio(asset).decode('utf-8')
             logger.info(f"   Read {len(text_content)} chars")
             
+            # Detect if this is a User Memory asset
+            is_user_memory = False
+            if sidecar_data:
+                is_user_memory = (
+                    sidecar_data.get("is_user_memory", False) or
+                    sidecar_data.get("operation") == "memory_spawn" or
+                    sidecar_data.get("operation") == "memory_ingest" or
+                    asset.filename.startswith("memory_")
+                )
+            
+            if is_user_memory:
+                logger.info("   🧠 USER MEMORY detected - using memory_analysis schema")
+            
             # Build external context
             external_context = {'document_text': text_content[:2000]}
             if sidecar_data:
@@ -1765,12 +1892,13 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                 if user_context["content"]:
                     external_context['user_context'] = user_context["content"]
             
-            # Build specialized text prompt
+            # Build specialized text prompt (with memory flag)
             prompt = build_specialized_prompt(
                 task_type="text",
-                external_context=external_context
+                external_context=external_context,
+                is_user_memory=is_user_memory
             )
-            logger.info(f"   Built text analysis prompt: {len(prompt)} chars")
+            logger.info(f"   Built {'memory' if is_user_memory else 'text'} analysis prompt: {len(prompt)} chars")
             
             # Call LLM for text analysis
             url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"

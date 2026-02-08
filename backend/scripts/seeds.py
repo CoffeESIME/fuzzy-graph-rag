@@ -198,66 +198,99 @@ def seed_neo4j():
 # 2. WEAVIATE: CONSISTENCIA DE NOMBRES
 # ==========================================
 def seed_weaviate():
-    print("🧩 [Weaviate] Configurando Schemas con Named Vectors...")
+    print("🧩 [Weaviate] Configurando Schemas Ricos (Hybrid Search Ready)...")
     client = get_weaviate_client()
     
+    # Propiedades base para trazabilidad
     common_props = [
-        wc.Property(name="neo4j_hash", data_type=wc.DataType.TEXT),
-        wc.Property(name="inbox_id", data_type=wc.DataType.TEXT),
+        wc.Property(name="neo4j_hash", data_type=wc.DataType.TEXT), # ID Universal
+        wc.Property(name="inbox_id", data_type=wc.DataType.TEXT),   # ID de Proceso
+        wc.Property(name="tags", data_type=wc.DataType.TEXT_ARRAY)  # Tags para todos
     ]
 
-    # 1. TextSpace (Documentos) -> 1 Solo Vector (Semántico)
+    # =========================================================
+    # 1. TEXT SPACE (Documentos)
+    # =========================================================
     if not client.collections.exists("TextSpace"):
         client.collections.create(
             name="TextSpace",
-            properties=common_props + [wc.Property(name="content", data_type=wc.DataType.TEXT)],
-            # Solo un vector predeterminado para el texto (Named Vector 'default')
+            properties=common_props + [
+                wc.Property(name="content", data_type=wc.DataType.TEXT), # Texto Crudo
+                wc.Property(name="ai_summary", data_type=wc.DataType.TEXT),
+                wc.Property(name="document_type", data_type=wc.DataType.TEXT), # Filter: 'article', 'note'
+                wc.Property(name="rhetorical_tone", data_type=wc.DataType.TEXT), # Filter: 'sarcastic'
+            ],
             vector_config=[wc.Configure.Vectors.self_provided(name="default")]
         )
 
-    # 2. VisualSpace (Memes/Imágenes) -> 2 Vectores (Visual + Semántico)
+    # =========================================================
+    # 2. VISUAL SPACE (Imágenes/Memes)
+    # =========================================================
     if not client.collections.exists("VisualSpace"):
         client.collections.create(
             name="VisualSpace",
             properties=common_props + [
-                wc.Property(name="description_ai", data_type=wc.DataType.TEXT), # Texto explicativo
-                wc.Property(name="ocr_text", data_type=wc.DataType.TEXT)
+                # Contenido Textual derivado
+                wc.Property(name="description_ai", data_type=wc.DataType.TEXT), # Summary
+                wc.Property(name="ocr_text", data_type=wc.DataType.TEXT),       # Searchable Text inside image
+                
+                # Metadatos Visuales (Filtros)
+                wc.Property(name="image_type", data_type=wc.DataType.TEXT),    # Filter: 'meme', 'photo'
+                wc.Property(name="art_style", data_type=wc.DataType.TEXT),     # Filter: 'pixel_art', 'noir'
+                wc.Property(name="visual_mood", data_type=wc.DataType.TEXT),   # Filter: 'gloomy', 'vibrant'
+                wc.Property(name="dominant_colors", data_type=wc.DataType.TEXT_ARRAY) # Filter: ['#000', '#F00']
             ],
-            # DEFINIMOS DOS VECTORES NOMBRADOS:
             vector_config=[
-                # Vector A: 'visual' (SigLIP - Píxeles)
-                wc.Configure.Vectors.self_provided(name="visual"), 
-                # Vector B: 'semantic' (BGE-M3 - Descripción del texto)
-                wc.Configure.Vectors.self_provided(name="semantic")
+                wc.Configure.Vectors.self_provided(name="visual"),   # SigLIP
+                wc.Configure.Vectors.self_provided(name="semantic")  # BGE-M3 (Super String)
             ]
         )
 
-    # 3. AudioSpace (Música/Voz) -> 2 Vectores (Sonido + Letra)
+    # =========================================================
+    # 3. AUDIO SPACE (Música/Voz)
+    # =========================================================
     if not client.collections.exists("AudioSpace"):
         client.collections.create(
             name="AudioSpace",
             properties=common_props + [
-                wc.Property(name="transcript", data_type=wc.DataType.TEXT),
-                wc.Property(name="emotion", data_type=wc.DataType.TEXT)
+                # Contenido Textual derivado
+                wc.Property(name="transcript", data_type=wc.DataType.TEXT),     # Whisper output
+                wc.Property(name="lyrics_summary", data_type=wc.DataType.TEXT), # Topic analysis
+                
+                # Metadatos Sonoros (Filtros)
+                wc.Property(name="audio_type", data_type=wc.DataType.TEXT),     # Filter: 'song', 'speech'
+                wc.Property(name="genre", data_type=wc.DataType.TEXT),          # Filter: 'jazz', 'rock'
+                wc.Property(name="emotion", data_type=wc.DataType.TEXT),        # Filter: 'sad', 'energetic'
+                wc.Property(name="instruments", data_type=wc.DataType.TEXT_ARRAY), # Filter: ['guitar', 'piano']
+                wc.Property(name="tempo", data_type=wc.DataType.TEXT)           # Filter: 'fast', '120bpm'
             ],
-            # DEFINIMOS DOS VECTORES NOMBRADOS:
             vector_config=[
-                # Vector A: 'audio_clap' (CLAP - Sonido puro/Vibración)
-                wc.Configure.Vectors.self_provided(name="audio_clap"),
-                # Vector B: 'transcript_semantic' (BGE-M3 - Significado de la letra)
-                wc.Configure.Vectors.self_provided(name="transcript_semantic")
+                wc.Configure.Vectors.self_provided(name="audio_clap"),         # CLAP
+                wc.Configure.Vectors.self_provided(name="transcript_semantic") # BGE-M3 (Super String)
             ]
         )
 
-    # 4. MemorySpace (Memorias) -> 1 Solo Vector
+    # =========================================================
+    # 4. MEMORY SPACE (Contexto de Usuario)
+    # =========================================================
     if not client.collections.exists("MemorySpace"):
         client.collections.create(
             name="MemorySpace",
-            properties=common_props + [wc.Property(name="text", data_type=wc.DataType.TEXT)],
+            properties=common_props + [
+                wc.Property(name="text", data_type=wc.DataType.TEXT),           # Enriched Narrative
+                
+                # Metadatos Emocionales/Relacionales (Filtros)
+                wc.Property(name="sentiment", data_type=wc.DataType.TEXT),      # Filter: 'nostalgic'
+                wc.Property(name="emotional_intensity", data_type=wc.DataType.NUMBER), # Filter: > 0.8
+                wc.Property(name="connection_type", data_type=wc.DataType.TEXT),# Filter: 'soundtrack_of'
+                
+                # Referencias para Merge futuro
+                wc.Property(name="related_file_uuids", data_type=wc.DataType.TEXT_ARRAY) 
+            ],
             vector_config=[wc.Configure.Vectors.self_provided(name="default")]
         )
     
-    print("   ✅ Weaviate: Colecciones con soporte Multi-Vector listas.")
+    print("   ✅ Weaviate: Colecciones enriquecidas listas.")
 
 # ==========================================
 # 3. MINIO: ESTRUCTURA MAESTRA

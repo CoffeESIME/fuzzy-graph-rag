@@ -16,7 +16,8 @@ from typing import Optional, Dict, Any, List
 def build_specialized_prompt(
     task_type: str,  # "vision", "audio", "text"
     external_context: Optional[Dict[str, Any]] = None,
-    existing_taxonomies: Optional[Dict[str, List[str]]] = None
+    existing_taxonomies: Optional[Dict[str, List[str]]] = None,
+    is_user_memory: bool = False  # NEW: Flag for memory-specific processing
 ) -> str:
     """
     Builds the system prompt for the LLM Gateway.
@@ -25,6 +26,7 @@ def build_specialized_prompt(
         task_type: One of "vision", "audio", "text"
         external_context: User-provided context (notes, descriptions)
         existing_taxonomies: Existing concept types/domains from the graph
+        is_user_memory: If True, use memory_analysis schema instead of text_specifics
         
     Returns:
         Complete system prompt for the LLM
@@ -102,7 +104,24 @@ def build_specialized_prompt(
         }
     }
 
+    # --- SCHEMA SELECTION ---
     target_schema = schemas.get(task_type, schemas["text"])
+    
+    # Override for User Memory: use memory_analysis instead of text_specifics
+    if task_type == "text" and is_user_memory:
+        target_schema = {
+            "graph_core": graph_core,
+            "memory_analysis": {
+                "enriched_text": "Narrativa detallada que expande y contextualiza el input del usuario (Spanish)",
+                "sentiment": "Nostalgic | Happy | Anxious | Surreal | Reflective | etc.",
+                "emotional_intensity": "<float 0.0-1.0>",
+                "file_connection": {
+                    "relation_type": "SOUNDTRACK_OF | REMINDS_OF | CAPTURED_DURING | INSPIRED_BY | etc.",
+                    "reasoning": "Explicación de por qué el archivo está conectado a esta memoria (Spanish)",
+                    "confidence": "<float 0.0-1.0>"
+                }
+            }
+        }
 
     # ==========================================
     # 3. FEW-SHOT EXAMPLES SELECTION
@@ -111,6 +130,12 @@ def build_specialized_prompt(
         examples_str = _get_vision_examples()
     elif task_type == "audio":
         examples_str = _get_audio_examples()
+    elif task_type == "text":
+        # Memory-specific examples vs normal text examples
+        if is_user_memory:
+            examples_str = _get_memory_examples()
+        else:
+            examples_str = _get_text_examples()
     else:
         examples_str = _get_text_examples()
 
@@ -314,3 +339,61 @@ def _get_text_examples() -> str:
         }
     }
     return f"Input: (Personal Note)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Scientific Text)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+
+
+def _get_memory_examples() -> str:
+    """Get few-shot examples specifically for User Memory analysis."""
+    
+    # Case 1: Strong Memory connected to a file (Synchrony)
+    ex1 = {
+        "graph_core": {
+            "summary": "Recuerdo sobre un sismo coincidiendo con una canción.",
+            "entities": {
+                "persons": [],
+                "locations": [{"name": "Ciudad de México", "type": "City", "confidence": 1.0}],
+                "organizations": [],
+                "concepts": [
+                    {"name": "Sincronía", "type": "Phenomenon", "domain": "Philosophy", "definition": "Coincidencia significativa percibida", "confidence": 0.9, "reasoning": "El timing exacto creó una experiencia surreal"}
+                ]
+            },
+            "tags": ["sismo", "coincidencia", "miedo", "musica"]
+        },
+        "memory_analysis": {
+            "enriched_text": "El usuario relata una experiencia surrealista donde el sismo de 2017 comenzó exactamente cuando la canción llegó a su clímax, creando una asociación permanente entre el caos y la música.",
+            "sentiment": "Surreal / Awe",
+            "emotional_intensity": 0.95,
+            "file_connection": {
+                "relation_type": "SOUNDTRACK_OF",
+                "reasoning": "La canción sonaba durante el evento traumático, creando una conexión emocional permanente.",
+                "confidence": 1.0
+            }
+        }
+    }
+
+    # Case 2: Vague Memory / Reflection (Weak connection)
+    ex2 = {
+        "graph_core": {
+            "summary": "Reflexión vaga sobre la infancia al ver una imagen.",
+            "entities": {
+                "persons": [{"name": "Abuela", "role": "Family", "confidence": 1.0}],
+                "locations": [],
+                "organizations": [],
+                "concepts": [
+                    {"name": "Nostalgia", "type": "Emotion", "domain": "Psychology", "definition": "Añoranza del pasado", "confidence": 1.0, "reasoning": "Sentimiento central de la memoria"}
+                ]
+            },
+            "tags": ["infancia", "abuela", "cocina"]
+        },
+        "memory_analysis": {
+            "enriched_text": "Una breve nota nostálgica evocada por el color amarillo de la imagen, que le recuerda vagamente a la cocina de su abuela.",
+            "sentiment": "Nostalgic",
+            "emotional_intensity": 0.4,
+            "file_connection": {
+                "relation_type": "REMINDS_OF",
+                "reasoning": "Asociación visual tenue por el color amarillo.",
+                "confidence": 0.3
+            }
+        }
+    }
+
+    return f"Input: (Story about earthquake + song)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Vague childhood memory)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
