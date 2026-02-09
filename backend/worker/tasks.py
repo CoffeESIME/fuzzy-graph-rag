@@ -61,10 +61,173 @@ _settings = get_settings()
 LLM_GATEWAY_BASE_URL = f"{_settings.LLM_GATEWAY_URL}/v1"
 MINIO_BUCKET = _settings.MINIO_BUCKET
 WHISPER_API_URL = _settings.WHISPER_API_URL
+LLM_REQUEST_TIMEOUT = _settings.LLM_REQUEST_TIMEOUT  # Configurable timeout for long inference
 
 logger.info(f"   LLM Gateway: {LLM_GATEWAY_BASE_URL}")
 logger.info(f"   MinIO Bucket: {MINIO_BUCKET}")
 logger.info(f"   Whisper API: {WHISPER_API_URL}")
+logger.info(f"   LLM Timeout: {LLM_REQUEST_TIMEOUT}s")
+
+# ==============================================================================
+# TODO [OPTIMIZATION - LOCAL LLM PERFORMANCE]
+# ==============================================================================
+# Current State: Single 'heavy_gpu' queue for all inference tasks.
+# Problem: Mixing Text (Llama3) and Vision (Llava/Qwen) tasks causes Ollama 
+#          to constantly unload/reload models in VRAM ("Model Thrashing").
+#
+# FUTURE IMPLEMENTATION (Task Routing):
+# 1. Define explicit routes in app.conf.task_routes:
+#    - 'worker.tasks.process_text_rag' -> 'gpu_text_queue'
+#    - 'worker.tasks.analyze_image'    -> 'gpu_vision_queue'
+#
+# 2. Update Worker Start Command to prioritize batching:
+#    - command: celery -A app worker -Q gpu_text_queue,gpu_vision_queue,...
+#    - This forces the worker to drain one queue (one model) before switching.
+#
+# Note: Skip this if migrating to Cloud APIs (OpenAI/Anthropic) as they auto-scale.
+# ==============================================================================
+
+# ==========================================
+# IMAGE OPTIMIZATION FOR VLM
+# ==========================================
+
+def optimize_image_for_vlm(image_bytes: bytes, max_dimension: int = 1024) -> bytes:
+    """
+    Resize and optimize image for VLM to prevent ContextWindowExceeded.
+    
+    Qwen-VL uses dynamic resolution - large images (4K/HD) generate thousands of
+    visual tokens, saturating context window and causing empty responses.
+    
+    Args:
+        image_bytes: Original image bytes
+        max_dimension: Maximum size for longest edge (default 1024px)
+        
+    Returns:
+        Optimized image bytes (JPEG, quality 85)
+    """
+    try:
+        from PIL import Image
+        
+        # Open image from bytes
+        img = Image.open(io.BytesIO(image_bytes))
+        original_size = img.size
+        original_mode = img.mode
+        
+        # Convert to RGB for JPEG compatibility (handles RGBA, P, etc.)
+        if img.mode in ('RGBA', 'P', 'LA', 'L'):
+            # Create white background for transparent images
+            if img.mode in ('RGBA', 'LA', 'P'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+                img = background
+            else:
+                img = img.convert('RGB')
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Resize if image exceeds max dimension
+        width, height = img.size
+        resized = False
+        if width > max_dimension or height > max_dimension:
+            img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+            resized = True
+        
+        # Compress to JPEG with quality 85
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=85, optimize=True)
+        optimized_bytes = buffer.getvalue()
+        
+        # Log optimization stats
+        compression_ratio = len(optimized_bytes) / len(image_bytes) * 100
+        logger.info(f"   🖼️ Image optimized for VLM:")
+        logger.info(f"      Original: {original_size[0]}x{original_size[1]} ({original_mode}), {len(image_bytes):,} bytes")
+        logger.info(f"      Optimized: {img.size[0]}x{img.size[1]} (RGB/JPEG), {len(optimized_bytes):,} bytes ({compression_ratio:.1f}%)")
+        if resized:
+            logger.info(f"      ⚠️ Resized from {original_size} to {img.size}")
+        
+        return optimized_bytes
+        
+    except ImportError:
+        logger.warning("⚠️ PIL/Pillow not installed. Using original image (may cause context overflow).")
+        return image_bytes
+    except Exception as e:
+        logger.warning(f"⚠️ Image optimization failed: {e}. Using original image.")
+        return image_bytes
+
+
+def optimize_image_for_ocr(image_bytes: bytes, max_dimension: int = 1024) -> bytes:
+    """
+    Optimize image specifically for OCR with aggressive preprocessing.
+    
+    Applies:
+    1. Grayscale conversion - simplifies for text detection
+    2. High contrast enhancement - removes shadows from curved pages
+    3. Binarization (thresholding) - makes text black on white
+    4. Resize to max dimension
+    
+    Args:
+        image_bytes: Original image bytes
+        max_dimension: Maximum size for longest edge (default 1024px)
+        
+    Returns:
+        Optimized image bytes (JPEG, quality 95 for text clarity)
+    """
+    try:
+        from PIL import Image, ImageEnhance
+        
+        # Open image from bytes
+        img = Image.open(io.BytesIO(image_bytes))
+        original_size = img.size
+        original_mode = img.mode
+        
+        logger.info(f"   📄 OCR preprocessing: {original_size[0]}x{original_size[1]} ({original_mode})")
+        
+        # Step 1: Convert to Grayscale
+        img = img.convert('L')
+        logger.info(f"      → Converted to grayscale")
+        
+        # Step 2: Aggressive contrast enhancement (factor 2.5)
+        # This removes shadows from curved book pages and defines letters
+        enhancer = ImageEnhance.Contrast(img)
+        img = enhancer.enhance(2.5)
+        logger.info(f"      → Applied contrast enhancement (2.5x)")
+        
+        # Step 3: Binarization (Thresholding)
+        # Converts everything not dark black to pure white
+        # Threshold 128 is a good middle ground
+        img = img.point(lambda p: 255 if p > 128 else 0)
+        logger.info(f"      → Applied binarization (threshold=128)")
+        
+        # Step 4: Resize if image exceeds max dimension
+        width, height = img.size
+        resized = False
+        if width > max_dimension or height > max_dimension:
+            img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+            resized = True
+            logger.info(f"      → Resized from {original_size} to {img.size}")
+        
+        # Convert back to RGB for JPEG (grayscale L mode works but RGB is more compatible)
+        img = img.convert('RGB')
+        
+        # Compress to JPEG with high quality for text clarity
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=95, optimize=True)
+        optimized_bytes = buffer.getvalue()
+        
+        # Log stats
+        compression_ratio = len(optimized_bytes) / len(image_bytes) * 100
+        logger.info(f"   📄 OCR image ready: {img.size[0]}x{img.size[1]}, {len(optimized_bytes):,} bytes ({compression_ratio:.1f}%)")
+        
+        return optimized_bytes
+        
+    except ImportError:
+        logger.warning("⚠️ PIL/Pillow not installed. Using standard VLM optimization for OCR.")
+        return optimize_image_for_vlm(image_bytes, max_dimension)
+    except Exception as e:
+        logger.warning(f"⚠️ OCR image optimization failed: {e}. Using standard VLM optimization.")
+        return optimize_image_for_vlm(image_bytes, max_dimension)
 
 
 # ==========================================
@@ -731,7 +894,7 @@ def call_chat_completions_api(
     # ==========================================
     
     try:
-        response = requests.post(url, data=data, files=files, timeout=120)
+        response = requests.post(url, data=data, files=files, timeout=LLM_REQUEST_TIMEOUT)
         logger.info(f"   Response status: {response.status_code}")
         
         if response.status_code != 200:
@@ -754,8 +917,8 @@ def call_chat_completions_api(
         logger.error(f"   Is the LLM Gateway running? Try: http://localhost:8765/health")
         raise Exception(f"LLM Gateway connection failed - is it running at localhost:8765?")
     except requests.exceptions.Timeout as e:
-        logger.error(f"❌ LLM Gateway timeout after 120 seconds")
-        raise Exception(f"LLM Gateway timeout - server may be overloaded")
+        logger.error(f"❌ LLM Gateway timeout after {LLM_REQUEST_TIMEOUT} seconds")
+        raise Exception(f"LLM Gateway timeout after {LLM_REQUEST_TIMEOUT}s - consider increasing LLM_REQUEST_TIMEOUT")
     except requests.exceptions.RequestException as e:
         logger.error(f"❌ Chat completions API failed: {type(e).__name__}: {e}")
         raise Exception(f"Chat completions API error: {str(e)}")
@@ -777,7 +940,13 @@ class DatabaseTask(Task):
 # MAIN TASK PROCESSOR
 # ==========================================
 
-@app.task(bind=True, base=DatabaseTask, max_retries=3)
+@app.task(
+    bind=True, 
+    base=DatabaseTask, 
+    max_retries=3,
+    soft_time_limit=900,  # 15 minutes - soft limit allows graceful cleanup
+    time_limit=1000       # ~16.6 minutes - hard kill if soft limit fails
+)
 def process_vector_task(self, vector_status_id: str):
     """
     Main task processor that routes to specific handlers based on VectorType.
@@ -1460,6 +1629,11 @@ def process_visual_semantic_task(asset: Asset, vector_status: VectorStatus, sess
     # Download file from MinIO
     file_content = download_file_from_minio(asset)
     
+    # Optimize image for VLM to prevent ContextWindowExceeded
+    # Large images (4K/HD) generate thousands of visual tokens in Qwen-VL
+    logger.info(f"   🖼️ Optimizing image for VLM...")
+    file_content = optimize_image_for_vlm(file_content, max_dimension=1024)
+    
     # Build external context for prompt
     external_context = {}
     
@@ -1595,11 +1769,14 @@ def process_text_ocr_task(asset: Asset, vector_status: VectorStatus, session) ->
                 file_response = minio_client.get_object(Bucket=MINIO_BUCKET, Key=file_path)
                 content = file_response['Body'].read()
                 
+                # Optimize each image for OCR (binarization + contrast)
+                content = optimize_image_for_ocr(content, max_dimension=1024)
+                
                 files_data.append({
                     'filename': filename,
                     'content': content
                 })
-                logger.info(f"   ✅ Downloaded {len(content)} bytes: {filename}")
+                logger.info(f"   ✅ Downloaded and optimized {len(content)} bytes: {filename}")
             
             # Call OCR API with multiple files
             result = call_chat_completions_api_multi_file(
@@ -1616,6 +1793,9 @@ def process_text_ocr_task(asset: Asset, vector_status: VectorStatus, session) ->
         # Single file OCR
         file_content = download_file_from_minio(asset)
         
+        # Optimize image for OCR (binarization + contrast)
+        file_content = optimize_image_for_ocr(file_content, max_dimension=1024)
+        
         prompt = "Extrae TODO el texto visible en esta imagen. Mantén el formato y orden de lectura natural."
         result = call_chat_completions_api(
             file_content=file_content,
@@ -1630,6 +1810,10 @@ def process_text_ocr_task(asset: Asset, vector_status: VectorStatus, session) ->
     
     if not extracted_text:
         raise Exception("No text extracted by OCR")
+    
+    # Clean up OCR response - remove markdown artifacts that LLMs add by inertia
+    extracted_text = extracted_text.replace("### ", "").replace("## ", "").replace("# ", "").strip()
+    logger.info(f"   📄 Cleaned OCR text: {len(extracted_text)} chars")
     
     # Update sidecar with OCR text in intermediate_results layer
     update_sidecar_metadata(
@@ -1843,6 +2027,9 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                 # Download file from MinIO
                 file_content = download_file_from_minio(asset)
                 logger.info(f"   Downloaded {len(file_content)} bytes")
+                
+                # Optimize image for VLM to prevent context overflow
+                file_content = optimize_image_for_vlm(file_content, max_dimension=1024)
                 
                 # Build external context
                 external_context = {}

@@ -52,35 +52,43 @@ app.conf.update(
         'master_name': 'mymaster',  # For Redis Sentinel (optional)
     },
     
-    # Queue Routing
+    # Queue Routing - Heavy GPU vs Fast CPU separation
     task_routes={
-        # Heavy GPU tasks
-        'worker.tasks.process_visual_semantic': {'queue': 'queue_heavy'},
-        'worker.tasks.process_text_ocr': {'queue': 'queue_heavy'},
-        'worker.tasks.process_audio_clap': {'queue': 'queue_heavy'},
-        'worker.tasks.process_audio_transcript': {'queue': 'queue_heavy'},
+        # ===========================================
+        # HEAVY GPU QUEUE - Long-running LLM inference
+        # ===========================================
+        # These tasks call local LLM models and can take 5-15 minutes
+        'worker.tasks.process_vector_task': {'queue': 'heavy_gpu'},  # Main dispatcher - routes to LLM
+        'worker.tasks.process_visual_semantic': {'queue': 'heavy_gpu'},
+        'worker.tasks.process_text_ocr': {'queue': 'heavy_gpu'},
+        'worker.tasks.process_text_summary': {'queue': 'heavy_gpu'},  # LLM summarization
+        'worker.tasks.process_audio_clap': {'queue': 'heavy_gpu'},
+        'worker.tasks.process_audio_transcript': {'queue': 'heavy_gpu'},  # Whisper
+        'worker.tasks.process_user_memory': {'queue': 'heavy_gpu'},  # LLM memory analysis
         
-        # Fast CPU tasks
-        'worker.tasks.process_visual_siglip': {'queue': 'queue_fast'},
-        'worker.tasks.process_text_chunk': {'queue': 'queue_fast'},
-        'worker.tasks.process_text_summary': {'queue': 'queue_fast'},
-        'worker.tasks.process_user_memory': {'queue': 'queue_fast'},
-        
-        # Generic task processor (will be routed dynamically)
-        'worker.tasks.process_vector_task': {'queue': 'queue_fast'},  # Default
+        # ===========================================
+        # FAST CPU QUEUE - Quick I/O tasks
+        # ===========================================
+        # These are lightweight embedding/db operations
+        'worker.tasks.process_visual_siglip': {'queue': 'fast_cpu'},
+        'worker.tasks.process_text_chunk': {'queue': 'fast_cpu'},
     },
     
     # Queue Definitions
     task_queues={
-        'queue_heavy': {
-            'exchange': 'queue_heavy',
+        'heavy_gpu': {
+            'exchange': 'heavy_gpu',
             'routing_key': 'heavy',
         },
-        'queue_fast': {
-            'exchange': 'queue_fast',
+        'fast_cpu': {
+            'exchange': 'fast_cpu',
             'routing_key': 'fast',
         },
     },
+    
+    # Default time limits for all tasks (can be overridden per-task)
+    task_soft_time_limit=600,  # 10 minutes soft limit
+    task_time_limit=660,       # 11 minutes hard limit
     
     # Monitoring & Logging
     worker_send_task_events=True,

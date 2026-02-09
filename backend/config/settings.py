@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     
     # LLM Gateway
     LLM_GATEWAY_URL: str = "http://localhost:8765"  # LLM Gateway base URL (without /v1)
+    LLM_REQUEST_TIMEOUT: int = 600  # Timeout in seconds for LLM API calls (10 minutes for local inference)
     
     # Whisper API (speaches)
     WHISPER_API_URL: str = "http://localhost:8778"  # Speaches Whisper API
