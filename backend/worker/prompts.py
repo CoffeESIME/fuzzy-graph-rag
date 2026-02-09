@@ -55,6 +55,19 @@ def build_specialized_prompt(
         "reasoning": "Breve explicación de por qué se eligió este concepto y esta confianza (Español)"
     }
 
+    # ==========================================
+    # USER CONTEXT STRUCTURE (Firewall for external memories)
+    # ==========================================
+    user_context_structure = {
+        "summary": "Resumen de la anécdota o memoria del usuario (Español)",
+        "context_entities": {
+            "events": [{"name": "Nombre del evento", "type": "Type", "confidence": "<float 0.0-1.0>"}],
+            "locations": [{"name": "Lugar del contexto", "confidence": "<float 0.0-1.0>"}],
+            "persons": [{"name": "Personas acompañantes", "confidence": "<float 0.0-1.0>"}]
+        },
+        "mood_influence": "Cómo este contexto afecta la percepción (e.g. Nostálgico, Celebratorio)"
+    }
+
     # Core Graph Data (Neo4j Nodes)
     graph_core = {
         "summary": "Dense description (Spanish)",
@@ -62,15 +75,24 @@ def build_specialized_prompt(
             "persons": [{"name": "Name", "role": "Role", "confidence": "<float 0.0-1.0>"}],
             "locations": [{"name": "Name", "type": "Type", "confidence": "<float 0.0-1.0>"}],
             "organizations": [{"name": "Org Name", "confidence": "<float 0.0-1.0>"}],
+            "events": [{"name": "Event Name", "type": "Concert/Conference/etc", "date": "YYYY-MM-DD (opt)", "confidence": "<float 0.0-1.0>"}],
+            "projects": [{"title": "Project Title", "type": "Type of project", "year": "YYYY (opt)", "confidence": "<float 0.0-1.0>"}],
             "concepts": [concept_structure]
         },
         "tags": ["keyword1", "keyword2"]
     }
 
+    # ==========================================
+    # CONDITIONAL CONTEXT FLAG
+    # ==========================================
+    # Detect if user provided context (and it's not a pure memory ingestion)
+    has_context = bool(external_context) and not is_user_memory
+
     # Specific Metadata per Type
     schemas = {
         "vision": {
             "graph_core": graph_core,
+            "user_context_analysis": user_context_structure if external_context else None,
             "visual_specifics": {
                 "image_type": "photography | meme | art | screenshot | diagram",
                 "composition": "Rule of thirds, Close-up...",
@@ -83,6 +105,7 @@ def build_specialized_prompt(
         },
         "audio": {
             "graph_core": graph_core,
+            "user_context_analysis": user_context_structure if external_context else None,
             "audio_specifics": {
                 "audio_type": "song | speech | sound_effect | instrumental",
                 "genre": "Género musical o tipo de charla",
@@ -94,6 +117,7 @@ def build_specialized_prompt(
         },
         "text": {
             "graph_core": graph_core,
+            "user_context_analysis": user_context_structure if external_context else None,
             "text_specifics": {
                 "document_type": "article | quote | personal_note | code | receipt",
                 "rhetorical_tone": "Académico, Sarcástico, Informal...",
@@ -105,7 +129,7 @@ def build_specialized_prompt(
     }
 
     # --- SCHEMA SELECTION ---
-    target_schema = schemas.get(task_type, schemas["text"])
+    target_schema = schemas.get(task_type, schemas["text"]).copy()
     
     # Override for User Memory: use memory_analysis instead of text_specifics
     if task_type == "text" and is_user_memory:
@@ -122,22 +146,24 @@ def build_specialized_prompt(
                 }
             }
         }
+    
+    # Note: user_context_analysis is already conditionally included in schemas above
 
     # ==========================================
     # 3. FEW-SHOT EXAMPLES SELECTION
     # ==========================================
     if task_type == "vision":
-        examples_str = _get_vision_examples()
+        examples_str = _get_vision_examples(include_context=has_context)
     elif task_type == "audio":
-        examples_str = _get_audio_examples()
+        examples_str = _get_audio_examples(include_context=has_context)
     elif task_type == "text":
         # Memory-specific examples vs normal text examples
         if is_user_memory:
             examples_str = _get_memory_examples()
         else:
-            examples_str = _get_text_examples()
+            examples_str = _get_text_examples(include_context=has_context)
     else:
-        examples_str = _get_text_examples()
+        examples_str = _get_text_examples(include_context=has_context)
 
     # ==========================================
     # 4. NUANCE-AWARE CONTEXT INSTRUCTION
@@ -149,25 +175,44 @@ VISION TASK SPECIFIC RULES:
 1. **MEMES & SCREENSHOTS:** If the image contains text (e.g., subtitles, code, chat logs), you MUST transcribe it VERBATIM into the 'ocr_text' field.
 2. **CONTEXTUALIZATION:** Use the 'ocr_text' to inform the 'visual_mood' and 'summary'. (e.g., If the text is a joke, the mood is 'Humorous').
 """
+    # ==========================================
+    # CONTEXT INSTRUCTION WITH FIREWALL RULES
+    # ==========================================
     context_instruction = ""
-    if external_context:
+    if has_context:
         context_instruction = f"""
-CRITICAL: USER CONTEXT ANALYSIS (NUANCE-AWARE):
-The user has provided descriptions/metadata: {json.dumps(external_context, indent=2, ensure_ascii=False)}
+CRITICAL: USER CONTEXT PROVIDED:
+{json.dumps(external_context, indent=2, ensure_ascii=False)}
 
-RULES FOR INTERPRETING USER CONTEXT:
-1. **Detect Qualifiers & Confidence:** Do NOT blindly assign confidence 1.0. Analyze tone:
+================================================================================
+FIREWALL RULES - SEPARATE CONTENT VS CONTEXT (MANDATORY)
+================================================================================
+
+1. **graph_core.entities:** ONLY facts found INSIDE the file content itself (pixels/audio/text).
+   - Example: If a photo shows a beach, extract Location: "Beach" here.
+   - Do NOT include places the user mentions in their notes unless visible in the actual file.
+
+2. **user_context_analysis.context_entities:** Entities mentioned ONLY by the user in their notes.
+   - Example: User says "I took this in London" -> Put "London" here, NOT in graph_core.
+   - This is the user's ANECDOTE, not the file content.
+
+3. **user_context_analysis.mood_influence:** How the user's story CHANGES the file's perceived vibe.
+   - Example: A neutral photo + "My wedding day" -> mood_influence: "Celebratory, Romantic"
+
+================================================================================
+NUANCE DETECTION RULES
+================================================================================
+
+4. **Detect Qualifiers & Confidence:** Do NOT blindly assign confidence 1.0. Analyze tone:
    - "Definitely", "Always", "I love" -> Confidence 0.95 - 1.0
    - "Very marked", "Strong influence" -> Confidence 0.8 - 0.9
    - "A bit like", "Reminds me of", "Maybe", "Sounds like" -> Confidence 0.4 - 0.6
 
-2. **Mixed Concepts:** If the user describes a mix (e.g., "Mexican Folk with Heavy Metal"), extract BOTH concepts separately with their respective confidence levels inferred from the description.
+5. **Mixed Concepts:** If the user describes a mix (e.g., "Mexican Folk with Heavy Metal"), extract BOTH concepts separately with their respective confidence levels.
+   - Example: "Mexican Folk with Heavy Metal" -> ["Mexican Folk", "Heavy Metal"]
 
-3. **Arrays as Distributions:** For fields like 'dominant_colors', 'genres', or 'instruments':
-   - ORDER MATTERS. Place the most dominant/prominent elements FIRST.
-   - Example: "Mucho amarillo, menos café" -> ["Yellow", "Brown"].
-   4. **ANECDOTAL SEPARATION (CRITICAL):** - If the user provides personal anecdotes (e.g., "I heard this at a wedding", "My cat loves this"), use this ONLY to infer the **Mood** or **Atmosphere** (e.g., 'Celebratory', 'Cozy').
-   - Do NOT include personal nouns (Wedding, Cat, Pizza) as factual entities of the file content unless they literally appear in the image/audio.
+6. **Arrays as Distributions:** ORDER MATTERS. Place the most dominant elements FIRST.
+   - Example: "Mucho amarillo, menos café" -> ["Yellow", "Brown"]
 """
 
     # ==========================================
@@ -203,9 +248,9 @@ Analyze the input and return ONLY the JSON object, no additional text."""
 # HELPER: FEW-SHOT EXAMPLES (2-Shots per Type)
 # ==========================================
 
-def _get_vision_examples() -> str:
+def _get_vision_examples(include_context: bool = False) -> str:
     """Get few-shot examples for vision analysis."""
-    # Case 1: Complex/Rich Image
+    # Case 1: Complex/Rich Image (No context)
     ex1 = {
         "graph_core": {
             "summary": "Retrato cinemático de un anciano fumando en una calle oscura.",
@@ -228,33 +273,69 @@ def _get_vision_examples() -> str:
             "ocr_text": None
         }
     }
-    # Case 2: Meme / Screenshot (Edge Case)
-    ex2 = {
-        "graph_core": {
-            "summary": "Meme de Bob Esponja cansado y jadeando.",
-            "entities": {
-                "persons": [{"name": "Bob Esponja", "role": "Personaje", "confidence": 0.99}],
-                "concepts": [
-                    {"name": "Agotamiento", "type": "State", "domain": "Health", "definition": "Estado físico del personaje", "confidence": 0.9},
-                    {"name": "Burnout", "type": "Concept", "domain": "Work", "definition": "Contexto laboral sugerido por el texto", "confidence": 0.8}
-                ]
+    
+    # Case 2: With User Context (Firewall example)
+    if include_context:
+        ex2 = {
+            "graph_core": {
+                "summary": "Foto de un atardecer dorado sobre el mar.",
+                "entities": {
+                    "persons": [],
+                    "locations": [{"name": "Playa", "type": "Landscape", "confidence": 1.0}],
+                    "concepts": [
+                        {"name": "Atardecer", "type": "Time", "domain": "Nature", "definition": "Hora del día visible", "confidence": 1.0}
+                    ]
+                },
+                "tags": ["sunset", "beach", "golden_hour"]
             },
-            "tags": ["meme", "tired", "funny", "work"]
-        },
-        "visual_specifics": {
-            "image_type": "meme",
-            "composition": "Dibujo 2D",
-            "dominant_colors": ["#FFFF00 (Yellow)", "#FFFFFF"],
-            "visual_mood": "Cómico / Exagerado",
-            "ocr_text": "Cuando son las 4:59pm y llega un ticket urgente"
+            "visual_specifics": {
+                "image_type": "photography",
+                "composition": "Horizonte centrado",
+                "lighting": "Golden hour",
+                "dominant_colors": ["#FFD700", "#FF6347", "#4169E1"],
+                "art_style": "Naturalista",
+                "visual_mood": "Romántico y Sereno",
+                "ocr_text": None
+            },
+            "user_context_analysis": {
+                "summary": "El usuario tomó esta foto durante su luna de miel en Londres.",
+                "context_entities": {
+                    "events": [{"name": "Luna de miel", "type": "Personal Event", "confidence": 1.0}],
+                    "locations": [{"name": "Londres", "confidence": 1.0}],
+                    "persons": [{"name": "Esposa", "confidence": 0.9}]
+                },
+                "mood_influence": "Celebratorio, Romántico, Nostálgico"
+            }
         }
-    }
-    return f"Input: (Cinematic Photo)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Meme with Text)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"Input: (Cinematic Photo without context)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Sunset Photo + User says 'Luna de miel en Londres')\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+    else:
+        # Case 2: Meme / Screenshot (No context)
+        ex2 = {
+            "graph_core": {
+                "summary": "Meme de Bob Esponja cansado y jadeando.",
+                "entities": {
+                    "persons": [{"name": "Bob Esponja", "role": "Personaje", "confidence": 0.99}],
+                    "concepts": [
+                        {"name": "Agotamiento", "type": "State", "domain": "Health", "definition": "Estado físico del personaje", "confidence": 0.9},
+                        {"name": "Burnout", "type": "Concept", "domain": "Work", "definition": "Contexto laboral sugerido por el texto", "confidence": 0.8}
+                    ]
+                },
+                "tags": ["meme", "tired", "funny", "work"]
+            },
+            "visual_specifics": {
+                "image_type": "meme",
+                "composition": "Dibujo 2D",
+                "dominant_colors": ["#FFFF00 (Yellow)", "#FFFFFF"],
+                "visual_mood": "Cómico / Exagerado",
+                "ocr_text": "Cuando son las 4:59pm y llega un ticket urgente"
+            }
+        }
+        return f"Input: (Cinematic Photo)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Meme with Text)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
 
 
-def _get_audio_examples() -> str:
+def _get_audio_examples(include_context: bool = False) -> str:
     """Get few-shot examples for audio analysis."""
-    # Case 1: Mixed Genres + User Nuance
+    # Case 1: Mixed Genres + User Nuance (No context)
     ex1 = {
         "graph_core": {
             "summary": "Pieza ecléctica que fusiona ritmos folclóricos con instrumentación pesada.",
@@ -277,33 +358,68 @@ def _get_audio_examples() -> str:
             "lyrics_summary": "Celebración irónica sobre el destino inevitable."
         }
     }
-    # Case 2: Instrumental / Ambient
-    ex2 = {
-        "graph_core": {
-            "summary": "Sonido ambiental de lluvia suave y truenos lejanos.",
-            "entities": {
-                "concepts": [
-                    {"name": "Relajación", "type": "Utility", "domain": "Health", "definition": "Uso potencial del audio", "confidence": 0.8},
-                    {"name": "Tormenta", "type": "Category", "domain": "Environment", "definition": "Fuente del sonido", "confidence": 1.0}
-                ]
+    
+    if include_context:
+        # Case 2: With User Context (Pink Floyd + London example)
+        ex2 = {
+            "graph_core": {
+                "summary": "Pieza de rock progresivo con sintetizadores atmosféricos y guitarra melodíosa.",
+                "entities": {
+                    "persons": [{"name": "Pink Floyd", "role": "Banda", "confidence": 0.95}],
+                    "concepts": [
+                        {"name": "Rock Progresivo", "type": "Genre", "domain": "Music", "definition": "Género detectado en la composición", "confidence": 0.9},
+                        {"name": "Melancolía", "type": "Mood", "domain": "Psychology", "definition": "Tono emocional de la música", "confidence": 0.85}
+                    ]
+                },
+                "tags": ["prog_rock", "atmospheric", "70s"]
             },
-            "tags": ["ambience", "rain", "sleep", "nature"]
-        },
-        "audio_specifics": {
-            "audio_type": "sound_effect",
-            "genre": "Field Recording",
-            "tempo": "N/A",
-            "instruments": [],
-            "emotional_tone": "Calmado",
-            "lyrics_summary": None
+            "audio_specifics": {
+                "audio_type": "song",
+                "genre": "Progressive Rock",
+                "tempo": "Lento (70 BPM)",
+                "instruments": ["Sintetizador", "Guitarra Eléctrica", "Bajo", "Batería"],
+                "emotional_tone": "Introspectivo y Nostálgico",
+                "lyrics_summary": "Reflexión sobre el paso del tiempo."
+            },
+            "user_context_analysis": {
+                "summary": "El usuario escuchó esta canción por primera vez en un concierto en Londres.",
+                "context_entities": {
+                    "events": [{"name": "Concierto de Pink Floyd", "type": "Concert", "confidence": 0.9}],
+                    "locations": [{"name": "Londres", "confidence": 1.0}],
+                    "persons": []
+                },
+                "mood_influence": "Nostálgico, Emocional, Significativo"
+            }
         }
-    }
-    return f"Input: (Fusion Song with User Context 'sounds a bit like...')\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Ambient Sound)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"Input: (Fusion Song)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Song + User says 'Lo escuché en un concierto en Londres')\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+    else:
+        # Case 2: Instrumental / Ambient (No context)
+        ex2 = {
+            "graph_core": {
+                "summary": "Sonido ambiental de lluvia suave y truenos lejanos.",
+                "entities": {
+                    "concepts": [
+                        {"name": "Relajación", "type": "Utility", "domain": "Health", "definition": "Uso potencial del audio", "confidence": 0.8},
+                        {"name": "Tormenta", "type": "Category", "domain": "Environment", "definition": "Fuente del sonido", "confidence": 1.0}
+                    ]
+                },
+                "tags": ["ambience", "rain", "sleep", "nature"]
+            },
+            "audio_specifics": {
+                "audio_type": "sound_effect",
+                "genre": "Field Recording",
+                "tempo": "N/A",
+                "instruments": [],
+                "emotional_tone": "Calmado",
+                "lyrics_summary": None
+            }
+        }
+        return f"Input: (Fusion Song with User Context 'sounds a bit like...')\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Ambient Sound)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
 
 
-def _get_text_examples() -> str:
+def _get_text_examples(include_context: bool = False) -> str:
     """Get few-shot examples for text analysis."""
-    # Case 1: Simple Note
+    # Case 1: Simple Note (No context)
     ex1 = {
         "graph_core": {
             "summary": "Nota rápida sobre ideas para la cena.",
@@ -320,25 +436,57 @@ def _get_text_examples() -> str:
             "requires_action": True
         }
     }
-    # Case 2: Academic/Formal (Edge Case)
-    ex2 = {
-        "graph_core": {
-            "summary": "Fragmento sobre la teoría de la relatividad.",
-            "entities": {
-                "persons": [{"name": "Albert Einstein", "role": "Mencionado", "confidence": 1.0}],
-                "concepts": [{"name": "Espacio-Tiempo", "type": "Scientific Concept", "domain": "Physics", "definition": "Unión de dimensiones", "confidence": 1.0}]
+    
+    if include_context:
+        # Case 2: Document with User Context
+        ex2 = {
+            "graph_core": {
+                "summary": "Contrato de arrendamiento de departamento.",
+                "entities": {
+                    "persons": [{"name": "Juan Pérez", "role": "Arrendatario", "confidence": 1.0}],
+                    "organizations": [{"name": "Inmobiliaria ABC", "confidence": 1.0}],
+                    "concepts": [{"name": "Contrato Legal", "type": "Document Type", "domain": "Law", "definition": "Tipo de documento", "confidence": 1.0}]
+                },
+                "tags": ["legal", "rent", "contract"]
             },
-            "tags": ["physics", "science", "history"]
-        },
-        "text_specifics": {
-            "document_type": "article",
-            "rhetorical_tone": "Académico / Explicativo",
-            "key_arguments": ["La gravedad es curvatura geométrica", "La luz se desvía por la masa"],
-            "language": "es",
-            "requires_action": False
+            "text_specifics": {
+                "document_type": "contract",
+                "rhetorical_tone": "Formal / Legal",
+                "key_arguments": ["Duración 12 meses", "Depósito de 2 meses"],
+                "language": "es",
+                "requires_action": True
+            },
+            "user_context_analysis": {
+                "summary": "El usuario firmó este contrato cuando se mudó a Monterrey por trabajo.",
+                "context_entities": {
+                    "events": [{"name": "Mudanza por trabajo", "type": "Life Event", "confidence": 0.95}],
+                    "locations": [{"name": "Monterrey", "confidence": 1.0}],
+                    "persons": []
+                },
+                "mood_influence": "Transición, Nuevo comienzo, Profesional"
+            }
         }
-    }
-    return f"Input: (Personal Note)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Scientific Text)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"Input: (Personal Note)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Contract + User says 'Lo firmé cuando me mudé a Monterrey')\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+    else:
+        # Case 2: Academic/Formal (No context)
+        ex2 = {
+            "graph_core": {
+                "summary": "Fragmento sobre la teoría de la relatividad.",
+                "entities": {
+                    "persons": [{"name": "Albert Einstein", "role": "Mencionado", "confidence": 1.0}],
+                    "concepts": [{"name": "Espacio-Tiempo", "type": "Scientific Concept", "domain": "Physics", "definition": "Unión de dimensiones", "confidence": 1.0}]
+                },
+                "tags": ["physics", "science", "history"]
+            },
+            "text_specifics": {
+                "document_type": "article",
+                "rhetorical_tone": "Académico / Explicativo",
+                "key_arguments": ["La gravedad es curvatura geométrica", "La luz se desvía por la masa"],
+                "language": "es",
+                "requires_action": False
+            }
+        }
+        return f"Input: (Personal Note)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Scientific Text)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
 
 
 def _get_memory_examples() -> str:
