@@ -1328,7 +1328,11 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     is_text_content = "text_specifics" in analysis_json or "memory_analysis" in analysis_json
     is_audio_with_transcript = "audio_specifics" in analysis_json
     
-    if is_text_content:
+    # SAFETY CHECK: If asset is binary (image/audio), do NOT try to read it as text
+    # even if analysis_json hints at text (LLM hallucination or schema mismatch)
+    is_binary_asset = asset.mime_type and (asset.mime_type.startswith("image/") or asset.mime_type.startswith("audio/"))
+    
+    if is_text_content and not is_binary_asset:
         # Text files: decode as UTF-8
         try:
             text_content = download_file_from_minio(asset).decode('utf-8')

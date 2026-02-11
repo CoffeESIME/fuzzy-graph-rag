@@ -219,23 +219,29 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             
             query = """
             MATCH (a:DigitalAsset {file_hash: $file_hash})
-            MERGE (p:Person {name: $name})
+            MERGE (c:Concept {name: $name})
             ON CREATE SET 
-                p.created_at = datetime(),
-                p.description = $description,
-                p.aliases = $aliases,
-                p.source = 'ai_extraction'
-            ON MATCH SET
-                p.last_referenced = datetime()
-            MERGE (a)-[r:MENTIONS_PERSON]->(p)
+                c.created_at = datetime(),
+                c.definition = $definition,
+                c.domain = $domain,
+                c.concept_type = $concept_type,
+                c.source = 'ai_extraction'
+            
+            MERGE (a)-[r:EVOKES_CONCEPT]->(c)
             ON CREATE SET 
                 r.created_at = datetime(),
-                r.weight = $weight,
-                r.role = $role
+                r.weight = $weight,         // Peso inicial
+                r.reasoning = $reasoning,
+                r.evocation_count = 1
             ON MATCH SET
                 r.last_seen = datetime(),
-                r.mention_count = coalesce(r.mention_count, 0) + 1
-            RETURN p.name as created, type(r) as rel_type
+                r.evocation_count = r.evocation_count + 1,
+                // LÓGICA DIFUSA INTELIGENTE:
+                // Si la nueva confianza es mayor, actualízala. Si no, mantén la histórica.
+                r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END,
+                // Si actualizamos el peso, actualizamos el razonamiento también
+                r.reasoning = CASE WHEN $weight > r.weight THEN $reasoning ELSE r.reasoning END
+            RETURN c.name as created, type(r) as rel_type
             """
             result = session.run(
                 query,

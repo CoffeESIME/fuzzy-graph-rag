@@ -102,7 +102,11 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
         tags = core.get("tags", [])
         tags_segment = f"Tags: {', '.join(tags)}." if tags else ""
         
-        return f"{style_segment} {desc_segment} {ocr_segment} {mood_segment} {tags_segment}".strip()
+        # Prioridad 5: Extracted Concepts (Fuzzy semantic bridge)
+        concepts = core.get("extracted_concepts", [])
+        concepts_segment = f"Linked Concepts: {', '.join(concepts)}." if concepts else ""
+        
+        return f"{style_segment} {desc_segment} {ocr_segment} {mood_segment} {concepts_segment} {tags_segment}".strip()
 
     # 2. CASO AUDIO (Música, Voz)
     elif task_type == "audio":
@@ -123,7 +127,11 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
         # Prioridad 4: Resumen general
         summary = core.get('summary', '')
         
-        return f"{meta_segment} {vibe_segment} {content_segment} Description: {summary}".strip()
+        # Prioridad 5: Extracted Concepts (Fuzzy semantic bridge)
+        concepts = core.get("extracted_concepts", [])
+        concepts_segment = f"Linked Concepts: {', '.join(concepts)}." if concepts else ""
+        
+        return f"{meta_segment} {vibe_segment} {content_segment} {concepts_segment} Description: {summary}".strip()
 
     # 3. CASO TEXTO (Notas, Artículos) - SIN ser memoria
     elif task_type == "text" and "memory_analysis" not in llm_json:
@@ -143,11 +151,15 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
         key_args = specs.get('key_arguments', [])
         args_segment = f"Key Points: {'; '.join(key_args)}." if key_args else ""
         
-        # Prioridad 4: El Texto Original (Chunk)
+        # Prioridad 4: Extracted Concepts (Fuzzy semantic bridge)
+        concepts = core.get("extracted_concepts", [])
+        concepts_segment = f"Linked Concepts: {', '.join(concepts)}." if concepts else ""
+        
+        # Prioridad 5: El Texto Original (Chunk)
         # BGE-M3 tiene una ventana grande (8k tokens), úsala. 
         original_segment = f"Content: {raw_text}" if raw_text else ""
         
-        return f"{meta_segment} {summary_segment} {args_segment} {original_segment}".strip()
+        return f"{meta_segment} {summary_segment} {args_segment} {concepts_segment} {original_segment}".strip()
 
     # 4. CASO USER MEMORY (Con o Sin Archivo)
     elif task_type == "text" and "memory_analysis" in llm_json:
@@ -167,8 +179,13 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
             relation_type = conn.get('relation_type', '')
             reasoning = conn.get('reasoning', '')
             conn_segment = f"Relation to file: {relation_type} ({reasoning})."
+        
+        # Extracted Concepts from graph_core (also present in memories)
+        core = llm_json.get("graph_core", {})
+        concepts = core.get("extracted_concepts", [])
+        concepts_segment = f"Linked Concepts: {', '.join(concepts)}." if concepts else ""
             
-        return f"User Memory: {enriched_narrative} {sentiment_segment} {conn_segment}".strip()
+        return f"User Memory: {enriched_narrative} {sentiment_segment} {conn_segment} {concepts_segment}".strip()
 
     # Fallback: Return raw text as-is
     logger.warning(f"   ⚠️ Vector Factory fallback for unknown task_type: {task_type}")

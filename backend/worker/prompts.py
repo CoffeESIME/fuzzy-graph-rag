@@ -12,6 +12,30 @@ Features:
 import json
 from typing import Optional, Dict, Any, List
 
+# --- 1. DEFINICIÓN DE LA ESCALA MAESTRA (LA REGLA DE ORO) ---
+CALIBRATION_RUBRIC = """
+CONFIDENCE SCORING RUBRIC (STRICT ENFORCEMENT):
+You must assign a 'confidence' score (0.0 - 1.0) to every entity and concept based on this scale:
+
+* **1.0 (FACTUAL / HARD DATA):** - Direct visual evidence (e.g., "The car is red").
+  - Explicit text definitions (e.g., "MQTT is a protocol").
+  - Physical locations or dates mentioned explicitly.
+
+* **0.7 - 0.9 (THEMATIC / STRONG CONTEXT):**
+  - Strong logical inference.
+  - Shared context (e.g., "Beach" implies "Vacation" even if not stated).
+  - Clear emotions explicitly described.
+
+* **0.4 - 0.6 (FUZZY / METAPHORICAL / VIBES):** <-- CRITICAL ZONE
+  - Artistic interpretations (e.g., "Darkness" symbolizing "Sadness").
+  - "Reminds of", "Looks like", or subtle emotional undertones.
+  - Cross-domain connections (Engineering <-> Philosophy).
+
+* **0.0 - 0.3 (NOISE):**
+  - Tangential mentions or weak guesses. Do not include unless necessary.
+
+RULE: Do NOT default to 0.9. If the connection is abstract, artistic, or distant, the score MUST be < 0.6.
+""" 
 
 def build_specialized_prompt(
     task_type: str,  # "vision", "audio", "text"
@@ -51,8 +75,8 @@ def build_specialized_prompt(
         "type": "Micro-Category (English preferred, e.g., 'Genre', 'Emotion')",
         "domain": "Macro-Area (English preferred, e.g., 'Arts', 'Math')",
         "definition": "Breve contexto para desambiguar",
-        "confidence": "<float 0.0-1.0>",
-        "reasoning": "Breve explicación de por qué se eligió este concepto y esta confianza (Español)"
+        "reasoning": "WHY this score? (e.g. 'Direct visual evidence' or 'Metaphorical link')",
+        "confidence": "<float 0.0-1.0 based on CALIBRATION_RUBRIC>"
     }
 
     # ==========================================
@@ -79,7 +103,8 @@ def build_specialized_prompt(
             "projects": [{"title": "Project Title", "type": "Type of project", "year": "YYYY (opt)", "confidence": "<float 0.0-1.0>"}],
             "concepts": [concept_structure]
         },
-        "tags": ["keyword1", "keyword2"]
+        "tags": ["keyword1", "keyword2"],
+        "extracted_concepts": ["List of extracted concept names for vector search"]
     }
 
     # ==========================================
@@ -229,6 +254,9 @@ LANGUAGE & FORMAT RULES (STRICT):
 3. **CONTENT VALUES (Names, Descriptions, Summaries):** Must be **SPANISH** (or original language).
    - This allows you to capture the nuance of the user's native language.
    {ocr_instruction}
+
+{CALIBRATION_RUBRIC}
+
 OUTPUT SCHEMA (Follow this structure exactly):
 {json.dumps(target_schema, indent=2)}
 
@@ -236,7 +264,7 @@ OUTPUT SCHEMA (Follow this structure exactly):
 
 {context_instruction}
 
-FEW-SHOT EXAMPLES (Reference for logic, not content):
+FEW-SHOT EXAMPLES (Study these carefully - note how confidence scores match the rubric):
 {examples_str}
 
 Analyze the input and return ONLY the JSON object, no additional text."""
@@ -249,44 +277,75 @@ Analyze the input and return ONLY the JSON object, no additional text."""
 # ==========================================
 
 def _get_vision_examples(include_context: bool = False) -> str:
-    """Get few-shot examples for vision analysis."""
-    # Case 1: Complex/Rich Image (No context)
-    ex1 = {
+    """Get calibrated few-shot examples for vision analysis."""
+    # Example 1: Clear Object (Factual - Score 1.0)
+    ex1_input = "Input: (Photo of a red sports car on a track)"
+    ex1_output = {
         "graph_core": {
-            "summary": "Retrato cinemático de un anciano fumando en una calle oscura.",
+            "summary": "Foto deportiva de un coche rojo en movimiento en una pista.",
             "entities": {
                 "persons": [],
+                "locations": [{"name": "Pista de carreras", "type": "Venue", "confidence": 1.0}],
                 "concepts": [
-                    {"name": "Soledad", "type": "Emotion", "domain": "Psychology", "definition": "Aislamiento visual", "confidence": 0.9},
-                    {"name": "Film Noir", "type": "Style", "domain": "Arts", "definition": "Estilo visual oscuro y contrastado", "confidence": 0.95}
+                    {"name": "Coche Deportivo", "type": "Object", "domain": "Automotive", "definition": "Objeto central visible", "reasoning": "Direct visual evidence - clearly visible central object.", "confidence": 1.0},
+                    {"name": "Velocidad", "type": "Action", "domain": "Physics", "definition": "Movimiento inferido", "reasoning": "Inferred from motion blur on background.", "confidence": 0.9}
                 ]
             },
-            "tags": ["bw", "smoke", "portrait", "night"]
+            "tags": ["car", "racing", "speed", "red"],
+            "extracted_concepts": ["Coche Deportivo", "Velocidad"]
         },
         "visual_specifics": {
             "image_type": "photography",
-            "composition": "Primer plano, Regla de tercios",
-            "lighting": "Contraluz (Rim light)",
-            "dominant_colors": ["#000000", "#808080"],
-            "art_style": "Film Noir",
-            "visual_mood": "Misterioso y Melancólico",
+            "composition": "Tracking shot, Regla de tercios",
+            "lighting": "Luz natural directa",
+            "dominant_colors": ["#CC0000", "#333333", "#87CEEB"],
+            "art_style": "Deportivo / Dinámico",
+            "visual_mood": "Adrenalina y Emoción",
             "ocr_text": None
         }
     }
-    
-    # Case 2: With User Context (Firewall example)
+
+    # Example 2: Abstract Art (Fuzzy - Score 0.4-0.5)
+    ex2_input = "Input: (Abstract painting with chaotic dark swirls)"
+    ex2_output = {
+        "graph_core": {
+            "summary": "Pintura abstracta oscura con trazos caóticos.",
+            "entities": {
+                "persons": [],
+                "concepts": [
+                    {"name": "Caos", "type": "Vibe", "domain": "Arts", "definition": "Interpretación subjetiva de los trazos", "reasoning": "Subjective interpretation of the swirls - no literal chaos depicted.", "confidence": 0.5},
+                    {"name": "Miedo", "type": "Emotion", "domain": "Psychology", "definition": "Respuesta emocional posible", "reasoning": "Possible emotional response to dark colors, highly subjective.", "confidence": 0.4}
+                ]
+            },
+            "tags": ["abstract", "dark", "art", "painting"],
+            "extracted_concepts": ["Caos", "Miedo"]
+        },
+        "visual_specifics": {
+            "image_type": "art",
+            "composition": "Sin estructura definida",
+            "lighting": "Oscuro, bajo contraste",
+            "dominant_colors": ["#1A1A1A", "#2C2C54", "#474787"],
+            "art_style": "Expresionismo Abstracto",
+            "visual_mood": "Opresivo e Inquietante",
+            "ocr_text": None
+        }
+    }
+
     if include_context:
-        ex2 = {
+        # Example 3: With User Context (Firewall demo)
+        ex3_input = "Input: (Sunset Photo + User says 'Luna de miel en Londres')"
+        ex3_output = {
             "graph_core": {
                 "summary": "Foto de un atardecer dorado sobre el mar.",
                 "entities": {
                     "persons": [],
                     "locations": [{"name": "Playa", "type": "Landscape", "confidence": 1.0}],
                     "concepts": [
-                        {"name": "Atardecer", "type": "Time", "domain": "Nature", "definition": "Hora del día visible", "confidence": 1.0}
+                        {"name": "Atardecer", "type": "Time", "domain": "Nature", "definition": "Hora del día visible", "reasoning": "Direct visual evidence - golden hour clearly visible.", "confidence": 1.0}
                     ]
                 },
-                "tags": ["sunset", "beach", "golden_hour"]
+                "tags": ["sunset", "beach", "golden_hour"],
+                "extracted_concepts": ["Atardecer"]
             },
             "visual_specifics": {
                 "image_type": "photography",
@@ -307,71 +366,79 @@ def _get_vision_examples(include_context: bool = False) -> str:
                 "mood_influence": "Celebratorio, Romántico, Nostálgico"
             }
         }
-        return f"Input: (Cinematic Photo without context)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Sunset Photo + User says 'Luna de miel en Londres')\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"{ex1_input}\nOutput: {json.dumps(ex1_output, ensure_ascii=False)}\n\n{ex2_input}\nOutput: {json.dumps(ex2_output, ensure_ascii=False)}\n\n{ex3_input}\nOutput: {json.dumps(ex3_output, ensure_ascii=False)}"
     else:
-        # Case 2: Meme / Screenshot (No context)
-        ex2 = {
-            "graph_core": {
-                "summary": "Meme de Bob Esponja cansado y jadeando.",
-                "entities": {
-                    "persons": [{"name": "Bob Esponja", "role": "Personaje", "confidence": 0.99}],
-                    "concepts": [
-                        {"name": "Agotamiento", "type": "State", "domain": "Health", "definition": "Estado físico del personaje", "confidence": 0.9},
-                        {"name": "Burnout", "type": "Concept", "domain": "Work", "definition": "Contexto laboral sugerido por el texto", "confidence": 0.8}
-                    ]
-                },
-                "tags": ["meme", "tired", "funny", "work"]
-            },
-            "visual_specifics": {
-                "image_type": "meme",
-                "composition": "Dibujo 2D",
-                "dominant_colors": ["#FFFF00 (Yellow)", "#FFFFFF"],
-                "visual_mood": "Cómico / Exagerado",
-                "ocr_text": "Cuando son las 4:59pm y llega un ticket urgente"
-            }
-        }
-        return f"Input: (Cinematic Photo)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Meme with Text)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"{ex1_input}\nOutput: {json.dumps(ex1_output, ensure_ascii=False)}\n\n{ex2_input}\nOutput: {json.dumps(ex2_output, ensure_ascii=False)}"
 
 
 def _get_audio_examples(include_context: bool = False) -> str:
-    """Get few-shot examples for audio analysis."""
-    # Case 1: Mixed Genres + User Nuance (No context)
-    ex1 = {
+    """Get calibrated few-shot examples for audio analysis."""
+    # Example 1: Clear Song with Identifiable Artist (Factual - Score 1.0/0.9)
+    ex1_input = "Input: (Rock song with heavy guitar riffs and English lyrics about rebellion)"
+    ex1_output = {
         "graph_core": {
-            "summary": "Pieza ecléctica que fusiona ritmos folclóricos con instrumentación pesada.",
+            "summary": "Canción de rock pesado con riffs de guitarra y letras sobre rebeldía.",
             "entities": {
-                "persons": [{"name": "Diablo Swing Orchestra", "role": "Banda", "confidence": 1.0}],
+                "persons": [],
                 "concepts": [
-                    {"name": "Música Tradicional Mexicana", "type": "Genre Influence", "domain": "Music", "definition": "Aire rítmico percibido", "confidence": 0.5},
-                    {"name": "Heavy Metal", "type": "Genre", "domain": "Music", "definition": "Instrumentación dominante", "confidence": 0.9},
-                    {"name": "Energía", "type": "Mood", "domain": "Psychology", "definition": "Ambiente general", "confidence": 0.95}
+                    {"name": "Rock", "type": "Genre", "domain": "Music", "definition": "Género musical dominante", "reasoning": "Direct auditory evidence - guitar riffs, drum patterns.", "confidence": 1.0},
+                    {"name": "Rebeldía", "type": "Theme", "domain": "Culture", "definition": "Tema central de la letra", "reasoning": "Explicit lyrical content about rebellion.", "confidence": 0.9}
                 ]
             },
-            "tags": ["metal", "fusion", "violin"]
+            "tags": ["rock", "guitar", "rebellion", "energy"],
+            "extracted_concepts": ["Rock", "Rebeldía"]
         },
         "audio_specifics": {
             "audio_type": "song",
-            "genre": "Avant-Garde Metal",
-            "tempo": "Rápido (150 BPM)",
-            "instruments": ["Guitarra Eléctrica", "Violín", "Trompeta", "Batería"],
-            "emotional_tone": "Teatral y Enérgico",
-            "lyrics_summary": "Celebración irónica sobre el destino inevitable."
+            "genre": "Hard Rock",
+            "tempo": "Rápido (140 BPM)",
+            "instruments": ["Guitarra Eléctrica", "Batería", "Bajo", "Voz"],
+            "emotional_tone": "Agresivo y Enérgico",
+            "lyrics_summary": "Letras sobre desafiar la autoridad y vivir sin reglas."
         }
     }
-    
+
+    # Example 2: Ambient / Abstract Sound (Fuzzy - Score 0.5)
+    ex2_input = "Input: (Ambient electronic track with ethereal pads and no lyrics)"
+    ex2_output = {
+        "graph_core": {
+            "summary": "Pieza electrónica ambiental con pads etéreos.",
+            "entities": {
+                "persons": [],
+                "concepts": [
+                    {"name": "Electrónica Ambiental", "type": "Genre", "domain": "Music", "definition": "Género detectado", "reasoning": "Direct auditory evidence - synthesizer pads, no beat.", "confidence": 0.9},
+                    {"name": "Meditación", "type": "Utility", "domain": "Health", "definition": "Uso potencial interpretado", "reasoning": "Subjective utility - calming sounds could be for meditation but not explicitly stated.", "confidence": 0.5},
+                    {"name": "Espacio", "type": "Vibe", "domain": "Arts", "definition": "Sensación sugerida", "reasoning": "Metaphorical association - ethereal pads evoke space, but it's artistic interpretation.", "confidence": 0.4}
+                ]
+            },
+            "tags": ["ambient", "electronic", "ethereal", "calm"],
+            "extracted_concepts": ["Electrónica Ambiental", "Meditación", "Espacio"]
+        },
+        "audio_specifics": {
+            "audio_type": "instrumental",
+            "genre": "Ambient Electronic",
+            "tempo": "Muy lento (60 BPM)",
+            "instruments": ["Sintetizador", "Pad", "Reverb Effects"],
+            "emotional_tone": "Contemplativo y Flotante",
+            "lyrics_summary": None
+        }
+    }
+
     if include_context:
-        # Case 2: With User Context (Pink Floyd + London example)
-        ex2 = {
+        # Example 3: With User Context (Firewall demo)
+        ex3_input = "Input: (Song + User says 'Lo escuché en un concierto en Londres')"
+        ex3_output = {
             "graph_core": {
-                "summary": "Pieza de rock progresivo con sintetizadores atmosféricos y guitarra melodíosa.",
+                "summary": "Pieza de rock progresivo con sintetizadores atmosféricos.",
                 "entities": {
-                    "persons": [{"name": "Pink Floyd", "role": "Banda", "confidence": 0.95}],
+                    "persons": [],
                     "concepts": [
-                        {"name": "Rock Progresivo", "type": "Genre", "domain": "Music", "definition": "Género detectado en la composición", "confidence": 0.9},
-                        {"name": "Melancolía", "type": "Mood", "domain": "Psychology", "definition": "Tono emocional de la música", "confidence": 0.85}
+                        {"name": "Rock Progresivo", "type": "Genre", "domain": "Music", "definition": "Género detectado en la composición", "reasoning": "Direct auditory evidence from song structure and instruments.", "confidence": 0.9},
+                        {"name": "Melancolía", "type": "Mood", "domain": "Psychology", "definition": "Tono emocional percibido", "reasoning": "Strong thematic context from slow tempo and minor key.", "confidence": 0.7}
                     ]
                 },
-                "tags": ["prog_rock", "atmospheric", "70s"]
+                "tags": ["prog_rock", "atmospheric", "melancholy"],
+                "extracted_concepts": ["Rock Progresivo", "Melancolía"]
             },
             "audio_specifics": {
                 "audio_type": "song",
@@ -384,70 +451,85 @@ def _get_audio_examples(include_context: bool = False) -> str:
             "user_context_analysis": {
                 "summary": "El usuario escuchó esta canción por primera vez en un concierto en Londres.",
                 "context_entities": {
-                    "events": [{"name": "Concierto de Pink Floyd", "type": "Concert", "confidence": 0.9}],
+                    "events": [{"name": "Concierto en vivo", "type": "Concert", "confidence": 0.9}],
                     "locations": [{"name": "Londres", "confidence": 1.0}],
                     "persons": []
                 },
                 "mood_influence": "Nostálgico, Emocional, Significativo"
             }
         }
-        return f"Input: (Fusion Song)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Song + User says 'Lo escuché en un concierto en Londres')\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"{ex1_input}\nOutput: {json.dumps(ex1_output, ensure_ascii=False)}\n\n{ex2_input}\nOutput: {json.dumps(ex2_output, ensure_ascii=False)}\n\n{ex3_input}\nOutput: {json.dumps(ex3_output, ensure_ascii=False)}"
     else:
-        # Case 2: Instrumental / Ambient (No context)
-        ex2 = {
-            "graph_core": {
-                "summary": "Sonido ambiental de lluvia suave y truenos lejanos.",
-                "entities": {
-                    "concepts": [
-                        {"name": "Relajación", "type": "Utility", "domain": "Health", "definition": "Uso potencial del audio", "confidence": 0.8},
-                        {"name": "Tormenta", "type": "Category", "domain": "Environment", "definition": "Fuente del sonido", "confidence": 1.0}
-                    ]
-                },
-                "tags": ["ambience", "rain", "sleep", "nature"]
-            },
-            "audio_specifics": {
-                "audio_type": "sound_effect",
-                "genre": "Field Recording",
-                "tempo": "N/A",
-                "instruments": [],
-                "emotional_tone": "Calmado",
-                "lyrics_summary": None
-            }
-        }
-        return f"Input: (Fusion Song with User Context 'sounds a bit like...')\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Ambient Sound)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"{ex1_input}\nOutput: {json.dumps(ex1_output, ensure_ascii=False)}\n\n{ex2_input}\nOutput: {json.dumps(ex2_output, ensure_ascii=False)}"
 
 
 def _get_text_examples(include_context: bool = False) -> str:
-    """Get few-shot examples for text analysis."""
-    # Case 1: Simple Note (No context)
-    ex1 = {
+    """Get calibrated few-shot examples for text analysis."""
+    # Example 1: Technical/Factual (Score 1.0)
+    ex1_input = "Input: (Technical Note: 'El protocolo MQTT usa un modelo publish/subscribe para IoT.')"
+    ex1_output = {
         "graph_core": {
-            "summary": "Nota rápida sobre ideas para la cena.",
+            "summary": "Definición técnica del protocolo MQTT y su modelo de comunicación.",
             "entities": {
-                "concepts": [{"name": "Dieta Keto", "type": "Topic", "domain": "Health", "definition": "Plan alimenticio", "confidence": 1.0}]
+                "persons": [],
+                "concepts": [
+                    {"name": "MQTT", "type": "Protocol", "domain": "Technology", "definition": "Protocolo de mensajería ligero", "reasoning": "Explicitly defined subject in the text.", "confidence": 1.0},
+                    {"name": "IoT", "type": "Context", "domain": "Technology", "definition": "Internet de las Cosas", "reasoning": "Explicit usage context mentioned in the text.", "confidence": 0.9},
+                    {"name": "Publish/Subscribe", "type": "Architecture Pattern", "domain": "Software Engineering", "definition": "Patrón de comunicación", "reasoning": "Directly stated architectural model.", "confidence": 1.0}
+                ]
             },
-            "tags": ["food", "todo", "ideas"]
+            "tags": ["mqtt", "iot", "protocol", "pubsub"],
+            "extracted_concepts": ["MQTT", "IoT", "Publish/Subscribe"]
         },
         "text_specifics": {
-            "document_type": "personal_note",
-            "rhetorical_tone": "Informal",
-            "key_arguments": ["Usar aguacate", "Evitar carbohidratos"],
+            "document_type": "article",
+            "rhetorical_tone": "Técnico / Explicativo",
+            "key_arguments": ["MQTT usa publish/subscribe", "Diseñado para IoT"],
             "language": "es",
-            "requires_action": True
+            "requires_action": False
         }
     }
-    
+
+    # Example 2: Poetic/Fuzzy (Score 0.5)
+    ex2_input = "Input: (Poem: 'Tu ausencia es como el invierno en mis manos.')"
+    ex2_output = {
+        "graph_core": {
+            "summary": "Fragmento poético sobre la soledad y la ausencia.",
+            "entities": {
+                "persons": [],
+                "concepts": [
+                    {"name": "Ausencia", "type": "Theme", "domain": "Literature", "definition": "Tema central del texto", "reasoning": "Main topic textually present - explicit subject.", "confidence": 1.0},
+                    {"name": "Invierno", "type": "Metaphor", "domain": "Literature", "definition": "Recurso literario", "reasoning": "Used metaphorically to describe coldness/sadness, not a literal season.", "confidence": 0.5},
+                    {"name": "Soledad", "type": "Emotion", "domain": "Psychology", "definition": "Sentimiento inferido", "reasoning": "Implied feeling from context of absence - not explicitly written.", "confidence": 0.6}
+                ]
+            },
+            "tags": ["poetry", "absence", "metaphor", "emotion"],
+            "extracted_concepts": ["Ausencia", "Invierno", "Soledad"]
+        },
+        "text_specifics": {
+            "document_type": "quote",
+            "rhetorical_tone": "Poético / Melancólico",
+            "key_arguments": ["La ausencia se compara con el frío invernal"],
+            "language": "es",
+            "requires_action": False
+        }
+    }
+
     if include_context:
-        # Case 2: Document with User Context
-        ex2 = {
+        # Example 3: With User Context (Firewall demo)
+        ex3_input = "Input: (Contract + User says 'Lo firmé cuando me mudé a Monterrey')"
+        ex3_output = {
             "graph_core": {
                 "summary": "Contrato de arrendamiento de departamento.",
                 "entities": {
                     "persons": [{"name": "Juan Pérez", "role": "Arrendatario", "confidence": 1.0}],
                     "organizations": [{"name": "Inmobiliaria ABC", "confidence": 1.0}],
-                    "concepts": [{"name": "Contrato Legal", "type": "Document Type", "domain": "Law", "definition": "Tipo de documento", "confidence": 1.0}]
+                    "concepts": [
+                        {"name": "Contrato Legal", "type": "Document Type", "domain": "Law", "definition": "Tipo de documento", "reasoning": "Document explicitly identified as a legal contract.", "confidence": 1.0}
+                    ]
                 },
-                "tags": ["legal", "rent", "contract"]
+                "tags": ["legal", "rent", "contract"],
+                "extracted_concepts": ["Contrato Legal"]
             },
             "text_specifics": {
                 "document_type": "contract",
@@ -466,27 +548,9 @@ def _get_text_examples(include_context: bool = False) -> str:
                 "mood_influence": "Transición, Nuevo comienzo, Profesional"
             }
         }
-        return f"Input: (Personal Note)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Contract + User says 'Lo firmé cuando me mudé a Monterrey')\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"{ex1_input}\nOutput: {json.dumps(ex1_output, ensure_ascii=False)}\n\n{ex2_input}\nOutput: {json.dumps(ex2_output, ensure_ascii=False)}\n\n{ex3_input}\nOutput: {json.dumps(ex3_output, ensure_ascii=False)}"
     else:
-        # Case 2: Academic/Formal (No context)
-        ex2 = {
-            "graph_core": {
-                "summary": "Fragmento sobre la teoría de la relatividad.",
-                "entities": {
-                    "persons": [{"name": "Albert Einstein", "role": "Mencionado", "confidence": 1.0}],
-                    "concepts": [{"name": "Espacio-Tiempo", "type": "Scientific Concept", "domain": "Physics", "definition": "Unión de dimensiones", "confidence": 1.0}]
-                },
-                "tags": ["physics", "science", "history"]
-            },
-            "text_specifics": {
-                "document_type": "article",
-                "rhetorical_tone": "Académico / Explicativo",
-                "key_arguments": ["La gravedad es curvatura geométrica", "La luz se desvía por la masa"],
-                "language": "es",
-                "requires_action": False
-            }
-        }
-        return f"Input: (Personal Note)\nOutput: {json.dumps(ex1, ensure_ascii=False)}\n\nInput: (Scientific Text)\nOutput: {json.dumps(ex2, ensure_ascii=False)}"
+        return f"{ex1_input}\nOutput: {json.dumps(ex1_output, ensure_ascii=False)}\n\n{ex2_input}\nOutput: {json.dumps(ex2_output, ensure_ascii=False)}"
 
 
 def _get_memory_examples() -> str:
@@ -504,7 +568,8 @@ def _get_memory_examples() -> str:
                     {"name": "Sincronía", "type": "Phenomenon", "domain": "Philosophy", "definition": "Coincidencia significativa percibida", "confidence": 0.9, "reasoning": "El timing exacto creó una experiencia surreal"}
                 ]
             },
-            "tags": ["sismo", "coincidencia", "miedo", "musica"]
+            "tags": ["sismo", "coincidencia", "miedo", "musica"],
+            "extracted_concepts": ["Sincronía"]
         },
         "memory_analysis": {
             "enriched_text": "El usuario relata una experiencia surrealista donde el sismo de 2017 comenzó exactamente cuando la canción llegó a su clímax, creando una asociación permanente entre el caos y la música.",
@@ -530,7 +595,8 @@ def _get_memory_examples() -> str:
                     {"name": "Nostalgia", "type": "Emotion", "domain": "Psychology", "definition": "Añoranza del pasado", "confidence": 1.0, "reasoning": "Sentimiento central de la memoria"}
                 ]
             },
-            "tags": ["infancia", "abuela", "cocina"]
+            "tags": ["infancia", "abuela", "cocina"],
+            "extracted_concepts": ["Nostalgia"]
         },
         "memory_analysis": {
             "enriched_text": "Una breve nota nostálgica evocada por el color amarillo de la imagen, que le recuerda vagamente a la cocina de su abuela.",
