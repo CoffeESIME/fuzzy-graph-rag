@@ -2296,6 +2296,26 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
             add_workflow_step='text_summary'
         )
         
+        # ============================================
+        # RESOLVE USER_MEMORY_REQUIRED FLAG
+        # ============================================
+        # If this asset required user memory and we got it, mark the flag as COMPLETED
+        if asset.requires_user_memory and user_context.get("content"):
+            from sqlmodel import select
+            umr_status = session.exec(
+                select(VectorStatus).where(
+                    VectorStatus.asset_id == asset.id,
+                    VectorStatus.vector_type == VectorType.USER_MEMORY_REQUIRED
+                )
+            ).first()
+            if umr_status:
+                umr_status.status = JobStatus.COMPLETED
+                umr_status.updated_at = datetime.utcnow()
+                session.commit()
+                logger.info(f"   ✅ USER_MEMORY_REQUIRED flag resolved → COMPLETED")
+            else:
+                logger.debug(f"   ℹ️ No USER_MEMORY_REQUIRED VectorStatus found (already resolved?)")
+        
         logger.info(f"   ✅ TEXT_SUMMARY completed: {summary_text[:100]}...")
         
         # ============================================

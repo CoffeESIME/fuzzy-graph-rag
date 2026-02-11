@@ -219,29 +219,25 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             
             query = """
             MATCH (a:DigitalAsset {file_hash: $file_hash})
-            MERGE (c:Concept {name: $name})
+            MERGE (p:Person {name: $name})
             ON CREATE SET 
-                c.created_at = datetime(),
-                c.definition = $definition,
-                c.domain = $domain,
-                c.concept_type = $concept_type,
-                c.source = 'ai_extraction'
-            
-            MERGE (a)-[r:EVOKES_CONCEPT]->(c)
+                p.created_at = datetime(),
+                p.description = $description,
+                p.aliases = $aliases,
+                p.source = 'ai_extraction'
+            ON MATCH SET
+                p.last_referenced = datetime()
+            MERGE (a)-[r:MENTIONS_PERSON]->(p)
             ON CREATE SET 
                 r.created_at = datetime(),
-                r.weight = $weight,         // Peso inicial
-                r.reasoning = $reasoning,
-                r.evocation_count = 1
+                r.weight = $weight,
+                r.role = $role,
+                r.mention_count = 1
             ON MATCH SET
                 r.last_seen = datetime(),
-                r.evocation_count = r.evocation_count + 1,
-                // LÓGICA DIFUSA INTELIGENTE:
-                // Si la nueva confianza es mayor, actualízala. Si no, mantén la histórica.
-                r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END,
-                // Si actualizamos el peso, actualizamos el razonamiento también
-                r.reasoning = CASE WHEN $weight > r.weight THEN $reasoning ELSE r.reasoning END
-            RETURN c.name as created, type(r) as rel_type
+                r.mention_count = coalesce(r.mention_count, 0) + 1,
+                r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
+            RETURN p.name as created, type(r) as rel_type
             """
             result = session.run(
                 query,
@@ -371,10 +367,13 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             ON CREATE SET 
                 r.created_at = datetime(),
                 r.weight = $weight,
-                r.reasoning = $reasoning
+                r.reasoning = $reasoning,
+                r.evocation_count = 1
             ON MATCH SET
                 r.last_seen = datetime(),
-                r.evocation_count = coalesce(r.evocation_count, 0) + 1
+                r.evocation_count = coalesce(r.evocation_count, 0) + 1,
+                r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END,
+                r.reasoning = CASE WHEN $weight > r.weight THEN $reasoning ELSE r.reasoning END
             RETURN c.name as created, type(r) as rel_type
             """
             result = session.run(

@@ -26,18 +26,23 @@ from typing import List, Dict, Any, Optional
 
 def fetch_pending_inbox(api_base_url: str) -> List[Dict[str, Any]]:
     """Fetch all pending inbox items from API."""
+    url = f"{api_base_url}/inbox/pending"
     try:
-        response = requests.get(
-            f"{api_base_url}/inbox/pending",
-            timeout=10
-        )
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.ConnectionError:
         st.error("❌ No se puede conectar al backend. ¿Está corriendo en localhost:8000?")
+        with st.expander("🔍 Debug: fetch_pending_inbox"):
+            st.code(f"GET {url}", language="text")
         return []
     except requests.exceptions.Timeout:
         st.error("❌ Timeout al conectar con el backend.")
+        return []
+    except requests.exceptions.HTTPError as e:
+        st.error(f"❌ Error al obtener inbox: HTTP {e.response.status_code}")
+        with st.expander("🔍 Debug: fetch_pending_inbox"):
+            st.code(f"GET {url}\nStatus: {e.response.status_code}\nResponse: {e.response.text}", language="text")
         return []
     except Exception as e:
         st.error(f"❌ Error al obtener datos: {str(e)}")
@@ -69,17 +74,28 @@ def approve_inbox_item(api_base_url: str, file_hash: str, entities: Dict,
         response.raise_for_status()
         return {"success": True, "data": response.json()}
     except requests.exceptions.HTTPError as e:
-        return {"success": False, "error": f"HTTP Error: {e.response.status_code} - {e.response.text}"}
+        error_msg = f"HTTP Error: {e.response.status_code} - {e.response.text}"
+        st.error(f"❌ Error al aprobar: HTTP {e.response.status_code}")
+        with st.expander("🔍 Debug: approve_inbox_item"):
+            st.code(f"POST {url}\nPayload:\n{json.dumps(payload, indent=2, ensure_ascii=False)}\n\nStatus: {e.response.status_code}\nResponse: {e.response.text}", language="text")
+        return {"success": False, "error": error_msg}
     except Exception as e:
+        st.error(f"❌ Error al aprobar: {str(e)}")
+        with st.expander("🔍 Debug: approve_inbox_item"):
+            st.code(f"POST {url}\nPayload:\n{json.dumps(payload, indent=2, ensure_ascii=False)}\n\nError: {str(e)}", language="text")
         return {"success": False, "error": str(e)}
 
 
 def get_node_types(api_base_url: str) -> Optional[List[Dict[str, Any]]]:
     """Fetch available node types from backend."""
+    url = f"{api_base_url}/graph/node-types"
     try:
-        response = requests.get(f"{api_base_url}/graph/node-types", timeout=10)
+        response = requests.get(url, timeout=10)
         if response.status_code == 200:
             return response.json()
+        st.warning(f"⚠️ get_node_types: HTTP {response.status_code}")
+        with st.expander("🔍 Debug: get_node_types"):
+            st.code(f"GET {url}\nStatus: {response.status_code}\nResponse: {response.text}", language="text")
         return None
     except requests.exceptions.ConnectionError:
         # Return mock data for development
@@ -88,16 +104,21 @@ def get_node_types(api_base_url: str) -> Optional[List[Dict[str, Any]]]:
             {"id": "place", "name": "Place", "label": "Place", "description": "A location", "properties": ["name", "description"]},
             {"id": "concept", "name": "Concept", "label": "Concept", "description": "An abstract concept", "properties": ["name", "description"]},
         ]
-    except Exception:
+    except Exception as e:
+        st.error(f"❌ Error get_node_types: {str(e)}")
         return None
 
 
 def get_connection_types(api_base_url: str) -> Optional[List[Dict[str, Any]]]:
     """Fetch available connection types from backend."""
+    url = f"{api_base_url}/graph/connection-types"
     try:
-        response = requests.get(f"{api_base_url}/graph/connection-types", timeout=10)
+        response = requests.get(url, timeout=10)
         if response.status_code == 200:
             return response.json()
+        st.warning(f"⚠️ get_connection_types: HTTP {response.status_code}")
+        with st.expander("🔍 Debug: get_connection_types"):
+            st.code(f"GET {url}\nStatus: {response.status_code}\nResponse: {response.text}", language="text")
         return None
     except requests.exceptions.ConnectionError:
         return [
@@ -105,30 +126,33 @@ def get_connection_types(api_base_url: str) -> Optional[List[Dict[str, Any]]]:
             {"id": "mentions_location", "name": "MENTIONS_LOCATION", "label": "Mentions Location", "description": "Asset mentions location"},
             {"id": "evokes_concept", "name": "EVOKES_CONCEPT", "label": "Evokes Concept", "description": "Asset evokes concept"},
         ]
-    except Exception:
+    except Exception as e:
+        st.error(f"❌ Error get_connection_types: {str(e)}")
         return None
 
 
 def create_node(api_base_url: str, node_type: str, properties: Dict[str, Any], 
                 source_asset_id: Optional[str] = None) -> Optional[Dict]:
     """Create a node in the graph."""
+    url = f"{api_base_url}/graph/nodes"
+    payload = {
+        "node_type": node_type,
+        "properties": properties,
+        "source_asset_id": source_asset_id
+    }
     try:
-        response = requests.post(
-            f"{api_base_url}/graph/nodes",
-            json={
-                "node_type": node_type,
-                "properties": properties,
-                "source_asset_id": source_asset_id
-            },
-            timeout=30
-        )
+        response = requests.post(url, json=payload, timeout=30)
         if response.status_code == 200:
             return response.json()
         else:
-            st.error(f"Error creating node: {response.status_code} - {response.text}")
+            st.error(f"❌ Error creando nodo: HTTP {response.status_code}")
+            with st.expander("🔍 Debug: create_node"):
+                st.code(f"POST {url}\nPayload:\n{json.dumps(payload, indent=2, ensure_ascii=False)}\n\nStatus: {response.status_code}\nResponse: {response.text}", language="text")
             return None
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"❌ Error creando nodo: {str(e)}")
+        with st.expander("🔍 Debug: create_node"):
+            st.code(f"POST {url}\nPayload:\n{json.dumps(payload, indent=2, ensure_ascii=False)}\n\nError: {str(e)}", language="text")
         return None
 
 
