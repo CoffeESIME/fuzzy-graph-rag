@@ -13,7 +13,7 @@ import requests
 import logging
 
 from config.settings import get_settings
-from shared.clients import get_weaviate_client
+from shared.clients import get_weaviate_client, get_minio_client
 import weaviate.classes.query as wq
 
 router = APIRouter(
@@ -188,6 +188,120 @@ def search_vectors(request: VectorSearchRequest):
     # 4. Sort by distance (closest first)
     all_results.sort(key=lambda r: r.distance)
 
+    # ==========================================
+    # DIRECT MINIO DISCOVERY (NO SQL)
+    # ==========================================
+    # User requested to bypass SQL/Weaviate and find files directly in MinIO.
+    # Pattern 1 (Uploads): raw/<type>/<8char_hash>_<filename>
+    # Pattern 2 (Texts): master_records/texts/<full_hash>.txt
+    
+    try:
+        minio_client = get_minio_client()
+        bucket_name = settings.MINIO_BUCKET
+        
+        # Prefixes to search.
+        CANDIDATE_PREFIXES = [
+            "raw/images/",
+            "raw/audio/",
+            "raw/videos/",
+            "raw/documents/",
+            "master_records/texts/"
+        ]
+        
+        # Cache for hash -> minio_path
+        hash_path_cache = {}
+        
+        for r in all_results:
+            props = r.properties
+            
+            # 1. Get Hash & Sanitize
+            file_hash = props.get("neo4j_hash") or props.get("file_hash") or props.get("hash")
+            if not file_hash:
+                continue
+                
+            # Clean hash: remove quotes, whitespace, newlines
+            file_hash = str(file_hash).strip().strip('"').strip("'")
+            
+            # 2. Check Cache
+            if file_hash in hash_path_cache:
+                found_path = hash_path_cache[file_hash]
+            else:
+                # 3. Search in MinIO
+                found_path = None
+                
+                # Optimization: Guess prefix based on Space
+                prefixes_to_try = CANDIDATE_PREFIXES
+                if r.space == "VisualSpace":
+                    prefixes_to_try = ["raw/images/"] + [p for p in CANDIDATE_PREFIXES if p != "raw/images/"]
+                elif r.space == "AudioSpace":
+                    prefixes_to_try = ["raw/audio/"] + [p for p in CANDIDATE_PREFIXES if p != "raw/audio/"]
+                elif r.space == "TextSpace":
+                    prefixes_to_try = ["master_records/texts/", "raw/documents/"] + [p for p in CANDIDATE_PREFIXES if p not in ("master_records/texts/", "raw/documents/")]
+                
+                for prefix in prefixes_to_try:
+                    # Construct search prefix
+                    
+                    # Case A: master_records/texts/ uses FULL hash
+                    if prefix == "master_records/texts/":
+                        search_prefix = f"{prefix}{file_hash}"
+                    # Case B: raw/ uses SHORT hash (8 chars)
+                    else:
+                        short_hash = file_hash[:8]
+                        search_prefix = f"{prefix}{short_hash}"
+                    
+                    try:
+                        # List objects
+                        response = minio_client.list_objects_v2(
+                            Bucket=bucket_name,
+                            Prefix=search_prefix,
+                            MaxKeys=1
+                        )
+                        
+                        if 'Contents' in response:
+                            # Match found!
+                            obj = response['Contents'][0]
+                            found_path = obj['Key']
+                            break # Stop checking other prefixes
+                            
+                    except Exception as e:
+                        logger.warning(f"MinIO list failed for {search_prefix}: {e}")
+                
+                # Update cache
+                hash_path_cache[file_hash] = found_path
+            
+            # 4. Generate Presigned URL
+            if found_path:
+                try:
+                    # Update true path
+                    r.properties["minio_path"] = found_path
+                    
+                    # Sign URL
+                    url = minio_client.generate_presigned_url(
+                        'get_object',
+                        Params={'Bucket': bucket_name, 'Key': found_path},
+                        ExpiresIn=3600
+                    )
+                    r.properties["download_url"] = url
+                except Exception as e:
+                    logger.error(f"Signing failed for {found_path}: {e}")
+            
+            # 5. Fix URL for Browser Access (Docker vs Host)
+            # The backend might generate a URL like 'http://rag_minio_dev:9000/...' or 'http://localhost:9000/...'
+            # But the user's browser needs 'http://localhost:9005/...' (as per docker-compose)
+            if r.properties.get("download_url"):
+                original_url = r.properties["download_url"]
+                
+                # Replace the authority part of the URL to point to localhost:9005
+                # This handles cases where boto3 signs with the internal container name
+                import re
+                new_url = re.sub(r'https?://[^/]+', 'http://localhost:9005', original_url)
+                
+                r.properties["download_url"] = new_url
+                print(f"DEBUG: URL Correction | Original: {original_url[:40]}... | New: {new_url[:40]}...")
+
+    except Exception as e:
+        logger.error(f"MinIO Discovery failed: {e}")
+
     return VectorSearchResponse(
         query=request.query,
         embedding_dimensions=len(embedding),
@@ -205,7 +319,9 @@ class StubSearchResult(BaseModel):
     filename: str
     score: float
     space: str
+    space_icon: str
     uuid: str
+    distance: float
     reasoning: str
     properties: Dict[str, Any] = {}
 
@@ -222,33 +338,57 @@ MOCK_RESULTS = [
         filename="research_ml_transformers.pdf",
         score=0.92,
         space="TextSpace",
+        space_icon="📄",
         uuid="a1b2c3d4-e5f6-7890-abcd-ef0123456789",
+        distance=0.08,
         reasoning="Alta similitud semántica con la consulta en el espacio de texto.",
-        properties={"document_type": "research_paper", "tags": ["ML", "transformers", "NLP"]},
+        properties={
+            "document_type": "research_paper", 
+            "tags": ["ML", "transformers", "NLP"],
+            "minio_path": "mock/research_ml_transformers.pdf"
+        },
     ),
     StubSearchResult(
         filename="foto_laboratorio_001.jpg",
         score=0.78,
         space="VisualSpace",
+        space_icon="📸",
         uuid="b2c3d4e5-f6a7-8901-bcde-f01234567890",
+        distance=0.22,
         reasoning="Contenido visual relacionado con contexto científico.",
-        properties={"visual_mood": "professional", "ocr_text": "Lab Equipment Setup"},
+        properties={
+            "visual_mood": "professional", 
+            "ocr_text": "Lab Equipment Setup",
+            "minio_path": "mock/foto_laboratorio_001.jpg"
+        },
     ),
     StubSearchResult(
         filename="audio_lecture_ai.mp3",
         score=0.71,
         space="AudioSpace",
+        space_icon="🎵",
         uuid="c3d4e5f6-a7b8-9012-cdef-012345678901",
+        distance=0.29,
         reasoning="Transcripción del audio contiene términos relacionados.",
-        properties={"language": "es", "duration_seconds": 1820},
+        properties={
+            "language": "es", 
+            "duration_seconds": 1820,
+            "minio_path": "mock/audio_lecture_ai.mp3"
+        },
     ),
     StubSearchResult(
         filename="memory_proyecto_ia.txt",
         score=0.65,
         space="MemorySpace",
+        space_icon="🧠",
         uuid="d4e5f6a7-b8c9-0123-defa-123456789012",
+        distance=0.35,
         reasoning="Nota personal con conexiones conceptuales a la consulta.",
-        properties={"sentiment": "positive", "connection_type": "conceptual"},
+        properties={
+            "sentiment": "positive", 
+            "connection_type": "conceptual",
+            "minio_path": "mock/memory_proyecto_ia.txt"
+        },
     ),
 ]
 

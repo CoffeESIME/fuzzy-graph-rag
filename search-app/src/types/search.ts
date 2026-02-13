@@ -3,26 +3,30 @@
    ========================================== */
 
 // --- Shared Result Type ---
+// --- Shared Result Type (Matching Real Backend) ---
 export interface SearchResult {
-    filename: string;
-    score: number;
     space: string;
+    space_icon: string;
     uuid: string;
-    reasoning: string;
-    properties: Record<string, unknown>;
+    distance: number;
+    score: number;
+    properties: Record<string, any>;
 }
 
 export interface SearchResponse {
     query: string;
-    search_type: string;
+    embedding_dimensions?: number;
+    spaces_searched?: string[];
+    search_type?: string;     // Backend stub uses this, real endpoint doesn't. Optional.
     total_results: number;
     results: SearchResult[];
 }
 
-// --- Tab 1: Semantic Text ---
+// --- Tab 1: Semantic Text (Real /vectors endpoint) ---
 export interface SemanticTextRequest {
     query: string;
     limit: number;
+    spaces?: string[];
 }
 
 // --- Tab 2: Visual SigLIP ---

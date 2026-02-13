@@ -1299,11 +1299,13 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
             'error_message': 'Missing sidecar - cannot process without metadata'
         }
     
-    # Look for analysis JSON in common locations
+    # Look for analysis JSON in common locations (Prioritize H-I-T-L manual outputs)
     data_layers = sidecar_data.get('data_layers', {})
     analysis_json = (
         data_layers.get('analysis_json') or 
-        data_layers.get('text_summary_analysis') or
+        data_layers.get('raw_debug_data', {}).get('visual_semantic_json') or  # <--- H-I-T-L Visual
+        data_layers.get('raw_debug_data', {}).get('memory_analysis_json') or  # <--- H-I-T-L Memory
+        data_layers.get('text_summary_analysis') or                           # <--- Auto-Ingest
         data_layers.get('raw_debug_data', {}).get('text_analysis_json')
     )
     
@@ -1445,12 +1447,13 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     
     # === LÓGICA DE MAPEO DE METADATOS (Hybrid Search Ready) ===
     
-    # 1. Datos Comunes (Base properties)
-    graph_core = analysis_json.get("graph_core", {})
     properties = {
         "neo4j_hash": asset.file_hash,
         "inbox_id": str(asset.id),
-        "tags": graph_core.get("tags", [])
+        "tags": graph_core.get("tags", []),
+        "filename": asset.filename,
+        "minio_path": asset.minio_path,
+        "mime_type": asset.mime_type
     }
     
     # 2. Selección de Vector Name y Campos Específicos
