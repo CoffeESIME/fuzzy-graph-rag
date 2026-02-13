@@ -673,6 +673,152 @@ def render_task_dashboard():
 
 
 # ==========================================
+# SEMANTIC SEARCH
+# ==========================================
+
+def render_semantic_search():
+    """Renderiza la interfaz de búsqueda semántica por vectores."""
+    st.header("🔍 Búsqueda Semántica")
+    st.markdown("Busca contenido similar en todos los espacios vectoriales usando embeddings de texto (BGE-M3).")
+
+    SPACE_OPTIONS = {
+        "TextSpace": "📄 TextSpace",
+        "VisualSpace": "📸 VisualSpace",
+        "AudioSpace": "🎵 AudioSpace",
+        "MemorySpace": "🧠 MemorySpace",
+    }
+
+    # Search form
+    query = st.text_input(
+        "🔎 Consulta de búsqueda",
+        placeholder="Ej: machine learning, fotografía nocturna, recuerdos de infancia...",
+        key="search_query",
+    )
+
+    col_s1, col_s2 = st.columns([3, 1])
+    with col_s1:
+        selected_spaces = st.multiselect(
+            "Espacios a buscar",
+            options=list(SPACE_OPTIONS.keys()),
+            default=list(SPACE_OPTIONS.keys()),
+            format_func=lambda x: SPACE_OPTIONS[x],
+            key="search_spaces",
+        )
+    with col_s2:
+        limit = st.slider("Resultados por espacio", min_value=1, max_value=20, value=5, key="search_limit")
+
+    if st.button("🚀 Buscar", key="search_go", type="primary", disabled=not query or not query.strip()):
+        import requests as _requests
+
+        with st.spinner("Generando embedding y buscando en Weaviate..."):
+            try:
+                payload = {
+                    "query": query.strip(),
+                    "spaces": selected_spaces if selected_spaces else None,
+                    "limit": limit,
+                }
+                resp = _requests.post(
+                    f"{API_BASE_URL}/search/vectors",
+                    json=payload,
+                    timeout=60,
+                )
+                if resp.status_code == 200:
+                    st.session_state["search_results"] = resp.json()
+                else:
+                    detail = resp.json().get("detail", resp.text)
+                    st.error(f"❌ Error: {detail}")
+                    st.session_state["search_results"] = None
+            except _requests.exceptions.ConnectionError:
+                st.error("❌ No se puede conectar al backend.")
+                st.session_state["search_results"] = None
+            except Exception as exc:
+                st.error(f"❌ Error: {exc}")
+                st.session_state["search_results"] = None
+
+    # Display results
+    data = st.session_state.get("search_results")
+    if data and data.get("results"):
+        st.markdown("---")
+
+        total = data["total_results"]
+        dims = data["embedding_dimensions"]
+        spaces_searched = data["spaces_searched"]
+
+        st.markdown(f"**{total} resultados** en {len(spaces_searched)} espacios | Embedding: {dims} dimensiones")
+
+        results = data["results"]
+
+        for idx, item in enumerate(results):
+            space = item["space"]
+            icon = item["space_icon"]
+            score = item["score"]
+            distance = item["distance"]
+            props = item["properties"]
+            uuid_short = item["uuid"][:8]
+
+            # Build a title from available properties
+            title = (
+                props.get("ai_summary")
+                or props.get("filename")
+                or props.get("neo4j_hash", "")
+            )
+            if isinstance(title, str) and len(title) > 100:
+                title = title[:100] + "..."
+
+            # Score bar color
+            if score >= 0.7:
+                score_color = "🟢"
+            elif score >= 0.4:
+                score_color = "🟡"
+            else:
+                score_color = "🔴"
+
+            with st.expander(
+                f"{icon} **{space}** | {score_color} {score:.2%} | `{uuid_short}…` — {title}",
+                expanded=(idx < 3),
+            ):
+                mcol1, mcol2, mcol3 = st.columns(3)
+                mcol1.metric("Similitud", f"{score:.2%}")
+                mcol2.metric("Distancia", f"{distance:.6f}")
+                mcol3.metric("Espacio", space)
+
+                # Show key properties based on space
+                if props:
+                    st.markdown("**Propiedades:**")
+
+                    # Highlight common ones
+                    show_keys = [
+                        ("filename", "📁 Archivo"),
+                        ("ai_summary", "📝 Resumen IA"),
+                        ("document_type", "📋 Tipo"),
+                        ("tags", "🏷️ Tags"),
+                        ("sentiment", "💭 Sentimiento"),
+                        ("visual_mood", "🎨 Mood Visual"),
+                        ("ocr_text", "📖 OCR"),
+                        ("connection_type", "🔗 Conexión"),
+                        ("language", "🌍 Idioma"),
+                    ]
+
+                    for key, label in show_keys:
+                        val = props.get(key)
+                        if val:
+                            display = str(val)
+                            if len(display) > 300:
+                                display = display[:300] + "..."
+                            st.markdown(f"- **{label}:** {display}")
+
+                    # Show remaining properties in JSON
+                    shown_keys = {k for k, _ in show_keys}
+                    extra = {k: v for k, v in props.items() if k not in shown_keys and v}
+                    if extra:
+                        with st.expander("Ver todas las propiedades"):
+                            st.json(extra)
+
+    elif data is not None and not data.get("results"):
+        st.info("🔍 No se encontraron resultados para esta consulta.")
+
+
+# ==========================================
 # MAIN APP
 # ==========================================
 
@@ -692,7 +838,7 @@ def main():
     st.markdown("Sistema de gestión para ingesta y procesamiento de datos multimodales.")
     
     # Tabs principales
-    tab1, tab2, tab3, tab4 = st.tabs(["📤 Ingesta y Agrupación", "⚙️ Control de Tareas", "👁️ Cola de Revisión", "🔗 Generador de Nodos"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 Ingesta y Agrupación", "⚙️ Control de Tareas", "👁️ Cola de Revisión", "🔗 Generador de Nodos", "🔍 Búsqueda Semántica"])
     
     # --- TAB 1: INGESTA ---
     with tab1:
@@ -741,6 +887,10 @@ def main():
     # --- TAB 4: GENERADOR DE NODOS ---
     with tab4:
         render_graph_generator(api_base_url=API_BASE_URL)
+    
+    # --- TAB 5: BÚSQUEDA SEMÁNTICA ---
+    with tab5:
+        render_semantic_search()
     
     # Sidecar viewer (sidebar)
     if st.session_state.viewing_sidecar:
