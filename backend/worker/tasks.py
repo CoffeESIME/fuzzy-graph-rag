@@ -837,7 +837,7 @@ def call_chat_completions_api(
         "task": task_type,
         "privacy_mode": privacy_mode,
         "messages": json.dumps(messages),
-        "temperature": 0.0 if task_type == "ocr" else 0.3  # Lower temp for more consistent JSON
+        "temperature": 0.0 if task_type == "ocr" else 0.5  # Lower temp for more consistent JSON
     }
     
     # Only request JSON format for vision tasks, not OCR
@@ -2003,7 +2003,7 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                     "task": "chat",  # TEXT task, not vision!
                     "privacy_mode": privacy_mode,
                     "messages": json.dumps(messages),
-                    "temperature": 0.3,
+                    "temperature": 0.5,
                     "response_format": json.dumps({"type": "json_object"})
                 }
                 
@@ -2113,7 +2113,8 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
             prompt = build_specialized_prompt(
                 task_type="text",
                 external_context=external_context,
-                is_user_memory=is_user_memory
+                is_user_memory=is_user_memory,
+                raw_text=text_content
             )
             logger.info(f"   Built {'memory' if is_user_memory else 'text'} analysis prompt: {len(prompt)} chars")
             
@@ -2128,7 +2129,7 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                 "task": "chat",
                 "privacy_mode": privacy_mode,
                 "messages": json.dumps(messages),
-                "temperature": 0.3,
+                "temperature": 0.5,
                 "response_format": json.dumps({"type": "json_object"})
             }
             
@@ -2227,7 +2228,7 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                     "task": "chat",
                     "privacy_mode": privacy_mode,
                     "messages": json.dumps(messages),
-                    "temperature": 0.3,
+                    "temperature": 0.5,
                     "response_format": json.dumps({"type": "json_object"})
                 }
                 
@@ -2453,7 +2454,7 @@ def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session)
             "task": "chat",
             "privacy_mode": privacy_mode,  # Always strict
             "messages": json.dumps(messages),
-            "temperature": 0.3,
+            "temperature": 0.5,
             "response_format": json.dumps({"type": "json_object"})
         }
         

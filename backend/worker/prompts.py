@@ -15,33 +15,44 @@ from typing import Optional, Dict, Any, List
 # --- 1. DEFINICIÓN DE LA ESCALA MAESTRA (LA REGLA DE ORO) ---
 CALIBRATION_RUBRIC = """
 CONFIDENCE SCORING RUBRIC (STRICT ENFORCEMENT):
-You must assign a 'confidence' score (0.0 - 1.0) to every entity and concept based on this scale:
 
-* **1.0 (FACTUAL / HARD DATA):** - Direct visual evidence (e.g., "The car is red").
-  - Explicit text definitions (e.g., "MQTT is a protocol").
-  - Physical locations or dates mentioned explicitly.
+* **1.0 (HARD REALITY):**
+  - ONLY for Physical Objects visible in pixels (Visual).
+  - ONLY for Named Entities (People, Cities, Dates, Organizations) explicitly named in text.
+  - FACTS that can be verified in a wiki (e.g., "Keops", "1983", "Madrid").
 
-* **0.7 - 0.9 (THEMATIC / STRONG CONTEXT):**
-  - Strong logical inference.
-  - Shared context (e.g., "Beach" implies "Vacation" even if not stated).
-  - Clear emotions explicitly described.
+* **0.8 - 0.9 (EXPLICIT CONCEPTS):**
+  - Abstract themes explicitly mentioned in text (e.g., "Love", "Freedom", "Time").
+  - Even if the text says "I feel sad", the concept "Sadness" is an abstraction, so Max Score is 0.9.
+  - Strong logical inferences derived directly from evidence.
 
-* **0.4 - 0.6 (FUZZY / METAPHORICAL / VIBES):** <-- CRITICAL ZONE
-  - Artistic interpretations (e.g., "Darkness" symbolizing "Sadness").
-  - "Reminds of", "Looks like", or subtle emotional undertones.
-  - Cross-domain connections (Engineering <-> Philosophy).
+* **0.5 - 0.7 (INTERPRETATION / VIBES):** <-- TARGET ZONE FOR ART
+  - Artistic metaphors (e.g., "Winter" -> "Solitude").
+  - Emotional undertones not explicitly stated.
+  - "Reminds me of..." or cross-domain links (Music -> Philosophy).
 
-* **0.0 - 0.3 (NOISE):**
-  - Tangential mentions or weak guesses. Do not include unless necessary.
+* **0.0 - 0.4 (NOISE / GUESSES):**
+  - Weak links or hallucinations.
 
-RULE: Do NOT default to 0.9. If the connection is abstract, artistic, or distant, the score MUST be < 0.6.
-""" 
+🔴 PENALTY RULES (CRITICAL):
+1. **ABSTRACT CEILING:** If the concept is intangible (Philosophy, Emotions, Desires), you MUST NOT score it 1.0. The absolute maximum for abstract ideas is 0.9.
+2. **METAPHOR PENALTY:** If the connection is poetic/metaphorical, the score MUST be < 0.7.
+3. **DIVERSITY:** Do not output all 1.0s. A realistic analysis contains uncertainty.
+4. **METAPHOR DECODING (ANTI-HALLUCINATION):**
+   - **Trigger:** When you see a simile ("like a goat", "como una cabra") or metaphor ("fogoso").
+   - **Action 1 (The Trap):** DO NOT extract the literal object (e.g., do NOT create a Concept "Cabra" or "Goat"). The object is not real.
+   - **Action 2 (The Translation):** Extract the *precise attribute* the metaphor represents.
+     - Example: "Como una cabra" -> Concept: "Agilidad" (NOT "Vitalidad" - be precise).
+     - Example: "Animal fogoso" -> Concept: "Ímpetu" or "Pasión".
+   - **Scoring:** Mark these translated concepts with **Confidence 0.6**.
+"""
 
 def build_specialized_prompt(
     task_type: str,  # "vision", "audio", "text"
     external_context: Optional[Dict[str, Any]] = None,
     existing_taxonomies: Optional[Dict[str, List[str]]] = None,
-    is_user_memory: bool = False  # NEW: Flag for memory-specific processing
+    is_user_memory: bool = False,  # Flag for memory-specific processing
+    raw_text: Optional[str] = None  # Raw text content for word-count rules
 ) -> str:
     """
     Builds the system prompt for the LLM Gateway.
@@ -197,12 +208,37 @@ def build_specialized_prompt(
     if task_type == "vision":
         ocr_instruction = """
 VISION TASK SPECIFIC RULES:
-1. **MEMES & SCREENSHOTS:** If the image contains text (e.g., subtitles, code, chat logs), you MUST transcribe it VERBATIM into the 'ocr_text' field.
-2. **CONTEXTUALIZATION:** Use the 'ocr_text' to inform the 'visual_mood' and 'summary'. (e.g., If the text is a joke, the mood is 'Humorous').
+1. **MEMES & SCREENSHOTS:** If the image contains text, transcribe it VERBATIM into 'ocr_text'.
+2. **VISUAL SYMBOLISM (CRITICAL):**
+   - If you see a famous artwork (e.g., Magritte, Dali) or mythical figure (e.g., Sisyphus, Atlas), you MUST extract them as Entities (Person/Character) with confidence 0.9-1.0.
+   - Do NOT just rely on the text. Look at the pixels.
+   - Example: A photo of Sisyphus pushing a rock -> Extract Concept: "Sisyphus" (1.0), "Absurdism" (0.6).
+3. **TEXT VS MEANING:**
+   - If the text mentions an abstract concept (e.g., "Sufrimiento"), do NOT score it 0.9 just because the word is there.
+   - Use the rubic: Abstract concepts from text = Max 0.8.
 """
+#         """
+# VISION TASK SPECIFIC RULES:
+# 1. **MEMES & SCREENSHOTS:** If the image contains text (e.g., subtitles, code, chat logs), you MUST transcribe it VERBATIM into the 'ocr_text' field.
+# 2. **CONTEXTUALIZATION:** Use the 'ocr_text' to inform the 'visual_mood' and 'summary'. (e.g., If the text is a joke, the mood is 'Humorous').
+# """
     # ==========================================
     # CONTEXT INSTRUCTION WITH FIREWALL RULES
     # ==========================================
+    
+    # Short text rule (< 100 words = quotes, aphorisms, dense fragments)
+    short_text_instruction = ""
+    if task_type == "text" and raw_text:
+        word_count = len(raw_text.split())
+        if word_count < 100:
+            short_text_instruction = f"""
+SPECIAL RULE FOR SHORT TEXTS / QUOTES (Detected: {word_count} words):
+- Short texts are often dense with meaning. You MUST extract the *implied* philosophical themes.
+- If the text tells a moral story, extract the Virtue or Value represented (e.g., "Humility", "Acceptance").
+- Do NOT pad the output with obvious tags. Focus on the DEEP meaning.
+- Mark these implied themes with confidence 0.6 - 0.7.
+"""
+    
     context_instruction = ""
     if has_context:
         context_instruction = f"""
@@ -263,6 +299,8 @@ OUTPUT SCHEMA (Follow this structure exactly):
 {taxonomy_hint}
 
 {context_instruction}
+
+{short_text_instruction}
 
 FEW-SHOT EXAMPLES (Study these carefully - note how confidence scores match the rubric):
 {examples_str}

@@ -276,18 +276,122 @@ def _render_single_task_editor(task: Dict[str, Any]) -> None:
                         help="Marcar si el audio contiene música/canción"
                     )
                 
+                # --- LRCLIB Lyrics search (only when is_song) ---
+                if is_song:
+                    st.markdown("---")
+                    st.markdown("##### 🔍 Buscar Letra en LRCLIB")
+
+                    # Session keys scoped to this task
+                    lrc_results_key = f"lrc_results_{vs_id}"
+                    lrc_selected_key = f"lrc_selected_{vs_id}"
+                    if lrc_results_key not in st.session_state:
+                        st.session_state[lrc_results_key] = []
+                    if lrc_selected_key not in st.session_state:
+                        st.session_state[lrc_selected_key] = None
+
+                    lrc_c1, lrc_c2, lrc_c3 = st.columns(3)
+                    with lrc_c1:
+                        lrc_track = st.text_input(
+                            "🎵 Canción *",
+                            key=f"lrc_track_{vs_id}",
+                            placeholder="Ej: Bohemian Rhapsody",
+                        )
+                    with lrc_c2:
+                        lrc_artist = st.text_input(
+                            "🎤 Artista",
+                            key=f"lrc_artist_{vs_id}",
+                            placeholder="Ej: Queen",
+                        )
+                    with lrc_c3:
+                        lrc_album = st.text_input(
+                            "💿 Álbum",
+                            key=f"lrc_album_{vs_id}",
+                            placeholder="Ej: A Night at the Opera",
+                        )
+
+                    if st.button("🔍 Buscar Letra", key=f"lrc_search_{vs_id}", type="primary"):
+                        if not lrc_track or not lrc_track.strip():
+                            st.error("❌ El nombre de la canción es obligatorio.")
+                        else:
+                            import requests as _requests
+                            api_base = st.secrets.get("API_BASE_URL", "http://localhost:8000")
+                            with st.spinner("Buscando en LRCLIB..."):
+                                try:
+                                    params = {"track_name": lrc_track.strip()}
+                                    if lrc_artist and lrc_artist.strip():
+                                        params["artist_name"] = lrc_artist.strip()
+                                    if lrc_album and lrc_album.strip():
+                                        params["album_name"] = lrc_album.strip()
+                                    resp = _requests.get(
+                                        f"{api_base}/lyrics/search",
+                                        params=params,
+                                        timeout=20,
+                                    )
+                                    if resp.status_code == 200:
+                                        st.session_state[lrc_results_key] = resp.json()
+                                        st.session_state[lrc_selected_key] = None
+                                        if not st.session_state[lrc_results_key]:
+                                            st.warning("⚠️ No se encontraron resultados.")
+                                    else:
+                                        detail = resp.json().get("detail", resp.text)
+                                        st.error(f"❌ Error: {detail}")
+                                except _requests.exceptions.ConnectionError:
+                                    st.error("❌ No se puede conectar al backend.")
+                                except Exception as exc:
+                                    st.error(f"❌ Error: {exc}")
+
+                    # Show search results
+                    lrc_results = st.session_state[lrc_results_key]
+                    if lrc_results:
+                        st.markdown(f"**Resultados ({len(lrc_results)}):**")
+                        for r_idx, item in enumerate(lrc_results):
+                            r_track = item.get("trackName", "?")
+                            r_artist = item.get("artistName", "?")
+                            r_album = item.get("albumName", "?")
+                            r_dur = item.get("duration", 0)
+                            # Prefer syncedLyrics, fall back to plainLyrics
+                            r_synced = item.get("syncedLyrics") or ""
+                            r_plain = item.get("plainLyrics") or ""
+                            r_lyrics = r_synced if r_synced else r_plain
+                            r_mins = int(r_dur // 60)
+                            r_secs = int(r_dur % 60)
+                            synced_badge = " ⏱️ Synced" if r_synced else ""
+                            r_tag = "🎹 Instrumental" if item.get("instrumental") else f"{len(r_lyrics.splitlines())} líneas{synced_badge}"
+
+                            with st.expander(f"**{r_track}** — {r_artist} | {r_album} ({r_mins}:{r_secs:02d}) | {r_tag}"):
+                                if r_lyrics:
+                                    st.text(r_lyrics[:400] + ("\n..." if len(r_lyrics) > 400 else ""))
+                                else:
+                                    st.info("Sin letra disponible.")
+                                if st.button("✅ Usar esta letra", key=f"lrc_use_{vs_id}_{r_idx}", type="primary"):
+                                    # Build formatted text with metadata header
+                                    header = f"Canción: {r_track}\nArtista: {r_artist}\nÁlbum: {r_album}\n{'='*40}\n"
+                                    st.session_state[lrc_selected_key] = header + (r_lyrics or "(instrumental)")
+                                    st.rerun()
+
+                    st.markdown("---")
+
+                # --- Provided lyrics / transcription ---
                 has_provided_lyrics = st.checkbox(
                     "📜 Tengo la letra/transcripción",
-                    value=audio_opts.get("has_provided_lyrics", False),
+                    value=audio_opts.get("has_provided_lyrics", False) or (is_song and st.session_state.get(f"lrc_selected_{vs_id}") is not None),
                     key=f"has_lyrics_{vs_id}",
                     help="Si tienes la letra o transcripción del audio, puedes proporcionarla"
                 )
                 
                 provided_lyrics_text = None
                 if has_provided_lyrics:
+                    # Pre-fill with LRCLIB selection if available
+                    default_lyrics = ""
+                    lrc_sel = st.session_state.get(f"lrc_selected_{vs_id}")
+                    if lrc_sel:
+                        default_lyrics = lrc_sel
+                    else:
+                        default_lyrics = audio_opts.get("provided_lyrics_text", "")
+
                     provided_lyrics_text = st.text_area(
                         "Letra / Transcripción",
-                        value=audio_opts.get("provided_lyrics_text", ""),
+                        value=default_lyrics,
                         key=f"lyrics_text_{vs_id}",
                         placeholder="Pega aquí la letra o transcripción del audio...",
                         height=120
