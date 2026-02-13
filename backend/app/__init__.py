@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from shared.database import create_db_and_tables
 from app.routers import router as ingest_router
@@ -19,6 +20,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Multimodal Graph RAG v2",
     lifespan=lifespan
+)
+
+# CORS for React dev server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Register routers

@@ -195,3 +195,192 @@ def search_vectors(request: VectorSearchRequest):
         total_results=len(all_results),
         results=all_results,
     )
+
+
+# ==========================================
+# STUB ENDPOINTS (Mock responses)
+# ==========================================
+
+class StubSearchResult(BaseModel):
+    filename: str
+    score: float
+    space: str
+    uuid: str
+    reasoning: str
+    properties: Dict[str, Any] = {}
+
+
+class StubSearchResponse(BaseModel):
+    query: str
+    search_type: str
+    total_results: int
+    results: List[StubSearchResult]
+
+
+MOCK_RESULTS = [
+    StubSearchResult(
+        filename="research_ml_transformers.pdf",
+        score=0.92,
+        space="TextSpace",
+        uuid="a1b2c3d4-e5f6-7890-abcd-ef0123456789",
+        reasoning="Alta similitud semántica con la consulta en el espacio de texto.",
+        properties={"document_type": "research_paper", "tags": ["ML", "transformers", "NLP"]},
+    ),
+    StubSearchResult(
+        filename="foto_laboratorio_001.jpg",
+        score=0.78,
+        space="VisualSpace",
+        uuid="b2c3d4e5-f6a7-8901-bcde-f01234567890",
+        reasoning="Contenido visual relacionado con contexto científico.",
+        properties={"visual_mood": "professional", "ocr_text": "Lab Equipment Setup"},
+    ),
+    StubSearchResult(
+        filename="audio_lecture_ai.mp3",
+        score=0.71,
+        space="AudioSpace",
+        uuid="c3d4e5f6-a7b8-9012-cdef-012345678901",
+        reasoning="Transcripción del audio contiene términos relacionados.",
+        properties={"language": "es", "duration_seconds": 1820},
+    ),
+    StubSearchResult(
+        filename="memory_proyecto_ia.txt",
+        score=0.65,
+        space="MemorySpace",
+        uuid="d4e5f6a7-b8c9-0123-defa-123456789012",
+        reasoning="Nota personal con conexiones conceptuales a la consulta.",
+        properties={"sentiment": "positive", "connection_type": "conceptual"},
+    ),
+]
+
+
+# --- Tab 1: Semantic Text ---
+class SemanticTextRequest(BaseModel):
+    query: str = Field(..., min_length=1)
+    limit: int = Field(10, ge=1, le=50)
+
+@router.post("/semantic-text", response_model=StubSearchResponse)
+def search_semantic_text(req: SemanticTextRequest):
+    """Stub: Semantic text search (BAAI/bge-m3)."""
+    results = MOCK_RESULTS[:req.limit]
+    return StubSearchResponse(
+        query=req.query,
+        search_type="semantic-text (bge-m3)",
+        total_results=len(results),
+        results=results,
+    )
+
+
+# --- Tab 2: Visual SigLIP ---
+class VisualSigLIPRequest(BaseModel):
+    image: str = Field(..., description="Base64 image or URL")
+    limit: int = Field(10, ge=1, le=50)
+
+@router.post("/visual-siglip", response_model=StubSearchResponse)
+def search_visual_siglip(req: VisualSigLIPRequest):
+    """Stub: Visual search (SigLIP)."""
+    visual_results = [r for r in MOCK_RESULTS if r.space == "VisualSpace"]
+    if not visual_results:
+        visual_results = MOCK_RESULTS[:1]
+    return StubSearchResponse(
+        query="[image]",
+        search_type="visual-siglip",
+        total_results=len(visual_results),
+        results=visual_results[:req.limit],
+    )
+
+
+# --- Tab 3: Hybrid Visual + Text ---
+class HybridVisualRequest(BaseModel):
+    image: str = Field(..., description="Base64 image or URL")
+    text_context: str = Field("", description="Optional text context")
+    alpha: float = Field(0.5, ge=0.0, le=1.0)
+    limit: int = Field(10, ge=1, le=50)
+
+@router.post("/hybrid-visual", response_model=StubSearchResponse)
+def search_hybrid_visual(req: HybridVisualRequest):
+    """Stub: Hybrid visual+text search (SigLIP + bge-m3)."""
+    return StubSearchResponse(
+        query=req.text_context or "[image+text]",
+        search_type=f"hybrid-visual (alpha={req.alpha})",
+        total_results=len(MOCK_RESULTS[:req.limit]),
+        results=MOCK_RESULTS[:req.limit],
+    )
+
+
+# --- Tab 4: Graph Crisp ---
+class GraphCrispRequest(BaseModel):
+    query: str = Field(..., min_length=1)
+    entity_types: Optional[List[str]] = None
+
+@router.post("/graph-crisp", response_model=StubSearchResponse)
+def search_graph_crisp(req: GraphCrispRequest):
+    """Stub: Crisp graph search (Neo4j exact)."""
+    graph_results = [
+        StubSearchResult(
+            filename="node:Person/Albert_Einstein",
+            score=1.0,
+            space="Neo4j",
+            uuid="e5f6a7b8-c9d0-1234-efab-234567890123",
+            reasoning=f"Coincidencia exacta en grafo para '{req.query}'.",
+            properties={"node_type": "Person", "connections": 12},
+        ),
+        StubSearchResult(
+            filename="node:Concept/Relatividad",
+            score=0.95,
+            space="Neo4j",
+            uuid="f6a7b8c9-d0e1-2345-fabc-345678901234",
+            reasoning=f"Concepto directamente relacionado con '{req.query}'.",
+            properties={"node_type": "Concept", "connections": 8},
+        ),
+    ]
+    return StubSearchResponse(
+        query=req.query,
+        search_type="graph-crisp (Neo4j)",
+        total_results=len(graph_results),
+        results=graph_results,
+    )
+
+
+# --- Tab 5: Graph Fuzzy ---
+class GraphFuzzyRequest(BaseModel):
+    query: str = Field(..., min_length=1)
+    min_confidence: float = Field(0.6, ge=0.0, le=1.0)
+
+@router.post("/graph-fuzzy", response_model=StubSearchResponse)
+def search_graph_fuzzy(req: GraphFuzzyRequest):
+    """Stub: Fuzzy graph search (weighted expansion)."""
+    fuzzy_results = [
+        StubSearchResult(
+            filename="node:Concept/Mecánica_Cuántica",
+            score=0.88,
+            space="Neo4j",
+            uuid="a7b8c9d0-e1f2-3456-abcd-456789012345",
+            reasoning=f"Expansión difusa (conf={req.min_confidence}) desde '{req.query}'.",
+            properties={"node_type": "Concept", "fuzzy_score": 0.88, "hops": 2},
+        ),
+        StubSearchResult(
+            filename="node:Person/Niels_Bohr",
+            score=0.72,
+            space="Neo4j",
+            uuid="b8c9d0e1-f2a3-4567-bcde-567890123456",
+            reasoning=f"Conexión difusa a 2 hops desde la consulta.",
+            properties={"node_type": "Person", "fuzzy_score": 0.72, "hops": 2},
+        ),
+        StubSearchResult(
+            filename="node:Concept/Principio_Incertidumbre",
+            score=0.61,
+            space="Neo4j",
+            uuid="c9d0e1f2-a3b4-5678-cdef-678901234567",
+            reasoning=f"Relación conceptual encontrada con confianza mínima.",
+            properties={"node_type": "Concept", "fuzzy_score": 0.61, "hops": 3},
+        ),
+    ]
+    # Filter by min_confidence
+    filtered = [r for r in fuzzy_results if r.score >= req.min_confidence]
+    return StubSearchResponse(
+        query=req.query,
+        search_type=f"graph-fuzzy (min_conf={req.min_confidence})",
+        total_results=len(filtered),
+        results=filtered,
+    )
+
