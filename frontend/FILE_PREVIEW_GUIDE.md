@@ -1,4 +1,6 @@
-# GraphRAG Multimodal - Previsualización Inteligente de Archivos
+# GraphRAG Multimodal - Previsualización Inteligente de Archivos (Streamlit Admin)
+
+> **Nota:** Esta guía aplica a la previsualización en el **Panel de Administración (Streamlit)** durante la etapa de ingesta. Para la previsualización en la Búsqueda, ver la documentación de `search-app`.
 
 ## 🎯 Funcionalidad
 

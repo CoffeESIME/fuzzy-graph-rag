@@ -171,6 +171,16 @@ GET /tasks/health
 Response: {"status": "healthy", "service": "tasks"}
 ```
 
+### Búsqueda (Search App)
+```bash
+POST /search/vectors
+Body: {"query": "gato blanco", "spaces": ["VisualSpace", "TextSpace"]}
+Response: VectorSearchResponse
+
+GET /search/options
+Response: SearchOptions (available spaces, models)
+```
+
 ---
 
 ## 🔐 Environment Variables
@@ -213,6 +223,11 @@ NEO4J_PASSWORD=password
 ### Frontend (`frontend/.streamlit/secrets.toml`)
 ```toml
 API_BASE_URL = "http://localhost:8000"
+```
+
+### Search App (`search-app/.env.local`)
+```env
+VITE_API_URL=http://localhost:8000
 ```
 
 ---

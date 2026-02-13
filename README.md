@@ -55,7 +55,12 @@ graphrag/
 │   ├── worker/                # Celery tasks
 │   └── pyproject.toml
 │
-├── frontend/                   # Streamlit UI
+├── search-app/                 # React Search Interface (New)
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+├── frontend/                   # Streamlit Admin Panel (Legacy)
 │   ├── app.py                 # Main application
 │   ├── .streamlit/            # Configuration
 │   ├── requirements.txt
@@ -99,7 +104,17 @@ poetry run uvicorn app:app --reload
 API disponible en: `http://localhost:8000`  
 Documentación: `http://localhost:8000/docs`
 
-### 3. Iniciar Frontend (Streamlit)
+### 3. Iniciar Frontend de Búsqueda (React)
+
+```bash
+cd search-app
+npm install
+npm run dev
+```
+
+Buscador disponible en: `http://localhost:5173/search`
+
+### 4. Iniciar Panel de Administración (Streamlit)
 
 ```bash
 cd frontend
@@ -118,7 +133,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Aplicación disponible en: `http://localhost:8501`
+Panel disponible en: `http://localhost:8501`
 
 ## 🎯 Funcionalidades Principales
 

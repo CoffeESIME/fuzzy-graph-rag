@@ -126,6 +126,26 @@
 
 ---
 
+### Caso 6: Búsqueda Semántica (React App)
+
+**Objetivo:** Buscar contenido visual y textual usando lenguaje natural.
+
+1. **Abrir Search App:** `http://localhost:5173/search`
+2. **Tab: Semántica**
+3. **Query:** "Documentos sobre inteligencia artificial y memes de gatos"
+4. **Espacios:** Seleccionar `TextSpace` y `VisualSpace`
+5. **Configuración:** Limit = 20
+6. **Click "Buscar"**
+
+**Resultado:**
+- Grid de resultados mixtos
+- **Imágenes:** Thumbnails de gatos
+- **Documentos:** Tarjetas con resumen de IA
+- **Acción:** Click en "Ver Texto" para abrir modal de lectura
+- **Acción:** Click en imagen para ver tamaño completo
+
+---
+
 ## 🔧 Troubleshooting por Caso de Uso
 
 ### Error: "No files were uploaded"

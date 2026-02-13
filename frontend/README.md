@@ -1,4 +1,7 @@
-# GraphRAG Multimodal - Frontend
+# GraphRAG Multimodal - Admin Frontend (Streamlit)
+
+> **⚠️ ADMIN PANEL ONLY:** Esta aplicación es el **Panel de Administración** para Ingesta y Control de Tareas. 
+> Para la interfaz de **Búsqueda (Usuario Final)**, por favor diríjase a `../search-app`.
 
 Interfaz de usuario Streamlit para el sistema GraphRAG Multimodal.
 

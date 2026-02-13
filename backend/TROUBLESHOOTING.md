@@ -270,4 +270,33 @@ Si sigues sin ver logs, comparte:
 
 1. **Output completo del worker al arrancar** (primeras 20 líneas)
 2. **Output de `poetry run python scripts/diagnose_worker.py`**
-3. **Error en el terminal del worker** (si hay)
+---
+
+## 11. Problema: React App "Network Error" / CORS
+
+**Síntoma:** El frontend React muestra error de conexión o "Network Error" al buscar.
+**Causa:** Bloqueo de CORS (Cross-Origin Resource Sharing) porque React (5173) y FastAPI (8000) son dominios distintos.
+
+**Solución:**
+Verificar configuración de CORS en `backend/app/__init__.py`:
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:8501"], # React + Streamlit
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+## 12. Problema: Imágenes Rotas en Search App (403/404)
+
+**Síntoma:** Los resultados de búsqueda aparecen pero las imágenes/audio no cargan.
+**Causa:**
+1. Las URLs presignadas de MinIO han expirado.
+2. El bucket de MinIO no es accesible desde el navegador (Docker networking).
+
+**Solución:**
+1. **Host config:** Asegúrate que `MINIO_ENDPOINT` en backend apunte a `localhost:9000` (para que el navegador lo vea) y NO a `minio:9000` (interno de Docker), O configurar DNS/Host correctamente.
+2. **Token:** Verifica que la URL contenga `?X-Amz-Algorithm=...`. Si no, no está firmada.
+3. **Logs:** Revisa logs del backend para "Generated presigned URL".

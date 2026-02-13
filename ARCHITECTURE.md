@@ -37,10 +37,28 @@ Este documento describe la integración entre la interfaz Streamlit y el backend
 │  ┌──────────────────┐       ┌──────────────────┐            │
 │  │ IngestService    │       │  VectorStatus    │            │
 │  │ - Upload files   │       │  - Query tasks   │            │
+│  └────────┬─────────┘       └────────┬─────────┘            │
+│           │                          │                      │
+│           ▼                          ▼                      │
+│  ┌──────────────────┐       ┌──────────────────┐            │
+│  │ IngestService    │       │  VectorStatus    │            │
+│  │ - Upload files   │       │  - Query tasks   │            │
 │  │ - Create assets  │       │  - Update status │            │
 │  └────────┬─────────┘       └────────┬─────────┘            │
 └───────────┼──────────────────────────┼──────────────────────┘
             │                          │
+            ▼                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    REACT SEARCH APP (Vite)                   │
+│  ┌─────────────────┐        ┌─────────────────┐             │
+│  │  Tab: Semántica │        │ Tab: Visual     │             │
+│  │  - Text Query   │        │ - Image Query   │             │
+│  │  - Space Filter │        │ - Drag n Drop   │             │
+│  └────────┬────────┘        └────────┬────────┘             │
+│           │                          │                      │
+└───────────┼──────────────────────────┼──────────────────────┘
+            │                          │
+            │  POST /search/vectors    │
             ▼                          ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    PERSISTENCIA                              │
@@ -140,6 +158,37 @@ sequenceDiagram
     R->>C: Dispatch worker
     F->>S: ProcessTasksResponse
     S->>U: Muestra éxito
+```
+
+### Flujo 3: Búsqueda Semántica (React)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant R as React App
+    participant F as FastAPI
+    participant W as Weaviate
+    participant L as LLM Gateway
+    participant M as MinIO
+
+    U->>R: Escribe query "gato en la playa"
+    R->>F: POST /search/vectors
+    
+    F->>L: Embed Query (Text)
+    L-->>F: Vector [0.1, 0.2, ...]
+    
+    F->>W: Near Vector Search (VisualSpace + TextSpace)
+    W-->>F: Lista de UUIDs/Hashes
+    
+    F->>F: Resolve File Paths
+    
+    loop Para cada resultado
+        F->>M: Generar Presigned URL (1h)
+        M-->>F: URL firmada
+    end
+    
+    F-->>R: SearchResults (con URLs)
+    R->>U: Muestra Grid de Resultados (Imágenes/Texto)
 ```
 
 ## 📡 Endpoints API
