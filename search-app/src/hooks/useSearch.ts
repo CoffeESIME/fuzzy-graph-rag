@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useSearchStore } from '../store/searchStore';
 import {
     searchSemanticText,
@@ -14,6 +15,7 @@ import type {
     GraphCrispRequest,
     GraphFuzzyRequest,
     SearchTab,
+    MultimodalFusionResponse,
 } from '../types/search';
 
 function useGenericSearch<T>(tab: SearchTab, fn: (data: T) => Promise<any>) {
@@ -50,11 +52,32 @@ export function useVisualSigLIPSearch() {
     );
 }
 
+/**
+ * Custom hook for hybrid visual search — returns MultimodalFusionResponse
+ * with separate text/visual/fused result lists (not the generic SearchResponse).
+ */
 export function useHybridVisualSearch() {
-    return useGenericSearch<HybridVisualRequest>(
-        'hybrid-visual',
-        searchHybridVisual
-    );
+    const [fusionData, setFusionData] = useState<MultimodalFusionResponse | null>(null);
+    const [fusionLoading, setFusionLoading] = useState(false);
+    const [fusionError, setFusionError] = useState<string | null>(null);
+
+    const mutation = useMutation({
+        mutationFn: searchHybridVisual,
+        onMutate: () => {
+            setFusionLoading(true);
+            setFusionError(null);
+        },
+        onSuccess: (data) => {
+            setFusionData(data);
+            setFusionLoading(false);
+        },
+        onError: (err: Error) => {
+            setFusionError(err.message);
+            setFusionLoading(false);
+        },
+    });
+
+    return { mutation, fusionData, fusionLoading, fusionError };
 }
 
 export function useGraphCrispSearch() {

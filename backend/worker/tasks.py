@@ -1309,6 +1309,9 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
         data_layers.get('raw_debug_data', {}).get('text_analysis_json')
     )
     
+    # Extract graph_core early to prevent UnboundLocalError
+    graph_core = analysis_json.get('graph_core', {}) if analysis_json else {}
+    
     if not analysis_json:
         logger.error(f"   ❌ No prior analysis found in sidecar for asset {asset.id}")
         logger.error(f"   💡 TEXT_SUMMARY must run before TEXT_CHUNK")

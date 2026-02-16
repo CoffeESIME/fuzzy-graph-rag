@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { FileText, BarChart3 } from 'lucide-react';
 import type { SearchResponse, SearchResult } from '../../types/search';
+import { useSearchStore } from '../../store/searchStore';
+import {
+    detectStrategy,
+    normalizeScores,
+    getMatchTypeBadge,
+    getAlphaDominance,
+    type NormalizedScore,
+} from '../../utils/scoreNormalizer';
 import MediaPreview from './MediaPreview';
 
 interface Props {
@@ -11,23 +19,27 @@ interface Props {
 
 export default function SearchResults({ data, loading, error }: Props) {
     const [selectedTextItem, setSelectedTextItem] = useState<SearchResult | null>(null);
+    const [hoveredScoreIdx, setHoveredScoreIdx] = useState<number | null>(null);
+    const { activeTab } = useSearchStore();
 
     if (loading) {
         return (
             <div style={{ marginTop: 24 }}>
-                <div className="loading-glow" style={{
-                    padding: 16,
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-subtle)',
-                    display: 'flex', alignItems: 'center', gap: 12,
-                }}>
-                    <div className="skeleton" style={{ width: 40, height: 40 }} />
-                    <div style={{ flex: 1 }}>
-                        <div className="skeleton" style={{ height: 14, width: '60%', marginBottom: 8 }} />
-                        <div className="skeleton" style={{ height: 10, width: '40%' }} />
+                {[0, 1, 2].map(i => (
+                    <div key={i} className="loading-glow" style={{
+                        padding: 16, marginBottom: 10,
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-subtle)',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                    }}>
+                        <div className="skeleton" style={{ width: 40, height: 40, borderRadius: 8 }} />
+                        <div style={{ flex: 1 }}>
+                            <div className="skeleton" style={{ height: 14, width: '60%', marginBottom: 8 }} />
+                            <div className="skeleton" style={{ height: 10, width: '40%' }} />
+                        </div>
                     </div>
-                </div>
+                ))}
             </div>
         );
     }
@@ -57,24 +69,63 @@ export default function SearchResults({ data, loading, error }: Props) {
         );
     }
 
+    // Normalize scores for the entire batch
+    const strategy = detectStrategy(activeTab);
+    const rawScores = data.results.map(r => r.score);
+    const normalized: NormalizedScore[] = normalizeScores(rawScores, strategy);
+    const matchBadge = getMatchTypeBadge(activeTab);
+
+    // Alpha dominance indicator (for multimodal)
+    // Extract alpha from query label if present (format: "[image] + text")
+    const alphaDominance = activeTab === 'hybrid-visual'
+        ? getAlphaDominance(0.5) // We don't track alpha in the response, use neutral default
+        : null;
+
     return (
         <div style={{ marginTop: 24 }}>
+            {/* Results Header */}
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                marginBottom: 16,
+                marginBottom: 16, flexWrap: 'wrap', gap: 8,
             }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    <BarChart3 size={14} style={{ display: 'inline', marginRight: 4 }} />
-                    <strong>{data.total_results}</strong> resultados — <em>{data.search_type}</em>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <BarChart3 size={14} />
+                    <strong>{data.total_results}</strong> resultados
+                    {data.spaces_searched && data.spaces_searched.length > 0 && (
+                        <span style={{ color: 'var(--text-muted)' }}>
+                            · {data.spaces_searched.join(', ')}
+                        </span>
+                    )}
                 </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '3px 10px', borderRadius: 12,
+                        fontSize: '0.7rem', fontWeight: 600,
+                        background: matchBadge.bg,
+                        color: matchBadge.color,
+                    }}>
+                        {matchBadge.icon} {matchBadge.label}
+                    </span>
+                    {alphaDominance && (
+                        <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            padding: '3px 10px', borderRadius: 12,
+                            fontSize: '0.65rem', fontWeight: 500,
+                            background: 'rgba(245,158,11,0.1)',
+                            color: '#f59e0b',
+                        }}>
+                            {alphaDominance.icon} {alphaDominance.label}
+                        </span>
+                    )}
+                </div>
             </div>
 
+            {/* Result Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {data.results.map((item, idx) => {
-                    const scoreClass =
-                        item.score >= 0.7 ? 'score-high' : item.score >= 0.4 ? 'score-medium' : 'score-low';
+                    const norm = normalized[idx];
 
-                    // Extract title and description from properties since real backend structure varies
                     const title = String(
                         item.properties.filename ||
                         item.properties.name ||
@@ -88,34 +139,33 @@ export default function SearchResults({ data, loading, error }: Props) {
                         item.properties.reasoning ||
                         item.properties.description ||
                         item.properties.text ||
-                        item.properties.content || // Added content for TextSpace
+                        item.properties.content ||
                         item.properties.ocr_text ||
-                        item.properties.transcript || // Fixed: was audio_transcript
+                        item.properties.transcript ||
                         'Sin descripción disponible.'
                     ).slice(0, 200);
+
+                    // Tags from properties
+                    const tags: string[] = Array.isArray(item.properties.tags) ? item.properties.tags : [];
 
                     return (
                         <div key={idx} className="result-item">
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                                {/* Space Icon */}
                                 <div style={{
                                     width: 36, height: 36,
                                     borderRadius: 'var(--radius-sm)',
                                     background: 'var(--bg-input)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0,
-                                    fontSize: '1.2rem',
+                                    flexShrink: 0, fontSize: '1.2rem',
                                 }}>
                                     {item.space_icon || <FileText size={18} color="var(--accent-indigo)" />}
                                 </div>
 
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                                            {title}
-                                        </span>
-                                        <span className={`score-badge ${scoreClass}`}>
-                                            {(item.score * 100).toFixed(1)}%
-                                        </span>
+                                    {/* Title Row */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{title}</span>
                                         <span style={{
                                             fontSize: '0.7rem', padding: '2px 8px',
                                             background: 'var(--bg-input)', borderRadius: 12,
@@ -123,15 +173,99 @@ export default function SearchResults({ data, loading, error }: Props) {
                                         }}>
                                             {item.space}
                                         </span>
+                                        {idx < 3 && strategy !== 'vector' && (
+                                            <span style={{
+                                                fontSize: '0.6rem', fontWeight: 700,
+                                                padding: '1px 6px', borderRadius: 4,
+                                                background: 'rgba(16,185,129,0.12)',
+                                                color: '#10b981',
+                                            }}>
+                                                TOP {idx + 1}
+                                            </span>
+                                        )}
                                     </div>
 
+                                    {/* Relevance Bar + Score */}
+                                    <div
+                                        style={{ marginTop: 8, position: 'relative' }}
+                                        onMouseEnter={() => setHoveredScoreIdx(idx)}
+                                        onMouseLeave={() => setHoveredScoreIdx(null)}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            {/* Progress Bar */}
+                                            <div style={{
+                                                flex: 1, height: 6, borderRadius: 3,
+                                                background: 'var(--bg-input)',
+                                                overflow: 'hidden',
+                                            }}>
+                                                <div style={{
+                                                    width: `${norm.displayPercent}%`,
+                                                    height: '100%', borderRadius: 3,
+                                                    background: norm.barColor,
+                                                    transition: 'width 0.5s ease-out',
+                                                }} />
+                                            </div>
+                                            {/* Percentage Label */}
+                                            <span style={{
+                                                fontSize: '0.75rem', fontWeight: 600,
+                                                color: norm.barColor,
+                                                minWidth: 42, textAlign: 'right',
+                                                fontVariantNumeric: 'tabular-nums',
+                                            }}>
+                                                {norm.label}
+                                            </span>
+                                        </div>
+
+                                        {/* Tooltip */}
+                                        {hoveredScoreIdx === idx && (
+                                            <div style={{
+                                                position: 'absolute', top: -36, left: 0,
+                                                padding: '5px 10px', borderRadius: 8,
+                                                fontSize: '0.7rem', color: '#e2e8f0',
+                                                background: 'rgba(15, 23, 42, 0.95)',
+                                                border: '1px solid rgba(100,116,139,0.3)',
+                                                whiteSpace: 'nowrap',
+                                                pointerEvents: 'none',
+                                                zIndex: 10,
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                                            }}>
+                                                {norm.tooltip}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Description */}
                                     <p style={{
                                         marginTop: 6, fontSize: '0.82rem',
                                         color: 'var(--text-secondary)', lineHeight: 1.5,
                                     }}>
-                                        {description}
-                                        {description.length >= 200 ? '...' : ''}
+                                        {description}{description.length >= 200 ? '...' : ''}
                                     </p>
+
+                                    {/* Tags */}
+                                    {tags.length > 0 && (
+                                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+                                            {tags.slice(0, 5).map((tag, i) => (
+                                                <span key={i} style={{
+                                                    fontSize: '0.65rem', padding: '1px 6px',
+                                                    borderRadius: 6, fontWeight: 500,
+                                                    background: 'rgba(99,102,241,0.1)',
+                                                    color: 'var(--accent-indigo)',
+                                                    border: '1px solid rgba(99,102,241,0.2)',
+                                                }}>
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                            {tags.length > 5 && (
+                                                <span style={{
+                                                    fontSize: '0.65rem', padding: '1px 6px',
+                                                    color: 'var(--text-muted)',
+                                                }}>
+                                                    +{tags.length - 5}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* Audio Specific Metadata */}
                                     {item.space === 'AudioSpace' && (
@@ -174,10 +308,8 @@ export default function SearchResults({ data, loading, error }: Props) {
                                                     background: 'transparent',
                                                     border: '1px solid var(--border-subtle)',
                                                     borderRadius: 'var(--radius-sm)',
-                                                    padding: '4px 10px',
-                                                    fontSize: '0.75rem',
-                                                    color: 'var(--text-secondary)',
-                                                    cursor: 'pointer',
+                                                    padding: '4px 10px', fontSize: '0.75rem',
+                                                    color: 'var(--text-secondary)', cursor: 'pointer',
                                                     display: 'flex', alignItems: 'center', gap: 6,
                                                     transition: 'all 0.2s'
                                                 }}
@@ -212,10 +344,8 @@ export default function SearchResults({ data, loading, error }: Props) {
                                                     background: 'transparent',
                                                     border: '1px solid var(--border-subtle)',
                                                     borderRadius: 'var(--radius-sm)',
-                                                    padding: '4px 10px',
-                                                    fontSize: '0.75rem',
-                                                    color: 'var(--text-secondary)',
-                                                    cursor: 'pointer',
+                                                    padding: '4px 10px', fontSize: '0.75rem',
+                                                    color: 'var(--text-secondary)', cursor: 'pointer',
                                                     display: 'flex', alignItems: 'center', gap: 6,
                                                     transition: 'all 0.2s'
                                                 }}
@@ -238,10 +368,10 @@ export default function SearchResults({ data, loading, error }: Props) {
                                         display: 'block', marginTop: 8, fontSize: '0.7rem',
                                         color: 'var(--text-muted)', fontFamily: 'monospace',
                                     }}>
-                                        UUID: {item.uuid.slice(0, 8)}... | Dist: {item.distance?.toFixed(4) ?? 'N/A'}
+                                        UUID: {item.uuid.slice(0, 8)}... | Dist: {item.distance?.toFixed(4) ?? 'N/A'} | Raw: {norm.rawScore.toFixed(6)}
                                     </code>
 
-                                    {/* Media Preview: Uses download_url if available (Presigned), else path */}
+                                    {/* Media Preview */}
                                     {(item.properties.minio_path || item.properties.download_url) && (
                                         <div style={{ width: '100%', marginTop: 8 }}>
                                             <MediaPreview

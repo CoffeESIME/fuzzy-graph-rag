@@ -8,12 +8,12 @@ import GraphCrispTab from './GraphCrispTab';
 import GraphFuzzyTab from './GraphFuzzyTab';
 import type { SearchTab } from '../../types/search';
 
-const TABS: { id: SearchTab; label: string; icon: React.ReactNode }[] = [
+const TABS: { id: SearchTab; label: string; icon: React.ReactNode; comingSoon?: boolean }[] = [
     { id: 'semantic-text', label: 'Semántica', icon: <Type size={16} /> },
-    { id: 'visual-siglip', label: 'Visual (SigLIP)', icon: <Image size={16} /> },
-    { id: 'hybrid-visual', label: 'Híbrida', icon: <Layers size={16} /> },
-    { id: 'graph-crisp', label: 'Grafo', icon: <GitBranch size={16} /> },
-    { id: 'graph-fuzzy', label: 'Grafo Difuso', icon: <Radar size={16} /> },
+    { id: 'visual-siglip', label: 'Visual', icon: <Image size={16} /> },
+    { id: 'hybrid-visual', label: 'Multimodal', icon: <Layers size={16} /> },
+    { id: 'graph-crisp', label: 'Grafo', icon: <GitBranch size={16} />, comingSoon: true },
+    { id: 'graph-fuzzy', label: 'Grafo Difuso', icon: <Radar size={16} />, comingSoon: true },
 ];
 
 export default function SearchTabs() {
@@ -35,9 +35,23 @@ export default function SearchTabs() {
                         key={tab.id}
                         value={tab.id}
                         className="search-tab-trigger"
+                        style={{ position: 'relative' }}
                     >
                         {tab.icon}
                         {tab.label}
+                        {tab.comingSoon && (
+                            <span style={{
+                                fontSize: '0.55rem', fontWeight: 700,
+                                padding: '1px 5px', borderRadius: 6,
+                                background: 'rgba(245, 158, 11, 0.15)',
+                                color: '#f59e0b',
+                                marginLeft: 4,
+                                lineHeight: 1.4,
+                                whiteSpace: 'nowrap',
+                            }}>
+                                SOON
+                            </span>
+                        )}
                     </Tabs.Trigger>
                 ))}
             </Tabs.List>

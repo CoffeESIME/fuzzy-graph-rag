@@ -2,7 +2,6 @@
    TypeScript Types for Multimodal Search
    ========================================== */
 
-// --- Shared Result Type ---
 // --- Shared Result Type (Matching Real Backend) ---
 export interface SearchResult {
     space: string;
@@ -17,39 +16,56 @@ export interface SearchResponse {
     query: string;
     embedding_dimensions?: number;
     spaces_searched?: string[];
-    search_type?: string;     // Backend stub uses this, real endpoint doesn't. Optional.
     total_results: number;
     results: SearchResult[];
 }
 
-// --- Tab 1: Semantic Text (Real /vectors endpoint) ---
+// --- Coming Soon Response ---
+export interface ComingSoonResponse {
+    message: string;
+    results: any[];
+}
+
+// --- Multimodal Fusion Response (Split View) ---
+export interface MultimodalFusionResponse {
+    query: string;
+    alpha: number;
+    text_results: SearchResult[];
+    visual_results: SearchResult[];
+    fused_results: SearchResult[];
+    total_results: number;
+    spaces_searched: string[];
+}
+
+// --- Tab 1: Semantic Text (Hybrid BM25 + Vector) ---
 export interface SemanticTextRequest {
     query: string;
     limit: number;
     spaces?: string[];
+    filters?: string[];   // Tag filters
+    alpha?: number;       // 0=keyword, 1=vector, 0.5=balanced
 }
 
 // --- Tab 2: Visual SigLIP ---
 export interface VisualSigLIPRequest {
-    image: string; // base64 or URL
+    image: string; // base64
     limit: number;
 }
 
-// --- Tab 3: Hybrid Visual ---
+// --- Tab 3: Hybrid Visual (Image + Text Fusion) ---
 export interface HybridVisualRequest {
-    image: string;
+    image: string;        // base64
     text_context: string;
-    alpha: number;
+    alpha: number;        // image vs text weight
     limit: number;
 }
 
-// --- Tab 4: Graph Crisp ---
+// --- Tab 4 & 5: Graph (Coming Soon) ---
 export interface GraphCrispRequest {
     query: string;
     entity_types?: string[];
 }
 
-// --- Tab 5: Graph Fuzzy ---
 export interface GraphFuzzyRequest {
     query: string;
     min_confidence: number;
@@ -68,35 +84,38 @@ export const SEARCH_TABS: {
     label: string;
     icon: string;
     description: string;
+    comingSoon?: boolean;
 }[] = [
         {
             id: 'semantic-text',
             label: 'Semántica',
             icon: 'type',
-            description: 'Búsqueda vectorial estándar (BAAI/bge-m3)',
+            description: 'Híbrida: BM25 + Vector (BAAI/bge-m3) con filtros por tags',
         },
         {
             id: 'visual-siglip',
             label: 'Visual (SigLIP)',
             icon: 'image',
-            description: 'Búsqueda puramente visual (vectores de imagen)',
+            description: 'Búsqueda puramente visual (vectores de imagen SigLIP)',
         },
         {
             id: 'hybrid-visual',
-            label: 'Híbrida',
+            label: 'Multimodal',
             icon: 'layers',
-            description: 'Fusión de vectores SigLIP y BAAI/bge-m3',
+            description: 'Fusión de imagen (SigLIP) + texto (BGE-M3) con RRF',
         },
         {
             id: 'graph-crisp',
             label: 'Grafo',
             icon: 'git-branch',
-            description: 'Búsqueda de relaciones estrictas en Neo4j',
+            description: 'Búsqueda de relaciones en Neo4j',
+            comingSoon: true,
         },
         {
             id: 'graph-fuzzy',
             label: 'Grafo Difuso',
             icon: 'radar',
             description: 'Expansión difusa con pesos calibrados',
+            comingSoon: true,
         },
     ];
