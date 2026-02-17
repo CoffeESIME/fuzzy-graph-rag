@@ -74,7 +74,12 @@ export default function GraphVisualizerReactFlow({
             type: 'default', // or custom
             style: {
                 background: node.type === 'Concept' ? '#8b5cf6' :
-                    node.type === 'DigitalAsset' ? '#10b981' : '#64748b',
+                    node.type === 'Person' ? '#f43f5e' :
+                        node.type === 'Location' ? '#f59e0b' :
+                            node.type === 'Organization' ? '#3b82f6' :
+                                node.type === 'Event' ? '#ec4899' :
+                                    node.type === 'Project' ? '#14b8a6' :
+                                        node.type === 'DigitalAsset' ? '#10b981' : '#64748b',
                 color: '#fff',
                 border: '1px solid #334155',
                 width: 150,
@@ -87,7 +92,7 @@ export default function GraphVisualizerReactFlow({
             source: typeof link.source === 'object' ? (link.source as any).id : link.source,
             target: typeof link.target === 'object' ? (link.target as any).id : link.target,
             type: 'smoothstep',
-            label: link.type, // Show relationship type
+            label: `${link.type} (${link.weight})`, // Show relationship type and weight
             labelStyle: { fill: '#94a3b8', fontSize: 11, fontWeight: 500 },
             labelBgStyle: { fill: '#0f172a', fillOpacity: 0.8, rx: 4, ry: 4 },
             labelBgPadding: [4, 2],

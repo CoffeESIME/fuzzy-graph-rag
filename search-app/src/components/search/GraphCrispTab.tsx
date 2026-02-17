@@ -63,9 +63,16 @@ export default function GraphCrispTab() {
 
     // Helper for sidebar coloring
     const getNodeColor = (node: GraphNode) => {
-        if (node.type === 'Concept') return '#8b5cf6'; // Violet
-        if (node.type === 'DigitalAsset') return '#10b981'; // Emerald
-        return '#64748b'; // Slate
+        switch (node.type) {
+            case 'Concept': return '#8b5cf6'; // Violet
+            case 'Person': return '#f43f5e'; // Rose
+            case 'Location': return '#f59e0b'; // Amber
+            case 'Organization': return '#3b82f6'; // Blue
+            case 'Event': return '#ec4899'; // Pink
+            case 'Project': return '#14b8a6'; // Teal
+            case 'DigitalAsset': return '#10b981'; // Emerald
+            default: return '#64748b'; // Slate
+        }
     };
 
     return (
@@ -207,8 +214,6 @@ export default function GraphCrispTab() {
                     )}
 
                     {/* Legend Overlay */}
-
-                    {/* Legend Overlay */}
                     <div style={{
                         position: 'absolute', bottom: 12, left: 12,
                         background: 'rgba(15, 23, 42, 0.85)',
@@ -221,6 +226,14 @@ export default function GraphCrispTab() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#8b5cf6' }}></span>
                             <span>Concepto</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f43f5e' }}></span>
+                            <span>Persona</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }}></span>
+                            <span>Lugar</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }}></span>
@@ -269,10 +282,11 @@ export default function GraphCrispTab() {
                                         fontFamily: 'monospace', fontSize: '0.65rem', whiteSpace: 'pre-wrap',
                                         color: '#cbd5e1'
                                     }}>
-                                        {`MATCH (c:Concept {name: "${query}"})
-<-[r:EVOKES|MENTIONS]-(d:Asset)
+                                        {`MATCH (n:Concept|Person|Location|...)
+WHERE n.name CONTAINS "${query}"
+<-[r:MENTIONS|EVOKES|...]-(d:Asset)
 WHERE r.weight >= ${alphaCut}
-RETURN d, r, c`}
+RETURN n, r, d`}
                                     </div>
                                 </div>
                             </div>

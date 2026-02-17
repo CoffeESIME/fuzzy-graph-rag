@@ -656,40 +656,43 @@ class GraphCrispResponse(BaseModel):
 @router.post("/graph-crisp", response_model=GraphCrispResponse)
 def search_graph_crisp(req: GraphCrispRequest):
     """
-    Graph crisp search — high-confidence traversal through the knowledge graph.
-
-    Flow:
-    1. **Concept Resolution**: Find :Concept nodes whose name matches the query (case-insensitive CONTAINS)
-    2. **Strict Expansion**: Traverse EVOKES/EXPLORES/DEFINES relationships to :DigitalAsset nodes
-    3. **Alpha Cut**: Only return relationships with weight >= alpha_cut (default 0.9)
-
-    Returns both flat results AND a `graph_topology` with nodes/edges for
-    frontend graph visualization (ForceGraph2D, etc.).
+    Graph crisp search v2 (Multi-Entity).
+    
+    Ahora busca coincidencias no solo en Conceptos, sino también en Personas, 
+    Lugares y Eventos, aprovechando la ontología rica del sistema.
     """
     from shared.clients import get_neo4j_driver
-
     driver = get_neo4j_driver()
 
-    # Cypher: Concept resolution → DigitalAsset expansion with alpha cut
-    # Returns full node objects + relationship metadata for topology building
     cypher_query = """
-// 1. Find anchor concepts (case-insensitive match)
-    MATCH (c:Concept)
-    WHERE toLower(c.name) CONTAINS toLower($user_query)
+    // 1. Búsqueda Omnisciente (Conceptos, Personas, Lugares, Eventos, Proyectos)
+    MATCH (n)
+    WHERE (n:Concept OR n:Person OR n:Location OR n:Organization OR n:Event OR n:Project)
+      AND toLower(n.name) CONTAINS toLower($user_query)
 
-    // 2. Expand to DigitalAssets 
-    // AGREGAMOS 'EVOKES_CONCEPT', 'MENTIONS', 'EMBODIES'
-    MATCH (d:DigitalAsset)-[r]->(c)
-    WHERE type(r) IN ['EVOKES', 'EXPLORES', 'DEFINES', 'EVOKES_CONCEPT', 'MENTIONS', 'EMBODIES']
-      AND r.weight >= $alpha_cut
+    // 2. Expansión Polimórfica
+    // Buscamos cualquier activo conectado a este nodo encontrado
+    MATCH (d:DigitalAsset)-[r]->(n)
+    
+    // 3. Filtro de Relaciones Válidas (Ontología Completa)
+    WHERE type(r) IN [
+        'EVOKES', 'EXPLORES', 'DEFINES', 'EVOKES_CONCEPT', 'EMBODIES', // Conceptos
+        'MENTIONS_PERSON', 'CREATED_BY',                               // Personas
+        'MENTIONS_LOCATION', 'LOCATED_AT',                             // Lugares
+        'MENTIONS_ORG',                                                // Organizaciones
+        'MENTIONS_EVENT', 'HAPPENED_AT',                               // Eventos
+        'MENTIONS_PROJECT'                                             // Proyectos
+    ]
+    AND r.weight >= $alpha_cut
 
-    // 3. Return full path data
-    RETURN d, c, r,
+    // 4. Retorno enriquecido con el tipo de nodo encontrado (Label)
+    RETURN d, n, r,
            elementId(d) AS d_id,
-           elementId(c) AS c_id,
+           elementId(n) AS c_id,
            r.weight AS score,
            r.reasoning AS reasoning,
-           c.name AS matched_concept,
+           n.name AS matched_node_name,
+           labels(n) AS matched_node_labels,
            type(r) AS rel_type
     ORDER BY score DESC
     LIMIT $limit
@@ -708,43 +711,45 @@ def search_graph_crisp(req: GraphCrispRequest):
         logger.error(f"Neo4j graph-crisp query failed: {e}")
         raise HTTPException(status_code=500, detail=f"Graph query failed: {e}")
 
-    # ── Build flat results (deduplicated) AND graph topology ──
+    # ── Map results ──
     seen_results: Dict[str, GraphCrispResultItem] = {}
     concepts_matched: set = set()
-
-    # Topology accumulators (keyed by ID to avoid duplicates)
     topo_nodes: Dict[str, GraphNode] = {}
     topo_edges: List[GraphEdge] = []
-    seen_edges: set = set()  # (source_id, target_id, rel_type) for dedup
+    seen_edges: set = set()
 
     for record in records:
+        # Extraer datos
         asset_node = record["d"]
-        concept_node = record["c"]
+        found_node = record["n"] # Ya no es solo 'concept', puede ser cualquiera
+        found_labels = record["matched_node_labels"]
         score = record["score"]
-        concept_name = record["matched_concept"]
+        node_name = record["matched_node_name"]
         rel_type = record["rel_type"]
-        reasoning = record["reasoning"]
         d_id = record["d_id"]
-        c_id = record["c_id"]
+        c_id = record["c_id"] # ID del nodo encontrado (Concept/Person/etc)
 
-        concepts_matched.add(concept_name)
+        concepts_matched.add(node_name)
 
-        # ── Topology: Concept node ──
+        # Determinar el tipo de nodo encontrado para el Frontend
+        # Neo4j devuelve una lista de labels, tomamos el más relevante que no sea 'Base'
+        primary_type = "Concept" # Default
+        for label in found_labels:
+            if label in ["Person", "Location", "Organization", "Event", "Project"]:
+                primary_type = label
+                break
+        
+        # ── Topology: Found Node (Antes Concept Node) ──
         if c_id not in topo_nodes:
-            concept_props = _sanitize_neo4j_props(dict(concept_node.items()))
+            node_props = _sanitize_neo4j_props(dict(found_node.items()))
             topo_nodes[c_id] = GraphNode(
                 id=c_id,
-                label=concept_name,
-                type="Concept",
-                properties={
-                    "name": concept_name,
-                    "domain": concept_props.get("domain", ""),
-                    "definition": concept_props.get("definition", ""),
-                },
+                label=node_name,
+                type=primary_type, # ¡Ahora el frontend sabrá si pintar una Persona o un Concepto!
+                properties=node_props,
             )
 
         # ── Topology: DigitalAsset node ──
-        # Try to find a stable ID or hash, fallback to elementId
         file_hash = asset_node.get("hash") or asset_node.get("file_hash") or d_id
         filename = asset_node.get("filename", "unknown")
         asset_props = _sanitize_neo4j_props(dict(asset_node.items()))
@@ -766,10 +771,10 @@ def search_graph_crisp(req: GraphCrispRequest):
                 target=c_id,
                 type=rel_type,
                 weight=round(score, 4),
-                reasoning=reasoning,
+                reasoning=record["reasoning"],
             ))
 
-        # ── Flat result (deduplicate by file_hash, keep best score) ──
+        # ── Flat result ──
         if file_hash not in seen_results or score > seen_results[file_hash].score:
             seen_results[file_hash] = GraphCrispResultItem(
                 space="GraphSpace",
@@ -777,7 +782,7 @@ def search_graph_crisp(req: GraphCrispRequest):
                 uuid=file_hash,
                 filename=filename,
                 score=round(score, 4),
-                matched_concept=concept_name,
+                matched_concept=f"{node_name} ({primary_type})", # Feedback visual útil: "Elon Musk (Person)"
                 relation_type=rel_type,
                 distance=0.0,
                 properties=asset_props,
@@ -787,10 +792,9 @@ def search_graph_crisp(req: GraphCrispRequest):
     formatted.sort(key=lambda r: r.score, reverse=True)
 
     # ── Enrich with MinIO presigned URLs ──
-    # _enrich_with_minio expects basic SearchResultItems, but GraphCrispResultItem inherits from it.
     _enrich_with_minio(formatted)
 
-    # Copy enriched URLs back to topology nodes so the graph visualizer can open them
+    # Copy enriched URLs back to topology nodes
     url_by_hash: Dict[str, Dict[str, str]] = {}
     for item in formatted:
         props = item.properties
@@ -801,7 +805,6 @@ def search_graph_crisp(req: GraphCrispRequest):
             if "minio_path" in props:
                 url_by_hash[h]["minio_path"] = props["minio_path"]
 
-    # Propagate URLs to topology nodes
     for node in topo_nodes.values():
         if node.type == "DigitalAsset":
             node_hash = node.properties.get("hash") or node.properties.get("file_hash")
