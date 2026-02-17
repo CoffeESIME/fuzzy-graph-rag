@@ -137,22 +137,130 @@ def analyze_bridges():
 # 🎲 Serendipity Path
 @router.post("/serendipity", response_model=AnalysisToolResponse)
 def analyze_serendipity():
-    return {
-        "tool": "serendipity_path",
-        "status": "placeholder",
-        "message": "Random walk discovery algorithm pending.",
-        "mock_data": {"path": [], "surprise_factor": 0.0}
-    }
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            # Random weak path discovery
+            # 1. Pick a random start node
+            # 2. Perform a random walk reusing low-weight edges if possible, or just find a path with low weights
+            # NOTE: purely random walk is better than shortestPath for serendipity
+            query = """
+                MATCH (s:Concept) WITH s, rand() AS r ORDER BY r LIMIT 1
+                MATCH p = (s)-[:RELATED_TO*2..3]-(t:Concept)
+                WHERE all(r in relationships(p) WHERE r.weight < 0.6)
+                AND elementId(s) <> elementId(t)
+                RETURN [x in nodes(p) | x.name] as path_nodes,
+                       [r in relationships(p) | r.weight] as path_weights,
+                       reduce(acc=0.0, r in relationships(p) | acc + r.weight) as total_score
+                LIMIT 1
+            """
+            result = session.run(query)
+            record = result.single()
+            
+            if not record:
+                # Fallback: strict conditions failed, relax weight constraint
+                fallback_query = """
+                    MATCH (s:Concept) WITH s, rand() AS r ORDER BY r LIMIT 1
+                    MATCH p = (s)-[:RELATED_TO*2]-(t:Concept)
+                    WHERE elementId(s) <> elementId(t)
+                    RETURN [x in nodes(p) | x.name] as path_nodes,
+                           [r in relationships(p) | r.weight] as path_weights,
+                           reduce(acc=0.0, r in relationships(p) | acc + r.weight) as total_score
+                    LIMIT 1
+                """
+                result = session.run(fallback_query)
+                record = result.single()
 
-# 🌫️ Fog of War
-@router.post("/fog-of-war", response_model=AnalysisToolResponse)
+            path_data = []
+            if record:
+                nodes = record["path_nodes"]
+                weights = record["path_weights"]
+                total_score = record["total_score"]
+                
+                for i in range(len(nodes) - 1):
+                    # Guard against index out of range if weights has fewer elements than edges (shouldn't happen with shortestPath)
+                    weight = weights[i] if i < len(weights) else 0.0
+                    path_data.append({
+                        "node": nodes[i],
+                        "edge": f"RELATED_TO ({weight:.2f})",
+                        "next": nodes[i+1],
+                        "weight": weight
+                    })
+                
+                # Add last node info (terminal)
+                # path_data structure requested: [{"node": "A", "edge": "...", "next": "B"}]
+                # The prompt example shows steps.
+            else:
+                total_score = 0.0
+
+            return {
+                "tool": "serendipity_path",
+                "status": "success",
+                "message": "Found a serendipitous path through the knowledge graph.",
+                "mock_data": {"path": path_data, "total_serendipity_score": total_score, "source": nodes[0] if record else "?", "target": nodes[-1] if record else "?"}
+            }
+
+    except Exception as e:
+        return {
+            "tool": "serendipity_path",
+            "status": "error",
+            "message": f"Error finding path: {str(e)}",
+            "mock_data": {"path": [], "total_serendipity_score": 0.0}
+        }
+
+# 🌫️ Fog of War (Distribution)
+@router.post("/fog-distribution", response_model=AnalysisToolResponse)
 def analyze_fog_of_war():
-    return {
-        "tool": "fog_of_war",
-        "status": "placeholder",
-        "message": "Global alpha filtering logic pending.",
-        "mock_data": {"visible_nodes": 0, "hidden_nodes": 0}
-    }
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            query = """
+                MATCH ()-[r:RELATED_TO]->()
+                WHERE r.weight IS NOT NULL
+                WITH toInteger(r.weight * 10) as decile, count(r) as c
+                RETURN decile, c ORDER BY decile
+            """
+            result = session.run(query)
+            
+            distribution = []
+            total_edges = 0
+            
+            # Initialize all deciles to 0
+            decile_map = {i: 0 for i in range(10)} # 0-9
+            
+            for record in result:
+                d = record["decile"]
+                c = record["c"]
+                if d is not None and 0 <= d <= 9:
+                    decile_map[d] = c
+                    total_edges += c
+            
+            labels = ["Ruido/Latente", "Muy Débil", "Débil", "Baja", "Media-Baja", "Media", "Media-Alta", "Alta", "Muy Alta", "Datos Duros"]
+            
+            for i in range(10):
+                lower = i / 10.0
+                upper = (i + 1) / 10.0
+                count = decile_map[i]
+                distribution.append({
+                    "range": f"{lower:.1f}-{upper:.1f}",
+                    "count": count,
+                    "label": labels[i]
+                })
+
+            return {
+                "tool": "fog_of_war",
+                "status": "success",
+                "message": "Calculated edge weight distribution.",
+                "mock_data": {"distribution": distribution, "total_edges": total_edges}
+            }
+
+    except Exception as e:
+        return {
+            "tool": "fog_of_war",
+            "status": "error",
+            "message": f"Error calculating distribution: {str(e)}",
+            "mock_data": {"distribution": [], "total_edges": 0}
+        }
 
 # 🧮 Heatmap (Concept Adjacency)
 @router.post("/heatmap", response_model=AnalysisToolResponse)
