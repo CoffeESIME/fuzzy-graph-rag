@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from shared.clients import get_neo4j_driver
 from pydantic import BaseModel
 from typing import Dict, Any, List
 
@@ -13,25 +14,125 @@ class AnalysisToolResponse(BaseModel):
     message: str
     mock_data: Dict[str, Any]
 
-# 🧬 Community Detection
+# 🧬 Community Detection (Louvain)
 @router.post("/communities", response_model=AnalysisToolResponse)
 def analyze_communities():
-    return {
-        "tool": "community_detection",
-        "status": "placeholder",
-        "message": "Community detection algorithm (Louvain/Leiden) pending implementation.",
-        "mock_data": {"nodes": [], "clusters": 0}
-    }
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            # 1. Clean up potential stale graph (Check existence first to be safe, or just drop yielding)
+            # Yielding graphName ensures we consume the result and wait for it
+            session.run("CALL gds.graph.drop('knowledgeGraph', false) YIELD graphName")
+            
+            # 2. Project Graph
+            session.run("""
+                CALL gds.graph.project(
+                  'knowledgeGraph',
+                  ['Concept', 'Person', 'Location', 'Event'],
+                  {
+                    ALL_RELS: {
+                      type: '*',
+                      orientation: 'UNDIRECTED'
+                    }
+                  }
+                )
+            """)
 
-# 🌉 Semantic Bridges
+            # 3. Run Louvain
+            result = session.run("""
+                CALL gds.louvain.stream('knowledgeGraph')
+                YIELD nodeId, communityId
+                WITH gds.util.asNode(nodeId) AS n, communityId
+                WITH communityId, collect(n.name) AS members, count(n) as size
+                ORDER BY size DESC LIMIT 10
+                RETURN communityId, members[0..5] as top_members, size
+            """)
+            
+            communities = [
+                {
+                    "id": record["communityId"],
+                    "members": record["top_members"],
+                    "size": record["size"]
+                } 
+                for record in result
+            ]
+
+            # 4. Cleanup
+            session.run("CALL gds.graph.drop('knowledgeGraph', false)")
+
+            return {
+                "tool": "community_detection",
+                "status": "success",
+                "message": f"Detected {len(communities)} major communities using Louvain algorithm.",
+                "mock_data": {"clusters": len(communities), "nodes": communities}
+            }
+            
+    except Exception as e:
+        return {
+            "tool": "community_detection",
+            "status": "error",
+            "message": f"GDS Error: {str(e)}",
+            "mock_data": {"nodes": [], "clusters": 0}
+        }
+
+# 🌉 Semantic Bridges (Betweenness Centrality)
 @router.post("/bridges", response_model=AnalysisToolResponse)
 def analyze_bridges():
-    return {
-        "tool": "semantic_bridges",
-        "status": "placeholder",
-        "message": "Bridge node detection (Betweenness Centrality) pending.",
-        "mock_data": {"bridges": [], "impact_score": 0.0}
-    }
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            # 1. Clean up potential stale graph
+            session.run("CALL gds.graph.drop('bridgesGraph', false) YIELD graphName")
+            
+            # 2. Project Graph
+            session.run("""
+                CALL gds.graph.project(
+                  'bridgesGraph',
+                  ['Concept', 'Person'],
+                  {
+                    ALL_RELS: {
+                      type: '*',
+                      orientation: 'UNDIRECTED'
+                    }
+                  }
+                )
+            """)
+
+            # 3. Run Betweenness
+            result = session.run("""
+                CALL gds.betweenness.stream('bridgesGraph')
+                YIELD nodeId, score
+                WITH gds.util.asNode(nodeId) AS n, score
+                ORDER BY score DESC LIMIT 20
+                RETURN n.name as name, labels(n) as type, score
+            """)
+            
+            bridges = [
+                {
+                    "name": record["name"],
+                    "type": record["type"][0] if record["type"] else "Unknown",
+                    "score": record["score"]
+                } 
+                for record in result
+            ]
+
+            # 4. Cleanup
+            session.run("CALL gds.graph.drop('bridgesGraph', false) YIELD graphName")
+
+            return {
+                "tool": "semantic_bridges",
+                "status": "success",
+                "message": "Identified top 20 bridge nodes acting as knowledge connectors.",
+                "mock_data": {"bridges": bridges, "impact_score": bridges[0]['score'] if bridges else 0}
+            }
+            
+    except Exception as e:
+        return {
+            "tool": "semantic_bridges",
+            "status": "error",
+            "message": f"GDS Error: {str(e)}",
+            "mock_data": {"bridges": [], "impact_score": 0.0}
+        }
 
 # 🎲 Serendipity Path
 @router.post("/serendipity", response_model=AnalysisToolResponse)
