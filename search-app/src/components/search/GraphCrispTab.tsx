@@ -1,15 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
-import { Search, GitBranch } from 'lucide-react';
-import ForceGraph2D from 'react-force-graph-2d';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Search, GitBranch, FileText, Layers, Workflow } from 'lucide-react';
+// ForceGraph2D removed as it is now in GraphVisualizer2D
 import { useGraphCrispSearch } from '../../hooks/useSearch';
 import { useSearchStore } from '../../store/searchStore';
 import type { GraphNode, GraphCrispResponse } from '../../types/search';
+import MediaPreview from './MediaPreview';
+import TextPreviewModal from './TextPreviewModal';
+import GraphVisualizer2D from './GraphVisualizer2D';
+// import GraphVisualizerThree from './GraphVisualizerThree'; // Kept for reference but unused
+import GraphVisualizerReactFlow from './GraphVisualizerReactFlow';
 
 export default function GraphCrispTab() {
     const [query, setQuery] = useState('');
     const [alphaCut, setAlphaCut] = useState(0.9);
     const [limit, setLimit] = useState(20);
     const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+    const [textPreviewOpen, setTextPreviewOpen] = useState(false);
+    const [visualizerMode, setVisualizerMode] = useState<'2d' | 'flow'>('2d');
     const containerRef = useRef<HTMLDivElement>(null);
     const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
@@ -17,7 +24,7 @@ export default function GraphCrispTab() {
     const { results, loading } = useSearchStore();
     const resultData = results['graph-crisp'] as GraphCrispResponse | undefined;
 
-    // Resize observer for the graph container
+    // Resize observer para el contenedor del grafo
     useEffect(() => {
         if (!containerRef.current) return;
         const ro = new ResizeObserver((entries) => {
@@ -45,22 +52,20 @@ export default function GraphCrispTab() {
         if (e.key === 'Enter') handleSearch();
     };
 
-    // Graph data preparation
+    // --- OPTIMIZACIÓN 1: Memorizar graphData ---
+    // Esto evita que el grafo se reinicie (física) cada vez que escribes en el input.
     const topology = resultData?.graph_topology;
-    const graphData = topology
-        ? { nodes: [...topology.nodes], links: [...topology.edges] }
-        : { nodes: [], links: [] };
+    const graphData = useMemo(() => {
+        return topology
+            ? { nodes: [...topology.nodes], links: [...topology.edges] }
+            : { nodes: [], links: [] };
+    }, [topology]);
 
-    // Node coloring
+    // Helper for sidebar coloring
     const getNodeColor = (node: GraphNode) => {
         if (node.type === 'Concept') return '#8b5cf6'; // Violet
         if (node.type === 'DigitalAsset') return '#10b981'; // Emerald
         return '#64748b'; // Slate
-    };
-
-    const getNodeVal = (node: GraphNode) => {
-        if (node.type === 'Concept') return 5;
-        return 3;
     };
 
     return (
@@ -116,6 +121,36 @@ export default function GraphCrispTab() {
                     <Search size={16} />
                     Explorar
                 </button>
+
+                {/* Visualizer Toggle */}
+                <div style={{ marginLeft: 'auto', display: 'flex', background: 'var(--bg-input)', borderRadius: 6, padding: 2 }}>
+                    <button
+                        onClick={() => setVisualizerMode('2d')}
+                        style={{
+                            padding: '6px 10px', borderRadius: 4,
+                            background: visualizerMode === '2d' ? 'var(--accent-indigo)' : 'transparent',
+                            color: visualizerMode === '2d' ? 'white' : 'var(--text-secondary)',
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            fontSize: '0.75rem', cursor: 'pointer', border: 'none'
+                        }}
+                        title="Vista Grafo de Fuerza (2D)"
+                    >
+                        <Layers size={14} /> Force
+                    </button>
+                    <button
+                        onClick={() => setVisualizerMode('flow')}
+                        style={{
+                            padding: '6px 10px', borderRadius: 4,
+                            background: visualizerMode === 'flow' ? 'var(--accent-indigo)' : 'transparent',
+                            color: visualizerMode === 'flow' ? 'white' : 'var(--text-secondary)',
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            fontSize: '0.75rem', cursor: 'pointer', border: 'none'
+                        }}
+                        title="Vista Diagrama (React Flow)"
+                    >
+                        <Workflow size={14} /> Flow
+                    </button>
+                </div>
             </div>
 
             {/* Main Content Area */}
@@ -155,63 +190,23 @@ export default function GraphCrispTab() {
                         </div>
                     )}
 
-                    {/* @ts-ignore - ForceGraph2D types might be finicky */}
-                    <ForceGraph2D
-                        width={dimensions.width}
-                        height={dimensions.height}
-                        graphData={graphData}
-                        nodeLabel="label"
-                        nodeColor={getNodeColor}
-                        nodeVal={getNodeVal}
-                        linkColor={() => '#334155'}
-                        linkWidth={link => (link as any).weight * 2}
-                        onNodeClick={(node) => setSelectedNode(node as GraphNode)}
-                        backgroundColor="#0f172a"
-                        nodeCanvasObject={(node: any, ctx, globalScale) => {
-                            const label = node.label;
-                            const fontSize = 12 / globalScale;
-                            ctx.font = `${fontSize}px Sans-Serif`;
+                    {/* Visualizer Component */}
+                    {visualizerMode === '2d' ? (
+                        <GraphVisualizer2D
+                            graphData={graphData}
+                            dimensions={dimensions}
+                            onNodeClick={setSelectedNode}
+                            onEngineStop={() => console.log('Simulación 2D estabilizada')}
+                        />
+                    ) : (
+                        <GraphVisualizerReactFlow
+                            graphData={graphData}
+                            dimensions={dimensions}
+                            onNodeClick={setSelectedNode}
+                        />
+                    )}
 
-                            // Draw Circle
-                            const r = Math.sqrt(getNodeVal(node)) * 4;
-                            ctx.beginPath();
-                            ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
-                            ctx.fillStyle = getNodeColor(node);
-                            ctx.fill();
-
-                            // Draw Label
-                            if (globalScale > 1.5) { // Only show labels when zoomed in a bit
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'middle';
-                                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                                ctx.fillText(label, node.x, node.y + r + fontSize);
-                            }
-                        }}
-                        linkCanvasObject={(link: any, ctx, globalScale) => {
-                            const start = link.source;
-                            const end = link.target;
-
-                            // Draw line
-                            ctx.beginPath();
-                            ctx.moveTo(start.x, start.y);
-                            ctx.lineTo(end.x, end.y);
-                            ctx.strokeStyle = '#334155';
-                            ctx.lineWidth = link.weight * 2;
-                            ctx.stroke();
-
-                            // Draw Label (Relationship Type)
-                            if (globalScale > 2) { // Only show edge labels when zoomed in
-                                const textPos = Object.assign({}, start, { x: start.x + (end.x - start.x) / 2, y: start.y + (end.y - start.y) / 2 });
-                                const relType = link.type;
-                                const fontSize = 10 / globalScale;
-                                ctx.font = `${fontSize}px Sans-Serif`;
-                                ctx.fillStyle = '#94a3b8';
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'middle';
-                                ctx.fillText(relType, textPos.x, textPos.y);
-                            }
-                        }}
-                    />
+                    {/* Legend Overlay */}
 
                     {/* Legend Overlay */}
                     <div style={{
@@ -238,66 +233,139 @@ export default function GraphCrispTab() {
                 </div>
 
                 {/* Side Panel / Details */}
-                {selectedNode && (
-                    <div style={{
-                        width: 300,
-                        background: 'var(--bg-card)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 12,
-                        padding: 16,
-                        overflowY: 'auto'
-                    }}>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
-                            {selectedNode.label}
-                        </h4>
-                        <span style={{
-                            fontSize: '0.75rem',
-                            padding: '2px 8px',
-                            borderRadius: 12,
-                            background: getNodeColor(selectedNode) + '20', // 20% opacity
-                            color: getNodeColor(selectedNode),
-                            fontWeight: 600,
-                            marginBottom: 12,
-                            display: 'inline-block'
-                        }}>
-                            {selectedNode.type}
-                        </span>
+                <div style={{
+                    width: 350, borderLeft: '1px solid var(--border-color)',
+                    background: 'var(--bg-secondary)', overflowY: 'auto',
+                    display: 'flex', flexDirection: 'column'
+                }}>
+                    {/* Logic & Query Info Section */}
+                    {resultData && (
+                        <div style={{ padding: 16, borderBottom: '1px solid var(--border-color)' }}>
+                            <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <GitBranch size={14} className="text-purple-400" />
+                                Lógica de Ejecución
+                            </h3>
 
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            {Object.entries(selectedNode.properties).map(([key, val]) => {
-                                if (key === 'download_url' || key === 'minio_path' || key === 'embedding') return null;
-                                return (
-                                    <div key={key}>
-                                        <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{key}:</strong>
-                                        <div style={{ wordBreak: 'break-word' }}>{String(val)}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                <div>
+                                    <span style={{ display: 'block', fontWeight: 500, marginBottom: 4 }}>Conceptos Ancla Identificados:</span>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                        {resultData.concepts_matched.length > 0 ? resultData.concepts_matched.map(c => (
+                                            <span key={c} style={{
+                                                padding: '2px 6px', borderRadius: 4,
+                                                background: 'rgba(139, 92, 246, 0.15)',
+                                                color: '#a78bfa', fontSize: '0.7rem'
+                                            }}>
+                                                {c}
+                                            </span>
+                                        )) : <span style={{ fontStyle: 'italic', opacity: 0.5 }}>Ninguno</span>}
                                     </div>
-                                );
-                            })}
-                        </div>
+                                </div>
 
-                        {selectedNode.properties.download_url && (
-                            <a
-                                href={selectedNode.properties.download_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    marginTop: 16,
-                                    display: 'block',
-                                    textAlign: 'center',
-                                    padding: '8px',
-                                    background: 'var(--accent-indigo)',
-                                    color: 'white',
-                                    borderRadius: 6,
-                                    textDecoration: 'none',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                Abrir Recurso
-                            </a>
-                        )}
-                    </div>
-                )}
+                                <div>
+                                    <span style={{ display: 'block', fontWeight: 500, marginBottom: 4 }}>Camino Lógico (Cypher):</span>
+                                    <div style={{
+                                        background: 'rgba(0,0,0,0.3)', padding: 8, borderRadius: 6,
+                                        fontFamily: 'monospace', fontSize: '0.65rem', whiteSpace: 'pre-wrap',
+                                        color: '#cbd5e1'
+                                    }}>
+                                        {`MATCH (c:Concept {name: "${query}"})
+<-[r:EVOKES|MENTIONS]-(d:Asset)
+WHERE r.weight >= ${alphaCut}
+RETURN d, r, c`}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedNode && (
+                        <div style={{ padding: 16 }}>
+                            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
+                                {selectedNode.label}
+                            </h4>
+                            <span style={{
+                                fontSize: '0.75rem',
+                                padding: '2px 8px',
+                                borderRadius: 12,
+                                background: getNodeColor(selectedNode) + '20',
+                                color: getNodeColor(selectedNode),
+                                fontWeight: 600,
+                                marginBottom: 12,
+                                display: 'inline-block'
+                            }}>
+                                {selectedNode.type}
+                            </span>
+
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                {Object.entries(selectedNode.properties).map(([key, val]) => {
+                                    // Filtrar propiedades grandes o técnicas
+                                    if (['download_url', 'minio_path', 'embedding', 'text', 'content', 'transcript'].includes(key)) return null;
+                                    return (
+                                        <div key={key}>
+                                            <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{key}:</strong>
+                                            <div style={{ wordBreak: 'break-word' }}>{String(val)}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Media Preview */}
+                            {(selectedNode.properties.download_url || selectedNode.properties.minio_path) && (
+                                <div style={{ marginTop: 16 }}>
+                                    <h5 style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>
+                                        Vista Previa
+                                    </h5>
+                                    <MediaPreview
+                                        url={selectedNode.properties.download_url}
+                                        path={selectedNode.properties.minio_path}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Text Content Preview Button */}
+                            {(selectedNode.properties.text || selectedNode.properties.content || selectedNode.properties.transcript) && (
+                                <button
+                                    onClick={() => setTextPreviewOpen(true)}
+                                    style={{
+                                        marginTop: 12,
+                                        width: '100%',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                        padding: '8px',
+                                        background: 'var(--bg-input)',
+                                        border: '1px solid var(--border-subtle)',
+                                        borderRadius: 6,
+                                        color: 'var(--text-secondary)',
+                                        fontSize: '0.8rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-indigo)'}
+                                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
+                                >
+                                    <FileText size={14} />
+                                    Ver contenido de texto
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* Text Preview Modal */}
+            {selectedNode && (
+                <TextPreviewModal
+                    isOpen={textPreviewOpen}
+                    onClose={() => setTextPreviewOpen(false)}
+                    title={selectedNode.label || 'Contenido de texto'}
+                    content={
+                        selectedNode.properties.text ||
+                        selectedNode.properties.content ||
+                        selectedNode.properties.transcript ||
+                        ''
+                    }
+                />
+            )}
         </div>
     );
 }
