@@ -17,7 +17,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
 import logging
-
+import re
 from shared.clients import get_neo4j_driver
 
 # Configure logging
@@ -179,47 +179,48 @@ def filter_redundant_tags(tags: List[str], entity_names: List[str], fuzzy_thresh
     return filtered_tags
 
 
+def sanitize_rel_type(rel_type: str, default: str) -> str:
+    """Valida y limpia el tipo de relación."""
+    if not rel_type:
+        return default
+    
+    # Normalizar (Upper snake case)
+    clean_rel = rel_type.strip().upper().replace(" ", "_")
+    
+    # Validar contra whitelist (Critical for Cypher injection prevention)
+    if clean_rel in ALLOWED_RELATIONSHIPS:
+        return clean_rel
+    
+    # Si el LLM inventó un verbo raro, volver al default seguro
+    logger.warning(f"⚠️ Relación desconocida '{clean_rel}', usando default '{default}'")
+    return default
+
 def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: list, tags: list) -> Dict[str, int]:
     """
-    Promote approved entities and concepts to actual graph nodes.
-    
-    Schema-on-Write Rules (STRICT):
-    ┌─────────────────────┬──────────────┬────────────────────┬─────────────────────────┐
-    │ JSON Key            │ Node Type    │ Relationship       │ Rel Properties          │
-    ├─────────────────────┼──────────────┼────────────────────┼─────────────────────────┤
-    │ entities.persons    │ Person       │ MENTIONS_PERSON    │ weight, role            │
-    │ entities.locations  │ Location     │ MENTIONS_LOCATION  │ weight, type            │
-    │ entities.organizations │ Organization │ MENTIONS_ORG    │ weight                  │
-    │ concepts (list)     │ Concept      │ EVOKES_CONCEPT     │ weight, reasoning       │
-    └─────────────────────┴──────────────┴────────────────────┴─────────────────────────┘
-    
-    Tag Filtering:
-    - Tags that match entity/concept names (fuzzy > 90%) are discarded
-    - Prevents redundancy in the graph
-    
-    Returns:
-        Dict with counts: {nodes_created, relationships_created, tags_saved}
+    Promote approved entities/concepts using DYNAMIC relationships.
     """
     nodes_created = 0
     relationships_created = 0
     
-    # Collect all entity/concept names for tag filtering
     all_entity_names = []
     
     with driver.session() as session:
         # ==========================================
-        # 1. PERSONS - MENTIONS_PERSON relationship
+        # 1. PERSONS (Dynamic: CREATED_BY vs MENTIONS)
         # ==========================================
         for person in entities.get("persons", []):
             person_name = person.get("name", "").strip()
-            if not person_name:
-                continue
-                
+            if not person_name: continue
             all_entity_names.append(person_name)
             
-            query = """
-            MATCH (a:DigitalAsset {file_hash: $file_hash})
-            MERGE (p:Person {name: $name})
+            # A. Obtener tipo de relación dinámica (Default: MENTIONS)
+            raw_rel = person.get("relation_type", "MENTIONS")
+            rel_type = sanitize_rel_type(raw_rel, "MENTIONS")
+            
+            # B. Inyectar relación en f-string (Seguro porque pasó por sanitize)
+            query = f"""
+            MATCH (a:DigitalAsset {{file_hash: $file_hash}})
+            MERGE (p:Person {{name: $name}})
             ON CREATE SET 
                 p.created_at = datetime(),
                 p.description = $description,
@@ -227,193 +228,129 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
                 p.source = 'ai_extraction'
             ON MATCH SET
                 p.last_referenced = datetime()
-            MERGE (a)-[r:MENTIONS_PERSON]->(p)
+            
+            MERGE (a)-[r:{rel_type}]->(p)
             ON CREATE SET 
                 r.created_at = datetime(),
                 r.weight = $weight,
                 r.role = $role,
-                r.mention_count = 1
+                r.reasoning = $reasoning,
+                r.count = 1
             ON MATCH SET
                 r.last_seen = datetime(),
-                r.mention_count = coalesce(r.mention_count, 0) + 1,
+                r.count = coalesce(r.count, 0) + 1,
                 r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
-            RETURN p.name as created, type(r) as rel_type
             """
-            result = session.run(
-                query,
-                file_hash=file_hash,
-                name=person_name,
+            
+            session.run(query, 
+                file_hash=file_hash, name=person_name,
                 description=person.get("description", ""),
                 aliases=person.get("aliases", []),
-                weight=person.get("confidence", person.get("weight", 1.0)),
-                role=person.get("role", "mentioned")
+                weight=person.get("confidence", 1.0),
+                role=person.get("role", "mentioned"),
+                reasoning=person.get("reasoning", "") # Guardamos el porqué
             )
-            record = result.single()
-            if record:
-                nodes_created += 1
-                relationships_created += 1
-                logger.debug(f"   👤 Created Person '{person_name}' with MENTIONS_PERSON")
-        
+            nodes_created += 1; relationships_created += 1
+
         # ==========================================
-        # 2. LOCATIONS - MENTIONS_LOCATION relationship
+        # 2. LOCATIONS
         # ==========================================
         for location in entities.get("locations", []):
-            location_name = location.get("name", "").strip()
-            if not location_name:
-                continue
-                
-            all_entity_names.append(location_name)
+            loc_name = location.get("name", "").strip()
+            if not loc_name: continue
+            all_entity_names.append(loc_name)
             
-            query = """
-            MATCH (a:DigitalAsset {file_hash: $file_hash})
-            MERGE (l:Location {name: $name})
-            ON CREATE SET 
-                l.created_at = datetime(),
-                l.description = $description,
-                l.coordinates = $coordinates,
-                l.source = 'ai_extraction'
-            ON MATCH SET
-                l.last_referenced = datetime()
-            MERGE (a)-[r:MENTIONS_LOCATION]->(l)
-            ON CREATE SET 
-                r.created_at = datetime(),
-                r.weight = $weight,
-                r.location_type = $location_type
-            ON MATCH SET
-                r.last_seen = datetime(),
-                r.mention_count = coalesce(r.mention_count, 0) + 1
-            RETURN l.name as created, type(r) as rel_type
+            raw_rel = location.get("relation_type", "MENTIONS")
+            rel_type = sanitize_rel_type(raw_rel, "MENTIONS") # Podría ser LOCATED_AT
+
+            query = f"""
+            MATCH (a:DigitalAsset {{file_hash: $file_hash}})
+            MERGE (l:Location {{name: $name}})
+            ON CREATE SET l.created_at = datetime(), l.source = 'ai_extraction'
+            MERGE (a)-[r:{rel_type}]->(l)
+            ON CREATE SET r.weight = $weight, r.created_at = datetime()
+            ON MATCH SET r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
             """
-            result = session.run(
-                query,
-                file_hash=file_hash,
-                name=location_name,
-                description=location.get("description", ""),
-                coordinates=location.get("coordinates", None),
-                weight=location.get("confidence", location.get("weight", 1.0)),
-                location_type=location.get("type", location.get("location_type", "unknown"))
-            )
-            record = result.single()
-            if record:
-                nodes_created += 1
-                relationships_created += 1
-                logger.debug(f"   📍 Created Location '{location_name}' with MENTIONS_LOCATION")
-        
+            session.run(query, file_hash=file_hash, name=loc_name, 
+                        weight=location.get("confidence", 1.0))
+            nodes_created += 1; relationships_created += 1
+
         # ==========================================
-        # 3. ORGANIZATIONS - MENTIONS_ORG relationship
+        # 3. PROJECTS (Vital para Álbumes)
         # ==========================================
-        for org in entities.get("organizations", []):
-            org_name = org.get("name", "").strip()
-            if not org_name:
-                continue
-                
-            all_entity_names.append(org_name)
+        for project in entities.get("projects", []):
+            proj_title = project.get("title", project.get("name", "")).strip()
+            if not proj_title: continue
+            all_entity_names.append(proj_title)
             
-            query = """
-            MATCH (a:DigitalAsset {file_hash: $file_hash})
-            MERGE (o:Organization {name: $name})
+            # Aquí es donde capturamos "PART_OF_PROJECT" (Canción -> Álbum)
+            raw_rel = project.get("relation_type", "MENTIONS")
+            rel_type = sanitize_rel_type(raw_rel, "MENTIONS")
+
+            query = f"""
+            MATCH (a:DigitalAsset {{file_hash: $file_hash}})
+            MERGE (pr:Project {{title: $title}})
             ON CREATE SET 
-                o.created_at = datetime(),
-                o.description = $description,
-                o.org_type = $org_type,
-                o.source = 'ai_extraction'
-            ON MATCH SET
-                o.last_referenced = datetime()
-            MERGE (a)-[r:MENTIONS_ORG]->(o)
-            ON CREATE SET 
-                r.created_at = datetime(),
-                r.weight = $weight
-            ON MATCH SET
-                r.last_seen = datetime(),
-                r.mention_count = coalesce(r.mention_count, 0) + 1
-            RETURN o.name as created, type(r) as rel_type
+                pr.created_at = datetime(),
+                pr.project_type = $type,
+                pr.source = 'ai_extraction'
+            
+            MERGE (a)-[r:{rel_type}]->(pr)
+            ON CREATE SET r.weight = $weight, r.created_at = datetime()
             """
-            result = session.run(
-                query,
-                file_hash=file_hash,
-                name=org_name,
-                description=org.get("description", ""),
-                org_type=org.get("type", org.get("org_type", "unknown")),
-                weight=org.get("confidence", org.get("weight", 1.0))
-            )
-            record = result.single()
-            if record:
-                nodes_created += 1
-                relationships_created += 1
-                logger.debug(f"   🏢 Created Organization '{org_name}' with MENTIONS_ORG")
-        
+            session.run(query, file_hash=file_hash, title=proj_title, 
+                        type=project.get("type", "unknown"),
+                        weight=project.get("confidence", 1.0))
+            nodes_created += 1; relationships_created += 1
+
         # ==========================================
-        # 4. CONCEPTS - EVOKES_CONCEPT relationship
+        # 4. CONCEPTS (Fuzzy Logic Core)
         # ==========================================
         for concept in concepts:
-            concept_name = concept.get("name", "").strip()
-            if not concept_name:
-                continue
-                
-            all_entity_names.append(concept_name)
+            c_name = concept.get("name", "").strip()
+            if not c_name: continue
+            all_entity_names.append(c_name)
             
-            query = """
-            MATCH (a:DigitalAsset {file_hash: $file_hash})
-            MERGE (c:Concept {name: $name})
+            # Dinámico: EVOKES vs EXPLORES vs DEFINES
+            raw_rel = concept.get("relation_type", "EVOKES")
+            rel_type = sanitize_rel_type(raw_rel, "EVOKES")
+
+            query = f"""
+            MATCH (a:DigitalAsset {{file_hash: $file_hash}})
+            MERGE (c:Concept {{name: $name}})
             ON CREATE SET 
                 c.created_at = datetime(),
-                c.definition = $definition,
                 c.domain = $domain,
-                c.concept_type = $concept_type,
+                c.definition = $definition,
                 c.source = 'ai_extraction'
-            ON MATCH SET
-                c.last_referenced = datetime()
-            MERGE (a)-[r:EVOKES_CONCEPT]->(c)
+            
+            MERGE (a)-[r:{rel_type}]->(c)
             ON CREATE SET 
                 r.created_at = datetime(),
                 r.weight = $weight,
-                r.reasoning = $reasoning,
-                r.evocation_count = 1
+                r.reasoning = $reasoning
             ON MATCH SET
-                r.last_seen = datetime(),
-                r.evocation_count = coalesce(r.evocation_count, 0) + 1,
                 r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END,
                 r.reasoning = CASE WHEN $weight > r.weight THEN $reasoning ELSE r.reasoning END
-            RETURN c.name as created, type(r) as rel_type
             """
-            result = session.run(
-                query,
-                file_hash=file_hash,
-                name=concept_name,
-                definition=concept.get("definition", concept.get("description", "")),
-                domain=concept.get("domain", "general"),
-                concept_type=concept.get("type", concept.get("concept_type", "abstract")),
-                weight=concept.get("confidence", concept.get("weight", 1.0)),
-                reasoning=concept.get("reasoning", concept.get("why", ""))
+            session.run(query, 
+                file_hash=file_hash, name=c_name,
+                domain=concept.get("domain", "General"),
+                definition=concept.get("definition", ""),
+                weight=concept.get("confidence", 0.5), # Fuzzy default
+                reasoning=concept.get("reasoning", "")
             )
-            record = result.single()
-            if record:
-                nodes_created += 1
-                relationships_created += 1
-                logger.debug(f"   💡 Created Concept '{concept_name}' with EVOKES_CONCEPT")
-        
-        # ==========================================
-        # 5. TAGS - Filter redundant + Save to DigitalAsset
-        # ==========================================
+            nodes_created += 1; relationships_created += 1
+
+        # 5. TAGS (Igual que antes)
         filtered_tags = filter_redundant_tags(tags, all_entity_names)
-        
         if filtered_tags:
-            query = """
+            session.run("""
             MATCH (a:DigitalAsset {file_hash: $file_hash})
-            SET a.tags = $tags,
-                a.tags_updated_at = datetime()
-            RETURN a.file_hash as updated
-            """
-            session.run(query, file_hash=file_hash, tags=filtered_tags)
-            logger.info(f"   🏷️ Saved {len(filtered_tags)} tags to DigitalAsset")
-    
-    return {
-        "nodes_created": nodes_created,
-        "relationships_created": relationships_created,
-        "tags_saved": len(filtered_tags) if tags else 0
-    }
+            SET a.tags = $tags
+            """, file_hash=file_hash, tags=filtered_tags)
 
-
+    return {"nodes_created": nodes_created, "relationships_created": relationships_created}
 # ==========================================
 # ENDPOINTS
 # ==========================================

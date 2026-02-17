@@ -387,11 +387,13 @@ def stage_suggestions_in_inbox(driver, file_hash: str, llm_json: dict) -> bool:
     # Separate Concepts (abstract) from Entities (physical)
     concepts_list = all_entities.get("concepts", [])
     
-    # Create dict with only physical entities (Persons, Locations, Orgs)
+    # Create dict with only physical entities (Persons, Locations, Orgs, Events, Projects)
     physical_entities = {
         "persons": all_entities.get("persons", []),
         "locations": all_entities.get("locations", []),
-        "organizations": all_entities.get("organizations", [])
+        "organizations": all_entities.get("organizations", []),
+        "events": all_entities.get("events", []),
+        "projects": all_entities.get("projects", [])
     }
     
     # Count suggestions for logging

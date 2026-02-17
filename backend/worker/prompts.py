@@ -87,6 +87,7 @@ def build_specialized_prompt(
         "domain": "Macro-Area (English preferred, e.g., 'Arts', 'Math')",
         "definition": "Breve contexto para desambiguar",
         "reasoning": "WHY this score? (e.g. 'Direct visual evidence' or 'Metaphorical link')",
+        "relation_type": "EVOKES | EXPLORES | DEFINES",
         "confidence": "<float 0.0-1.0 based on CALIBRATION_RUBRIC>"
     }
 
@@ -107,11 +108,11 @@ def build_specialized_prompt(
     graph_core = {
         "summary": "Dense description (Spanish)",
         "entities": {
-            "persons": [{"name": "Name", "role": "Role", "confidence": "<float 0.0-1.0>"}],
-            "locations": [{"name": "Name", "type": "Type", "confidence": "<float 0.0-1.0>"}],
+            "persons": [{"name": "Name", "role": "Role", "confidence": "<float 0.0-1.0>", "relation_type": "CREATED_BY | PARTICIPATED_IN | DEPICTS | MENTIONS"}],
+            "locations": [{"name": "Name", "type": "Type", "confidence": "<float 0.0-1.0>", "relation_type": "LOCATED_AT | HAPPENED_AT | MENTIONS"}],
             "organizations": [{"name": "Org Name", "confidence": "<float 0.0-1.0>"}],
-            "events": [{"name": "Event Name", "type": "Concert/Conference/etc", "date": "YYYY-MM-DD (opt)", "confidence": "<float 0.0-1.0>"}],
-            "projects": [{"title": "Project Title", "type": "Type of project", "year": "YYYY (opt)", "confidence": "<float 0.0-1.0>"}],
+            "events": [{"name": "Event Name", "type": "Concert/Conference/etc", "date": "YYYY-MM-DD (opt)", "confidence": "<float 0.0-1.0>", "relation_type": "ABOUT_EVENT | CAPTURED_DURING | MENTIONS"}],
+            "projects": [{"title": "Project Title", "type": "Type of project", "year": "YYYY (opt)", "confidence": "<float 0.0-1.0>", "relation_type": "PART_OF_PROJECT | ABOUT_PROJECT | MENTIONS"}],
             "concepts": [concept_structure]
         },
         "tags": ["keyword1", "keyword2"],
