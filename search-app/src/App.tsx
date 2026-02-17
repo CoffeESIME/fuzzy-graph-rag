@@ -7,6 +7,8 @@ import CommunityAnalysisCard from './components/analysis/CommunityAnalysisCard';
 import BridgeAnalysisCard from './components/analysis/BridgeAnalysisCard';
 import SerendipityCard from './components/analysis/SerendipityCard';
 import FogOfWarCard from './components/analysis/FogOfWarCard';
+import HeatmapAnalysisCard from './components/analysis/HeatmapAnalysisCard';
+import ChordAnalysisCard from './components/analysis/ChordAnalysisCard';
 
 export default function App() {
   return (
@@ -19,6 +21,8 @@ export default function App() {
         <Route path="/analysis/bridges" element={<BridgeAnalysisCard />} />
         <Route path="/analysis/serendipity" element={<SerendipityCard />} />
         <Route path="/analysis/fog-of-war" element={<FogOfWarCard />} />
+        <Route path="/analysis/heatmap" element={<HeatmapAnalysisCard />} />
+        <Route path="/analysis/chord" element={<ChordAnalysisCard />} />
         <Route path="/analysis/:toolId" element={<AnalysisPlaceholder />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
