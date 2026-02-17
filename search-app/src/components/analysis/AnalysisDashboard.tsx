@@ -24,7 +24,7 @@ const ANALYSIS_TOOLS = [
     { id: 'fog-of-war', title: 'Niebla de Guerra', description: 'Filtrado progresivo por confianza', icon: CloudFog, color: '#64748b' },
     { id: 'heatmap', title: 'Matriz de Calor', description: 'Adyacencia de conceptos', icon: Grid3X3, color: '#ef4444' },
     { id: 'chord', title: 'Diagrama de Cuerdas', description: 'Relaciones entre categorías', icon: CircleDot, color: '#f59e0b' },
-    { id: 'radial', title: 'Árbol Radial', description: 'Jerarquías desde nodo central', icon: Target, color: '#10b981' },
+    { id: 'radial-tree', title: 'Árbol Radial', description: 'Jerarquías desde nodo central', icon: Target, color: '#10b981' },
     { id: 'pagerank', title: 'PageRank', description: 'Influencers del grafo', icon: Trophy, color: '#eab308' },
     { id: 'abstract-concepts', title: 'Conceptos Abstractos', description: 'Alta conectividad, bajo peso', icon: Shapes, color: '#a855f7' },
     { id: 'orphans', title: 'Nodos Huérfanos', description: 'Auditoría de salud del grafo', icon: Unplug, color: '#71717a' },

@@ -410,24 +410,151 @@ def analyze_chord():
         }
 
 # 🌳 Radial Tree
-@router.post("/radial", response_model=AnalysisToolResponse)
-def analyze_radial():
-    return {
-        "tool": "radial_tree",
-        "status": "placeholder",
-        "message": "Hierarchical expansion logic pending.",
-        "mock_data": {"root": {}, "children": []}
-    }
+class RadialTreeRequest(BaseModel):
+    root_node_name: str = None
+
+@router.post("/radial-tree", response_model=AnalysisToolResponse)
+def analyze_radial(payload: RadialTreeRequest = None):
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            root_name = payload.root_node_name if payload and payload.root_node_name else None
+            
+            # If no root specified, find a central node (highest degree)
+            if not root_name:
+                res = session.run("MATCH (n:Concept) WITH n, count{(n)--()} as d ORDER BY d DESC LIMIT 1 RETURN n.name as name")
+                rec = res.single()
+                if rec:
+                    root_name = rec["name"]
+                else:
+                    return {
+                        "tool": "radial_tree",
+                        "status": "error",
+                        "message": "Graph is empty, cannot find root.",
+                        "mock_data": {"nodes": [], "edges": []}
+                    }
+
+            # Query for 2 layers of expansion
+            # Using simple path traversal to get nodes and edges
+            # We want specific levels: 0 (root), 1 (neighbors), 2 (neighbors of neighbors)
+            query = """
+                MATCH (root) WHERE root.name = $rootName
+                
+                // Level 1
+                OPTIONAL MATCH (root)-[r1]-(l1)
+                
+                // Level 2 (exclude root to avoid backtracking)
+                OPTIONAL MATCH (l1)-[r2]-(l2)
+                WHERE elementId(l2) <> elementId(root)
+                
+                WITH root, l1, l2, r1, r2
+                LIMIT 200 // Safety limit
+                
+                RETURN 
+                    root.name as root,
+                    l1.name as name1,
+                    l2.name as name2,
+                    elementId(r1) as r1_id,
+                    elementId(r2) as r2_id
+            """
+            
+            result = session.run(query, rootName=root_name)
+            
+            nodes_map = {} # name -> level
+            edges_set = set() # (src, tgt) tuples
+            
+            # Add root level 0
+            nodes_map[root_name] = 0
+            
+            for record in result:
+                # Level 1
+                n1 = record["name1"]
+                if n1:
+                    if n1 not in nodes_map:
+                        nodes_map[n1] = 1
+                    edges_set.add(tuple(sorted((root_name, n1))))
+                    
+                    # Level 2
+                    n2 = record["name2"]
+                    if n2:
+                        if n2 not in nodes_map:
+                            nodes_map[n2] = 2
+                        # Edge l1-l2
+                        edges_set.add(tuple(sorted((n1, n2))))
+            
+            nodes = [{"id": name, "level": lvl} for name, lvl in nodes_map.items()]
+            edges = [{"source": e[0], "target": e[1]} for e in edges_set]
+            
+            return {
+                "tool": "radial_tree",
+                "status": "success",
+                "message": f"Expanded radial tree from root '{root_name}'.",
+                "mock_data": {"root": root_name, "nodes": nodes, "edges": edges}
+            }
+
+    except Exception as e:
+        return {
+            "tool": "radial_tree",
+            "status": "error",
+            "message": f"Error generating radial tree: {str(e)}",
+            "mock_data": {"nodes": [], "edges": []}
+        }
 
 # 👑 PageRank
 @router.post("/pagerank", response_model=AnalysisToolResponse)
 def analyze_pagerank():
-    return {
-        "tool": "pagerank",
-        "status": "placeholder",
-        "message": "PageRank centrality algorithm pending.",
-        "mock_data": {"top_nodes": []}
-    }
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            # 1. Cleanup
+            session.run("CALL gds.graph.drop('pagerankGraph', false) YIELD graphName")
+            
+            # 2. Project
+            session.run("""
+                CALL gds.graph.project(
+                    'pagerankGraph',
+                    ['Concept', 'Person', 'Organization'],
+                    '*'
+                )
+            """)
+            
+            # 3. Stream PageRank
+            result = session.run("""
+                CALL gds.pageRank.stream('pagerankGraph')
+                YIELD nodeId, score
+                WITH gds.util.asNode(nodeId) AS n, score
+                WHERE score > 0.15
+                RETURN n.name AS id, score as value, labels(n)[0] as category
+                ORDER BY score DESC
+                LIMIT 20
+            """)
+            
+            data = [
+                {
+                    "id": record["id"],
+                    "value": record["value"],
+                    "category": record["category"]
+                }
+                for record in result
+            ]
+            
+            # 4. Cleanup
+            session.run("CALL gds.graph.drop('pagerankGraph', false) YIELD graphName")
+            
+            return {
+                "tool": "pagerank",
+                "status": "success",
+                "message": "Calculated top influencial nodes using PageRank.",
+                "mock_data": {"ranking": data}
+            }
+
+    except Exception as e:
+        return {
+            "tool": "pagerank",
+            "status": "error",
+            "message": f"GDS Error: {str(e)}",
+            "mock_data": {"ranking": []}
+        }
 
 # 🕸️ Abstract Concepts
 @router.post("/abstract-concepts", response_model=AnalysisToolResponse)

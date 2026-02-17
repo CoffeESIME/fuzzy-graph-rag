@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@nivo/bar": "^0.99.0",
     "@nivo/chord": "^0.99.0",
     "@nivo/core": "^0.99.0",
     "@nivo/heatmap": "^0.99.0",
