@@ -101,10 +101,11 @@ export interface GraphCrispResponse {
     graph_topology: GraphTopology;
 }
 
-// --- Tab 5: Graph Fuzzy (Coming Soon) ---
+// --- Tab 5: Graph Fuzzy (Vector-First) ---
 export interface GraphFuzzyRequest {
     query: string;
-    min_confidence: number;
+    alpha_cut: number;
+    limit: number;
 }
 
 // --- Tab Enum ---

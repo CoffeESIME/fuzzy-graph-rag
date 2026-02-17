@@ -13,7 +13,7 @@ const TABS: { id: SearchTab; label: string; icon: React.ReactNode; comingSoon?: 
     { id: 'visual-siglip', label: 'Visual', icon: <Image size={16} /> },
     { id: 'hybrid-visual', label: 'Multimodal', icon: <Layers size={16} /> },
     { id: 'graph-crisp', label: 'Grafo', icon: <GitBranch size={16} /> },
-    { id: 'graph-fuzzy', label: 'Grafo Difuso', icon: <Radar size={16} />, comingSoon: true },
+    { id: 'graph-fuzzy', label: 'Grafo Difuso', icon: <Radar size={16} /> },
 ];
 
 export default function SearchTabs() {

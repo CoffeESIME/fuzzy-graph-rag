@@ -828,13 +828,284 @@ def search_graph_crisp(req: GraphCrispRequest):
 # ENDPOINT 5: GRAPH FUZZY SEARCH (COMING SOON)
 # ==========================================
 
-class GraphFuzzyRequest(BaseModel):
-    query: str = Field(..., min_length=1)
-    min_confidence: float = Field(0.6, ge=0.0, le=1.0)
+@router.post("/graph-fuzzy", response_model=GraphCrispResponse)
+def search_graph_fuzzy(req: GraphCrispRequest):
+    """
+    Graph Fuzzy Search (Vector-First Graph Expansion).
 
+    Flow:
+    1. **Vector Search**: Find top DigitalAssets semantically similar to query (alpha=1.0).
+    2. **Graph Seeding**: Use found assets as seeds in Neo4j.
+    3. **Fuzzy Expansion**: Expand from seeds to connected entities (Concept, Person, etc.) 
+       filtering by relationship weight (alpha_cut).
+    4. **Discovery**: Optionally find 'sibling' assets connected to those entities.
 
-@router.post("/graph-fuzzy", response_model=ComingSoonResponse)
-def search_graph_fuzzy(req: GraphFuzzyRequest):
-    """Graph fuzzy search – coming soon."""
-    return ComingSoonResponse()
+    Returns the topology of this "semantic neighborhood".
+    """
+    from shared.clients import get_neo4j_driver
+    
+    # ── 1. Vector Search (Simulated via Weaviate) ──
+    # We manually run a vector search to get seeds. 
+    # Not using search_vectors internal func to avoid overhead/pydantic wrapping, 
+    # but reusing checks.
+    
+    embedding = _embed_text(req.query)
+    
+    # Search all spaces for seeds
+    # We focus on DigitalAssets, so TextSpace, VisualSpace, AudioSpace.
+    # MemorySpace might be relevant too? Let's include all.
+    seed_uuids = set()
+    seed_hashes = set()
+    weaviate_client = get_weaviate_client()
+    
+    for space_name, vector_name in SEARCHABLE_SPACES.items():
+        if not weaviate_client.collections.exists(space_name):
+            continue
+        try:
+            collection = weaviate_client.collections.get(space_name)
+            
+            # Use Hybrid Search (Vector + BM25) for better seed selection
+            # alpha=0.9 implies strong vector preference but allows keyword matches
+            hybrid_kwargs = {
+                "query": req.query,
+                "vector": embedding,
+                "alpha": 0.9, 
+                "limit": 5, 
+                "return_metadata": wq.MetadataQuery(distance=True, score=True),
+                # "return_properties": ... (Let Weaviate return default)
+            }
+            if vector_name != "default":
+                hybrid_kwargs["target_vector"] = vector_name
+
+            response = collection.query.hybrid(**hybrid_kwargs)
+            for obj in response.objects:
+                seed_uuids.add(str(obj.uuid))
+                # Robust extraction of hash from Weaviate
+                props = obj.properties
+                found_hash = props.get("file_hash") or props.get("hash") or props.get("neo4j_hash")
+                if found_hash:
+                    seed_hashes.add(found_hash)
+                
+        except Exception as e:
+            logger.warning(f"Vector seed search failed for {space_name}: {e}")
+
+    if not seed_uuids and not seed_hashes:
+        # No semantic matches found
+        return GraphCrispResponse(
+            query=req.query,
+            concepts_matched=[],
+            alpha_cut=req.alpha_cut,
+            total_results=0,
+            results=[],
+            graph_topology=GraphTopology(nodes=[], edges=[])
+        )
+
+    # ── 2. Neo4j Expansion ──
+    # Notes: 
+    # - Neo4j 'DigitalAsset' nodes use 'file_hash' as primary key usually.
+    # - 'uuid' property might be missing in Neo4j, causing warnings.
+    # - We rely on 'file_hash' for linking Weaviate -> Neo4j.
+    
+    driver = get_neo4j_driver()
+    
+    cypher_query = """
+    // A. Encontrar los nodos semilla
+    MATCH (seed:DigitalAsset)
+    WHERE seed.file_hash IN $seed_hashes
+    
+    // B. Expandir a Entidades Conectadas (Puente)
+    MATCH (seed)-[r]->(target)
+    WHERE (target:Concept OR target:Person OR target:Location OR target:Organization OR target:Event OR target:Project)
+      AND r.weight >= $alpha_cut
+    
+    // C. Expandir 'Hermanos' (Discovery) con Decaimiento
+    // Aquí está el truco: Multiplicamos los pesos. 
+    // Si r=0.8 y r2=0.7 -> Total=0.56. Si alpha=0.6, esto se filtra.
+    OPTIONAL MATCH (target)<-[r2]-(discovery:DigitalAsset)
+    WHERE discovery.file_hash <> seed.file_hash 
+      AND (r.weight * r2.weight) >= $alpha_cut
+
+    // D. Retornar y Ordenar por Fuerza Total del Camino
+    RETURN seed, r, target, r2, discovery,
+           elementId(seed) as seed_id,
+           elementId(target) as target_id,
+           elementId(discovery) as disc_id,
+           r.weight as w1,
+           r2.weight as w2
+    
+    // Ordenamos priorizando descubrimientos fuertes, luego conexiones directas fuertes
+    ORDER BY (CASE WHEN r2 IS NOT NULL THEN r.weight * r2.weight ELSE r.weight END) DESC
+    LIMIT $limit
+    """
+    try:
+        with driver.session() as session:
+            result = session.run(
+                cypher_query,
+                seed_uuids=list(seed_uuids),
+                seed_hashes=list(seed_hashes),
+                alpha_cut=req.alpha_cut,
+                limit=req.limit * 2
+            )
+            records = list(result)
+    except Exception as e:
+        logger.error(f"Neo4j graph-fuzzy query failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Graph fuzzy query failed: {e}")
+
+    # ── 3. Build Topology ──
+    seen_results: Dict[str, GraphCrispResultItem] = {} # Keyed by hash/uuid
+    topo_nodes: Dict[str, GraphNode] = {}
+    topo_edges: List[GraphEdge] = []
+    seen_edges: set = set()
+    concepts_matched: set = set()
+    
+    for record in records:
+        seed = record["seed"]
+        target = record["target"] # Entity
+        discovery = record["discovery"] # Optional
+        
+        seed_id = record["seed_id"]
+        target_id = record["target_id"]
+        disc_id = record["disc_id"]
+        
+        w1 = record["w1"]
+        w2 = record["w2"] # Can be None
+        
+        rel1 = record["r"]
+        rel2 = record["r2"] # Optional
+        
+        target_name = target.get("name", "Unknown")
+        concepts_matched.add(target_name)
+        
+        # Determine Target Type
+        target_labels = list(target.labels)
+        primary_type = "Concept"
+        for label in target_labels:
+            if label in ["Person", "Location", "Organization", "Event", "Project"]:
+                primary_type = label
+                break
+                
+        # ── Nodes ──
+        
+        # Target (Center)
+        if target_id not in topo_nodes:
+            topo_nodes[target_id] = GraphNode(
+                id=target_id,
+                label=target_name,
+                type=primary_type,
+                properties=_sanitize_neo4j_props(dict(target.items()))
+            )
+
+        # Seed (Source)
+        seed_hash = seed.get("hash") or seed.get("file_hash") or seed_id
+        if seed_id not in topo_nodes:
+            props = _sanitize_neo4j_props(dict(seed.items()))
+            props["is_seed"] = True # Marking as seed
+            topo_nodes[seed_id] = GraphNode(
+                id=seed_id,
+                label=seed.get("filename", "Seed"),
+                type="DigitalAsset",
+                properties=props
+            )
+            
+        # ── Edges ──
+        
+        # Edge 1: Seed -> Target
+        edge1_key = (seed_id, target_id, type(rel1).__name__)
+        if edge1_key not in seen_edges:
+            seen_edges.add(edge1_key)
+            topo_edges.append(GraphEdge(
+                source=seed_id,
+                target=target_id,
+                type=rel1.type,
+                weight=round(w1, 4),
+                reasoning="Vector Seed Match"
+            ))
+            
+            # Result Item for Seed
+            if seed_hash not in seen_results or w1 > seen_results[seed_hash].score:
+                 seen_results[seed_hash] = GraphCrispResultItem(
+                    space="GraphSpace",
+                    space_icon="🌱", # Seed icon
+                    uuid=seed_hash,
+                    filename=seed.get("filename", "Seed"),
+                    score=round(w1, 4),
+                    matched_concept=f"{target_name} ({primary_type})",
+                    relation_type=rel1.type,
+                    distance=0.0,
+                    properties=_sanitize_neo4j_props(dict(seed.items()))
+                )
+
+        # Discovery (Optional)
+        if discovery:
+            disc_hash = discovery.get("hash") or discovery.get("file_hash") or disc_id
+            
+            # Node
+            if disc_id not in topo_nodes:
+                props = _sanitize_neo4j_props(dict(discovery.items()))
+                props["is_discovery"] = True
+                topo_nodes[disc_id] = GraphNode(
+                    id=disc_id,
+                    label=discovery.get("filename", "Discovery"),
+                    type="DigitalAsset",
+                    properties=props
+                )
+                
+            # Edge 2: Discovery -> Target
+            edge2_key = (disc_id, target_id, type(rel2).__name__)
+            if edge2_key not in seen_edges:
+                seen_edges.add(edge2_key)
+                topo_edges.append(GraphEdge(
+                    source=disc_id,
+                    target=target_id,
+                    type=rel2.type,
+                    weight=round(w2, 4),
+                    reasoning="Graph Discovery"
+                ))
+                
+                # Result Item for Discovery
+                if disc_hash not in seen_results or w2 > seen_results[disc_hash].score:
+                     seen_results[disc_hash] = GraphCrispResultItem(
+                        space="GraphSpace",
+                        space_icon="🔭", # Telescope
+                        uuid=disc_hash,
+                        filename=discovery.get("filename", "Discovery"),
+                        score=round(w2, 4),
+                        matched_concept=f"{target_name} ({primary_type})",
+                        relation_type=rel2.type,
+                        distance=0.0,
+                        properties=_sanitize_neo4j_props(dict(discovery.items()))
+                    )
+
+    # ── Finalize ──
+    formatted = list(seen_results.values())
+    formatted.sort(key=lambda r: r.score, reverse=True)
+    
+    _enrich_with_minio(formatted)
+    
+    # Enriched URLs propagation (reuse logic)
+    url_by_hash = {}
+    for item in formatted:
+        props = item.properties
+        if "download_url" in props:
+            url_by_hash[item.uuid] = {"download_url": props["download_url"]}
+            if "minio_path" in props:
+                url_by_hash[item.uuid]["minio_path"] = props["minio_path"]
+
+    for node in topo_nodes.values():
+        if node.type == "DigitalAsset":
+            node_hash = node.properties.get("hash") or node.properties.get("file_hash")
+            if node_hash and node_hash in url_by_hash:
+                node.properties.update(url_by_hash[node_hash])
+
+    return GraphCrispResponse(
+        query=req.query,
+        concepts_matched=sorted(concepts_matched),
+        alpha_cut=req.alpha_cut,
+        total_results=len(formatted),
+        results=formatted,
+        graph_topology=GraphTopology(
+            nodes=list(topo_nodes.values()),
+            edges=topo_edges,
+        ),
+    )
 

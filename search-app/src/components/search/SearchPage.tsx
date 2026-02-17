@@ -1,15 +1,18 @@
-import { Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Home, Activity } from 'lucide-react';
 import SearchTabs from './SearchTabs';
 
 export default function SearchPage() {
+    const navigate = useNavigate();
+
     return (
         <div style={{
-            maxWidth: 960,
+            maxWidth: 1200, // Increased max width
             margin: '0 auto',
-            padding: '40px 24px',
+            padding: '24px 24px',
         }}>
-            {/* Header */}
-            <div style={{ marginBottom: 32 }}>
+            {/* Header + Nav */}
+            <div style={{ marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{
                         width: 44, height: 44,
@@ -27,9 +30,30 @@ export default function SearchPage() {
                             <span className="text-gradient">Búsqueda</span>
                         </h1>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 2 }}>
-                            Explora tu grafo de conocimiento con múltiples estrategias de búsqueda
+                            Explora tu grafo de conocimiento
                         </p>
                     </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <button
+                        onClick={() => navigate('/')}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: '0.9rem' }}
+                        title="Ir al Inicio"
+                    >
+                        <Home size={16} />
+                        <span className="hide-mobile">Inicio</span>
+                    </button>
+                    <button
+                        onClick={() => navigate('/analysis')}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: '0.9rem' }}
+                        title="Ir a Análisis"
+                    >
+                        <Activity size={16} />
+                        <span className="hide-mobile">Análisis</span>
+                    </button>
                 </div>
             </div>
 

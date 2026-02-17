@@ -9,6 +9,7 @@ from app.routers.sidecar import router as sidecar_router
 from app.routers.inbox import router as inbox_router
 from app.routers.lyrics import router as lyrics_router
 from app.routers.search import router as search_router
+from app.routers.analysis import router as analysis_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -44,6 +45,7 @@ app.include_router(sidecar_router)
 app.include_router(inbox_router)
 app.include_router(lyrics_router)
 app.include_router(search_router)
+app.include_router(analysis_router)
 
 @app.get("/")
 def read_root():
