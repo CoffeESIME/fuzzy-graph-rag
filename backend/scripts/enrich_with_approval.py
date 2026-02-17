@@ -34,11 +34,7 @@ import requests
 # Setup path for local imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.clients import get_neo4j_driver, get_minio_client
-from shared.database import engine
 from config.settings import get_settings
-from sqlmodel import Session, select
-from app.models import Asset, VectorStatus
-from app.models.enums import JobStatus, VectorType
 
 # Wikipedia (optional dependency)
 try:
@@ -443,6 +439,14 @@ def persist_enrichment(
     results = {"graph_updates": 0, "sidecar_path": None, "relations_created": 0, "asset_id": None}
     canonical = profile.get("canonical_name", entity_name)
     
+    # Lazy imports - bypass shared.database and app.__init__ to avoid circular import:
+    #   shared.database -> app.models -> app.__init__ -> shared.database
+    from sqlmodel import Session, select, create_engine
+    from app.models.asset import Asset
+    from app.models.vector_status import VectorStatus
+    from app.models.enums import JobStatus, VectorType
+    _engine = create_engine(settings.DATABASE_URL, echo=False)
+    
     # --------------------------------------------------------
     # A. NEO4J: Update node properties + create relations
     # --------------------------------------------------------
@@ -602,7 +606,7 @@ def persist_enrichment(
     #        TEXT_SUMMARY as pre-completed to satisfy this prerequisite.
     # --------------------------------------------------------
     try:
-        with Session(engine) as sql_session:
+        with Session(_engine) as sql_session:
             # Check for duplicate (idempotent)
             existing = sql_session.exec(
                 select(Asset).where(Asset.file_hash == content_hash)

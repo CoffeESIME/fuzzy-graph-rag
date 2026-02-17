@@ -60,12 +60,48 @@ export interface HybridVisualRequest {
     limit: number;
 }
 
-// --- Tab 4 & 5: Graph (Coming Soon) ---
+// --- Tab 4: Graph Crisp ---
 export interface GraphCrispRequest {
     query: string;
-    entity_types?: string[];
+    alpha_cut?: number;
+    limit?: number;
 }
 
+export interface GraphNode {
+    id: string;
+    label: string;
+    type: string;
+    properties: Record<string, any>;
+}
+
+export interface GraphEdge {
+    source: string;
+    target: string;
+    type: string;
+    weight: number;
+    reasoning?: string;
+}
+
+export interface GraphTopology {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+}
+
+export interface GraphCrispResultItem extends SearchResult {
+    matched_concept: string;
+    relation_type: string;
+}
+
+export interface GraphCrispResponse {
+    query: string;
+    concepts_matched: string[];
+    alpha_cut: number;
+    total_results: number;
+    results: GraphCrispResultItem[];
+    graph_topology: GraphTopology;
+}
+
+// --- Tab 5: Graph Fuzzy (Coming Soon) ---
 export interface GraphFuzzyRequest {
     query: string;
     min_confidence: number;

@@ -1,5 +1,12 @@
 import { create } from 'zustand';
-import type { SearchTab, SearchResponse } from '../types/search';
+import type {
+    SearchTab,
+    SearchResponse,
+    MultimodalFusionResponse,
+    GraphCrispResponse
+} from '../types/search';
+
+type AnySearchResponse = SearchResponse | MultimodalFusionResponse | GraphCrispResponse;
 
 interface SearchState {
     // Active tab
@@ -7,8 +14,8 @@ interface SearchState {
     setActiveTab: (tab: SearchTab) => void;
 
     // Results per tab
-    results: Partial<Record<SearchTab, SearchResponse | null>>;
-    setResults: (tab: SearchTab, data: SearchResponse | null) => void;
+    results: Partial<Record<SearchTab, AnySearchResponse | null>>;
+    setResults: (tab: SearchTab, data: AnySearchResponse | null) => void;
 
     // Loading per tab
     loading: Partial<Record<SearchTab, boolean>>;

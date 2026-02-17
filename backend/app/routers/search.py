@@ -5,7 +5,7 @@ Endpoints:
   1. POST /search/vectors     – Hybrid (BM25 + Vector) with optional tag filters
   2. POST /search/visual-siglip – Pure visual search via SigLIP image embeddings
   3. POST /search/hybrid-visual – Multimodal fusion (image + text, RRF merge)
-  4. POST /search/graph-crisp  – Coming Soon stub
+  4. POST /search/graph-crisp  – Crisp graph traversal (Neo4j, alpha-cut)
   5. POST /search/graph-fuzzy  – Coming Soon stub
 """
 
@@ -116,6 +116,24 @@ def _clean_properties(obj) -> Dict[str, Any]:
                 clean[k] = v
             else:
                 clean[k] = str(v)
+    return clean
+
+
+def _sanitize_neo4j_props(props: Dict[str, Any]) -> Dict[str, Any]:
+    """Clean Neo4j node properties for JSON serialization (handle DateTime, etc)."""
+    clean = {}
+    for k, v in props.items():
+        if v is None:
+            continue
+        if isinstance(v, (str, int, float, bool)):
+            clean[k] = v
+        elif isinstance(v, list):
+            # Recursively clean list? No, just ISO format for dates in list
+            clean[k] = [x.iso_format() if hasattr(x, "iso_format") else x for x in v]
+        elif hasattr(v, "iso_format"):  # datetime, date, time
+            clean[k] = v.iso_format()
+        else:
+            clean[k] = str(v)
     return clean
 
 
@@ -583,26 +601,237 @@ def search_hybrid_visual(request: HybridVisualRequest):
 
 
 # ==========================================
-# ENDPOINT 4 & 5: GRAPH (COMING SOON)
+# ENDPOINT 4: GRAPH CRISP SEARCH (Neo4j)
 # ==========================================
 
 class GraphCrispRequest(BaseModel):
-    query: str = Field(..., min_length=1)
-    entity_types: Optional[List[str]] = None
+    query: str = Field(..., min_length=1, description="Text query to resolve against Concept nodes")
+    alpha_cut: float = Field(0.9, ge=0.0, le=1.0, description="Minimum relationship weight (crisp threshold)")
+    limit: int = Field(20, ge=1, le=100, description="Max results")
 
+
+class GraphCrispResultItem(SearchResultItem):
+    matched_concept: str
+    relation_type: str
+
+
+class GraphNode(BaseModel):
+    """A node in the graph topology for frontend visualization."""
+    id: str = Field(..., description="Unique node ID (elementId or hash)")
+    label: str = Field(..., description="Display label for the node")
+    type: str = Field(..., description="Node label/type: Concept, DigitalAsset, Person, etc.")
+    properties: Dict[str, Any] = Field(default_factory=dict, description="All node properties")
+
+
+class GraphEdge(BaseModel):
+    """An edge in the graph topology for frontend visualization."""
+    source: str = Field(..., description="Source node ID")
+    target: str = Field(..., description="Target node ID")
+    type: str = Field(..., description="Relationship type: EVOKES, EXPLORES, DEFINES, etc.")
+    weight: float = Field(..., description="Fuzzy membership weight [0-1]")
+    reasoning: Optional[str] = Field(None, description="Why this connection exists")
+
+
+class GraphTopology(BaseModel):
+    """Full graph structure for frontend rendering (e.g. D3, Cytoscape, React Flow)."""
+    nodes: List[GraphNode] = Field(default_factory=list)
+    edges: List[GraphEdge] = Field(default_factory=list)
+
+
+class GraphCrispResponse(BaseModel):
+    query: str
+    concepts_matched: List[str]
+    alpha_cut: float
+    total_results: int
+    results: List[GraphCrispResultItem]
+    graph_topology: GraphTopology = Field(
+        ..., description="Nodes and edges for dynamic graph visualization"
+    )
+
+
+# ==========================================
+# ENDPOINT 4: GRAPH CRISP SEARCH
+# ==========================================
+
+@router.post("/graph-crisp", response_model=GraphCrispResponse)
+def search_graph_crisp(req: GraphCrispRequest):
+    """
+    Graph crisp search — high-confidence traversal through the knowledge graph.
+
+    Flow:
+    1. **Concept Resolution**: Find :Concept nodes whose name matches the query (case-insensitive CONTAINS)
+    2. **Strict Expansion**: Traverse EVOKES/EXPLORES/DEFINES relationships to :DigitalAsset nodes
+    3. **Alpha Cut**: Only return relationships with weight >= alpha_cut (default 0.9)
+
+    Returns both flat results AND a `graph_topology` with nodes/edges for
+    frontend graph visualization (ForceGraph2D, etc.).
+    """
+    from shared.clients import get_neo4j_driver
+
+    driver = get_neo4j_driver()
+
+    # Cypher: Concept resolution → DigitalAsset expansion with alpha cut
+    # Returns full node objects + relationship metadata for topology building
+    cypher_query = """
+// 1. Find anchor concepts (case-insensitive match)
+    MATCH (c:Concept)
+    WHERE toLower(c.name) CONTAINS toLower($user_query)
+
+    // 2. Expand to DigitalAssets 
+    // AGREGAMOS 'EVOKES_CONCEPT', 'MENTIONS', 'EMBODIES'
+    MATCH (d:DigitalAsset)-[r]->(c)
+    WHERE type(r) IN ['EVOKES', 'EXPLORES', 'DEFINES', 'EVOKES_CONCEPT', 'MENTIONS', 'EMBODIES']
+      AND r.weight >= $alpha_cut
+
+    // 3. Return full path data
+    RETURN d, c, r,
+           elementId(d) AS d_id,
+           elementId(c) AS c_id,
+           r.weight AS score,
+           r.reasoning AS reasoning,
+           c.name AS matched_concept,
+           type(r) AS rel_type
+    ORDER BY score DESC
+    LIMIT $limit
+    """
+
+    try:
+        with driver.session() as session:
+            result = session.run(
+                cypher_query,
+                user_query=req.query,
+                alpha_cut=req.alpha_cut,
+                limit=req.limit,
+            )
+            records = list(result)
+    except Exception as e:
+        logger.error(f"Neo4j graph-crisp query failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Graph query failed: {e}")
+
+    # ── Build flat results (deduplicated) AND graph topology ──
+    seen_results: Dict[str, GraphCrispResultItem] = {}
+    concepts_matched: set = set()
+
+    # Topology accumulators (keyed by ID to avoid duplicates)
+    topo_nodes: Dict[str, GraphNode] = {}
+    topo_edges: List[GraphEdge] = []
+    seen_edges: set = set()  # (source_id, target_id, rel_type) for dedup
+
+    for record in records:
+        asset_node = record["d"]
+        concept_node = record["c"]
+        score = record["score"]
+        concept_name = record["matched_concept"]
+        rel_type = record["rel_type"]
+        reasoning = record["reasoning"]
+        d_id = record["d_id"]
+        c_id = record["c_id"]
+
+        concepts_matched.add(concept_name)
+
+        # ── Topology: Concept node ──
+        if c_id not in topo_nodes:
+            concept_props = _sanitize_neo4j_props(dict(concept_node.items()))
+            topo_nodes[c_id] = GraphNode(
+                id=c_id,
+                label=concept_name,
+                type="Concept",
+                properties={
+                    "name": concept_name,
+                    "domain": concept_props.get("domain", ""),
+                    "definition": concept_props.get("definition", ""),
+                },
+            )
+
+        # ── Topology: DigitalAsset node ──
+        # Try to find a stable ID or hash, fallback to elementId
+        file_hash = asset_node.get("hash") or asset_node.get("file_hash") or d_id
+        filename = asset_node.get("filename", "unknown")
+        asset_props = _sanitize_neo4j_props(dict(asset_node.items()))
+
+        if d_id not in topo_nodes:
+            topo_nodes[d_id] = GraphNode(
+                id=d_id,
+                label=filename,
+                type="DigitalAsset",
+                properties=asset_props,
+            )
+
+        # ── Topology: Edge ──
+        edge_key = (d_id, c_id, rel_type)
+        if edge_key not in seen_edges:
+            seen_edges.add(edge_key)
+            topo_edges.append(GraphEdge(
+                source=d_id,
+                target=c_id,
+                type=rel_type,
+                weight=round(score, 4),
+                reasoning=reasoning,
+            ))
+
+        # ── Flat result (deduplicate by file_hash, keep best score) ──
+        if file_hash not in seen_results or score > seen_results[file_hash].score:
+            seen_results[file_hash] = GraphCrispResultItem(
+                space="GraphSpace",
+                space_icon="🔗",
+                uuid=file_hash,
+                filename=filename,
+                score=round(score, 4),
+                matched_concept=concept_name,
+                relation_type=rel_type,
+                distance=0.0,
+                properties=asset_props,
+            )
+
+    formatted = list(seen_results.values())
+    formatted.sort(key=lambda r: r.score, reverse=True)
+
+    # ── Enrich with MinIO presigned URLs ──
+    # _enrich_with_minio expects basic SearchResultItems, but GraphCrispResultItem inherits from it.
+    _enrich_with_minio(formatted)
+
+    # Copy enriched URLs back to topology nodes so the graph visualizer can open them
+    url_by_hash: Dict[str, Dict[str, str]] = {}
+    for item in formatted:
+        props = item.properties
+        if "download_url" in props:
+            # Normalize hash lookups
+            h = item.uuid
+            url_by_hash[h] = {"download_url": props["download_url"]}
+            if "minio_path" in props:
+                url_by_hash[h]["minio_path"] = props["minio_path"]
+
+    # Propagate URLs to topology nodes
+    for node in topo_nodes.values():
+        if node.type == "DigitalAsset":
+            node_hash = node.properties.get("hash") or node.properties.get("file_hash")
+            if node_hash and node_hash in url_by_hash:
+                node.properties.update(url_by_hash[node_hash])
+
+    return GraphCrispResponse(
+        query=req.query,
+        concepts_matched=sorted(concepts_matched),
+        alpha_cut=req.alpha_cut,
+        total_results=len(formatted),
+        results=formatted,
+        graph_topology=GraphTopology(
+            nodes=list(topo_nodes.values()),
+            edges=topo_edges,
+        ),
+    )
+
+
+# ==========================================
+# ENDPOINT 5: GRAPH FUZZY SEARCH (COMING SOON)
+# ==========================================
 
 class GraphFuzzyRequest(BaseModel):
     query: str = Field(..., min_length=1)
     min_confidence: float = Field(0.6, ge=0.0, le=1.0)
 
 
-@router.post("/graph-crisp", response_model=ComingSoonResponse)
-def search_graph_crisp(req: GraphCrispRequest):
-    """Graph crisp search – coming soon."""
-    return ComingSoonResponse()
-
-
 @router.post("/graph-fuzzy", response_model=ComingSoonResponse)
 def search_graph_fuzzy(req: GraphFuzzyRequest):
     """Graph fuzzy search – coming soon."""
     return ComingSoonResponse()
+
