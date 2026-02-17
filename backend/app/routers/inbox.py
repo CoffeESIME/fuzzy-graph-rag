@@ -28,6 +28,20 @@ router = APIRouter(
     tags=["inbox", "graph-review"]
 )
 
+# Whitelist of allowed relationship types (Cypher injection prevention)
+ALLOWED_RELATIONSHIPS = {
+    # Persons
+    "MENTIONS", "CREATED_BY", "PARTICIPATED_IN", "DEPICTS",
+    # Locations
+    "LOCATED_AT", "HAPPENED_AT",
+    # Events
+    "ABOUT_EVENT", "CAPTURED_DURING",
+    # Projects
+    "PART_OF_PROJECT", "ABOUT_PROJECT",
+    # Concepts
+    "EVOKES", "EXPLORES", "DEFINES",
+}
+
 
 # ==========================================
 # PYDANTIC SCHEMAS
@@ -276,7 +290,59 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             nodes_created += 1; relationships_created += 1
 
         # ==========================================
-        # 3. PROJECTS (Vital para Álbumes)
+        # 2.5 ORGANIZATIONS
+        # ==========================================
+        for org in entities.get("organizations", []):
+            org_name = org.get("name", "").strip()
+            if not org_name: continue
+            all_entity_names.append(org_name)
+
+            raw_rel = org.get("relation_type", "MENTIONS")
+            rel_type = sanitize_rel_type(raw_rel, "MENTIONS")
+
+            query = f"""
+            MATCH (a:DigitalAsset {{file_hash: $file_hash}})
+            MERGE (o:Organization {{name: $name}})
+            ON CREATE SET o.created_at = datetime(), o.source = 'ai_extraction'
+            MERGE (a)-[r:{rel_type}]->(o)
+            ON CREATE SET r.weight = $weight, r.created_at = datetime()
+            ON MATCH SET r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
+            """
+            session.run(query, file_hash=file_hash, name=org_name,
+                        weight=org.get("confidence", 1.0))
+            nodes_created += 1; relationships_created += 1
+
+        # ==========================================
+        # 2.7 EVENTS
+        # ==========================================
+        for event in entities.get("events", []):
+            event_name = event.get("name", "").strip()
+            if not event_name: continue
+            all_entity_names.append(event_name)
+
+            raw_rel = event.get("relation_type", "MENTIONS")
+            rel_type = sanitize_rel_type(raw_rel, "MENTIONS")
+
+            query = f"""
+            MATCH (a:DigitalAsset {{file_hash: $file_hash}})
+            MERGE (e:Event {{name: $name}})
+            ON CREATE SET
+                e.created_at = datetime(),
+                e.event_type = $event_type,
+                e.date = $date,
+                e.source = 'ai_extraction'
+            MERGE (a)-[r:{rel_type}]->(e)
+            ON CREATE SET r.weight = $weight, r.created_at = datetime()
+            ON MATCH SET r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
+            """
+            session.run(query, file_hash=file_hash, name=event_name,
+                        event_type=event.get("type", "unknown"),
+                        date=event.get("date", None),
+                        weight=event.get("confidence", 1.0))
+            nodes_created += 1; relationships_created += 1
+
+        # ==========================================
+        # 3. PROJECTS (Vital para Albumes)
         # ==========================================
         for project in entities.get("projects", []):
             proj_title = project.get("title", project.get("name", "")).strip()
