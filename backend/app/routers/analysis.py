@@ -559,29 +559,117 @@ def analyze_pagerank():
 # 🕸️ Abstract Concepts
 @router.post("/abstract-concepts", response_model=AnalysisToolResponse)
 def analyze_abstract_concepts():
-    return {
-        "tool": "abstract_concepts",
-        "status": "placeholder",
-        "message": "High connectivity / low weight detection pending.",
-        "mock_data": {"abstract_nodes": []}
-    }
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            # High connectivity (degree > 5) but low weight (< 0.6)
+            # These are "fuzzy glue" concepts
+            query = """
+                MATCH (c:Concept)-[r]-()
+                WITH c, count(r) as degree, avg(r.weight) as avg_weight
+                WHERE degree > 5 AND avg_weight < 0.6
+                RETURN c.name as id, degree as x, avg_weight as y
+                ORDER BY degree DESC
+                LIMIT 50
+            """
+            result = session.run(query)
+            
+            data = [
+                {
+                    "id": record["id"],
+                    "data": [{"x": record["x"], "y": record["y"]}]
+                }
+                for record in result
+            ]
+            
+            return {
+                "tool": "abstract_concepts",
+                "status": "success",
+                "message": "Identified abstract concepts (high degree, low weight).",
+                "mock_data": {"abstract_nodes": data}
+            }
+
+    except Exception as e:
+        return {
+            "tool": "abstract_concepts",
+            "status": "error",
+            "message": f"Error finding abstract concepts: {str(e)}",
+            "mock_data": {"abstract_nodes": []}
+        }
 
 # 🏚️ Orphan Nodes
 @router.post("/orphans", response_model=AnalysisToolResponse)
 def analyze_orphans():
-    return {
-        "tool": "orphan_nodes",
-        "status": "placeholder",
-        "message": "Disconnected node audit pending.",
-        "mock_data": {"count": 0, "nodes": []}
-    }
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            # Find DigitalAssets with no relationships
+            query = """
+                MATCH (d:DigitalAsset)
+                WHERE NOT (d)--()
+                RETURN d.filename as filename, elementId(d) as uuid
+                LIMIT 50
+            """
+            result = session.run(query)
+            
+            nodes = [
+                {"filename": record["filename"], "uuid": record["uuid"]}
+                for record in result
+            ]
+            
+            return {
+                "tool": "orphan_nodes",
+                "status": "success",
+                "message": f"Found {len(nodes)} orphan assets.",
+                "mock_data": {"count": len(nodes), "nodes": nodes}
+            }
+            
+    except Exception as e:
+         return {
+            "tool": "orphan_nodes",
+            "status": "error",
+            "message": f"Error auditing orphan nodes: {str(e)}",
+            "mock_data": {"count": 0, "nodes": []}
+        }
 
 # 📊 Weight Distribution
 @router.post("/weight-distribution", response_model=AnalysisToolResponse)
 def analyze_weight_distribution():
-    return {
-        "tool": "weight_distribution",
-        "status": "placeholder",
-        "message": "Edge weight histogram calculation pending.",
-        "mock_data": {"bins": [], "counts": []}
-    }
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            # Histogram of edge weights
+            query = """
+                MATCH ()-[r]->()
+                WHERE r.weight IS NOT NULL
+                WITH toInteger(r.weight * 10) as bucket, count(*) as count
+                RETURN bucket, count
+                ORDER BY bucket ASC
+            """
+            result = session.run(query)
+            
+            # Initialize 10 bins
+            bins = [{"range": f"{i/10:.1f}-{(i+1)/10:.1f}", "count": 0, "bucket": i} for i in range(10)]
+            
+            for record in result:
+                b = record["bucket"]
+                if 0 <= b < 10:
+                    bins[b]["count"] = record["count"]
+            
+            # Format for Nivo Bar
+            # data = [{ range: "0.0-0.1", count: 123 }, ...]
+            
+            return {
+                "tool": "weight_distribution",
+                "status": "success",
+                "message": "Calculated edge weight histogram.",
+                "mock_data": {"histogram": bins}
+            }
+
+    except Exception as e:
+        return {
+            "tool": "weight_distribution",
+            "status": "error",
+            "message": f"Error calculating weight distribution: {str(e)}",
+            "mock_data": {"histogram": []}
+        }

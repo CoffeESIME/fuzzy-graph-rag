@@ -11,6 +11,9 @@ import HeatmapAnalysisCard from './components/analysis/HeatmapAnalysisCard';
 import ChordAnalysisCard from './components/analysis/ChordAnalysisCard';
 import PageRankCard from './components/analysis/PageRankCard';
 import RadialTreeCard from './components/analysis/RadialTreeCard';
+import AbstractConceptsCard from './components/analysis/AbstractConceptsCard';
+import OrphansCard from './components/analysis/OrphansCard';
+import WeightDistributionCard from './components/analysis/WeightDistributionCard';
 
 export default function App() {
   return (
@@ -27,6 +30,9 @@ export default function App() {
         <Route path="/analysis/chord" element={<ChordAnalysisCard />} />
         <Route path="/analysis/pagerank" element={<PageRankCard />} />
         <Route path="/analysis/radial-tree" element={<RadialTreeCard />} />
+        <Route path="/analysis/abstract-concepts" element={<AbstractConceptsCard />} />
+        <Route path="/analysis/orphans" element={<OrphansCard />} />
+        <Route path="/analysis/weight-distribution" element={<WeightDistributionCard />} />
         <Route path="/analysis/:toolId" element={<AnalysisPlaceholder />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
