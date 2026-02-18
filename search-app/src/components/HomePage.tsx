@@ -1,6 +1,5 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Activity, Database, Radio } from 'lucide-react';
+import { Search, Activity, Database, Upload } from 'lucide-react';
 
 export default function HomePage() {
     const navigate = useNavigate();
@@ -34,8 +33,8 @@ export default function HomePage() {
             </div>
 
             <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: 32, width: '100%', maxWidth: 900
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: 32, width: '100%', maxWidth: 1100
             }}>
                 {/* Search Card */}
                 <div
@@ -82,6 +81,29 @@ export default function HomePage() {
                         Detección de comunidades, métricas de centralidad y visualizaciones avanzadas de la estructura del conocimiento.
                     </p>
                 </div>
+
+                {/* Ingest & Control Card */}
+                <div
+                    onClick={() => navigate('/ingest')}
+                    className="home-card"
+                    style={{
+                        background: 'var(--bg-secondary)', borderRadius: 24, padding: 40,
+                        border: '1px solid var(--border-subtle)', cursor: 'pointer',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                >
+                    <div style={{
+                        width: 64, height: 64, borderRadius: 16, background: 'rgba(234, 179, 8, 0.1)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24
+                    }}>
+                        <Upload size={32} className="text-yellow-500" />
+                    </div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>Ingest & Control</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                        Ingesta de archivos, control de tareas de procesamiento, cola de revisión y generación de nodos.
+                    </p>
+                </div>
             </div>
 
             <div style={{ marginTop: 60, display: 'flex', gap: 24, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -103,6 +125,7 @@ export default function HomePage() {
                 }
                 .text-blue-500 { color: #3b82f6; }
                 .text-purple-500 { color: #a855f7; }
+                .text-yellow-500 { color: #eab308; }
             `}</style>
         </div>
     );
