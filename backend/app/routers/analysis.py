@@ -293,70 +293,75 @@ def analyze_fog_of_war():
 
 # 🧮 Old Heatmap removed — replaced by Jaccard Co-Occurrence version at bottom of file
 
-# 🍩 Chord Diagram
+# 🍩 Chord Diagram (Category Co-Occurrence via DigitalAssets)
 @router.post("/chord", response_model=AnalysisToolResponse)
 def analyze_chord():
+    """
+    Genera la matriz de flujo entre Categorías (Co-ocurrencia a través de DigitalAssets).
+    Usa head([lbl IN labels(n) WHERE lbl IN allowed]) para extraer label principal.
+    Zeroes Concept-Concept self-reference to avoid visual domination.
+    """
     driver = get_neo4j_driver()
+
+    categories = ["Person", "Organization", "Location", "Concept", "Event", "Project"]
+
+    cypher_query = """
+    WITH $categories as allowed_labels
+
+    MATCH (n1)<--(a:DigitalAsset)-->(n2)
+    WHERE elementId(n1) < elementId(n2)
+
+    WITH n1, n2, allowed_labels,
+         head([lbl IN labels(n1) WHERE lbl IN allowed_labels]) as l1,
+         head([lbl IN labels(n2) WHERE lbl IN allowed_labels]) as l2
+
+    WHERE l1 IS NOT NULL AND l2 IS NOT NULL
+
+    RETURN l1 as source, l2 as target, count(*) as weight
+    """
+
     try:
         with driver.session() as session:
-            # Defined categories to analyze
-            categories = ['Person', 'Organization', 'Location', 'Concept', 'Event', 'Project']
-            
-            # Initialize NxN matrix with 0
-            n = len(categories)
-            matrix = [[0 for _ in range(n)] for _ in range(n)]
-            
-            # Map category name to index
-            cat_to_idx = {cat: i for i, cat in enumerate(categories)}
-            
-            # Query to count connections between categories
-            query = """
-                MATCH (a)-[r]-(b)
-                WHERE any(l IN labels(a) WHERE l IN $categories)
-                  AND any(l IN labels(b) WHERE l IN $categories)
-                WITH labels(a) as labelsA, labels(b) as labelsB, count(r) as count
-                RETURN labelsA, labelsB, count
-            """
-            
-            result = session.run(query, categories=categories)
-            
-            for record in result:
-                # Extract the primary label matching our list
-                lA = next((l for l in record["labelsA"] if l in cat_to_idx), None)
-                lB = next((l for l in record["labelsB"] if l in cat_to_idx), None)
-                
-                if lA and lB:
-                    idxA = cat_to_idx[lA]
-                    idxB = cat_to_idx[lB]
-                    count = record["count"]
-                    
-                    # Add to matrix (undirected count)
-                    matrix[idxA][idxB] += count
-                    # Don't double count if it's the same relationship record? 
-                    # Cypher matches (a)-[r]-(b) which is undirected pattern, but usually returns one direction per match if we don't direct it?
-                    # Actually (a)-[r]-(b) might match twice A->B and B<-A if not careful?
-                    # GDS project uses undirected orientation.
-                    # Here we just want flow volume.
-                    # If A!=B, matrix is symmetric-ish?
-                    # Chord expects directed flow usually, but for undirected graph, we can mirror or just fill one side.
-                    # Let's verify: Neo4j returns r once per relationship if we don't specify direction?
-                    # Actually MATCH (a)-[r]-(b) returns twice: once for (a,b), once for (b,a).
-                    # So we should be careful.
-                    # Whatever, Nivo Chord handles it. If symmetric, it shows balanced ribbons.
+            result = session.run(cypher_query, categories=categories)
+            records = list(result)
+
+            matrix_map = {cat: {cat2: 0 for cat2 in categories} for cat in categories}
+
+            for r in records:
+                src = r["source"]
+                tgt = r["target"]
+                w = r["weight"]
+                matrix_map[src][tgt] += w
+                if src != tgt:
+                    matrix_map[tgt][src] += w
+
+            # Zero out Concept-Concept to prevent visual domination
+            matrix_map["Concept"]["Concept"] = 0
+
+            matrix_list = []
+            for row_cat in categories:
+                row_data = []
+                for col_cat in categories:
+                    row_data.append(matrix_map[row_cat][col_cat])
+                matrix_list.append(row_data)
 
             return {
-                "tool": "chord_diagram",
+                "tool": "chord",
                 "status": "success",
-                "message": "Calculated inter-category relationship flows.",
-                "mock_data": {"matrix": matrix, "keys": categories}
+                "message": f"Category flows calculated ({len(categories)} categories).",
+                "mock_data": {
+                    "keys": categories,
+                    "matrix": matrix_list
+                }
             }
 
     except Exception as e:
+        print(f"🔥 Error Chord: {e}")
         return {
-            "tool": "chord_diagram",
+            "tool": "chord",
             "status": "error",
-            "message": f"Error generating chord diagram: {str(e)}",
-            "mock_data": {"matrix": [], "keys": []}
+            "message": f"Error: {str(e)}",
+            "mock_data": {"keys": [], "matrix": []}
         }
 
 # 🌳 Radial Tree (Co-Occurrence Expansion)
@@ -555,47 +560,6 @@ def analyze_pagerank():
             "status": "error",
             "message": f"GDS Error: {str(e)}",
             "mock_data": {"ranking": []}
-        }
-
-# 🕸️ Abstract Concepts
-@router.post("/abstract-concepts", response_model=AnalysisToolResponse)
-def analyze_abstract_concepts():
-    driver = get_neo4j_driver()
-    try:
-        with driver.session() as session:
-            # High connectivity (degree > 5) but low weight (< 0.6)
-            # These are "fuzzy glue" concepts
-            query = """
-                MATCH (c:Concept)-[r]-()
-                WITH c, count(r) as degree, avg(r.weight) as avg_weight
-                WHERE degree > 5 AND avg_weight < 0.6
-                RETURN c.name as id, degree as x, avg_weight as y
-                ORDER BY degree DESC
-                LIMIT 50
-            """
-            result = session.run(query)
-            
-            data = [
-                {
-                    "id": record["id"],
-                    "data": [{"x": record["x"], "y": record["y"]}]
-                }
-                for record in result
-            ]
-            
-            return {
-                "tool": "abstract_concepts",
-                "status": "success",
-                "message": "Identified abstract concepts (high degree, low weight).",
-                "mock_data": {"abstract_nodes": data}
-            }
-
-    except Exception as e:
-        return {
-            "tool": "abstract_concepts",
-            "status": "error",
-            "message": f"Error finding abstract concepts: {str(e)}",
-            "mock_data": {"abstract_nodes": []}
         }
 
 # 🏚️ Orphan Nodes
@@ -877,69 +841,3 @@ def analyze_heatmap():
             "mock_data": {"matrix": [], "keys": []}
         }
 
-# 🍩 Chord Diagram – Category Co-Occurrence
-@router.post("/chord", response_model=AnalysisToolResponse)
-def analyze_chord():
-    """
-    Genera la matriz de relaciones entre Categorías (Labels) del grafo.
-    Cuenta cuántos DigitalAssets conectan una categoría con otra.
-    """
-    driver = get_neo4j_driver()
-
-    categories = ["Concept", "Person", "Location", "Event", "Organization"]
-
-    cypher_query = """
-    UNWIND $categories as sourceLabel
-    UNWIND $categories as targetLabel
-
-    CALL {
-        WITH sourceLabel, targetLabel
-        MATCH (n1)<--(a:DigitalAsset)-->(n2)
-        WHERE sourceLabel IN labels(n1) AND targetLabel IN labels(n2)
-          AND elementId(n1) <> elementId(n2)
-        RETURN count(distinct a) as weight
-    }
-
-    RETURN sourceLabel, targetLabel, weight
-    ORDER BY sourceLabel, targetLabel
-    """
-
-    try:
-        with driver.session() as session:
-            result = session.run(cypher_query, categories=categories)
-            records = list(result)
-
-            # Build NxN matrix for Nivo Chord
-            matrix_dict = {cat: {cat2: 0 for cat2 in categories} for cat in categories}
-
-            for r in records:
-                src = r["sourceLabel"]
-                tgt = r["targetLabel"]
-                w = r["weight"]
-                matrix_dict[src][tgt] = w
-
-            matrix_list = []
-            for row_cat in categories:
-                row_data = []
-                for col_cat in categories:
-                    row_data.append(matrix_dict[row_cat][col_cat])
-                matrix_list.append(row_data)
-
-            return {
-                "tool": "chord",
-                "status": "success",
-                "message": f"Category co-occurrence matrix ({len(categories)} categories).",
-                "mock_data": {
-                    "keys": categories,
-                    "matrix": matrix_list
-                }
-            }
-
-    except Exception as e:
-        print(f"🔥 Error Chord: {e}")
-        return {
-            "tool": "chord",
-            "status": "error",
-            "message": f"Error computing chord: {str(e)}",
-            "mock_data": {"keys": [], "matrix": []}
-        }

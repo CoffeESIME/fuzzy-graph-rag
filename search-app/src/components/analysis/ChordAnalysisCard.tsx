@@ -1,39 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ResponsiveChord } from '@nivo/chord';
-import { RefreshCw, Component, Loader2, Info } from 'lucide-react';
+import { RefreshCw, Loader2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+interface ChordData {
+    keys: string[];
+    matrix: number[][];
+}
 
 interface AnalysisResponse {
     tool: string;
     status: string;
     message: string;
-    mock_data: {
-        matrix: number[][];
-        keys: string[];
-    };
+    mock_data: ChordData;
 }
 
-// Fixed colors per category for visual consistency
-const CATEGORY_COLORS: Record<string, string> = {
-    Concept: '#a78bfa', // Violet
-    Person: '#60a5fa', // Blue
-    Location: '#f87171', // Red
-    Event: '#fbbf24', // Amber
-    Organization: '#34d399', // Emerald
-};
+// Fixed vibrant colors per category (order matches backend categories array)
+// Person, Organization, Location, Concept, Event, Project
+const CATEGORY_COLORS = ['#60a5fa', '#34d399', '#f87171', '#a78bfa', '#fbbf24', '#f472b6'];
 
 const CATEGORY_ICONS: Record<string, string> = {
-    Concept: '💡',
     Person: '👤',
-    Location: '📍',
-    Event: '📅',
     Organization: '🏢',
+    Location: '📍',
+    Concept: '💡',
+    Event: '📅',
+    Project: '📁',
 };
 
 export default function ChordAnalysisCard() {
-    const [matrix, setMatrix] = useState<number[][]>([]);
-    const [keys, setKeys] = useState<string[]>([]);
+    const [data, setData] = useState<ChordData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState('');
@@ -45,8 +42,7 @@ export default function ChordAnalysisCard() {
         try {
             const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/chord');
             if (res.data.status === 'error') throw new Error(res.data.message);
-            setMatrix(res.data.mock_data.matrix);
-            setKeys(res.data.mock_data.keys);
+            setData(res.data.mock_data);
             setMessage(res.data.message);
         } catch (err: any) {
             console.error(err);
@@ -60,32 +56,13 @@ export default function ChordAnalysisCard() {
         fetchData();
     }, []);
 
-    // Map keys to fixed colors in order
-    const colors = keys.map(k => CATEGORY_COLORS[k] || '#64748b');
-
-    const theme = {
-        background: 'transparent',
-        textColor: '#e2e8f0',
-        fontSize: 12,
-        tooltip: {
-            container: {
-                background: '#0f172a',
-                color: '#f8fafc',
-                fontSize: 12,
-                borderRadius: 8,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                padding: '10px 14px',
-                border: '1px solid #334155'
-            }
-        }
-    };
-
-    if (loading) return (
-        <div className="flex flex-col items-center justify-center p-12 text-gray-500 min-h-[400px]">
-            <Loader2 className="animate-spin mb-4" size={32} />
-            <p>Calculando flujos entre categorías...</p>
-        </div>
-    );
+    if (loading)
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-gray-500 min-h-[400px]">
+                <Loader2 className="animate-spin mb-4" size={32} />
+                <p>Calculando flujos entre categorías...</p>
+            </div>
+        );
 
     return (
         <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1200, margin: '0 auto' }}>
@@ -94,11 +71,12 @@ export default function ChordAnalysisCard() {
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate('/analysis')} className="btn-secondary">Back</button>
                     <div>
-                        <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <Component className="text-teal-500" />
-                            Interconexión de Categorías
+                        <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-100">
+                            🍩 Diagrama de Cuerdas
                         </h2>
-                        <p className="text-gray-500">Flujo de información entre tipos de entidades del grafo.</p>
+                        <p className="text-sm text-slate-500">
+                            Flujo de información entre categorías del grafo
+                        </p>
                     </div>
                 </div>
                 <button onClick={fetchData} className="btn-icon">
@@ -110,65 +88,92 @@ export default function ChordAnalysisCard() {
                 <div className="p-8 text-red-500 border border-red-200 rounded">{error}</div>
             ) : (
                 <div style={{ display: 'flex', gap: 20 }}>
-                    {/* Main Chord */}
+                    {/* Chart */}
                     <div
                         className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
-                        style={{ flex: '1 1 0', height: 700, padding: 16, position: 'relative', minWidth: 0 }}
+                        style={{ flex: 1, height: 620, padding: 16, position: 'relative' }}
                     >
-                        {matrix.length === 0 ? (
+                        {!data || data.matrix.length === 0 ? (
                             <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                                No hay datos disponibles
+                                Sin datos de flujo entre categorías.
                             </div>
                         ) : (
                             <ResponsiveChord
-                                data={matrix}
-                                keys={keys}
-                                margin={{ top: 60, right: 60, bottom: 90, left: 60 }}
-                                valueFormat=".0f"
-                                padAngle={0.02}
+                                data={data.matrix}
+                                keys={data.keys}
+                                margin={{ top: 60, right: 60, bottom: 60, left: 60 }}
+                                padAngle={0.05}
                                 innerRadiusRatio={0.96}
                                 innerRadiusOffset={0.02}
-                                inactiveArcOpacity={0.25}
-                                arcOpacity={1}
-                                activeArcOpacity={1}
-                                inactiveRibbonOpacity={0.15}
                                 ribbonOpacity={0.5}
-                                activeRibbonOpacity={0.9}
-                                labelRotation={-90}
+                                activeRibbonOpacity={1.0}
+                                inactiveRibbonOpacity={0.15}
+                                colors={CATEGORY_COLORS}
+                                arcBorderWidth={1}
+                                arcBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
+                                enableLabel={true}
+                                label="id"
                                 labelOffset={12}
-                                labelTextColor="#e2e8f0"
-                                colors={colors}
-                                motionConfig="stiff"
-                                theme={theme}
+                                labelRotation={-90}
+                                labelTextColor="#cbd5e1"
                                 arcTooltip={({ arc }) => (
-                                    <div style={{
-                                        background: '#0f172a', border: '1px solid #334155',
-                                        borderRadius: 8, padding: '10px 14px', color: '#f8fafc',
-                                        fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span>{CATEGORY_ICONS[arc.label] || '🔷'}</span>
-                                            <strong>{arc.label}</strong>
-                                        </div>
-                                        <div style={{ color: '#94a3b8', marginTop: 2 }}>
-                                            {arc.value} conexiones vía archivos
-                                        </div>
+                                    <div
+                                        style={{
+                                            background: '#0f172a',
+                                            color: '#f8fafc',
+                                            padding: '8px 14px',
+                                            borderRadius: 8,
+                                            border: '1px solid #334155',
+                                            fontSize: 12,
+                                        }}
+                                    >
+                                        <strong style={{ color: arc.color }}>
+                                            {CATEGORY_ICONS[arc.id] || ''} {arc.id}
+                                        </strong>
+                                        <br />
+                                        <span style={{ color: '#94a3b8' }}>
+                                            Total flujo: <strong style={{ color: '#e2e8f0' }}>{arc.value}</strong>
+                                        </span>
                                     </div>
                                 )}
                                 ribbonTooltip={({ ribbon }) => (
-                                    <div style={{
-                                        background: '#0f172a', border: '1px solid #334155',
-                                        borderRadius: 8, padding: '10px 14px', color: '#f8fafc',
-                                        fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
-                                    }}>
-                                        <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                                            {CATEGORY_ICONS[ribbon.source.label] || ''} {ribbon.source.label} ↔ {CATEGORY_ICONS[ribbon.target.label] || ''} {ribbon.target.label}
+                                    <div
+                                        style={{
+                                            background: '#0f172a',
+                                            color: '#f8fafc',
+                                            padding: '10px 14px',
+                                            borderRadius: 8,
+                                            border: '1px solid #334155',
+                                            fontSize: 12,
+                                        }}
+                                    >
+                                        <div style={{ marginBottom: 4 }}>
+                                            <span style={{ color: ribbon.source.color }}>
+                                                {CATEGORY_ICONS[ribbon.source.id] || ''} {ribbon.source.id}
+                                            </span>
+                                            {' → '}
+                                            <span style={{ color: ribbon.target.color }}>
+                                                {CATEGORY_ICONS[ribbon.target.id] || ''} {ribbon.target.id}
+                                            </span>
                                         </div>
-                                        <div style={{ color: '#94a3b8' }}>
-                                            <strong style={{ color: '#f8fafc' }}>{ribbon.source.value}</strong> archivos compartidos
-                                        </div>
+                                        <span style={{ color: '#94a3b8' }}>
+                                            Archivos compartidos:{' '}
+                                            <strong style={{ color: '#e2e8f0' }}>{ribbon.source.value}</strong>
+                                        </span>
                                     </div>
                                 )}
+                                theme={{
+                                    labels: { text: { fill: '#cbd5e1', fontSize: 12, fontWeight: 600 } },
+                                    tooltip: {
+                                        container: {
+                                            background: '#0f172a',
+                                            color: '#f8fafc',
+                                            fontSize: 12,
+                                            borderRadius: 8,
+                                            border: '1px solid #334155',
+                                        },
+                                    },
+                                }}
                             />
                         )}
                     </div>
@@ -176,65 +181,49 @@ export default function ChordAnalysisCard() {
                     {/* Explanation Side Panel */}
                     <div
                         className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
-                        style={{ width: 280, padding: 20, flexShrink: 0 }}
+                        style={{ width: 260, padding: 20, flexShrink: 0 }}
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                            <Info size={18} className="text-teal-400" />
+                            <Info size={18} className="text-cyan-400" />
                             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
-                                ¿Qué veo aquí?
+                                Interconexión de Categorías
                             </h3>
                         </div>
 
                         <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>
-                            Este diagrama muestra cómo fluye la información entre
-                            <strong style={{ color: '#e2e8f0' }}> tipos de entidades</strong>.
-                            Si la cinta entre <strong style={{ color: '#60a5fa' }}>Persona</strong> y
-                            <strong style={{ color: '#fbbf24' }}> Evento</strong> es gruesa,
-                            significa que tienes muchas fotos o textos sobre gente participando en eventos.
+                            Cada <strong style={{ color: '#e2e8f0' }}>arco</strong> representa una categoría.
+                            Las <strong style={{ color: '#e2e8f0' }}>cintas</strong> muestran cuántos archivos
+                            (DigitalAssets) conectan una categoría con otra.
                         </p>
 
                         <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 20 }}>
-                            A diferencia de una conexión directa, esto cuenta cuántos
-                            <strong style={{ color: '#e2e8f0' }}> archivos (DigitalAssets)</strong> conectan
-                            un tipo de entidad con otro.
+                            Una cinta gruesa = muchos archivos mencionan ambas categorías.
+                            La auto-referencia <em>Concept↔Concept</em> se omite para mayor claridad visual.
                         </p>
 
                         {/* Category Legend */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                            background: '#1e293b', borderRadius: 8, padding: 12,
                             border: '1px solid #334155'
                         }}>
                             <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 10 }}>
                                 CATEGORÍAS
                             </div>
-                            {Object.entries(CATEGORY_COLORS).map(([name, color]) => (
+                            {data?.keys.map((name, i) => (
                                 <div key={name} style={{
-                                    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
+                                    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5,
                                     fontSize: '0.75rem'
                                 }}>
                                     <div style={{
-                                        width: 12, height: 12, borderRadius: 3,
-                                        background: color, flexShrink: 0
+                                        width: 10, height: 10, borderRadius: '50%',
+                                        background: CATEGORY_COLORS[i] || '#666',
+                                        flexShrink: 0
                                     }} />
                                     <span style={{ color: '#94a3b8' }}>
-                                        {CATEGORY_ICONS[name]} {name}
+                                        {CATEGORY_ICONS[name] || ''} {name}
                                     </span>
                                 </div>
                             ))}
-                        </div>
-
-                        <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12,
-                            border: '1px solid #334155'
-                        }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
-                                LECTURA
-                            </div>
-                            <p style={{ fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
-                                <strong style={{ color: '#e2e8f0' }}>Arco fino</strong> = proporción del total.
-                                <br />
-                                <strong style={{ color: '#e2e8f0' }}>Cinta gruesa</strong> = muchos archivos comparten ambas categorías.
-                            </p>
                         </div>
 
                         {message && (
