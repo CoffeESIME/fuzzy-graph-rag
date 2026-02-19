@@ -655,55 +655,71 @@ def analyze_abstract_concepts():
 
 # �👑 PageRank
 @router.post("/pagerank", response_model=AnalysisToolResponse)
-def analyze_pagerank():
+def analyze_pagerank(method: str = "standard"):
+    """
+    PageRank Dual: Standard (conteo de archivos) vs Fuzzy (pesos semánticos).
+    Usa proyección dirigida para que PageRank distribuya influencia correctamente.
+    """
     driver = get_neo4j_driver()
+
+    # --- Proyección según método (dirigida, sin undirected para PageRank) ---
+    if method == "fuzzy":
+        query_project = """
+        MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
+        WHERE elementId(c1) <> elementId(c2)
+        WITH c1, c2, sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight
+        WITH gds.graph.project(
+          'conceptPR', c1, c2,
+          { relationshipProperties: { weight: weight } }
+        ) AS g
+        RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
+        """
+    else:
+        query_project = """
+        MATCH (c1:Concept)<--(a:DigitalAsset)-->(c2:Concept)
+        WHERE elementId(c1) <> elementId(c2)
+        WITH c1, c2, count(a) AS weight
+        WITH gds.graph.project(
+          'conceptPR', c1, c2,
+          { relationshipProperties: { weight: weight } }
+        ) AS g
+        RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
+        """
+
+    query_pagerank = """
+    CALL gds.pageRank.stream('conceptPR', { relationshipWeightProperty: 'weight' })
+    YIELD nodeId, score
+    WITH gds.util.asNode(nodeId) AS n, score
+    ORDER BY score DESC
+    LIMIT 20
+    RETURN n.name AS id, round(score, 4) AS value
+    """
+
     try:
         with driver.session() as session:
-            # 1. Safe project
-            _safe_gds_project(session, 'pagerankGraph', """
-                CALL gds.graph.project(
-                    'pagerankGraph',
-                    ['Concept', 'Person', 'Organization'],
-                    '*'
-                )
-            """)
-            
-            # 3. Stream PageRank
-            result = session.run("""
-                CALL gds.pageRank.stream('pagerankGraph')
-                YIELD nodeId, score
-                WITH gds.util.asNode(nodeId) AS n, score
-                WHERE score > 0.15
-                RETURN n.name AS id, score as value, labels(n)[0] as category
-                ORDER BY score DESC
-                LIMIT 20
-            """)
-            
-            data = [
-                {
-                    "id": record["id"],
-                    "value": record["value"],
-                    "category": record["category"]
-                }
-                for record in result
-            ]
-            
-            # Cleanup
-            _safe_gds_drop(session, 'pagerankGraph')
-            
+            _safe_gds_project(session, 'conceptPR', query_project)
+            result = session.run(query_pagerank)
+            data = [{"id": r["id"], "value": r["value"]} for r in result]
+            _safe_gds_drop(session, 'conceptPR')
+
+            mode_name = "Fuzzy PageRank" if method == "fuzzy" else "Standard PageRank"
             return {
                 "tool": "pagerank",
                 "status": "success",
-                "message": "Calculated top influencial nodes using PageRank.",
-                "mock_data": {"ranking": data}
+                "message": f"{mode_name} calculado para top {len(data)} conceptos.",
+                "mock_data": {
+                    "ranking": data,
+                    "method": method,
+                },
             }
 
     except Exception as e:
+        print(f"🔥 Error PageRank ({method}): {e}")
         return {
             "tool": "pagerank",
             "status": "error",
             "message": f"GDS Error: {str(e)}",
-            "mock_data": {"ranking": []}
+            "mock_data": {"ranking": [], "method": method},
         }
 
 # 🏚️ Orphan Nodes
