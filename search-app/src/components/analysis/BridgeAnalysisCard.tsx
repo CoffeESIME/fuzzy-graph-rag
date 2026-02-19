@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import ReactFlow, { Background, Controls } from 'reactflow';
 import type { Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Network, Loader2 } from 'lucide-react';
+import { Network, Loader2, RefreshCw, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface BridgeNode {
-    name: string;
-    type: string;
+interface BridgeItem {
+    id: string;
     score: number;
+    context: string[];
 }
 
 interface AnalysisResponse {
@@ -17,142 +17,365 @@ interface AnalysisResponse {
     status: string;
     message: string;
     mock_data: {
-        bridges: BridgeNode[];
-        impact_score: number;
+        bridges: BridgeItem[];
     };
 }
 
+// Build a Bowtie layout: left column → center → right column
+function buildBowtieGraph(bridge: BridgeItem): { nodes: Node[]; edges: Edge[] } {
+    const ctx = bridge.context || [];
+    const mid = Math.ceil(ctx.length / 2);
+    const leftItems = ctx.slice(0, mid);
+    const rightItems = ctx.slice(mid);
+
+    const nodes: Node[] = [];
+    const edges: Edge[] = [];
+
+    // Center bridge node
+    const centerX = 300;
+    const centerY = Math.max(leftItems.length, rightItems.length, 1) * 40;
+    nodes.push({
+        id: 'bridge',
+        position: { x: centerX, y: centerY },
+        data: { label: `🌉 ${bridge.id}` },
+        style: {
+            background: 'linear-gradient(135deg, #ef4444, #f97316)',
+            color: '#fff',
+            borderRadius: '50%',
+            width: 80,
+            height: 80,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 11,
+            fontWeight: 700,
+            border: '3px solid #fbbf24',
+            boxShadow: '0 0 24px rgba(239,68,68,0.5)',
+            textAlign: 'center' as const,
+        },
+    });
+
+    // Left column
+    leftItems.forEach((name, i) => {
+        const y = i * 80 + 20;
+        const nodeId = `left-${i}`;
+        nodes.push({
+            id: nodeId,
+            position: { x: 30, y },
+            data: { label: name },
+            style: {
+                background: '#1e293b',
+                color: '#93c5fd',
+                border: '1px solid #3b82f6',
+                borderRadius: 8,
+                fontSize: 10,
+                padding: '6px 10px',
+                minWidth: 100,
+                textAlign: 'center' as const,
+            },
+        });
+        edges.push({
+            id: `e-l-${i}`,
+            source: nodeId,
+            target: 'bridge',
+            animated: true,
+            style: { stroke: '#3b82f6', strokeWidth: 2 },
+        });
+    });
+
+    // Right column
+    rightItems.forEach((name, i) => {
+        const y = i * 80 + 20;
+        const nodeId = `right-${i}`;
+        nodes.push({
+            id: nodeId,
+            position: { x: 570, y },
+            data: { label: name },
+            style: {
+                background: '#1e293b',
+                color: '#86efac',
+                border: '1px solid #22c55e',
+                borderRadius: 8,
+                fontSize: 10,
+                padding: '6px 10px',
+                minWidth: 100,
+                textAlign: 'center' as const,
+            },
+        });
+        edges.push({
+            id: `e-r-${i}`,
+            source: 'bridge',
+            target: nodeId,
+            animated: true,
+            style: { stroke: '#22c55e', strokeWidth: 2 },
+        });
+    });
+
+    return { nodes, edges };
+}
+
 export default function BridgeAnalysisCard() {
-    const [bridges, setBridges] = useState<BridgeNode[]>([]);
+    const [bridges, setBridges] = useState<BridgeItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [nodes, setNodes] = useState<Node[]>([]);
-    const [edges, setEdges] = useState<Edge[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [activeBridge, setActiveBridge] = useState<BridgeItem | null>(null);
+    const [flowNodes, setFlowNodes] = useState<Node[]>([]);
+    const [flowEdges, setFlowEdges] = useState<Edge[]>([]);
+    const [message, setMessage] = useState('');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/bridges');
-                if (res.data.status === 'error') {
-                    throw new Error(res.data.message);
-                }
-                const data = res.data.mock_data.bridges;
-                setBridges(data);
-
-                // Create visualization for top bridge
-                if (data.length > 0) {
-                    const center = data[0];
-                    const initialNodes: Node[] = [
-                        {
-                            id: 'center',
-                            position: { x: 250, y: 150 },
-                            data: { label: center.name },
-                            style: { background: '#ef4444', color: 'white', borderRadius: '50%', width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none' }
-                        }
-                    ];
-                    const initialEdges: Edge[] = [];
-
-                    // Create satellite nodes to symbolize connections
-                    [1, 2, 3, 4, 5].forEach((i) => {
-                        const angle = (i * 72) * (Math.PI / 180);
-                        const x = 250 + 120 * Math.cos(angle);
-                        const y = 150 + 120 * Math.sin(angle);
-                        initialNodes.push({
-                            id: `sat-${i}`,
-                            position: { x, y },
-                            data: { label: 'Cluster ' + i },
-                            style: { background: '#e2e8f0', color: '#64748b', fontSize: 10, borderRadius: 4, width: 60, textAlign: 'center' }
-                        });
-                        initialEdges.push({
-                            id: `e-${i}`,
-                            source: 'center',
-                            target: `sat-${i}`,
-                            style: { stroke: '#94a3b8', strokeDasharray: '5,5' }
-                        });
-                    });
-
-                    setNodes(initialNodes);
-                    setEdges(initialEdges);
-                }
-
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/bridges');
+            if (res.data.status === 'error') throw new Error(res.data.message);
+            const items = res.data.mock_data.bridges;
+            setBridges(items);
+            setMessage(res.data.message);
+            if (items.length > 0) {
+                selectBridge(items[0]);
             }
-        };
-        fetchData();
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || 'Error fetching bridges');
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    if (loading) return (
-        <div className="flex flex-col items-center justify-center p-12 text-gray-500">
-            <Loader2 className="animate-spin mb-4" size={32} />
-            <p>Calculando Centralidad de Intermediación...</p>
-        </div>
-    );
+    const selectBridge = (b: BridgeItem) => {
+        setActiveBridge(b);
+        const { nodes, edges } = buildBowtieGraph(b);
+        setFlowNodes(nodes);
+        setFlowEdges(edges);
+    };
 
-    const topBridge = bridges[0];
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    if (loading)
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-gray-500 min-h-[400px]">
+                <Loader2 className="animate-spin mb-4" size={32} />
+                <p>Detectando puentes semánticos...</p>
+            </div>
+        );
 
     return (
-        <div style={{ padding: 24, paddingBottom: 60 }}>
+        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1400, margin: '0 auto' }}>
             {/* Header */}
-            <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-                <button onClick={() => navigate('/analysis')} className="btn-secondary">Back</button>
-                <div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Network size={28} className="text-red-500" />
-                        Puentes Semánticos
-                    </h2>
-                    <p style={{ color: 'var(--text-secondary)' }}>
-                        Nodos con mayor Betweenness Centrality.
-                    </p>
-                </div>
-            </div>
-
-            <div className="flex gap-8 flex-col lg:flex-row">
-                {/* Ranking List */}
-                <div className="flex-1">
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 mb-6">
-                        <p className="text-lg text-slate-700 dark:text-slate-300">
-                            Estos conceptos actúan como carreteras principales.
-                            Si eliminas <strong>{topBridge?.name}</strong>, tu grafo podría fragmentarse.
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => navigate('/analysis')} className="btn-secondary">Back</button>
+                    <div>
+                        <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-100">
+                            <Network size={28} className="text-red-500" />
+                            Puentes Semánticos
+                        </h2>
+                        <p className="text-sm text-slate-500">
+                            Conceptos que conectan diferentes "mundos" de tu grafo
                         </p>
                     </div>
-
-                    <h3 className="font-bold mb-4 text-gray-600 uppercase text-xs tracking-wider">Top Conceptos Puente</h3>
-                    <div className="space-y-3">
-                        {bridges.map((b, i) => (
-                            <div key={i} className="flex items-center justify-between p-3 bg-white dark:bg-slate-950 border rounded-lg hover:border-red-300 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                                        {i + 1}
-                                    </div>
-                                    <span className="font-medium">{b.name}</span>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-sm font-mono font-bold text-slate-700">{b.score.toFixed(2)}</div>
-                                    <div className="text-[10px] text-slate-400">{b.type}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
                 </div>
-
-                {/* Visual Graph */}
-                <div className="flex-1 h-[500px] border rounded-xl overflow-hidden bg-slate-50 relative">
-                    <div className="absolute top-4 left-4 z-10 bg-white/90 p-2 rounded text-xs font-mono shadow-sm">
-                        Visualization: Bridge Node Impact
-                    </div>
-                    <ReactFlow
-                        nodes={nodes}
-                        edges={edges}
-                        fitView
-                    >
-                        <Background />
-                        <Controls />
-                    </ReactFlow>
-                </div>
+                <button onClick={fetchData} className="btn-icon">
+                    <RefreshCw size={18} />
+                </button>
             </div>
+
+            {error ? (
+                <div className="p-8 text-red-500 border border-red-200 rounded">{error}</div>
+            ) : (
+                <div style={{ display: 'flex', gap: 20 }}>
+                    {/* Left Panel — Leaderboard */}
+                    <div style={{ width: 280, flexShrink: 0 }}>
+                        <div
+                            className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
+                            style={{ padding: 16 }}
+                        >
+                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+                                🏆 Ranking de Puentes
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {bridges.map((b, i) => {
+                                    const isActive = activeBridge?.id === b.id;
+                                    return (
+                                        <button
+                                            key={b.id}
+                                            onClick={() => selectBridge(b)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '10px 12px',
+                                                borderRadius: 10,
+                                                border: isActive ? '1px solid #ef4444' : '1px solid #334155',
+                                                background: isActive ? '#ef444418' : '#0f172a',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s',
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                <div
+                                                    style={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        borderRadius: '50%',
+                                                        background: i === 0 ? '#ef4444' : i < 3 ? '#f9731630' : '#1e293b',
+                                                        color: i === 0 ? '#fff' : '#94a3b8',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: 11,
+                                                        fontWeight: 700,
+                                                        flexShrink: 0,
+                                                    }}
+                                                >
+                                                    {i + 1}
+                                                </div>
+                                                <span style={{ fontSize: '0.82rem', color: isActive ? '#fca5a5' : '#e2e8f0', fontWeight: isActive ? 600 : 400 }}>
+                                                    {b.id}
+                                                </span>
+                                            </div>
+                                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'monospace' }}>
+                                                {b.score}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {bridges.length === 0 && (
+                                <div style={{ padding: 20, textAlign: 'center', color: '#475569', fontSize: '0.8rem' }}>
+                                    No se encontraron puentes.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Center Panel — Bowtie React Flow */}
+                    <div
+                        className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
+                        style={{ flex: 1, height: 520, position: 'relative', overflow: 'hidden' }}
+                    >
+                        {!activeBridge ? (
+                            <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                                Selecciona un puente del ranking para visualizarlo.
+                            </div>
+                        ) : (
+                            <>
+                                <div
+                                    style={{
+                                        position: 'absolute',
+                                        top: 12,
+                                        left: 16,
+                                        zIndex: 10,
+                                        background: '#0f172acc',
+                                        backdropFilter: 'blur(8px)',
+                                        padding: '6px 14px',
+                                        borderRadius: 20,
+                                        fontSize: '0.72rem',
+                                        color: '#94a3b8',
+                                        border: '1px solid #334155',
+                                    }}
+                                >
+                                    🌉 Bowtie: <strong style={{ color: '#fca5a5' }}>{activeBridge.id}</strong>
+                                </div>
+                                <ReactFlow
+                                    nodes={flowNodes}
+                                    edges={flowEdges}
+                                    fitView
+                                    minZoom={0.5}
+                                    nodesDraggable={false}
+                                >
+                                    <Background color="#334155" gap={30} />
+                                    <Controls />
+                                </ReactFlow>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Right Panel — Explanation */}
+                    <div
+                        className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
+                        style={{ width: 250, padding: 20, flexShrink: 0 }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                            <Info size={18} className="text-red-400" />
+                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                                Puente Semántico
+                            </h3>
+                        </div>
+
+                        {activeBridge ? (
+                            <>
+                                <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                                    El concepto <strong style={{ color: '#fca5a5' }}>{activeBridge.id}</strong> es
+                                    un <strong style={{ color: '#e2e8f0' }}>puente crítico</strong>. Está
+                                    conectando temas como{' '}
+                                    <strong style={{ color: '#93c5fd' }}>
+                                        {activeBridge.context[0] || '—'}
+                                    </strong>{' '}
+                                    con{' '}
+                                    <strong style={{ color: '#86efac' }}>
+                                        {activeBridge.context[activeBridge.context.length - 1] || '—'}
+                                    </strong>
+                                    .
+                                </p>
+                                <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                                    Sin este concepto, estos temas estarían <em>aislados</em> en el grafo.
+                                </p>
+
+                                <div style={{
+                                    background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                                    border: '1px solid #334155'
+                                }}>
+                                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                                        CONECTA
+                                    </div>
+                                    {activeBridge.context.map((c, i) => (
+                                        <div key={i} style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 3 }}>
+                                            • {c}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={{
+                                    background: '#1e293b', borderRadius: 8, padding: 12,
+                                    border: '1px solid #334155'
+                                }}>
+                                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 4 }}>
+                                        SCORE
+                                    </div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ef4444', fontFamily: 'monospace' }}>
+                                        {activeBridge.score}
+                                    </div>
+                                    <div style={{ fontSize: '0.65rem', color: '#475569', marginTop: 2 }}>
+                                        diversidad × nodos conectados
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <p style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.6 }}>
+                                Selecciona un concepto del ranking para ver su visualización Bowtie y
+                                entender qué mundos conecta.
+                            </p>
+                        )}
+
+                        {message && (
+                            <div style={{
+                                marginTop: 16, fontSize: '0.7rem', color: '#4ade80',
+                                padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
+                                border: '1px solid #22c55e30'
+                            }}>
+                                ✅ {message}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

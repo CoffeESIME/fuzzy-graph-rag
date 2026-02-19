@@ -1,7 +1,13 @@
 from fastapi import APIRouter
-from shared.clients import get_neo4j_driver
+from shared.clients import get_neo4j_driver, get_minio_client
+from config.settings import get_settings
 from pydantic import BaseModel
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+import re
+import logging
+
+logger = logging.getLogger(__name__)
+settings = get_settings()
 
 router = APIRouter(
     prefix="/analysis",
@@ -99,142 +105,228 @@ def analyze_communities():
             "mock_data": {"nodes": [], "clusters": 0}
         }
 
-# 🌉 Semantic Bridges (Betweenness Centrality)
+# 🌉 Semantic Bridges (Bowtie Heuristic — no GDS needed)
 @router.post("/bridges", response_model=AnalysisToolResponse)
 def analyze_bridges():
+    """
+    Encuentra Conceptos que actúan como puentes semánticos.
+    Heurística: Conceptos que conectan con la mayor diversidad de etiquetas (Labels)
+    y archivos distintos. bridge_score = diversity_score * connected_nodes.
+    """
     driver = get_neo4j_driver()
+
+    cypher_query = """
+    // 1. Conceptos con buena cantidad de conexiones (>= 3 assets)
+    MATCH (bridge:Concept)<-[]-(a:DigitalAsset)
+    WITH bridge, count(distinct a) as asset_count
+    WHERE asset_count >= 3
+
+    // 2. Ver a qué OTRAS cosas se conectan esos assets
+    MATCH (bridge)<-[]-(a:DigitalAsset)-->(other)
+    WHERE elementId(bridge) <> elementId(other)
+
+    // 3. Diversidad: cuántos labels distintos une
+    WITH bridge, asset_count,
+         count(distinct other) as connected_nodes,
+         size(collect(distinct head(
+           [lbl IN labels(other) WHERE lbl IN ['Person','Organization','Location','Concept','Event','Project']]
+         ))) as diversity_score
+
+    // 4. Bridge Score
+    WITH bridge.name as concept, asset_count, connected_nodes, diversity_score,
+         (diversity_score * connected_nodes) as bridge_score
+    ORDER BY bridge_score DESC
+    LIMIT 10
+
+    // 5. Extraer contexto (los "Dos Mundos" que une)
+    MATCH (b:Concept {name: concept})<-[]-(a:DigitalAsset)-->(o)
+    WHERE elementId(b) <> elementId(o)
+    WITH concept, bridge_score, collect(distinct o.name)[0..5] as connected_examples
+
+    RETURN concept as id, bridge_score as score, connected_examples as context
+    ORDER BY score DESC
+    """
+
     try:
         with driver.session() as session:
-            # 1. Safe project
-            _safe_gds_project(session, 'bridgesGraph', """
-                CALL gds.graph.project(
-                  'bridgesGraph',
-                  ['Concept', 'Person'],
-                  {
-                    ALL_RELS: {
-                      type: '*',
-                      orientation: 'UNDIRECTED'
-                    }
-                  }
-                )
-            """)
-
-            # 3. Run Betweenness
-            result = session.run("""
-                CALL gds.betweenness.stream('bridgesGraph')
-                YIELD nodeId, score
-                WITH gds.util.asNode(nodeId) AS n, score
-                ORDER BY score DESC LIMIT 20
-                RETURN n.name as name, labels(n) as type, score
-            """)
-            
+            result = session.run(cypher_query)
             bridges = [
-                {
-                    "name": record["name"],
-                    "type": record["type"][0] if record["type"] else "Unknown",
-                    "score": record["score"]
-                } 
-                for record in result
+                {"id": r["id"], "score": r["score"], "context": r["context"]}
+                for r in result
             ]
 
-            # Cleanup
-            _safe_gds_drop(session, 'bridgesGraph')
-
             return {
-                "tool": "semantic_bridges",
+                "tool": "bridges",
                 "status": "success",
-                "message": "Identified top 20 bridge nodes acting as knowledge connectors.",
-                "mock_data": {"bridges": bridges, "impact_score": bridges[0]['score'] if bridges else 0}
+                "message": f"Found top {len(bridges)} semantic bridges.",
+                "mock_data": {"bridges": bridges}
             }
-            
     except Exception as e:
+        print(f"🔥 Error Bridges: {e}")
         return {
-            "tool": "semantic_bridges",
+            "tool": "bridges",
             "status": "error",
-            "message": f"GDS Error: {str(e)}",
-            "mock_data": {"bridges": [], "impact_score": 0.0}
+            "message": str(e),
+            "mock_data": {"bridges": []}
         }
 
-# 🎲 Serendipity Path
+# ── MinIO helpers ──
+CANDIDATE_PREFIXES = [
+    "raw/images/", "raw/audio/", "raw/videos/",
+    "raw/documents/", "master_records/texts/"
+]
+
+def _resolve_minio_url(file_hash: Optional[str], mime_type: Optional[str] = None) -> dict:
+    """
+    Given a file_hash, search MinIO for the actual object and return
+    {download_url, minio_path} or empty dict.
+    """
+    if not file_hash:
+        return {}
+    try:
+        minio_client = get_minio_client()
+        bucket = settings.MINIO_BUCKET
+
+        # Optimize prefix order by mime
+        prefixes = list(CANDIDATE_PREFIXES)
+        if mime_type:
+            if mime_type.startswith("image"):
+                prefixes = ["raw/images/"] + [p for p in CANDIDATE_PREFIXES if p != "raw/images/"]
+            elif mime_type.startswith("audio"):
+                prefixes = ["raw/audio/"] + [p for p in CANDIDATE_PREFIXES if p != "raw/audio/"]
+            elif mime_type.startswith("video"):
+                prefixes = ["raw/videos/"] + [p for p in CANDIDATE_PREFIXES if p != "raw/videos/"]
+            elif mime_type.startswith("text") or "pdf" in (mime_type or ""):
+                prefixes = ["master_records/texts/", "raw/documents/"] + [
+                    p for p in CANDIDATE_PREFIXES if p not in ("master_records/texts/", "raw/documents/")
+                ]
+
+        found_path = None
+        for prefix in prefixes:
+            search_prefix = f"{prefix}{file_hash}" if prefix == "master_records/texts/" else f"{prefix}{file_hash[:8]}"
+            try:
+                response = minio_client.list_objects_v2(
+                    Bucket=bucket, Prefix=search_prefix, MaxKeys=1
+                )
+                if "Contents" in response:
+                    found_path = response["Contents"][0]["Key"]
+                    break
+            except Exception:
+                pass
+
+        if found_path:
+            url = minio_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": bucket, "Key": found_path},
+                ExpiresIn=3600,
+            )
+            download_url = re.sub(r"https?://[^/]+", "http://localhost:9005", url)
+            return {"download_url": download_url, "minio_path": found_path}
+    except Exception as e:
+        logger.warning(f"MinIO resolve failed for {file_hash}: {e}")
+    return {}
+
+
+# 🎲 Serendipity Path (Fuzzy Random Walk)
 @router.post("/serendipity", response_model=AnalysisToolResponse)
 def analyze_serendipity():
+    """
+    Genera un camino asociativo (Serendipia) saltando entre Conceptos y Assets.
+    Favorece caminos que incluyen al menos una conexión 'difusa' (weight < 0.9).
+    """
     driver = get_neo4j_driver()
+
+    cypher_query = """
+    // 1. Elegir un nodo de inicio aleatorio que tenga conexiones difusas
+    MATCH (start:Concept)<-[r]-(:DigitalAsset)
+    WHERE r.weight < 0.9
+    WITH start ORDER BY rand() LIMIT 1
+
+    // 2. Trazar un camino de 2 Assets de profundidad
+    MATCH path = (start)<-[r1]-(a1:DigitalAsset)-[r2]->(mid:Concept)<-[r3]-(a2:DigitalAsset)-[r4]->(end:Concept)
+
+    // 3. Evitar bucles
+    WHERE elementId(start) <> elementId(mid)
+      AND elementId(mid) <> elementId(end)
+      AND elementId(start) <> elementId(end)
+      AND elementId(a1) <> elementId(a2)
+
+    // 4. Factor Serendipia: Al menos una relación verdaderamente difusa
+      AND (r1.weight <= 0.7 OR r2.weight <= 0.7 OR r3.weight <= 0.7 OR r4.weight <= 0.7)
+
+    // 5. Elegir un camino al azar
+    WITH path, start, a1, mid, a2, end, r1, r2, r3, r4
+    ORDER BY rand()
+    LIMIT 1
+
+    // 6. Formatear como secuencia de pasos (incluir propiedades de Asset)
+    RETURN
+        start.name as step1_node, 'Concept' as step1_type,
+        r1.weight as edge1_weight,
+        a1.filename as step2_node, 'Asset' as step2_type,
+        a1.file_hash as a1_hash, a1.mime_type as a1_mime,
+        r2.weight as edge2_weight,
+        mid.name as step3_node, 'Concept' as step3_type,
+        r3.weight as edge3_weight,
+        a2.filename as step4_node, 'Asset' as step4_type,
+        a2.file_hash as a2_hash, a2.mime_type as a2_mime,
+        r4.weight as edge4_weight,
+        end.name as step5_node, 'Concept' as step5_type
+    """
+
     try:
         with driver.session() as session:
-            # Random weak path discovery
-            # 1. Pick a random start node
-            # 2. Perform a random walk reusing low-weight edges if possible, or just find a path with low weights
-            # NOTE: purely random walk is better than shortestPath for serendipity
-            # Walk through shared DigitalAssets to discover serendipitous concept paths
-            query = """
-                MATCH (s:Concept) WITH s, rand() AS r ORDER BY r LIMIT 1
-                MATCH (s)<--(d1:DigitalAsset)-->(mid:Concept)<--(d2:DigitalAsset)-->(t:Concept)
-                WHERE elementId(s) <> elementId(mid) AND elementId(mid) <> elementId(t)
-                  AND elementId(s) <> elementId(t)
-                WITH s, mid, t,
-                     count(distinct d1) as shared1, count(distinct d2) as shared2
-                WITH [s.name, mid.name, t.name] as path_nodes,
-                     [toFloat(shared1)/10.0, toFloat(shared2)/10.0] as path_weights,
-                     (toFloat(shared1) + toFloat(shared2)) / 10.0 as total_score
-                ORDER BY total_score ASC
-                LIMIT 1
-                RETURN path_nodes, path_weights, total_score
-            """
-            result = session.run(query)
+            result = session.run(cypher_query)
             record = result.single()
-            
-            if not record:
-                # Fallback: simpler 2-hop path
-                fallback_query = """
-                    MATCH (s:Concept) WITH s, rand() AS r ORDER BY r LIMIT 1
-                    MATCH (s)<--(d:DigitalAsset)-->(t:Concept)
-                    WHERE elementId(s) <> elementId(t)
-                    WITH s, t, count(distinct d) as shared
-                    WITH [s.name, t.name] as path_nodes,
-                         [toFloat(shared)/10.0] as path_weights,
-                         toFloat(shared)/10.0 as total_score
-                    ORDER BY total_score ASC
-                    LIMIT 1
-                    RETURN path_nodes, path_weights, total_score
-                """
-                result = session.run(fallback_query)
-                record = result.single()
 
-            path_data = []
-            if record:
-                nodes = record["path_nodes"]
-                weights = record["path_weights"]
-                total_score = record["total_score"]
-                
-                for i in range(len(nodes) - 1):
-                    # Guard against index out of range if weights has fewer elements than edges (shouldn't happen with shortestPath)
-                    weight = weights[i] if i < len(weights) else 0.0
-                    path_data.append({
-                        "node": nodes[i],
-                        "edge": f"CO_OCCURS ({weight:.2f})",
-                        "next": nodes[i+1],
-                        "weight": weight
-                    })
-                
-                # Add last node info (terminal)
-                # path_data structure requested: [{"node": "A", "edge": "...", "next": "B"}]
-                # The prompt example shows steps.
-            else:
-                total_score = 0.0
+            if not record:
+                return {
+                    "tool": "serendipity",
+                    "status": "success",
+                    "message": "No fuzzy path found. Try again or add more data.",
+                    "mock_data": {"path": []}
+                }
+
+            def _rw(val):
+                return round(val, 2) if val is not None else None
+
+            # Resolve MinIO presigned URLs for each asset
+            a1_minio = _resolve_minio_url(record.get("a1_hash"), record.get("a1_mime"))
+            a2_minio = _resolve_minio_url(record.get("a2_hash"), record.get("a2_mime"))
+
+            path_sequence = [
+                {"id": record["step1_node"], "type": record["step1_type"], "weight": None},
+                {
+                    "id": record["step2_node"], "type": record["step2_type"],
+                    "weight": _rw(record["edge1_weight"]),
+                    "file_hash": record.get("a1_hash"),
+                    "mime_type": record.get("a1_mime"),
+                    **a1_minio,
+                },
+                {"id": record["step3_node"], "type": record["step3_type"], "weight": _rw(record["edge2_weight"])},
+                {
+                    "id": record["step4_node"], "type": record["step4_type"],
+                    "weight": _rw(record["edge3_weight"]),
+                    "file_hash": record.get("a2_hash"),
+                    "mime_type": record.get("a2_mime"),
+                    **a2_minio,
+                },
+                {"id": record["step5_node"], "type": record["step5_type"], "weight": _rw(record["edge4_weight"])},
+            ]
 
             return {
-                "tool": "serendipity_path",
+                "tool": "serendipity",
                 "status": "success",
-                "message": "Found a serendipitous path through the knowledge graph.",
-                "mock_data": {"path": path_data, "total_serendipity_score": total_score, "source": nodes[0] if record else "?", "target": nodes[-1] if record else "?"}
+                "message": f"Conectado '{record['step1_node']}' con '{record['step5_node']}'",
+                "mock_data": {"path": path_sequence}
             }
-
     except Exception as e:
+        print(f"🔥 Error Serendipity: {e}")
         return {
-            "tool": "serendipity_path",
+            "tool": "serendipity",
             "status": "error",
-            "message": f"Error finding path: {str(e)}",
-            "mock_data": {"path": [], "total_serendipity_score": 0.0}
+            "message": str(e),
+            "mock_data": {"path": []}
         }
 
 # 🌫️ Fog of War (Distribution)
