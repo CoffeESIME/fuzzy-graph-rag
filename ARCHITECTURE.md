@@ -1,437 +1,233 @@
-# GraphRAG Multimodal - Arquitectura Frontend-Backend
+# Arquitectura del Sistema — GraphRAG Multimodal v2
 
-## 📐 Visión General
+## Visión General
 
-Este documento describe la integración entre la interfaz Streamlit y el backend FastAPI del sistema GraphRAG Multimodal.
+GraphRAG es un sistema de **Retrieval-Augmented Generation** multimodal que combina:
 
-## 🏗️ Arquitectura
+- **Grafo de conocimiento difuso** (Neo4j + GDS) con pesos de membresía [0–1]
+- **Búsqueda vectorial multimodo** (Weaviate) con 4 espacios: texto, visual, audio, memoria
+- **Procesamiento distribuido** (Celery + Redis) con pipeline de LLM
+- **Frontend React** con 3 módulos: búsqueda (6 tabs), análisis (11 herramientas), ingesta (5 tabs)
+
+---
+
+## Backend (FastAPI · `:8000`)
+
+### Routers
+
+| Router | Archivo | Prefijo | Descripción |
+|--------|---------|---------|-------------|
+| **Ingest** | `__init__.py` | `/ingest` | Upload de archivos a MinIO + creación de DigitalAsset en Postgres |
+| **Tasks** | `tasks.py` | `/tasks` | CRUD de tareas Celery: on-hold, start, status, retry, cancel |
+| **Search** | `search.py` | `/search` | 5 modos de búsqueda (vectorial, visual, multimodal, grafo crisp/fuzzy) |
+| **Analysis** | `analysis.py` | `/analysis` | 11 herramientas de análisis con Neo4j GDS |
+| **Inbox** | `inbox.py` | `/inbox` | Review queue: aprobar/rechazar conceptos y personas antes del grafo |
+| **Graph** | `graph.py` | `/graph` | CRUD manual de nodos y conexiones en Neo4j |
+| **Sidecar** | `sidecar.py` | `/sidecar` | Editor de sidecar metadata JSON por asset |
+| **Lyrics** | `lyrics.py` | `/lyrics` | Lookup de letras para audio assets |
+
+### Search Endpoints (search.py)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    USUARIO                                   │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│               STREAMLIT FRONTEND                             │
-│  ┌─────────────────┐        ┌─────────────────┐             │
-│  │  Tab 1: Ingesta │        │ Tab 2: Control  │             │
-│  │  - File Upload  │        │ - Task List     │             │
-│  │  - Grouping     │        │ - Start Process │             │
-│  │  - Send to API  │        │ - Status Update │             │
-│  └────────┬────────┘        └────────┬────────┘             │
-│           │                          │                      │
-└───────────┼──────────────────────────┼──────────────────────┘
-            │                          │
-            │  POST /ingest/upload     │  GET /tasks/on-hold
-            │                          │  POST /tasks/start
-            ▼                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  FASTAPI BACKEND                             │
-│  ┌──────────────────┐       ┌──────────────────┐            │
-│  │ Ingest Router    │       │  Tasks Router    │            │
-│  │ /ingest/*        │       │  /tasks/*        │            │
-│  └────────┬─────────┘       └────────┬─────────┘            │
-│           │                          │                      │
-│           ▼                          ▼                      │
-│  ┌──────────────────┐       ┌──────────────────┐            │
-│  │ IngestService    │       │  VectorStatus    │            │
-│  │ - Upload files   │       │  - Query tasks   │            │
-│  └────────┬─────────┘       └────────┬─────────┘            │
-│           │                          │                      │
-│           ▼                          ▼                      │
-│  ┌──────────────────┐       ┌──────────────────┐            │
-│  │ IngestService    │       │  VectorStatus    │            │
-│  │ - Upload files   │       │  - Query tasks   │            │
-│  │ - Create assets  │       │  - Update status │            │
-│  └────────┬─────────┘       └────────┬─────────┘            │
-└───────────┼──────────────────────────┼──────────────────────┘
-            │                          │
-            ▼                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    REACT SEARCH APP (Vite)                   │
-│  ┌─────────────────┐        ┌─────────────────┐             │
-│  │  Tab: Semántica │        │ Tab: Visual     │             │
-│  │  - Text Query   │        │ - Image Query   │             │
-│  │  - Space Filter │        │ - Drag n Drop   │             │
-│  └────────┬────────┘        └────────┬────────┘             │
-│           │                          │                      │
-└───────────┼──────────────────────────┼──────────────────────┘
-            │                          │
-            │  POST /search/vectors    │
-            ▼                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    PERSISTENCIA                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│  │PostgreSQL│  │  MinIO   │  │  Redis   │  │  Celery  │    │
-│  │(Metadata)│  │(Binaries)│  │ (Queue)  │  │(Workers) │    │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
-└─────────────────────────────────────────────────────────────┘
+POST /search/vectors        → Hybrid BM25 + BGE-M3 vector (4 espacios)
+POST /search/visual-siglip  → Visual SigLIP embeddings (1152d)
+POST /search/hybrid-visual  → Multimodal fusion (imagen + texto, RRF)
+POST /search/graph-crisp    → Neo4j traversal con alpha-cut threshold
+POST /search/graph-fuzzy    → Vector-first + graph expansion (descubrimiento)
 ```
 
-## 🔄 Flujos de Datos
+Todos los endpoints de búsqueda enriquecen resultados con **presigned URLs de MinIO** para preview inline (imágenes, audio, video).
 
-### Flujo 1: Ingesta de Archivos
+### Analysis Endpoints (analysis.py)
 
-```mermaid
-sequenceDiagram
-    participant U as Usuario
-    participant S as Streamlit
-    participant F as FastAPI
-    participant DB as PostgreSQL
-    participant M as MinIO
-
-    U->>S: Carga archivos
-    U->>S: Crea grupos
-    U->>S: Configura vectores
-    U->>S: Click "Enviar"
-    
-    S->>S: create_upload_map()
-    S->>F: POST /ingest/upload
-    Note over S,F: files + upload_map JSON
-    
-    F->>F: IngestService.process_upload()
-    
-    loop Para cada grupo
-        F->>M: Sube archivo binario
-        F->>M: Crea sidecar JSON
-        F->>DB: Crea Asset
-        loop Para cada vector_type
-            F->>DB: Crea VectorStatus (ON_HOLD)
-        end
-    end
-    
-    F->>S: UploadResponse
-    S->>U: Muestra éxito
+```
+POST /analysis/communities         → Louvain Modularity (GDS cypher projection)
+POST /analysis/bridges             → Puentes semánticos (heurística diversidad)
+POST /analysis/serendipity         → Fuzzy random walk con presigned URLs
+POST /analysis/fog-of-war          → Distribución de grado por label
+POST /analysis/heatmap             → Jaccard co-occurrence matrix
+POST /analysis/chord               → Co-ocurrencia categorías vía DigitalAssets
+POST /analysis/radial-tree         → Co-occurrence BFS expansion tree
+POST /analysis/abstract-concepts   → Degree vs avg weight scatter plot
+POST /analysis/pagerank            → GDS PageRank top nodos
+POST /analysis/orphans             → Nodos sin conexiones (degree = 0)
+POST /analysis/weight-distribution → Histograma de pesos de relaciones [0-1]
 ```
 
-**Ejemplo de Payload:**
+### Helpers compartidos
 
-```json
-POST /ingest/upload
+- **`_safe_gds_project()`**: Drop + project con retry para race conditions de GDS
+- **`_safe_gds_drop()`**: Drop silencioso de grafos en memoria GDS
+- **`_resolve_minio_url()`**: Búsqueda por file_hash prefix en MinIO + presigned URL
+- **`_enrich_with_minio()`**: Enriquece search results con download_url + minio_path
 
-FormData:
-  files: [File1, File2, File3]
-  upload_map: [
-    {
-      "file_indices": [0, 1],
-      "operation": "merge_ocr",
-      "vector_types": ["text_chunk"],
-      "user_notes": "Twitter thread",
-      "discard_original": true
-    },
-    {
-      "file_indices": [2],
-      "operation": "standard",
-      "vector_types": ["visual_siglip", "visual_semantic"],
-      "discard_original": false
-    }
-  ]
+---
+
+## Worker (Celery)
+
+### Pipeline de Procesamiento
+
+```
+DigitalAsset creado en Postgres + MinIO
+    │
+    ▼ (User triggers via /tasks/start)
+┌────────────────────────────────────────┐
+│ Celery Worker                          │
+│                                        │
+│  text_summary_task                     │
+│    └─ LLM genera resumen del asset     │
+│                                        │
+│  process_text_chunk_task               │
+│    └─ Chunking + BGE-M3 → Weaviate    │
+│                                        │
+│  process_visual_siglip_task            │
+│    └─ SigLIP embedding → Weaviate     │
+│                                        │
+│  process_visual_semantic_task          │
+│    └─ OCR (Qwen3-VL) + BGE-M3         │
+│                                        │
+│  process_audio_clap_task               │
+│    └─ CLAP embedding → Weaviate       │
+│                                        │
+│  process_audio_transcript_task         │
+│    └─ Whisper → BGE-M3 → Weaviate     │
+│                                        │
+│  sync_to_neo4j (post-LLM)             │
+│    └─ Crear Concepts, Persons,         │
+│       Locations, Events + relations    │
+└────────────────────────────────────────┘
 ```
 
-### Flujo 2: Control de Tareas
+### LLM Gateway
 
-```mermaid
-sequenceDiagram
-    participant U as Usuario
-    participant S as Streamlit
-    participant F as FastAPI
-    participant DB as PostgreSQL
-    participant R as Redis
-    participant C as Celery
+El worker se comunica con modelos LLM vía un gateway configurable:
 
-    U->>S: Tab 2: Control de Tareas
-    S->>F: GET /tasks/on-hold
-    F->>DB: SELECT VectorStatus WHERE status=ON_HOLD
-    DB->>F: Lista de tareas
-    F->>S: TaskResponse[]
-    S->>U: Muestra tabla
-    
-    U->>S: Selecciona tareas
-    U->>S: Click "Procesar"
-    
-    S->>F: POST /tasks/start
-    Note over S,F: {"task_ids": ["uuid1", "uuid2"]}
-    
-    F->>DB: UPDATE status=PENDING
-    F->>R: Encola tarea
-    R->>C: Dispatch worker
-    F->>S: ProcessTasksResponse
-    S->>U: Muestra éxito
+| Tarea | Modelo Default | Task Type |
+|-------|---------------|-----------|
+| Resumen de texto | `llama3.2` | `chat` |
+| OCR de imágenes | `qwen3-vl:8b` | `vision` |
+| Extracción de conceptos | `llama3.2` | `chat` |
+| Transcripción audio | `whisper` | `transcribe` |
+
+---
+
+## Frontend (React + Vite · `:5173`)
+
+### Routing
+
+```
+/                   → HomePage (landing)
+/search             → SearchPage (6 tabs de búsqueda)
+/ingest             → IngestControlPage (5 tabs de ingesta/review)
+/analysis           → AnalysisDashboard (grid de herramientas)
+/analysis/:tool     → Card individual de cada herramienta
 ```
 
-### Flujo 3: Búsqueda Semántica (React)
+### Módulo de Búsqueda (`search/`)
 
-```mermaid
-sequenceDiagram
-    participant U as Usuario
-    participant R as React App
-    participant F as FastAPI
-    participant W as Weaviate
-    participant L as LLM Gateway
-    participant M as MinIO
+| Componente | Descripción |
+|------------|-------------|
+| `SemanticTextTab` | Búsqueda vectorial con filtros, alpha slider, resultados por espacio |
+| `VisualSigLIPTab` | Upload de imagen, búsqueda visual |
+| `HybridVisualTab` | Split view: texto vs visual vs fusión RRF |
+| `GraphCrispTab` | Grafo interactivo Neo4j con alpha-cut + panel de nodo |
+| `GraphFuzzyTab` | Vector-first expansion con 3D/2D graph visualizers |
+| `MediaPreview` | Renderiza imágenes, audio, video inline via presigned URLs |
+| `TextPreviewModal` | Modal para vista previa de texto completo |
+| `SearchResults` | Lista de resultados con scores, properties, download |
+| `GraphVisualizer*` | 3 visualizadores: Three.js 3D, D3 2D, React Flow |
 
-    U->>R: Escribe query "gato en la playa"
-    R->>F: POST /search/vectors
-    
-    F->>L: Embed Query (Text)
-    L-->>F: Vector [0.1, 0.2, ...]
-    
-    F->>W: Near Vector Search (VisualSpace + TextSpace)
-    W-->>F: Lista de UUIDs/Hashes
-    
-    F->>F: Resolve File Paths
-    
-    loop Para cada resultado
-        F->>M: Generar Presigned URL (1h)
-        M-->>F: URL firmada
-    end
-    
-    F-->>R: SearchResults (con URLs)
-    R->>U: Muestra Grid de Resultados (Imágenes/Texto)
+### Módulo de Análisis (`analysis/`)
+
+| Componente | Librería de Visualización |
+|------------|---------------------------|
+| `CommunityAnalysisCard` | `@nivo/circle-packing` — Circle Packing jerárquico |
+| `BridgeAnalysisCard` | Cards con badges y métricas |
+| `SerendipityCard` | Metro-line custom + `MediaPreview` integrado |
+| `FogOfWarCard` | `recharts` — Bar chart |
+| `HeatmapAnalysisCard` | `@nivo/heatmap` |
+| `ChordAnalysisCard` | `@nivo/chord` |
+| `RadialTreeCard` | `@nivo/radial-bar` |
+| `AbstractConceptsCard` | `@nivo/scatterplot` |
+| `PageRankCard` | Cards con ranking y badges |
+| `OrphansCard` | Cards simples |
+| `WeightDistributionCard` | `recharts` — Bar chart |
+
+### Módulo de Ingesta (`ingest/`)
+
+| Componente | Descripción |
+|------------|-------------|
+| `IngestGroupingTab` | Drag & drop archivos, crear grupos, seleccionar vectores |
+| `TaskControlTab` | Dashboard de tareas Celery con progreso en tiempo real |
+| `ReviewQueueTab` | Aprobación de entidades extraídas por LLM (conceptos, personas) |
+| `GraphGeneratorTab` | Editor visual para crear nodos/conexiones manualmente |
+
+---
+
+## Modelo de Datos
+
+### Neo4j (Grafo de Conocimiento Difuso)
+
+```cypher
+(:DigitalAsset {filename, file_hash, mime_type, inbox_id, created_at})
+  -[:EVOKES_CONCEPT {weight: 0.0-1.0, reasoning: "..."}]->
+(:Concept {name})
+
+(:DigitalAsset)
+  -[:MENTIONS_PERSON {weight: 0.0-1.0}]->
+(:Person {name})
+
+(:Concept) -[:RELATED_TO {weight}]-> (:Concept)
 ```
 
-## 📡 Endpoints API
+**Propiedades clave de DigitalAsset en Neo4j**: `file_hash`, `filename`, `mime_type`, `inbox_id`, `created_at`, `last_seen`.
 
-### `/ingest` - Ingesta
+> ⚠️ `download_url`, `minio_path`, y `text` **NO** son propiedades de Neo4j — se resuelven en runtime via MinIO.
 
-#### `POST /ingest/upload`
-**Descripción:** Carga archivos y crea assets en staging.
+### Weaviate (4 Espacios Vectoriales)
 
-**Request:**
-- `files`: List[UploadFile] - Archivos a subir
-- `upload_map`: JSON string - Configuración de grupos
+| Collection | Named Vectors | Modelo |
+|------------|---------------|--------|
+| `TextSpace` | `default` (BGE-M3) | Texto chunked |
+| `VisualSpace` | `semantic` (BGE-M3), `visual` (SigLIP) | Imágenes |
+| `AudioSpace` | `transcript_semantic` (BGE-M3), `audio_clap` (CLAP) | Audio |
+| `MemorySpace` | `default` (BGE-M3) | Notas del usuario |
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Successfully processed 3 files into 2 assets",
-  "assets_created": [
-    {
-      "id": "uuid",
-      "filename": "merged_ocr_result.txt",
-      "minio_path": "assets/...",
-      "sidecar_path": "assets/.../metadata.json",
-      "is_merged": true,
-      "vector_tasks_created": 1,
-      "created_at": "2025-12-28T17:00:00"
-    }
-  ],
-  "total_files_processed": 3
-}
+### PostgreSQL (Metadata)
+
+- `digital_assets`: Registro maestro de archivos
+- `vector_statuses`: Estado de vectorización por tipo
+- `task_metadata`: Configuración de tareas (prompts, opciones)
+- `sidecar_data`: JSON metadata editables por asset
+
+### MinIO (Almacenamiento de Objetos)
+
+```
+graphrag/
+├── raw/images/       {hash8}_filename.ext
+├── raw/audio/        {hash8}_filename.ext
+├── raw/videos/       {hash8}_filename.ext
+├── raw/documents/    {hash8}_filename.ext
+└── master_records/texts/  {full_hash}.json
 ```
 
-### `/tasks` - Gestión de Tareas
+Las **presigned URLs** se generan en runtime con `generate_presigned_url()` y se reescriben a `localhost:9005` para acceso desde el navegador.
 
-#### `GET /tasks/on-hold`
-**Descripción:** Lista todas las tareas en estado ON_HOLD.
+---
 
-**Response:**
-```json
-[
-  {
-    "id": "task-uuid",
-    "asset_id": "asset-uuid",
-    "filename": "image.jpg",
-    "vector_type": "visual_siglip",
-    "status": "on_hold",
-    "created_at": "2025-12-28T17:00:00",
-    "updated_at": "2025-12-28T17:00:00"
-  }
-]
-```
+## Dependencias npm (search-app)
 
-#### `POST /tasks/start`
-**Descripción:** Activa procesamiento de tareas seleccionadas.
-
-**Request:**
-```json
-{
-  "task_ids": ["uuid1", "uuid2", "uuid3"]
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Successfully queued 3 task(s) for processing",
-  "tasks_updated": 3,
-  "celery_task_ids": ["celery-uuid1", "celery-uuid2", "celery-uuid3"]
-}
-```
-
-#### `GET /tasks/status/{task_id}`
-**Descripción:** Obtiene el estado de una tarea específica.
-
-**Response:**
-```json
-{
-  "id": "task-uuid",
-  "asset_id": "asset-uuid",
-  "filename": "image.jpg",
-  "vector_type": "visual_siglip",
-  "status": "processing",
-  "created_at": "2025-12-28T17:00:00",
-  "updated_at": "2025-12-28T17:05:00"
-}
-```
-
-## 🗄️ Modelos de Datos
-
-### Frontend (Streamlit Session State)
-
-```python
-st.session_state = {
-    'uploaded_files': List[UploadFile],
-    'file_groups': List[Dict],
-    'ungrouped_files': List[UploadFile],
-    'next_group_id': int
-}
-
-# Estructura de un grupo:
-group = {
-    'id': 1,
-    'files': ['image1.jpg', 'image2.jpg'],
-    'operation': 'merge_ocr',
-    'vectors': ['text_chunk', 'visual_semantic'],
-    'discard_original': True,
-    'notes': 'User context'
-}
-```
-
-### Backend (SQLModel)
-
-```python
-# Asset
-class Asset(SQLModel, table=True):
-    id: UUID
-    filename: str
-    minio_path: str
-    sidecar_path: str
-    is_merged: bool
-    created_at: datetime
-
-# VectorStatus
-class VectorStatus(SQLModel, table=True):
-    id: UUID
-    asset_id: UUID  # FK -> Asset
-    vector_type: VectorType
-    status: JobStatus  # ON_HOLD, PENDING, PROCESSING, COMPLETED, FAILED
-    weaviate_uuid: Optional[str]
-    error_message: Optional[str]
-    created_at: datetime
-    updated_at: datetime
-```
-
-## 🎨 UX Considerations
-
-### Gestión de Estado
-- **Persistencia:** Streamlit se recarga en cada interacción. Uso crítico de `st.session_state`.
-- **Sincronización:** Al eliminar un grupo, los archivos vuelven a `ungrouped_files`.
-- **Validación:** No permitir envío sin grupos creados.
-
-### Feedback Visual
-- **Spinners:** Durante llamadas API (`st.spinner()`)
-- **Alertas:** Éxito (`st.success()`), errores (`st.error()`), advertencias (`st.warning()`)
-- **Expanders:** Detalles de respuesta JSON, grupos creados
-
-### Performance
-- **Lazy Loading:** Tasks solo se cargan al abrir Tab 2
-- **Batch Processing:** Envío de múltiples tareas en una sola llamada
-- **Upload Limits:** Configurado en `.streamlit/config.toml` (500MB default)
-
-## 🔐 Seguridad
-
-### CORS
-Si el frontend está en un dominio diferente al backend:
-
-```python
-# backend/app/__init__.py
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:8501"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-### Secrets Management
-- Nunca commitear `.streamlit/secrets.toml`
-- Usar variables de entorno en producción
-- Template `.toml.template` para documentación
-
-## 🧪 Testing
-
-### Frontend Manual Testing
-1. Cargar archivos → verificar aparecen en "Sin Asignar"
-2. Crear grupo → verificar desaparecen de "Sin Asignar"
-3. Eliminar grupo → verificar vuelven a "Sin Asignar"
-4. Enviar al servidor → verificar response correcta
-5. Tab 2 → verificar tasks aparecen
-6. Procesar tasks → verificar estado cambia a PENDING
-
-### Backend API Testing
-```bash
-# Test upload endpoint
-curl -X POST "http://localhost:8000/ingest/upload" \
-  -F "files=@test1.jpg" \
-  -F "files=@test2.jpg" \
-  -F 'upload_map=[{"file_indices":[0,1],"operation":"standard","vector_types":["visual_siglip"],"discard_original":false}]'
-
-# Test on-hold tasks
-curl "http://localhost:8000/tasks/on-hold"
-
-# Test start processing
-curl -X POST "http://localhost:8000/tasks/start" \
-  -H "Content-Type: application/json" \
-  -d '{"task_ids":["uuid1","uuid2"]}'
-```
-
-## 📝 Notas de Implementación
-
-### Pendientes (TODOs)
-1. **Celery Integration:** `/tasks/start` actualmente marca tasks como PENDING pero no dispara Celery workers
-2. **Polling:** Implementar auto-refresh en Tab 2 (opcional)
-3. **Filtros:** Agregar filtros por vector_type, fecha, status
-4. **Paginación:** Para grandes volúmenes de tasks
-5. **Bulk Actions:** Selección masiva de tasks
-
-### Decisiones de Diseño
-- **Form vs Direct State:** Uso de `st.form()` en group builder para evitar re-renders
-- **Multipart Upload:** FastAPI recibe archivos como `List[UploadFile]` con índices en JSON
-- **Staging Philosophy:** Todo empieza en ON_HOLD, procesamiento manual por usuario
-
-## 🚀 Deployment
-
-### Local Development
-```bash
-# Terminal 1: Backend
-cd backend
-poetry install
-poetry run uvicorn app:app --reload
-
-# Terminal 2: Frontend
-cd frontend
-python -m venv venv
-venv\Scripts\activate  # Windows
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-### Production Considerations
-- Usar Gunicorn/Uvicorn workers para FastAPI
-- Proxy reverso (Nginx) para routing
-- Streamlit Cloud o self-hosted con systemd
-- Variables de entorno en lugar de secrets.toml
-
-## 📚 Referencias
-
-- [Streamlit Docs](https://docs.streamlit.io)
-- [FastAPI Multipart](https://fastapi.tiangolo.com/tutorial/request-files/)
-- [SQLModel](https://sqlmodel.tiangolo.com)
-- [Celery](https://docs.celeryq.dev)
+| Paquete | Uso |
+|---------|-----|
+| `react`, `react-dom` | Core UI |
+| `react-router-dom` | Routing SPA |
+| `axios` | HTTP client |
+| `recharts` | Bar charts, histogramas |
+| `@nivo/circle-packing` | Circle Packing (Comunidades) |
+| `@nivo/heatmap` | Heatmap (Jaccard) |
+| `@nivo/chord` | Chord diagram (Co-ocurrencia) |
+| `@nivo/radial-bar` | Radial tree |
+| `@nivo/scatterplot` | Scatter plot (Abstractos) |
+| `lucide-react` | Iconos |
+| `three`, `@react-three/fiber` | 3D graph visualizer |
+| `reactflow` | React Flow graph visualizer |

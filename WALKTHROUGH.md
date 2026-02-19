@@ -1,106 +1,48 @@
-# GraphRAG Multimodal - Implementation Walkthrough
+# Walkthrough — GraphRAG Multimodal v2
 
-## 📅 Project Timeline
+## Resumen del Sistema
 
-| Phase | Component | Status | Description |
-|-------|-----------|--------|-------------|
-| **Phase 1** | Streamlit Admin | ✅ Done | File Ingestion, Grouping, Task Management |
-| **Phase 2** | React Search App | ✅ Done | User-facing Search, Multimedia Previews, Modal Reader |
-| **Phase 3** | Graph Visualization | 🔄 Planned | Node interactions, D3/Neo4j integration |
+GraphRAG es un cerebro digital que ingiere archivos multimodales (texto, imagen, audio, video), los analiza con LLMs, genera embeddings vectoriales, construye un grafo de conocimiento difuso, y expone todo via una interfaz React con búsqueda semántica y herramientas de análisis.
 
----
+## Stack Tecnológico
 
-## 🏗️ Phase 2: React Search App (New!)
+| Capa | Tecnología | Rol |
+|------|-----------|-----|
+| Frontend | React + Vite + TypeScript | SPA con 3 módulos |
+| Visualización | Nivo, Recharts, Three.js, React Flow | Gráficos, grafos, heatmaps |
+| Backend | FastAPI (Python) | REST API, 8 routers |
+| Workers | Celery + Redis | Procesamiento async de LLM/embeddings |
+| LLM | Ollama (llama3.2, qwen3-vl, whisper) | Resúmenes, OCR, transcripción |
+| Vectores | Weaviate | 4 espacios, 7 named vectors |
+| Grafo | Neo4j + GDS Plugin | Louvain, PageRank, proyecciones |
+| Objetos | MinIO (S3-compatible) | Almacenamiento de archivos raw |
+| Metadata | PostgreSQL | Registro de assets, tareas, sidecars |
 
-### 🎯 Objective
-Create a modern, responsive user interface for **searching** the multimodal knowledge base, separating the "Admin/Ingest" role (Streamlit) from the "End User/Search" role (React).
+## Flujo de Datos Completo
 
-### 📦 Key Components (`search-app/`)
-
-#### 1. Tech Stack
-- **Vite + React 19 + TypeScript**: High-performance SPA.
-- **Tailwind CSS v4**: Modern styling with dark mode default.
-- **Zustand**: Lightweight global state management.
-- **TanStack Query**: Efficient async data fetching and caching.
-
-#### 2. Features Built
-- **Semantic Text Tab:**
-  - Real-time querying to `POST /search/vectors`.
-  - **Space Filtering:** Toggle between Text, Visual, Audio, and Memory spaces.
-  - **Result Grid:** Responsive grid layout for multimedia results.
-
-- **Multimedia Previews (`MediaPreview.tsx`):**
-  - **Images:** Securely loaded via Presigned URLs (MinIO).
-  - **Audio:** Custom HTML5 player with metadata badges (Genre, Tempo).
-  - **Text/Memory:** "View Full Text" modal for reading document content inline.
-  - **Video:** Native video player support.
-
-- **Direct MinIO Integration:**
-  - Backend bypasses unstable SQL paths -> Uses **Hash-Search** in MinIO.
-  - Generates **1-hour Signed URLs** for secure browser access.
-  - Handles `raw/` assets and `processed/` text files unifiedly.
-
-#### 3. State Management
-- **SearchStore:**
-  - `query`: Current user search string.
-  - `selectedSpaces`: Active filters (default: all).
-  - `results`: Array of `VectorSearchResult`.
-  - `isSearching`: Loading state.
-
-### 📐 Architecture Update
-The system now runs **Hybrid Frontend**:
-- **Port 8501 (Streamlit):** Admin Panel for Ingest & Tasks.
-- **Port 5173 (Vite):** Search Interface for Users.
-- **Port 8000 (FastAPI):** Unified Backend serving both.
-
----
-
-## 🏗️ Phase 1: Streamlit Admin (Legacy/Backend Control)
-
-### 🎯 Objective
-Create a Streamlit application that serves as the user interface for the GraphRAG Multimodal system ingestion.
-
-*(See previous documentation for Phase 1 details)*
-
-### 📦 Deliverables
-- **app.py** - Main Streamlit application
-- **Tab 1: Ingesta y Agrupación**
-- **Tab 2: Control de Tareas**
-
----
-
-## 🚀 How to Run the Full Stack
-
-### 1. Backend (Core)
-```bash
-cd backend
-poetry run uvicorn app:app --port 8000 --reload
+```
+1. Upload → MinIO almacena archivo, Postgres registra DigitalAsset
+2. Staging → Tarea queda ON_HOLD en review queue
+3. Review → Usuario aprueba conceptos/personas extraídos
+4. Processing → Celery: LLM resumen, embeddings, graph sync
+5. Ready → Archivo buscable en Weaviate, conectado en Neo4j
+6. Búsqueda → 6 modos: semántica, visual, multimodal, grafo×2
+7. Análisis → 11 herramientas GDS para entender la estructura
 ```
 
-### 2. Search App (User UI)
-```bash
-cd search-app
-npm run dev
-# -> http://localhost:5173/search
-```
+## Módulos Frontend
 
-### 3. Admin Panel (Ingest UI)
-```bash
-cd frontend
-streamlit run app.py
-# -> http://localhost:8501
-```
+### Búsqueda (6 tabs)
+- Semántica (BM25+vector), Visual (SigLIP), Multimodal (RRF fusion)
+- Grafo Crisp (alpha-cut traversal), Grafo Fuzzy (vector→graph expansion)
+- MediaPreview inline para imágenes, audio, video
 
----
+### Análisis (11 herramientas)
+- Comunidades (Louvain Circle Packing), Puentes, Serendipia
+- Fog of War, Heatmap Jaccard, Chord Co-ocurrencia
+- Radial Tree, Conceptos Abstractos, PageRank
+- Huérfanos, Distribución de Pesos
 
-## 🧪 Verification Steps (Phase 2)
-
-1. **Start Backend & Search App.**
-2. **Go to Semántica Tab.**
-3. **Type "gato"** (assuming you ingested cat images).
-4. **Verify Results:**
-   - Should see images of cats.
-   - Should see badges e.g., "VisualSpace".
-   - Images should load (check Console for 403/404 if not).
-5. **Click Text Result:**
-   - Modal should open with full text content.
+### Ingesta (5 tabs)
+- Upload con agrupación, Control de tareas, Review queue
+- Graph Generator manual, Lyrics lookup

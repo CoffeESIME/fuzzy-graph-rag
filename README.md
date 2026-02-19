@@ -1,110 +1,121 @@
 # GraphRAG Multimodal v2
 
-Sistema de Graph RAG multimodal con arquitectura híbrida Worker-Server, interfaz Streamlit, y procesamiento distribuido con Celery.
+Sistema de **Graph RAG multimodal** con grafo de conocimiento difuso, búsqueda semántica multimodo, herramientas de análisis avanzadas, y procesamiento distribuido con Celery.
 
 ## 🏗️ Arquitectura
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    FRONTEND (Streamlit)                  │
-│  - File Upload & Grouping                               │
-│  - Task Management Dashboard                            │
-│  - Vector Configuration                                 │
-└────────────────────────┬────────────────────────────────┘
-                         │ HTTP/REST
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│                  BACKEND (FastAPI)                       │
-│  - /ingest/upload    - Asset creation                   │
-│  - /tasks/*          - Task management                  │
-│  - IngestService     - Business logic                   │
-└──┬──────────────┬──────────────┬──────────────┬─────────┘
-   │              │              │              │
-   ▼              ▼              ▼              ▼
-┌────────┐  ┌─────────┐  ┌──────────┐  ┌──────────────┐
-│Postgres│  │  MinIO  │  │  Redis   │  │  Weaviate    │
-│(Meta)  │  │(Binary) │  │(Queue)   │  │(Vectors)     │
-└────────┘  └─────────┘  └─────┬────┘  └──────────────┘
-                                │
-                                ▼
-                         ┌──────────────┐
-                         │    Celery    │
-                         │  (Workers)   │
-                         └──────┬───────┘
-                                │
-                                ▼
-                         ┌──────────────┐
-                         │    Neo4j     │
-                         │   (Graph)    │
-                         └──────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│              FRONTEND (React + Vite · :5173)                │
+│  ┌──────────┐  ┌─────────────┐  ┌────────────────────────┐ │
+│  │ Search   │  │ Ingest &    │  │ Analysis Dashboard     │ │
+│  │ 6 tabs   │  │  Review 5t  │  │ 11 herramientas GDS    │ │
+│  └──────────┘  └─────────────┘  └────────────────────────┘ │
+└──────────────────────┬──────────────────────────────────────┘
+                       │ HTTP/REST
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   BACKEND (FastAPI · :8000)                  │
+│  Routers: ingest, tasks, search, analysis, inbox,           │
+│           graph, sidecar, lyrics                            │
+└──┬──────────┬──────────┬──────────┬──────────┬──────────────┘
+   │          │          │          │          │
+   ▼          ▼          ▼          ▼          ▼
+┌───────┐ ┌───────┐ ┌───────┐ ┌──────────┐ ┌──────────────┐
+│Postgr.│ │ MinIO │ │ Redis │ │ Weaviate │ │ Neo4j + GDS  │
+│(Meta) │ │(Blob) │ │(Queue)│ │(Vectors) │ │  (Graph)     │
+└───────┘ └───────┘ └───┬───┘ └──────────┘ └──────────────┘
+                        │
+                        ▼
+                 ┌──────────────┐     ┌──────────────────┐
+                 │    Celery    │────►│  LLM Gateway     │
+                 │  (Workers)   │     │(Ollama/Cloud API)│
+                 └──────────────┘     └──────────────────┘
 ```
 
 ## 📁 Estructura del Proyecto
 
 ```
 graphrag/
-├── backend/                    # FastAPI Server
+├── backend/                        # FastAPI Server
 │   ├── app/
-│   │   ├── models/            # SQLModel entities
-│   │   ├── routers/           # API endpoints
-│   │   ├── schemas/           # Pydantic schemas
-│   │   └── services/          # Business logic
-│   ├── config/                # Settings
-│   ├── scripts/               # Utilities
-│   ├── shared/                # Database & clients
-│   ├── worker/                # Celery tasks
+│   │   ├── models/                # SQLModel entities
+│   │   ├── routers/
+│   │   │   ├── __init__.py        # Ingest endpoints (upload, health)
+│   │   │   ├── analysis.py        # 11 analysis tools (GDS + Cypher)
+│   │   │   ├── search.py          # 5 search modes (vector, visual, graph)
+│   │   │   ├── graph.py           # Graph node CRUD
+│   │   │   ├── inbox.py           # Inbox & review queue
+│   │   │   ├── tasks.py           # Task management & control
+│   │   │   ├── sidecar.py         # Sidecar metadata editor
+│   │   │   └── lyrics.py          # Lyrics lookup
+│   │   ├── schemas/               # Pydantic schemas
+│   │   └── services/              # Business logic
+│   ├── config/                    # Settings & .env
+│   ├── shared/                    # DB clients (Neo4j, MinIO, Weaviate, Postgres)
+│   ├── worker/
+│   │   ├── celery_app.py          # Celery config
+│   │   ├── tasks.py               # All async task definitions (106KB)
+│   │   ├── prompts.py             # LLM prompt templates
+│   │   └── utils.py               # Shared worker utilities
+│   ├── scripts/                   # DB migrations, backfill, enrichment
 │   └── pyproject.toml
 │
-├── search-app/                 # React Search Interface (New)
-│   ├── src/
-│   ├── public/
-│   └── package.json
+├── search-app/                     # React Frontend (Vite)
+│   └── src/
+│       ├── App.tsx                # Routing: /, /search, /ingest, /analysis/*
+│       └── components/
+│           ├── HomePage.tsx        # Landing page
+│           ├── search/            # 6 search tabs + visualizers
+│           ├── analysis/          # 13 analysis card components
+│           └── ingest/            # 5 ingest/review tabs
 │
-├── frontend/                   # Streamlit Admin Panel (Legacy)
-│   ├── app.py                 # Main application
-│   ├── .streamlit/            # Configuration
-│   ├── requirements.txt
-│   ├── start.bat / start.sh
-│   └── README.md
+├── frontend/                       # Streamlit Admin Panel (Legacy)
+├── graph-rag/                      # Docker Compose (infrastructure)
+│   └── docker-compose.yml
 │
-├── graph-rag/                  # Docker Compose
-│   └── docker-compose.yml     # Services stack
-│
-├── ARCHITECTURE.md             # System design
-├── USAGE_GUIDE.md             # User manual
-├── QUICK_REFERENCE.md         # Cheat sheet
-├── WALKTHROUGH.md             # Implementation summary
-└── README.md                  # This file
+├── ARCHITECTURE.md                 # System design (este archivo)
+├── USAGE_GUIDE.md                 # User manual
+├── QUICK_REFERENCE.md             # Cheat sheet
+└── README.md                      # This file
 ```
 
 ## 🚀 Quick Start
 
-### 1. Iniciar Infraestructura (Docker)
+### 1. Infraestructura (Docker)
 
 ```bash
 cd graph-rag
 docker-compose up -d
 ```
 
-Servicios disponibles:
-- PostgreSQL: `localhost:5432`
-- Redis: `localhost:6379`
-- MinIO: `localhost:9000` (Console: `localhost:9001`)
-- Weaviate: `localhost:8080`
-- Neo4j: `localhost:7687` (Browser: `localhost:7474`)
+| Servicio   | Puerto    | Console              |
+|------------|-----------|----------------------|
+| PostgreSQL | `5432`    | —                    |
+| Redis      | `6379`    | —                    |
+| MinIO      | `9000`    | `localhost:9001`     |
+| Weaviate   | `8080`    | —                    |
+| Neo4j      | `7687`    | `localhost:7474`     |
+| MinIO API  | `9005`    | Presigned URLs       |
 
-### 2. Iniciar Backend (FastAPI)
+### 2. Backend (FastAPI)
 
 ```bash
 cd backend
 poetry install
-poetry run uvicorn app:app --reload
+poetry run uvicorn app:app --reload --port 8000
 ```
 
-API disponible en: `http://localhost:8000`  
-Documentación: `http://localhost:8000/docs`
+API docs: `http://localhost:8000/docs`
 
-### 3. Iniciar Frontend de Búsqueda (React)
+### 3. Worker (Celery)
+
+```bash
+cd backend
+poetry run celery -A worker.celery_app worker --loglevel=info
+```
+
+### 4. Frontend (React + Vite)
 
 ```bash
 cd search-app
@@ -112,268 +123,132 @@ npm install
 npm run dev
 ```
 
-Buscador disponible en: `http://localhost:5173/search`
+App: `http://localhost:5173`
 
-### 4. Iniciar Panel de Administración (Streamlit)
+## 🔍 Módulo de Búsqueda (6 tabs)
 
-```bash
-cd frontend
+| Tab | Endpoint | Descripción |
+|-----|----------|-------------|
+| **Semántica** | `POST /search/vectors` | Búsqueda híbrida BM25 + BGE-M3 vector. 4 espacios: TextSpace, VisualSpace, AudioSpace, MemorySpace. Soporta tag filters y alpha tuning. |
+| **Visual SigLIP** | `POST /search/visual-siglip` | Búsqueda por imagen. Sube una foto y encuentra contenido visualmente similar (embeddings SigLIP 1152d). |
+| **Multimodal** | `POST /search/hybrid-visual` | Fusión imagen + texto. Split view con resultados de texto, visuales y fusionados (RRF). Alpha controla el peso imagen vs texto. |
+| **Grafo Crisp** | `POST /search/graph-crisp` | Traversal de Neo4j con umbral alpha-cut. Busca conceptos, personas, lugares y eventos. Visualiza topología con React Flow / D3. |
+| **Grafo Fuzzy** | `POST /search/graph-fuzzy` | Vector-first + graph expansion. Busca assets similares en Weaviate, luego expande vía Neo4j para descubrir vecinos semánticos. |
+| **MediaPreview** | — | Componente inline que renderiza imágenes, reproduce audio/video, y muestra descargas via presigned URLs de MinIO. |
 
-# Opción A: Script automático (Windows)
-start.bat
+## 📊 Módulo de Análisis (11 herramientas)
 
-# Opción B: Script automático (Linux/Mac)
-chmod +x start.sh
-./start.sh
+| Ruta | Herramienta | Algoritmo | Visualización |
+|------|-------------|-----------|---------------|
+| `/analysis/communities` | **Comunidades** | Louvain Modularity (GDS) | Nivo Circle Packing |
+| `/analysis/bridges` | **Puentes Semánticos** | Heurística de diversidad (Bowtie) | Cards + badges |
+| `/analysis/serendipity` | **Camino de Serendipia** | Fuzzy Random Walk | Metro-line + MediaPreview |
+| `/analysis/fog-of-war` | **Fog of War** | Distribución grado vs label | Recharts bars |
+| `/analysis/heatmap` | **Heatmap Jaccard** | Jaccard co-occurrence matrix | Nivo Heatmap |
+| `/analysis/chord` | **Diagrama de Cuerdas** | Co-ocurrencia categorías vía Assets | Nivo Chord |
+| `/analysis/radial-tree` | **Árbol Radial** | Co-occurrence expansion (BFS) | Nivo Radial Tree |
+| `/analysis/abstract-concepts` | **Conceptos Abstractos** | Degree vs avg weight scatter | Nivo Scatter |
+| `/analysis/pagerank` | **PageRank** | GDS PageRank | Cards + ranking |
+| `/analysis/orphans` | **Nodos Huérfanos** | Grado = 0 | Cards |
+| `/analysis/weight-distribution` | **Distribución de Pesos** | Histograma pesos [0-1] | Recharts |
 
-# Opción C: Manual
-python -m venv venv
-venv\Scripts\activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
-```
+Cada herramienta incluye:
+- Panel explicativo lateral con narrativa dinámica
+- Visualización interactiva con tema oscuro
+- Botón de reload y estados de loading/error/empty
 
-Panel disponible en: `http://localhost:8501`
+## 📥 Módulo de Ingesta (5 tabs)
 
-## 🎯 Funcionalidades Principales
+| Tab | Descripción |
+|-----|-------------|
+| **Ingest Grouping** | Carga y agrupación de archivos. Operaciones: Standard (1:1), Merge OCR (N:1). Vectores: visual, audio, text, memory. |
+| **Task Control** | Dashboard de tareas Celery. Estados: ON_HOLD → PENDING → PROCESSING → COMPLETED/FAILED. Activación selectiva, retry, cancel. |
+| **Review Queue** | Cola de revisión de inbox: aprobación de personas, conceptos, y relaciones antes de ingresar al grafo. Visualización de sidecar metadata. |
+| **Graph Generator** | Editor visual de nodos y conexiones. Crea Concepts, Persons, Locations, Events con propiedades y relaciones ponderadas. |
+| **Lyrics** | Búsqueda y asociación de letras de canciones a audio assets. |
 
-### Frontend (Streamlit)
+## 🎨 Tipos de Vectores
 
-#### Tab 1: Ingesta y Agrupación
-- 📁 **Carga de Archivos**: Múltiples archivos simultáneamente
-- 🔧 **Constructor de Grupos**: 
-  - Operaciones: Standard (1:1) o Merge OCR (N:1)
-  - Vectores: Visual, Audio, Text, Memory
-  - Opciones: Descartar originales, notas contextuales
-- 📦 **Visualización**: Vista clara de grupos creados
-- 🚀 **Envío Inteligente**: Mapeo automático al backend
+| Vector Type | Modelo | Espacio | Uso |
+|-------------|--------|---------|-----|
+| `visual_siglip` | SigLIP | VisualSpace | Forma, estética, objetos |
+| `visual_semantic` | BGE-M3 | VisualSpace | Conceptos, significado (memes, arte) |
+| `text_ocr` | Qwen3-VL | VisualSpace → TextSpace | Extracción de texto de imágenes |
+| `audio_clap` | CLAP | AudioSpace | Búsqueda por sonido/música |
+| `audio_transcript` | Whisper | AudioSpace | Transcripción de voz/letra |
+| `text_chunk` | BGE-M3 | TextSpace | Documentos, artículos |
+| `text_summary` | LLM | — | Resumen textual |
+| `user_memory` | BGE-M3 | MemorySpace | Notas del usuario, contexto |
 
-#### Tab 2: Control de Tareas
-- 📊 **Dashboard**: Lista de tareas en estado ON_HOLD
-- ✅ **Activación Selectiva**: Procesar tareas específicas
-- 🔄 **Refresh Manual**: Actualizar estado de tareas
-
-### Backend (FastAPI)
-
-#### Endpoints de Ingesta
-- `POST /ingest/upload` - Subir archivos con configuración
-- `GET /ingest/health` - Health check
-
-#### Endpoints de Tareas
-- `GET /tasks/on-hold` - Listar tareas en staging
-- `POST /tasks/start` - Activar procesamiento
-- `GET /tasks/status/{task_id}` - Estado de tarea
-- `GET /tasks/health` - Health check
-
-## 📚 Documentación
-
-| Documento | Descripción | Audiencia |
-|-----------|-------------|-----------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Diseño del sistema, flujos de datos, API contracts | Desarrolladores |
-| [USAGE_GUIDE.md](USAGE_GUIDE.md) | Casos de uso, ejemplos prácticos, troubleshooting | Usuarios finales |
-| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | Cheat sheet de vectores, operaciones, configuraciones | Todos |
-| [WALKTHROUGH.md](WALKTHROUGH.md) | Resumen de implementación, features, roadmap | Stakeholders |
-| [frontend/README.md](frontend/README.md) | Setup del frontend, instrucciones detalladas | Desarrolladores |
-
-## 🎨 Tipos de Vectores Disponibles
-
-| Vector Type | Uso Principal | Espacio |
-|-------------|---------------|---------|
-| `visual_siglip` | Forma, estética, objetos | VisualSpace |
-| `visual_semantic` | Conceptos, significado (memes, arte) | VisualSpace |
-| `text_ocr` | Extracción de texto de imágenes | VisualSpace → TextSpace |
-| `audio_clap` | Búsqueda por sonido/música | AudioSpace |
-| `audio_transcript` | Transcripción de voz/lírica | AudioSpace |
-| `text_chunk` | Documentos, artículos | TextSpace |
-| `text_summary` | Resumen textual | - |
-| `user_memory` | Notas del usuario, contexto | MemorySpace |
-
-## ⚙️ Operaciones de Procesamiento
-
-### Standard (1 archivo → 1 asset)
-Procesa cada archivo individualmente. Ideal para imágenes, audio, documentos independientes.
-
-### Merge OCR (N archivos → 1 asset)
-Extrae texto de múltiples imágenes y concatena. Útil para screenshots multipágina, Twitter threads, documentos escaneados.
-
-## 🔄 Ciclo de Vida de Tareas
+## 🔄 Pipeline de Procesamiento
 
 ```
-ON_HOLD (Staging)
-    ↓ (User triggers)
-PENDING (En cola)
-    ↓ (Worker takes)
-PROCESSING (Ejecutando)
-    ↓
-    ├── COMPLETED (Éxito)
-    ├── FAILED (Error)
-    └── REJECTED (Cancelado)
+    Upload (MinIO)
+         │
+         ▼
+    ON_HOLD (Staging / Review)
+         │  User triggers
+         ▼
+    PENDING (Redis Queue)
+         │  Celery Worker takes
+         ▼
+    PROCESSING
+    ├── text_summary    → LLM genera resumen
+    ├── text_chunk      → Chunking + BGE-M3 embedding → Weaviate
+    ├── visual_siglip   → SigLIP embedding → Weaviate
+    ├── visual_semantic  → OCR + BGE-M3 → Weaviate
+    ├── audio_clap      → CLAP embedding → Weaviate
+    ├── audio_transcript → Whisper → BGE-M3 → Weaviate
+    └── graph_sync      → Neo4j (Concepts, Persons, Relations)
+         │
+         ▼
+    COMPLETED ← MinIO presigned URLs para preview
 ```
 
-## 🧪 Testing
+## 🧠 Modelo de Grafo (Neo4j)
 
-### Backend API
-```bash
-# Health checks
-curl http://localhost:8000/
-curl http://localhost:8000/ingest/health
-curl http://localhost:8000/tasks/health
-
-# List ON_HOLD tasks
-curl http://localhost:8000/tasks/on-hold
-
-# Upload files
-curl -X POST "http://localhost:8000/ingest/upload" \
-  -F "files=@test.jpg" \
-  -F 'upload_map=[{"file_indices":[0],"operation":"standard","vector_types":["visual_siglip"],"discard_original":false}]'
+```
+(:DigitalAsset) -[:EVOKES_CONCEPT {weight, reasoning}]-> (:Concept)
+(:DigitalAsset) -[:MENTIONS_PERSON {weight}]-> (:Person)
+(:Concept)      -[:RELATED_TO {weight}]-> (:Concept)
 ```
 
-### Frontend
-1. Cargar archivos → Verificar aparecen en "Sin Asignar"
-2. Crear grupo → Verificar desaparecen de "Sin Asignar"
-3. Eliminar grupo → Verificar vuelven a "Sin Asignar"
-4. Enviar al servidor → Verificar response exitosa
-5. Tab 2 → Verificar tasks aparecen
-6. Procesar tasks → Verificar estado cambia
+- **Pesos difusos** [0–1]: El LLM asigna un grado de membresía fuzzy a cada relación
+- **GDS Plugin**: Louvain, PageRank, proyecciones virtuales via aggregation functions
+- **Co-ocurrencia**: Dos conceptos están vinculados si al menos un DigitalAsset los menciona a ambos
 
-## 🔧 Configuración
-
-### Variables de Entorno (Backend)
+## ⚙️ Variables de Entorno
 
 Crear `backend/.env.development`:
 
 ```env
-# API
-API_HOST=0.0.0.0
-API_PORT=8000
-
-# PostgreSQL
 POSTGRES_USER=graphrag
 POSTGRES_PASSWORD=yourpassword
 POSTGRES_SERVER=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=graphrag
-
-# Redis
 REDIS_HOST=localhost
 REDIS_PORT=6379
-
-# MinIO
 MINIO_ENDPOINT=localhost:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
-
-# Weaviate
+MINIO_BUCKET=graphrag
 WEAVIATE_URL=localhost
 WEAVIATE_PORT=8080
-
-# Neo4j
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=yourpassword
+LLM_GATEWAY_URL=http://localhost:11434
 ```
 
-### Secrets (Frontend)
+## 📚 Documentación
 
-Ya configurado en `frontend/.streamlit/secrets.toml`:
-
-```toml
-API_BASE_URL = "http://localhost:8000"
-```
-
-## 📋 Casos de Uso Comunes
-
-### 1. Galería de Fotos
-```
-Archivos: foto1.jpg, foto2.jpg, foto3.jpg
-Operación: standard (por foto)
-Vectores: visual_siglip, visual_semantic
-```
-
-### 2. Merge de Screenshots
-```
-Archivos: screenshot1.png, screenshot2.png, screenshot3.png
-Operación: merge_ocr (todas juntas)
-Vectores: text_chunk
-Descartar: Sí
-```
-
-### 3. Podcast
-```
-Archivo: podcast.mp3
-Operación: standard
-Vectores: audio_clap, audio_transcript
-```
-
-Ver [USAGE_GUIDE.md](USAGE_GUIDE.md) para más ejemplos.
-
-## 🐛 Troubleshooting
-
-### Backend no responde
-```bash
-# Verificar que está ejecutándose
-curl http://localhost:8000/
-
-# Revisar logs
-cd backend
-poetry run uvicorn app:app --reload
-```
-
-### Frontend no conecta
-1. Verificar `frontend/.streamlit/secrets.toml` tiene `API_BASE_URL` correcto
-2. Verificar backend está en la URL especificada
-3. Revisar CORS si frontend y backend están en diferentes dominios
-
-### Tasks no aparecen en Tab 2
-1. Verificar que enviaste archivos con vectores seleccionados
-2. Verificar backend tiene router de tasks registrado
-3. Query directo a DB:
-   ```sql
-   SELECT * FROM vector_statuses WHERE status = 'on_hold';
-   ```
-
-## 🎯 Roadmap
-
-### Completado ✅
-- [x] Frontend Streamlit completo
-- [x] Gestión de estado con session_state
-- [x] Integración con backend FastAPI
-- [x] Router de tasks (/tasks/*)
-- [x] Documentación completa
-
-### En Progreso 🔄
-- [ ] Integración Celery real en /tasks/start
-- [ ] Workers procesando vectorizaciones
-
-### Futuro 📅
-- [ ] Auto-refresh de Tab 2
-- [ ] Filtros y paginación en task dashboard
-- [ ] Interface de búsqueda semántica
-- [ ] Visualización de grafo Neo4j
-- [ ] Autenticación multi-usuario
-
-## 🤝 Contribuir
-
-1. Fork el repositorio
-2. Crea una branch (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -m 'Agrega nueva funcionalidad'`)
-4. Push a la branch (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
+| Documento | Descripción |
+|-----------|-------------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Diseño del sistema, flujos de datos, API contracts |
+| [USAGE_GUIDE.md](USAGE_GUIDE.md) | Casos de uso, workflows completos |
+| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | Cheat sheet de endpoints, vectores, configuraciones |
 
 ## 📄 Licencia
 
 Este proyecto es privado. Todos los derechos reservados.
-
-## 👥 Autores
-
-- **Equipo GraphRAG** - Desarrollo inicial
-
-## 🙏 Agradecimientos
-
-- Streamlit por la excelente framework de UI
-- FastAPI por el backend veloz y moderno
-- SQLModel, Weaviate, Neo4j por las tecnologías de datos
-
----
-
-**¿Dudas?** Consulta la [documentación completa](ARCHITECTURE.md) o abre un issue.
