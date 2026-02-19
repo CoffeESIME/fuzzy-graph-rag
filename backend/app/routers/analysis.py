@@ -506,8 +506,15 @@ def analyze_pagerank():
     driver = get_neo4j_driver()
     try:
         with driver.session() as session:
-            # 1. Cleanup
-            session.run("CALL gds.graph.drop('pagerankGraph', false) YIELD graphName")
+            # 1. Cleanup any stale projection
+            try:
+                exists = session.run(
+                    "CALL gds.graph.exists('pagerankGraph') YIELD exists RETURN exists"
+                ).single()["exists"]
+                if exists:
+                    session.run("CALL gds.graph.drop('pagerankGraph') YIELD graphName")
+            except Exception:
+                pass  # If check fails, proceed anyway
             
             # 2. Project
             session.run("""
@@ -539,7 +546,10 @@ def analyze_pagerank():
             ]
             
             # 4. Cleanup
-            session.run("CALL gds.graph.drop('pagerankGraph', false) YIELD graphName")
+            try:
+                session.run("CALL gds.graph.drop('pagerankGraph') YIELD graphName")
+            except Exception:
+                pass
             
             return {
                 "tool": "pagerank",

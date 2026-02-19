@@ -85,7 +85,7 @@ export default function ChordAnalysisCard() {
             {error ? (
                 <div className="p-8 text-red-500 border border-red-200 rounded">{error}</div>
             ) : (
-                <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 h-[700px] w-full relative flex justify-center">
+                <div className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 h-[700px] w-full relative ">
                     {matrix.length === 0 ? (
                         <div className="absolute inset-0 flex items-center justify-center text-slate-400">
                             No data available

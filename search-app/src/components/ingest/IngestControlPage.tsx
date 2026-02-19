@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, ListChecks, Eye, GitBranch, Search, BrainCircuit } from 'lucide-react';
 import TaskControlTab from './TaskControlTab';
+import ReviewQueueTab from './ReviewQueueTab';
+import GraphGeneratorTab from './GraphGeneratorTab';
+import IngestGroupingTab from './IngestGroupingTab';
 
 const TABS = [
     { id: 'ingest', label: 'Ingesta y Agrupación', icon: Upload },
@@ -10,24 +13,7 @@ const TABS = [
     { id: 'graph', label: 'Generador de Nodos', icon: GitBranch },
 ];
 
-function PlaceholderTab({ title, description }: { title: string; description: string }) {
-    return (
-        <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            minHeight: 400, gap: 16, color: 'var(--text-secondary, #94a3b8)'
-        }}>
-            <div style={{
-                width: 64, height: 64, borderRadius: 16,
-                background: 'linear-gradient(135deg, #6366f120, #a855f720)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28
-            }}>
-                🚧
-            </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary, #f8fafc)' }}>{title}</h3>
-            <p style={{ maxWidth: 400, textAlign: 'center', lineHeight: 1.6 }}>{description}</p>
-        </div>
-    );
-}
+
 
 export default function IngestControlPage() {
     const [activeTab, setActiveTab] = useState('tasks');
@@ -95,25 +81,10 @@ export default function IngestControlPage() {
 
             {/* Tab Content */}
             <div style={{ padding: '24px 48px' }}>
-                {activeTab === 'ingest' && (
-                    <PlaceholderTab
-                        title="Ingesta y Agrupación"
-                        description="Carga de archivos, agrupación por operación, configuración de vectores y envío al backend. Próximamente."
-                    />
-                )}
+                {activeTab === 'ingest' && <IngestGroupingTab />}
                 {activeTab === 'tasks' && <TaskControlTab />}
-                {activeTab === 'review' && (
-                    <PlaceholderTab
-                        title="Cola de Revisión"
-                        description="Revisión y aprobación de tareas TEXT_SUMMARY antes de continuar el pipeline. Próximamente."
-                    />
-                )}
-                {activeTab === 'graph' && (
-                    <PlaceholderTab
-                        title="Generador de Nodos"
-                        description="Generación de nodos de grafos (Concept, Person, Organization) a partir de sidecars aprobados. Próximamente."
-                    />
-                )}
+                {activeTab === 'review' && <ReviewQueueTab />}
+                {activeTab === 'graph' && <GraphGeneratorTab />}
             </div>
         </div>
     );
