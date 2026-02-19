@@ -50,66 +50,86 @@ def _safe_gds_drop(session, graph_name: str):
 
 # 🧬 Community Detection (Louvain via Cypher Projection)
 @router.post("/communities", response_model=AnalysisToolResponse)
-def analyze_communities():
+def analyze_communities(method: str = "standard"):
     """
-    Detecta comunidades de conceptos usando Louvain Modularity en GDS.
-    Proyecta un grafo virtual basado en la co-ocurrencia de conceptos en archivos.
+    Detecta comunidades usando GDS Louvain con soporte Dual (Standard y Fuzzy).
+    Standard: aristas = conteo de archivos compartidos, nodos = count(archivos).
+    Fuzzy: aristas = sum(min(w1,w2)), nodos = sum(pesos relaciones).
     """
     driver = get_neo4j_driver()
 
-    # 1. Limpiar proyección anterior (si existe)
-    query_drop = "CALL gds.graph.drop('conceptCommunities', false) YIELD graphName"
+    # --- Proyección según método ---
+    if method == "fuzzy":
+        query_project = """
+        MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
+        WHERE id(c1) < id(c2)
+        WITH c1, c2, sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight
+        WITH gds.graph.project(
+          'conceptCommunities',
+          c1, c2,
+          { relationshipProperties: { weight: weight } },
+          { undirectedRelationshipTypes: ['*'] }
+        ) AS g
+        RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
+        """
+        node_size_clause = "MATCH (n)<-[r]-(:DigitalAsset) WITH n, communityId, round(sum(r.weight), 2) AS degree"
+    else:
+        query_project = """
+        MATCH (c1:Concept)<--(a:DigitalAsset)-->(c2:Concept)
+        WHERE id(c1) < id(c2)
+        WITH c1, c2, count(a) AS weight
+        WITH gds.graph.project(
+          'conceptCommunities',
+          c1, c2,
+          { relationshipProperties: { weight: weight } },
+          { undirectedRelationshipTypes: ['*'] }
+        ) AS g
+        RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
+        """
+        node_size_clause = "MATCH (n)<--(a:DigitalAsset) WITH n, communityId, count(distinct a) AS degree"
 
-    # 2. Crear proyección virtual usando aggregation function (nueva API GDS)
-    #    Nodos = Conceptos, Aristas = co-ocurrencia ponderada por assets compartidos
-    query_project = """
-    MATCH (c1:Concept)<--(a:DigitalAsset)-->(c2:Concept)
-    WHERE id(c1) < id(c2)
-    WITH c1, c2, count(a) AS weight
-    WITH gds.graph.project(
-      'conceptCommunities',
-      c1, c2,
-      { relationshipProperties: { weight: weight } },
-      { undirectedRelationshipTypes: ['*'] }
-    ) AS g
-    RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
-    """
-
-    # 3. Ejecutar algoritmo Louvain y agrupar resultados
-    query_louvain = """
-    CALL gds.louvain.stream('conceptCommunities', { relationshipWeightProperty: 'weight' })
+    # --- Louvain + enriquecer con tamaño real ---
+    query_louvain = f"""
+    CALL gds.louvain.stream('conceptCommunities', {{ relationshipWeightProperty: 'weight' }})
     YIELD nodeId, communityId
     WITH gds.util.asNode(nodeId) AS n, communityId
-    WITH communityId, collect(n.name) AS members, count(n) AS size
+
+    {node_size_clause}
+    ORDER BY degree DESC
+
+    WITH communityId, collect({{name: n.name, degree: degree}}) AS members, count(n) AS size
     WHERE size > 1
-    RETURN communityId, members[0..15] AS top_members, size
+    RETURN communityId, members[0..25] AS top_members, size
     ORDER BY size DESC
     LIMIT 12
     """
 
     try:
         with driver.session() as session:
-            # Ejecutar pipeline GDS
             _safe_gds_project(session, 'conceptCommunities', query_project)
             result = session.run(query_louvain)
             records = list(result)
-
-            # Cleanup GDS memory
             _safe_gds_drop(session, 'conceptCommunities')
 
             # --- Formateo para Nivo Circle Packing ---
             communities_data = []
             for idx, r in enumerate(records):
-                comm_name = f"Clúster {idx + 1}"
-                if len(r["top_members"]) > 0:
-                    comm_name = f"Tema: {r['top_members'][0]}"
+                comm_name = f"Tema: {r['top_members'][0]['name']}" if r['top_members'] else f"Clúster {idx + 1}"
 
-                children_nodes = [{"name": member, "loc": 1} for member in r["top_members"]]
+                children_nodes = [
+                    {
+                        "name": member["name"],
+                        "loc": member["degree"],
+                        "degree": member["degree"],
+                    }
+                    for member in r["top_members"]
+                ]
 
                 communities_data.append({
                     "name": comm_name,
                     "children": children_nodes,
-                    "color": f"hsl({(idx * 45) % 360}, 70%, 50%)"
+                    "color": f"hsl({(idx * 50) % 360}, 70%, 50%)",
+                    "total_size": r["size"],
                 })
 
             nivo_data = {
@@ -117,11 +137,15 @@ def analyze_communities():
                 "children": communities_data
             }
 
+            mode_name = "Fuzzy Louvain" if method == "fuzzy" else "Standard Louvain"
             return {
                 "tool": "communities",
                 "status": "success",
-                "message": f"Detected {len(communities_data)} main communities.",
-                "mock_data": {"packing_data": nivo_data}
+                "message": f"{mode_name} detectó {len(communities_data)} comunidades.",
+                "mock_data": {
+                    "packing_data": nivo_data,
+                    "method": method,
+                },
             }
 
     except Exception as e:
@@ -760,49 +784,33 @@ def analyze_weight_distribution():
         }
 
 @router.post("/heatmap", response_model=AnalysisToolResponse)
-def analyze_heatmap():
+def analyze_heatmap(method: str = "standard"):
     """
-    Genera matriz de calor Jaccard.
-    Versión Simplificada y Robusta: Usa nodos directos y recálculo en línea.
+    Genera matriz de calor Jaccard con soporte Dual (Standard y Fuzzy).
     """
     driver = get_neo4j_driver()
 
-    cypher_query = """
-    // 1. Obtener Top 20 Nodos (Solo los nodos, nada más)
+    # Query para Jaccard Estándar (Basado en conteo de archivos)
+    query_standard = """
     MATCH (c:Concept)<--(d:DigitalAsset)
     WITH c, count(d) as degree
     ORDER BY degree DESC LIMIT 20
     WITH collect(c) as topConcepts
 
-    // 2. Producto Cartesiano (Todos contra Todos)
     UNWIND topConcepts as c1
     UNWIND topConcepts as c2
     
-    // 3. Calcular Intersección (El corazón del problema)
-    // Usamos COUNT subquery para aislar la lógica y forzar ejecución
     CALL {
         WITH c1, c2
         MATCH (c1)<--(a:DigitalAsset)-->(c2)
         RETURN count(distinct a) as intersection
     }
 
-    // 4. Calcular Grados Individuales (Recálculo seguro)
-    CALL {
-        WITH c1
-        MATCH (c1)<--(a1:DigitalAsset)
-        RETURN count(distinct a1) as degree1
-    }
-    CALL {
-        WITH c2
-        MATCH (c2)<--(a2:DigitalAsset)
-        RETURN count(distinct a2) as degree2
-    }
+    CALL { WITH c1 MATCH (c1)<--(a1:DigitalAsset) RETURN count(distinct a1) as degree1 }
+    CALL { WITH c2 MATCH (c2)<--(a2:DigitalAsset) RETURN count(distinct a2) as degree2 }
     
-    // 5. Matemática Jaccard
     WITH c1.name as x, c2.name as y, intersection, degree1, degree2
-    WITH x, y, 
-         (degree1 + degree2 - intersection) as union_count,
-         intersection
+    WITH x, y, (degree1 + degree2 - intersection) as union_count, intersection
     
     RETURN x, y, 
            CASE 
@@ -812,152 +820,84 @@ def analyze_heatmap():
            END as weight
     ORDER BY x, y
     """
+
+    # Query para Fuzzy Jaccard (Basado en pesos de relaciones difusas)
+    query_fuzzy = """
+    MATCH (c:Concept)<-[r]-(d:DigitalAsset)
+    WITH c, sum(r.weight) as weighted_degree
+    ORDER BY weighted_degree DESC LIMIT 20
+    WITH collect(c) as topConcepts
+
+    UNWIND topConcepts as c1
+    UNWIND topConcepts as c2
     
+    CALL {
+        WITH c1, c2
+        MATCH (c1)<-[r1]-(a:DigitalAsset)-[r2]->(c2)
+        RETURN sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) as fuzzy_intersection
+    }
+
+    CALL { WITH c1 MATCH (c1)<-[r1]-(:DigitalAsset) RETURN sum(r1.weight) as sum_w1 }
+    CALL { WITH c2 MATCH (c2)<-[r2]-(:DigitalAsset) RETURN sum(r2.weight) as sum_w2 }
+    
+    WITH c1.name as x, c2.name as y, fuzzy_intersection, sum_w1, sum_w2
+    WITH x, y, (sum_w1 + sum_w2 - fuzzy_intersection) as fuzzy_union, fuzzy_intersection
+    
+    RETURN x, y, 
+           CASE 
+             WHEN x = y THEN 1.0 
+             WHEN fuzzy_union = 0 THEN 0.0
+             ELSE round(toFloat(fuzzy_intersection) / toFloat(fuzzy_union), 3)
+           END as weight
+    ORDER BY x, y
+    """
+
+    cypher_query = query_fuzzy if method == "fuzzy" else query_standard
+
     try:
         with driver.session() as session:
             result = session.run(cypher_query)
             records = list(result)
 
-            # --- Procesamiento Python (Garantizar Matriz Cuadrada) ---
             data_map = {}
             unique_keys = set()
-            
-            # Primera pasada: Llenar mapa
+
             for r in records:
-                row = r["x"]
-                col = r["y"]
-                val = r["weight"]
+                row, col, val = r["x"], r["y"], r["weight"]
                 unique_keys.add(row)
                 unique_keys.add(col)
-                
-                if row not in data_map: data_map[row] = {}
+                if row not in data_map:
+                    data_map[row] = {}
                 data_map[row][col] = val
 
-            # Segunda pasada: Construir lista para Nivo
             sorted_keys = sorted(list(unique_keys))
             nivo_matrix = []
-            
+
             for row_key in sorted_keys:
                 data_points = []
                 for col_key in sorted_keys:
-                    # Si no hay dato, es 0.0
                     val = data_map.get(row_key, {}).get(col_key, 0.0)
-                    data_points.append({ "x": col_key, "y": val })
-                
-                nivo_matrix.append({ "id": row_key, "data": data_points })
+                    data_points.append({"x": col_key, "y": val})
+                nivo_matrix.append({"id": row_key, "data": data_points})
 
+            mode_name = "Fuzzy Jaccard" if method == "fuzzy" else "Standard Jaccard"
             return {
                 "tool": "heatmap",
                 "status": "success",
-                "message": f"Generated matrix for {len(sorted_keys)} concepts.",
+                "message": f"Generated {mode_name} matrix for {len(sorted_keys)} concepts.",
                 "mock_data": {
-                    "matrix": nivo_matrix, 
-                    "keys": sorted_keys
-                }
+                    "matrix": nivo_matrix,
+                    "keys": sorted_keys,
+                    "method": method,
+                },
             }
 
     except Exception as e:
-        print(f"🔥 Error en Heatmap: {e}")
+        print(f"🔥 Error en Heatmap ({method}): {e}")
         return {
             "tool": "heatmap",
             "status": "error",
             "message": str(e),
-            "mock_data": {"matrix": [], "keys": []}
-        }
-    """
-    Genera una matriz de calor basada en la Co-Ocurrencia de conceptos (Jaccard).
-    Versión Optimizada: Pre-calcula grados para evitar errores de agregación.
-    """
-    driver = get_neo4j_driver()
-
-    cypher_query = """
-    // 1. Pre-calcular Nodos y sus Grados (Top 20)
-    // Esto asegura que 'degree' es estático y correcto antes de comparar
-    MATCH (c:Concept)<-[]-(:DigitalAsset)
-    WITH c, count(*) as degree
-    ORDER BY degree DESC 
-    LIMIT 20
-    WITH collect({node: c, name: c.name, degree: degree}) as topNodes
-
-    // 2. Producto Cartesiano
-    UNWIND topNodes as item1
-    UNWIND topNodes as item2
-
-    // 3. Calcular Intersección (Solo buscamos esto, el resto ya lo tenemos)
-    // Usamos elementId para asegurar que macheamos el nodo correcto de la lista
-    OPTIONAL MATCH (c1:Concept)<-[]-(common:DigitalAsset)-[]->(c2:Concept)
-    WHERE elementId(c1) = elementId(item1.node) 
-      AND elementId(c2) = elementId(item2.node)
-    
-    WITH item1, item2, count(distinct common) as intersection
-
-    // 4. Fórmula Jaccard con datos pre-calculados
-    WITH item1.name as x, item2.name as y, 
-         intersection,
-         (item1.degree + item2.degree - intersection) as union_count
-    
-    RETURN x, y, 
-           CASE 
-             WHEN x = y THEN 1.0 
-             WHEN union_count = 0 THEN 0.0
-             ELSE round(toFloat(intersection) / toFloat(union_count), 3)
-           END as weight
-    ORDER BY x, y
-    """
-    
-    try:
-        with driver.session() as session:
-            result = session.run(cypher_query)
-            records = list(result)
-
-            # --- Procesamiento Robusto para Nivo Heatmap ---
-            
-            # 1. Recolectar todos los valores y claves únicas
-            data_map = {}
-            unique_keys = set()
-            
-            for r in records:
-                row = r["x"]
-                col = r["y"]
-                val = r["weight"]
-                
-                unique_keys.add(row)
-                unique_keys.add(col)
-                
-                if row not in data_map: data_map[row] = {}
-                data_map[row][col] = val
-
-            # 2. Ordenar claves para que la matriz se vea bonita
-            sorted_keys = sorted(list(unique_keys))
-
-            # 3. Construir la estructura densa NxN (rellenando huecos con 0)
-            nivo_matrix = []
-            for row_key in sorted_keys:
-                data_points = []
-                for col_key in sorted_keys:
-                    # Si Neo4j no devolvió esa pareja (raro con UNWIND, pero posible), es 0
-                    val = data_map.get(row_key, {}).get(col_key, 0.0)
-                    data_points.append({ "x": col_key, "y": val })
-                
-                nivo_matrix.append({ "id": row_key, "data": data_points })
-
-            return {
-                "tool": "heatmap",
-                "status": "success",
-                "message": f"Generated Jaccard matrix for {len(sorted_keys)} concepts.",
-                "mock_data": {
-                    "matrix": nivo_matrix, 
-                    "keys": sorted_keys # Claves únicas y ordenadas
-                }
-            }
-
-    except Exception as e:
-        # Log del error real para depuración
-        print(f"🔥 Error en Heatmap: {e}")
-        return {
-            "tool": "heatmap",
-            "status": "error",
-            "message": f"Error computing heatmap: {str(e)}",
-            "mock_data": {"matrix": [], "keys": []}
+            "mock_data": {"matrix": [], "keys": [], "method": method},
         }
 
