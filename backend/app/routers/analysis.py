@@ -48,61 +48,89 @@ def _safe_gds_drop(session, graph_name: str):
     except Exception:
         pass
 
-# 🧬 Community Detection (Louvain)
+# 🧬 Community Detection (Louvain via Cypher Projection)
 @router.post("/communities", response_model=AnalysisToolResponse)
 def analyze_communities():
+    """
+    Detecta comunidades de conceptos usando Louvain Modularity en GDS.
+    Proyecta un grafo virtual basado en la co-ocurrencia de conceptos en archivos.
+    """
     driver = get_neo4j_driver()
+
+    # 1. Limpiar proyección anterior (si existe)
+    query_drop = "CALL gds.graph.drop('conceptCommunities', false) YIELD graphName"
+
+    # 2. Crear proyección virtual usando aggregation function (nueva API GDS)
+    #    Nodos = Conceptos, Aristas = co-ocurrencia ponderada por assets compartidos
+    query_project = """
+    MATCH (c1:Concept)<--(a:DigitalAsset)-->(c2:Concept)
+    WHERE id(c1) < id(c2)
+    WITH c1, c2, count(a) AS weight
+    WITH gds.graph.project(
+      'conceptCommunities',
+      c1, c2,
+      { relationshipProperties: { weight: weight } },
+      { undirectedRelationshipTypes: ['*'] }
+    ) AS g
+    RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
+    """
+
+    # 3. Ejecutar algoritmo Louvain y agrupar resultados
+    query_louvain = """
+    CALL gds.louvain.stream('conceptCommunities', { relationshipWeightProperty: 'weight' })
+    YIELD nodeId, communityId
+    WITH gds.util.asNode(nodeId) AS n, communityId
+    WITH communityId, collect(n.name) AS members, count(n) AS size
+    WHERE size > 1
+    RETURN communityId, members[0..15] AS top_members, size
+    ORDER BY size DESC
+    LIMIT 12
+    """
+
     try:
         with driver.session() as session:
-            # 1. Safe project
-            _safe_gds_project(session, 'knowledgeGraph', """
-                CALL gds.graph.project(
-                  'knowledgeGraph',
-                  ['Concept', 'Person', 'Location', 'Event'],
-                  {
-                    ALL_RELS: {
-                      type: '*',
-                      orientation: 'UNDIRECTED'
-                    }
-                  }
-                )
-            """)
+            # Ejecutar pipeline GDS
+            _safe_gds_project(session, 'conceptCommunities', query_project)
+            result = session.run(query_louvain)
+            records = list(result)
 
-            # 3. Run Louvain
-            result = session.run("""
-                CALL gds.louvain.stream('knowledgeGraph')
-                YIELD nodeId, communityId
-                WITH gds.util.asNode(nodeId) AS n, communityId
-                WITH communityId, collect(n.name) AS members, count(n) as size
-                ORDER BY size DESC LIMIT 10
-                RETURN communityId, members[0..5] as top_members, size
-            """)
-            
-            communities = [
-                {
-                    "id": record["communityId"],
-                    "members": record["top_members"],
-                    "size": record["size"]
-                } 
-                for record in result
-            ]
+            # Cleanup GDS memory
+            _safe_gds_drop(session, 'conceptCommunities')
 
-            # Cleanup
-            _safe_gds_drop(session, 'knowledgeGraph')
+            # --- Formateo para Nivo Circle Packing ---
+            communities_data = []
+            for idx, r in enumerate(records):
+                comm_name = f"Clúster {idx + 1}"
+                if len(r["top_members"]) > 0:
+                    comm_name = f"Tema: {r['top_members'][0]}"
+
+                children_nodes = [{"name": member, "loc": 1} for member in r["top_members"]]
+
+                communities_data.append({
+                    "name": comm_name,
+                    "children": children_nodes,
+                    "color": f"hsl({(idx * 45) % 360}, 70%, 50%)"
+                })
+
+            nivo_data = {
+                "name": "Knowledge Graph",
+                "children": communities_data
+            }
 
             return {
-                "tool": "community_detection",
+                "tool": "communities",
                 "status": "success",
-                "message": f"Detected {len(communities)} major communities using Louvain algorithm.",
-                "mock_data": {"clusters": len(communities), "nodes": communities}
+                "message": f"Detected {len(communities_data)} main communities.",
+                "mock_data": {"packing_data": nivo_data}
             }
-            
+
     except Exception as e:
+        print(f"🔥 Error Communities: {e}")
         return {
-            "tool": "community_detection",
+            "tool": "communities",
             "status": "error",
             "message": f"GDS Error: {str(e)}",
-            "mock_data": {"nodes": [], "clusters": 0}
+            "mock_data": {"packing_data": {}}
         }
 
 # 🌉 Semantic Bridges (Bowtie Heuristic — no GDS needed)

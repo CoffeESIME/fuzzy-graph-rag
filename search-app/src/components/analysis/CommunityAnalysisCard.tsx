@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Dna, Loader2 } from 'lucide-react';
+import { ResponsiveCirclePacking } from '@nivo/circle-packing';
+import { Dna, Loader2, RefreshCw, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface Community {
-    id: number;
-    members: string[];
-    size: number;
+interface PackingNode {
+    name: string;
+    loc?: number;
+    children?: PackingNode[];
+    color?: string;
 }
 
 interface AnalysisResponse {
@@ -15,124 +16,221 @@ interface AnalysisResponse {
     status: string;
     message: string;
     mock_data: {
-        clusters: number;
-        nodes: Community[];
+        packing_data: PackingNode;
     };
 }
 
+const COMMUNITY_COLORS = [
+    '#8b5cf6', '#f97316', '#22c55e', '#3b82f6',
+    '#ec4899', '#eab308', '#14b8a6', '#ef4444',
+    '#6366f1', '#84cc16', '#f59e0b', '#06b6d4',
+];
+
 export default function CommunityAnalysisCard() {
-    const [data, setData] = useState<Community[] | null>(null);
+    const [data, setData] = useState<PackingNode | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [message, setMessage] = useState('');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Using axios directly for simplicity, or use React Query
-                const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/communities');
-                if (res.data.status === 'error') {
-                    throw new Error(res.data.message);
-                }
-                setData(res.data.mock_data.nodes);
-            } catch (err: any) {
-                setError(err.message || 'Error fetching analysis data');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+    const fetch = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/communities');
+            if (res.data.status === 'error') throw new Error(res.data.message);
+            setData(res.data.mock_data.packing_data || null);
+            setMessage(res.data.message);
+        } catch (err: any) {
+            setError(err.message || 'Error detecting communities');
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#8dd1e1', '#a4de6c'];
+    useEffect(() => { fetch(); }, [fetch]);
 
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 text-gray-500">
-                <Loader2 className="animate-spin mb-4" size={32} />
-                <p>Ejecutando algoritmo Louvain...</p>
-                <div className="text-xs text-gray-400 mt-2">Projection graph in GDS Memory</div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return <div className="p-8 text-red-500">Error: {error}</div>
-    }
+    const communityCount = data?.children?.length || 0;
 
     return (
-        <div style={{ padding: 24, paddingBottom: 60 }}>
+        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1200, margin: '0 auto' }}>
             {/* Header */}
-            <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-                <button onClick={() => navigate('/analysis')} className="btn-secondary">Back</button>
-                <div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Dna size={28} className="text-purple-500" />
-                        Detección de Comunidades
-                    </h2>
-                    <p style={{ color: 'var(--text-secondary)' }}>
-                        Algoritmo de Louvain aplicado a la estructura del grafo.
-                    </p>
-                </div>
-            </div>
-
-            {/* Narrative */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 mb-8">
-                <p className="text-lg text-slate-700 dark:text-slate-300">
-                    El algoritmo de Louvain ha detectado <strong>{data?.length}</strong> comunidades principales en tu cerebro digital.
-                    Esto indica que tu información se agrupa naturalmente en estos temas.
-                </p>
-            </div>
-
-            {/* Chart */}
-            <div style={{ height: 400, width: '100%', marginBottom: 40 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data || []} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
-                        <XAxis
-                            dataKey="id"
-                            label={{ value: 'ID Comunidad', position: 'insideBottom', offset: -10 }}
-                        />
-                        <YAxis label={{ value: 'Nodos', angle: -90, position: 'insideLeft' }} />
-                        <Tooltip
-                            content={({ active, payload }) => {
-                                if (active && payload && payload.length) {
-                                    const d = payload[0].payload;
-                                    return (
-                                        <div className="bg-white dark:bg-slate-800 p-4 rounded shadow-lg border border-slate-200 dark:border-slate-700">
-                                            <p className="font-bold mb-2">Comunidad {d.id}</p>
-                                            <p className="text-sm">Tamaño: {d.size} nodos</p>
-                                            <div className="mt-2 text-xs text-slate-500">
-                                                <strong>Top Miembros:</strong><br />
-                                                {d.members.join(', ')}
-                                            </div>
-                                        </div>
-                                    );
-                                }
-                                return null;
-                            }}
-                        />
-                        <Bar dataKey="size" radius={[4, 4, 0, 0]}>
-                            {data?.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
-
-            {/* Detail Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {data?.map((community, i) => (
-                    <div key={community.id} className="p-4 border rounded-lg bg-white dark:bg-slate-950 dark:border-slate-800">
-                        <div className="flex justify-between items-center mb-2">
-                            <span className="font-mono text-xs text-slate-400">ID: {community.id}</span>
-                            <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-bold">{community.size} nodos</span>
-                        </div>
-                        <div className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                            {community.members.slice(0, 3).join(', ')}...
-                        </div>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => navigate('/analysis')} className="btn-secondary">Back</button>
+                    <div>
+                        <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-100">
+                            <Dna size={28} className="text-purple-500" />
+                            Comunidades Temáticas (Louvain)
+                        </h2>
+                        <p className="text-sm text-slate-500">
+                            Clústeres de conceptos detectados por co-ocurrencia en archivos
+                        </p>
                     </div>
-                ))}
+                </div>
+                <button onClick={fetch} className="btn-icon" disabled={loading}>
+                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                </button>
+            </div>
+
+            {error && (
+                <div className="p-4 mb-6 text-red-500 border border-red-200 rounded-xl">{error}</div>
+            )}
+
+            <div style={{ display: 'flex', gap: 20 }}>
+                {/* Main Circle Packing Panel */}
+                <div
+                    className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
+                    style={{ flex: 1, padding: 0, minHeight: 560, overflow: 'hidden', position: 'relative' }}
+                >
+                    {loading && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 560 }}>
+                            <Loader2 className="animate-spin mb-4 text-purple-400" size={40} />
+                            <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Ejecutando Louvain Modularity...</span>
+                            <span style={{ color: '#475569', fontSize: '0.7rem', marginTop: 6 }}>Proyectando grafo virtual en GDS</span>
+                        </div>
+                    )}
+
+                    {!loading && data && data.children && data.children.length > 0 && (
+                        <div style={{ height: 560, width: '100%' }}>
+                            <ResponsiveCirclePacking
+                                data={data}
+                                id="name"
+                                value="loc"
+                                padding={4}
+                                enableLabels={true}
+                                labelsFilter={(label) => label.node.depth === 2}
+                                labelsSkipRadius={15}
+                                labelTextColor="#ffffff"
+                                colors={(node) => {
+                                    // Depth 1 = cluster, depth 2 = concept inside cluster
+                                    if (node.depth === 1) {
+                                        // Use index-based color from our palette
+                                        const parentIndex = data.children?.findIndex(c => c.name === node.id) ?? 0;
+                                        return COMMUNITY_COLORS[parentIndex % COMMUNITY_COLORS.length];
+                                    }
+                                    if (node.depth === 2 && node.parent) {
+                                        const parentIndex = data.children?.findIndex(c => c.name === node.parent!.id) ?? 0;
+                                        const baseColor = COMMUNITY_COLORS[parentIndex % COMMUNITY_COLORS.length];
+                                        return baseColor + 'cc'; // Slightly transparent
+                                    }
+                                    return '#1e293b';
+                                }}
+                                borderWidth={2}
+                                borderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
+                                theme={{
+                                    labels: {
+                                        text: {
+                                            fill: '#ffffff',
+                                            fontWeight: 600,
+                                            fontSize: 11,
+                                        },
+                                    },
+                                    tooltip: {
+                                        container: {
+                                            background: '#0f172a',
+                                            color: '#f8fafc',
+                                            borderRadius: '8px',
+                                            border: '1px solid #334155',
+                                            fontSize: '13px',
+                                            padding: '8px 12px',
+                                        },
+                                    },
+                                }}
+                                motionConfig="gentle"
+                                animate={true}
+                            />
+                        </div>
+                    )}
+
+                    {!loading && (!data || !data.children || data.children.length === 0) && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 560 }}>
+                            <Dna size={48} color="#475569" />
+                            <span style={{ color: '#475569', marginTop: 12 }}>
+                                No se detectaron comunidades. Agrega más datos al grafo.
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Explanation Panel */}
+                <div
+                    className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
+                    style={{ width: 280, padding: 20, flexShrink: 0 }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                        <Info size={18} className="text-purple-400" />
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                            ¿Qué es esto?
+                        </h3>
+                    </div>
+
+                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                        El algoritmo de <strong style={{ color: '#a78bfa' }}>Louvain Modularity</strong> identifica
+                        clústeres de conceptos que aparecen juntos frecuentemente en tus archivos.
+                    </p>
+
+                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                        Dos conceptos se consideran <em>vecinos</em> si al menos un <strong style={{ color: '#e2e8f0' }}>DigitalAsset</strong> los
+                        menciona a ambos. El peso de la conexión es la cantidad de archivos compartidos.
+                    </p>
+
+                    {communityCount > 0 && (
+                        <div style={{
+                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid #334155'
+                        }}>
+                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                                RESULTADO
+                            </div>
+                            <p style={{ fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                                El algoritmo ha agrupado tus datos en{' '}
+                                <strong style={{ color: '#a78bfa' }}>{communityCount}</strong> grandes mundos.
+                                Las burbujas agrupadas representan conceptos que el sistema considera
+                                <em> indivisibles</em> debido a la alta frecuencia con la que aparecen juntos.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Community legend */}
+                    {data?.children && data.children.length > 0 && (
+                        <div style={{
+                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid #334155'
+                        }}>
+                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                                COMUNIDADES
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
+                                {data.children.map((community, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <div style={{
+                                            width: 10, height: 10, borderRadius: '50%',
+                                            background: COMMUNITY_COLORS[i % COMMUNITY_COLORS.length],
+                                            flexShrink: 0,
+                                        }} />
+                                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.3 }}>
+                                            {community.name}
+                                            <span style={{ color: '#475569', marginLeft: 4 }}>
+                                                ({community.children?.length || 0})
+                                            </span>
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {message && (
+                        <div style={{
+                            fontSize: '0.7rem', color: '#4ade80',
+                            padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
+                            border: '1px solid #22c55e30'
+                        }}>
+                            ✅ {message}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
