@@ -14,18 +14,42 @@ class AnalysisToolResponse(BaseModel):
     message: str
     mock_data: Dict[str, Any]
 
+def _safe_gds_project(session, graph_name: str, project_query: str):
+    """Project a GDS graph, dropping any stale version first. Retry-safe."""
+    # Try dropping first (might not exist, that's fine)
+    try:
+        session.run(f"CALL gds.graph.drop('{graph_name}')").consume()
+    except Exception:
+        pass
+    # Now project — if STILL fails (race condition), drop hard and retry
+    try:
+        session.run(project_query).consume()
+    except Exception as e:
+        if 'already loaded' in str(e).lower():
+            # Nuclear option: list and drop, then retry
+            try:
+                session.run(f"CALL gds.graph.drop('{graph_name}')").consume()
+            except Exception:
+                pass
+            session.run(project_query).consume()
+        else:
+            raise
+
+def _safe_gds_drop(session, graph_name: str):
+    """Safely drop a GDS graph, ignoring if not found."""
+    try:
+        session.run(f"CALL gds.graph.drop('{graph_name}')").consume()
+    except Exception:
+        pass
+
 # 🧬 Community Detection (Louvain)
 @router.post("/communities", response_model=AnalysisToolResponse)
 def analyze_communities():
     driver = get_neo4j_driver()
     try:
         with driver.session() as session:
-            # 1. Clean up potential stale graph (Check existence first to be safe, or just drop yielding)
-            # Yielding graphName ensures we consume the result and wait for it
-            session.run("CALL gds.graph.drop('knowledgeGraph', false) YIELD graphName")
-            
-            # 2. Project Graph
-            session.run("""
+            # 1. Safe project
+            _safe_gds_project(session, 'knowledgeGraph', """
                 CALL gds.graph.project(
                   'knowledgeGraph',
                   ['Concept', 'Person', 'Location', 'Event'],
@@ -57,8 +81,8 @@ def analyze_communities():
                 for record in result
             ]
 
-            # 4. Cleanup
-            session.run("CALL gds.graph.drop('knowledgeGraph', false)")
+            # Cleanup
+            _safe_gds_drop(session, 'knowledgeGraph')
 
             return {
                 "tool": "community_detection",
@@ -81,11 +105,8 @@ def analyze_bridges():
     driver = get_neo4j_driver()
     try:
         with driver.session() as session:
-            # 1. Clean up potential stale graph
-            session.run("CALL gds.graph.drop('bridgesGraph', false) YIELD graphName")
-            
-            # 2. Project Graph
-            session.run("""
+            # 1. Safe project
+            _safe_gds_project(session, 'bridgesGraph', """
                 CALL gds.graph.project(
                   'bridgesGraph',
                   ['Concept', 'Person'],
@@ -116,8 +137,8 @@ def analyze_bridges():
                 for record in result
             ]
 
-            # 4. Cleanup
-            session.run("CALL gds.graph.drop('bridgesGraph', false) YIELD graphName")
+            # Cleanup
+            _safe_gds_drop(session, 'bridgesGraph')
 
             return {
                 "tool": "semantic_bridges",
@@ -435,18 +456,8 @@ def analyze_pagerank():
     driver = get_neo4j_driver()
     try:
         with driver.session() as session:
-            # 1. Cleanup any stale projection
-            try:
-                exists = session.run(
-                    "CALL gds.graph.exists('pagerankGraph') YIELD exists RETURN exists"
-                ).single()["exists"]
-                if exists:
-                    session.run("CALL gds.graph.drop('pagerankGraph') YIELD graphName")
-            except Exception:
-                pass  # If check fails, proceed anyway
-            
-            # 2. Project
-            session.run("""
+            # 1. Safe project
+            _safe_gds_project(session, 'pagerankGraph', """
                 CALL gds.graph.project(
                     'pagerankGraph',
                     ['Concept', 'Person', 'Organization'],
@@ -474,11 +485,8 @@ def analyze_pagerank():
                 for record in result
             ]
             
-            # 4. Cleanup
-            try:
-                session.run("CALL gds.graph.drop('pagerankGraph') YIELD graphName")
-            except Exception:
-                pass
+            # Cleanup
+            _safe_gds_drop(session, 'pagerankGraph')
             
             return {
                 "tool": "pagerank",
@@ -813,4 +821,71 @@ def analyze_heatmap():
             "status": "error",
             "message": f"Error computing heatmap: {str(e)}",
             "mock_data": {"matrix": [], "keys": []}
+        }
+
+# 🍩 Chord Diagram – Category Co-Occurrence
+@router.post("/chord", response_model=AnalysisToolResponse)
+def analyze_chord():
+    """
+    Genera la matriz de relaciones entre Categorías (Labels) del grafo.
+    Cuenta cuántos DigitalAssets conectan una categoría con otra.
+    """
+    driver = get_neo4j_driver()
+
+    categories = ["Concept", "Person", "Location", "Event", "Organization"]
+
+    cypher_query = """
+    UNWIND $categories as sourceLabel
+    UNWIND $categories as targetLabel
+
+    CALL {
+        WITH sourceLabel, targetLabel
+        MATCH (n1)<--(a:DigitalAsset)-->(n2)
+        WHERE sourceLabel IN labels(n1) AND targetLabel IN labels(n2)
+          AND elementId(n1) <> elementId(n2)
+        RETURN count(distinct a) as weight
+    }
+
+    RETURN sourceLabel, targetLabel, weight
+    ORDER BY sourceLabel, targetLabel
+    """
+
+    try:
+        with driver.session() as session:
+            result = session.run(cypher_query, categories=categories)
+            records = list(result)
+
+            # Build NxN matrix for Nivo Chord
+            matrix_dict = {cat: {cat2: 0 for cat2 in categories} for cat in categories}
+
+            for r in records:
+                src = r["sourceLabel"]
+                tgt = r["targetLabel"]
+                w = r["weight"]
+                matrix_dict[src][tgt] = w
+
+            matrix_list = []
+            for row_cat in categories:
+                row_data = []
+                for col_cat in categories:
+                    row_data.append(matrix_dict[row_cat][col_cat])
+                matrix_list.append(row_data)
+
+            return {
+                "tool": "chord",
+                "status": "success",
+                "message": f"Category co-occurrence matrix ({len(categories)} categories).",
+                "mock_data": {
+                    "keys": categories,
+                    "matrix": matrix_list
+                }
+            }
+
+    except Exception as e:
+        print(f"🔥 Error Chord: {e}")
+        return {
+            "tool": "chord",
+            "status": "error",
+            "message": f"Error computing chord: {str(e)}",
+            "mock_data": {"keys": [], "matrix": []}
         }
