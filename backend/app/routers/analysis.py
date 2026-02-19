@@ -359,7 +359,7 @@ def analyze_chord():
             "mock_data": {"matrix": [], "keys": []}
         }
 
-# 🌳 Radial Tree
+# 🌳 Radial Tree (Co-Occurrence Expansion)
 class RadialTreeRequest(BaseModel):
     root_node_name: str = None
 
@@ -369,10 +369,14 @@ def analyze_radial(payload: RadialTreeRequest = None):
     try:
         with driver.session() as session:
             root_name = payload.root_node_name if payload and payload.root_node_name else None
-            
-            # If no root specified, find a central node (highest degree)
+
+            # If no root, pick highest-degree Concept
             if not root_name:
-                res = session.run("MATCH (n:Concept) WITH n, count{(n)--()} as d ORDER BY d DESC LIMIT 1 RETURN n.name as name")
+                res = session.run("""
+                    MATCH (c:Concept)<--(d:DigitalAsset)
+                    WITH c, count(d) as deg ORDER BY deg DESC LIMIT 1
+                    RETURN c.name as name
+                """)
                 rec = res.single()
                 if rec:
                     root_name = rec["name"]
@@ -380,77 +384,127 @@ def analyze_radial(payload: RadialTreeRequest = None):
                     return {
                         "tool": "radial_tree",
                         "status": "error",
-                        "message": "Graph is empty, cannot find root.",
-                        "mock_data": {"nodes": [], "edges": []}
+                        "message": "Graph is empty.",
+                        "mock_data": {"root": "", "nodes": [], "edges": []}
                     }
 
-            # Query for 2 layers of expansion
-            # Using simple path traversal to get nodes and edges
-            # We want specific levels: 0 (root), 1 (neighbors), 2 (neighbors of neighbors)
-            query = """
-                MATCH (root) WHERE root.name = $rootName
-                
-                // Level 1
-                OPTIONAL MATCH (root)-[r1]-(l1)
-                
-                // Level 2 (exclude root to avoid backtracking)
-                OPTIONAL MATCH (l1)-[r2]-(l2)
-                WHERE elementId(l2) <> elementId(root)
-                
-                WITH root, l1, l2, r1, r2
-                LIMIT 200 // Safety limit
-                
-                RETURN 
-                    root.name as root,
-                    l1.name as name1,
-                    l2.name as name2,
-                    elementId(r1) as r1_id,
-                    elementId(r2) as r2_id
+            # Level 1: Top 10 co-occurring concepts with root
+            l1_query = """
+                MATCH (root:Concept {name: $rootName})<--(a:DigitalAsset)-->(l1)
+                WHERE elementId(root) <> elementId(l1)
+                WITH root, l1, count(distinct a) as weight, labels(l1)[0] as ltype
+                ORDER BY weight DESC LIMIT 10
+                RETURN l1.name as name, weight, ltype
             """
-            
-            result = session.run(query, rootName=root_name)
-            
-            nodes_map = {} # name -> level
-            edges_set = set() # (src, tgt) tuples
-            
-            # Add root level 0
-            nodes_map[root_name] = 0
-            
-            for record in result:
-                # Level 1
-                n1 = record["name1"]
-                if n1:
-                    if n1 not in nodes_map:
-                        nodes_map[n1] = 1
-                    edges_set.add(tuple(sorted((root_name, n1))))
-                    
-                    # Level 2
-                    n2 = record["name2"]
-                    if n2:
-                        if n2 not in nodes_map:
-                            nodes_map[n2] = 2
-                        # Edge l1-l2
-                        edges_set.add(tuple(sorted((n1, n2))))
-            
-            nodes = [{"id": name, "level": lvl} for name, lvl in nodes_map.items()]
-            edges = [{"source": e[0], "target": e[1]} for e in edges_set]
-            
+            l1_result = session.run(l1_query, rootName=root_name)
+            l1_records = list(l1_result)
+
+            nodes_list = [{"id": root_name, "level": 0, "type": "Concept", "parent": None}]
+            edges_list = []
+            seen = {root_name}
+
+            l1_names = []
+            for r in l1_records:
+                n = r["name"]
+                if n and n not in seen:
+                    seen.add(n)
+                    l1_names.append(n)
+                    nodes_list.append({
+                        "id": n, "level": 1,
+                        "type": r["ltype"] or "Concept",
+                        "parent": root_name
+                    })
+                    edges_list.append({"source": root_name, "target": n})
+
+            # Level 2: Top 5 co-occurring per L1 node (excluding seen)
+            if l1_names:
+                l2_query = """
+                    UNWIND $l1Names as parentName
+                    MATCH (parent {name: parentName})<--(a:DigitalAsset)-->(l2)
+                    WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2)
+                    WITH parentName, l2, count(distinct a) as weight, labels(l2)[0] as ltype
+                    ORDER BY parentName, weight DESC
+                    WITH parentName, collect({name: l2.name, weight: weight, ltype: ltype})[0..5] as children
+                    UNWIND children as child
+                    RETURN parentName, child.name as name, child.weight as weight, child.ltype as ltype
+                """
+                l2_result = session.run(l2_query, l1Names=l1_names, seen=list(seen))
+
+                for r in l2_result:
+                    n = r["name"]
+                    parent = r["parentName"]
+                    if n and n not in seen:
+                        seen.add(n)
+                        nodes_list.append({
+                            "id": n, "level": 2,
+                            "type": r["ltype"] or "Concept",
+                            "parent": parent
+                        })
+                        edges_list.append({"source": parent, "target": n})
+
             return {
                 "tool": "radial_tree",
                 "status": "success",
-                "message": f"Expanded radial tree from root '{root_name}'.",
-                "mock_data": {"root": root_name, "nodes": nodes, "edges": edges}
+                "message": f"Expanded radial tree from '{root_name}' ({len(nodes_list)} nodes).",
+                "mock_data": {"root": root_name, "nodes": nodes_list, "edges": edges_list}
             }
 
     except Exception as e:
         return {
             "tool": "radial_tree",
             "status": "error",
-            "message": f"Error generating radial tree: {str(e)}",
-            "mock_data": {"nodes": [], "edges": []}
+            "message": f"Error: {str(e)}",
+            "mock_data": {"root": "", "nodes": [], "edges": []}
         }
 
-# 👑 PageRank
+# �️ Abstract Concepts (Scatter Plot)
+@router.post("/abstract-concepts", response_model=AnalysisToolResponse)
+def analyze_abstract_concepts():
+    """
+    Scatter Plot: X=Grado (Cantidad), Y=Peso Promedio (Calidad/Certeza).
+    Filtro relajado (degree >= 2) para visualizar datos incluso en datasets pequeños.
+    """
+    driver = get_neo4j_driver()
+
+    cypher_query = """
+    MATCH (c:Concept)<-[r]-(a:DigitalAsset)
+    WITH c, count(r) as degree, avg(r.weight) as avg_weight
+    WHERE degree >= 2
+    RETURN c.name as id, degree as x, round(avg_weight, 2) as y
+    ORDER BY degree DESC
+    LIMIT 100
+    """
+
+    try:
+        with driver.session() as session:
+            result = session.run(cypher_query)
+            data_points = [
+                {"x": r["x"], "y": r["y"], "name": r["id"]}
+                for r in result
+            ]
+
+            return {
+                "tool": "abstract_concepts",
+                "status": "success",
+                "message": f"Found {len(data_points)} concepts.",
+                "mock_data": {
+                    "series": [
+                        {
+                            "id": "Conceptos",
+                            "data": data_points
+                        }
+                    ]
+                }
+            }
+    except Exception as e:
+        return {
+            "tool": "abstract_concepts",
+            "status": "error",
+            "message": str(e),
+            "mock_data": {"series": []}
+        }
+
+# �👑 PageRank
 @router.post("/pagerank", response_model=AnalysisToolResponse)
 def analyze_pagerank():
     driver = get_neo4j_driver()
