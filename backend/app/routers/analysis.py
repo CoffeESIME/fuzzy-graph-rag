@@ -144,29 +144,37 @@ def analyze_serendipity():
             # 1. Pick a random start node
             # 2. Perform a random walk reusing low-weight edges if possible, or just find a path with low weights
             # NOTE: purely random walk is better than shortestPath for serendipity
+            # Walk through shared DigitalAssets to discover serendipitous concept paths
             query = """
                 MATCH (s:Concept) WITH s, rand() AS r ORDER BY r LIMIT 1
-                MATCH p = (s)-[:RELATED_TO*2..3]-(t:Concept)
-                WHERE all(r in relationships(p) WHERE r.weight < 0.6)
-                AND elementId(s) <> elementId(t)
-                RETURN [x in nodes(p) | x.name] as path_nodes,
-                       [r in relationships(p) | r.weight] as path_weights,
-                       reduce(acc=0.0, r in relationships(p) | acc + r.weight) as total_score
+                MATCH (s)<--(d1:DigitalAsset)-->(mid:Concept)<--(d2:DigitalAsset)-->(t:Concept)
+                WHERE elementId(s) <> elementId(mid) AND elementId(mid) <> elementId(t)
+                  AND elementId(s) <> elementId(t)
+                WITH s, mid, t,
+                     count(distinct d1) as shared1, count(distinct d2) as shared2
+                WITH [s.name, mid.name, t.name] as path_nodes,
+                     [toFloat(shared1)/10.0, toFloat(shared2)/10.0] as path_weights,
+                     (toFloat(shared1) + toFloat(shared2)) / 10.0 as total_score
+                ORDER BY total_score ASC
                 LIMIT 1
+                RETURN path_nodes, path_weights, total_score
             """
             result = session.run(query)
             record = result.single()
             
             if not record:
-                # Fallback: strict conditions failed, relax weight constraint
+                # Fallback: simpler 2-hop path
                 fallback_query = """
                     MATCH (s:Concept) WITH s, rand() AS r ORDER BY r LIMIT 1
-                    MATCH p = (s)-[:RELATED_TO*2]-(t:Concept)
+                    MATCH (s)<--(d:DigitalAsset)-->(t:Concept)
                     WHERE elementId(s) <> elementId(t)
-                    RETURN [x in nodes(p) | x.name] as path_nodes,
-                           [r in relationships(p) | r.weight] as path_weights,
-                           reduce(acc=0.0, r in relationships(p) | acc + r.weight) as total_score
+                    WITH s, t, count(distinct d) as shared
+                    WITH [s.name, t.name] as path_nodes,
+                         [toFloat(shared)/10.0] as path_weights,
+                         toFloat(shared)/10.0 as total_score
+                    ORDER BY total_score ASC
                     LIMIT 1
+                    RETURN path_nodes, path_weights, total_score
                 """
                 result = session.run(fallback_query)
                 record = result.single()
@@ -182,7 +190,7 @@ def analyze_serendipity():
                     weight = weights[i] if i < len(weights) else 0.0
                     path_data.append({
                         "node": nodes[i],
-                        "edge": f"RELATED_TO ({weight:.2f})",
+                        "edge": f"CO_OCCURS ({weight:.2f})",
                         "next": nodes[i+1],
                         "weight": weight
                     })
@@ -215,7 +223,7 @@ def analyze_fog_of_war():
     try:
         with driver.session() as session:
             query = """
-                MATCH ()-[r:RELATED_TO]->()
+                MATCH ()-[r]->()
                 WHERE r.weight IS NOT NULL
                 WITH toInteger(r.weight * 10) as decile, count(r) as c
                 RETURN decile, c ORDER BY decile
@@ -262,86 +270,7 @@ def analyze_fog_of_war():
             "mock_data": {"distribution": [], "total_edges": 0}
         }
 
-# 🧮 Heatmap (Concept Adjacency)
-@router.post("/heatmap", response_model=AnalysisToolResponse)
-def analyze_heatmap():
-    driver = get_neo4j_driver()
-    try:
-        with driver.session() as session:
-            # 1. Get Top 20 Concepts by Degree
-            top_nodes_query = """
-                MATCH (n:Concept)
-                WITH n, count{ (n)--() } as degree
-                ORDER BY degree DESC LIMIT 20
-                RETURN n.name as name
-            """
-            result_nodes = session.run(top_nodes_query)
-            top_names = [record["name"] for record in result_nodes]
-            
-            if not top_names:
-                return {
-                    "tool": "concept_heatmap",
-                    "status": "error",
-                    "message": "No concepts found to analyze.",
-                    "mock_data": {"matrix": [], "keys": []}
-                }
-
-            # 2. Build Adjacency Matrix
-            # We need to check every pair (A, B) in top_names
-            matrix_data = [] # List of {id: "A", data: [{x: "B", y: 0.5}, ...]}
-            
-            # Use a single query to get all relationships between these nodes to minimize DB calls
-            # Passing list of names to Cypher
-            rels_query = """
-                MATCH (a:Concept)-[r:RELATED_TO]-(b:Concept)
-                WHERE a.name IN $names AND b.name IN $names
-                RETURN a.name as source, b.name as target, r.weight as weight
-            """
-            result_rels = session.run(rels_query, names=top_names)
-            
-            # Map: "A" -> "B" -> weight
-            adjacency = {name: {other: 0.0 for other in top_names} for name in top_names}
-            
-            for record in result_rels:
-                src = record["source"]
-                tgt = record["target"]
-                w = record["weight"] if record["weight"] is not None else 0.5 # Default weight if missing
-                if src in adjacency and tgt in adjacency[src]:
-                    adjacency[src][tgt] = w
-                if tgt in adjacency and src in adjacency[tgt]:
-                    adjacency[tgt][src] = w
-
-            # Format for Nivo Heatmap
-            for row_name in top_names:
-                row_data = []
-                for col_name in top_names:
-                    # Heatmap usually X=col, Y=row. 
-                    # id=row_name, data=[{x=col_name, y=value}]
-                    val = adjacency[row_name][col_name]
-                    # Self-loop can be 1.0 or 0. Let's make it 1.0 to show identity, or null/0.
-                    if row_name == col_name:
-                        val = 1.0
-                    row_data.append({"x": col_name, "y": val})
-                
-                matrix_data.append({
-                    "id": row_name,
-                    "data": row_data
-                })
-
-            return {
-                "tool": "concept_heatmap",
-                "status": "success",
-                "message": f"Generated adjacency matrix for top {len(top_names)} concepts.",
-                "mock_data": {"matrix": matrix_data, "keys": top_names}
-            }
-
-    except Exception as e:
-        return {
-            "tool": "concept_heatmap",
-            "status": "error",
-            "message": f"Error generating heatmap: {str(e)}",
-            "mock_data": {"matrix": [], "keys": []}
-        }
+# 🧮 Old Heatmap removed — replaced by Jaccard Co-Occurrence version at bottom of file
 
 # 🍩 Chord Diagram
 @router.post("/chord", response_model=AnalysisToolResponse)
@@ -682,4 +611,206 @@ def analyze_weight_distribution():
             "status": "error",
             "message": f"Error calculating weight distribution: {str(e)}",
             "mock_data": {"histogram": []}
+        }
+
+@router.post("/heatmap", response_model=AnalysisToolResponse)
+def analyze_heatmap():
+    """
+    Genera matriz de calor Jaccard.
+    Versión Simplificada y Robusta: Usa nodos directos y recálculo en línea.
+    """
+    driver = get_neo4j_driver()
+
+    cypher_query = """
+    // 1. Obtener Top 20 Nodos (Solo los nodos, nada más)
+    MATCH (c:Concept)<--(d:DigitalAsset)
+    WITH c, count(d) as degree
+    ORDER BY degree DESC LIMIT 20
+    WITH collect(c) as topConcepts
+
+    // 2. Producto Cartesiano (Todos contra Todos)
+    UNWIND topConcepts as c1
+    UNWIND topConcepts as c2
+    
+    // 3. Calcular Intersección (El corazón del problema)
+    // Usamos COUNT subquery para aislar la lógica y forzar ejecución
+    CALL {
+        WITH c1, c2
+        MATCH (c1)<--(a:DigitalAsset)-->(c2)
+        RETURN count(distinct a) as intersection
+    }
+
+    // 4. Calcular Grados Individuales (Recálculo seguro)
+    CALL {
+        WITH c1
+        MATCH (c1)<--(a1:DigitalAsset)
+        RETURN count(distinct a1) as degree1
+    }
+    CALL {
+        WITH c2
+        MATCH (c2)<--(a2:DigitalAsset)
+        RETURN count(distinct a2) as degree2
+    }
+    
+    // 5. Matemática Jaccard
+    WITH c1.name as x, c2.name as y, intersection, degree1, degree2
+    WITH x, y, 
+         (degree1 + degree2 - intersection) as union_count,
+         intersection
+    
+    RETURN x, y, 
+           CASE 
+             WHEN x = y THEN 1.0 
+             WHEN union_count = 0 THEN 0.0
+             ELSE round(toFloat(intersection) / toFloat(union_count), 3)
+           END as weight
+    ORDER BY x, y
+    """
+    
+    try:
+        with driver.session() as session:
+            result = session.run(cypher_query)
+            records = list(result)
+
+            # --- Procesamiento Python (Garantizar Matriz Cuadrada) ---
+            data_map = {}
+            unique_keys = set()
+            
+            # Primera pasada: Llenar mapa
+            for r in records:
+                row = r["x"]
+                col = r["y"]
+                val = r["weight"]
+                unique_keys.add(row)
+                unique_keys.add(col)
+                
+                if row not in data_map: data_map[row] = {}
+                data_map[row][col] = val
+
+            # Segunda pasada: Construir lista para Nivo
+            sorted_keys = sorted(list(unique_keys))
+            nivo_matrix = []
+            
+            for row_key in sorted_keys:
+                data_points = []
+                for col_key in sorted_keys:
+                    # Si no hay dato, es 0.0
+                    val = data_map.get(row_key, {}).get(col_key, 0.0)
+                    data_points.append({ "x": col_key, "y": val })
+                
+                nivo_matrix.append({ "id": row_key, "data": data_points })
+
+            return {
+                "tool": "heatmap",
+                "status": "success",
+                "message": f"Generated matrix for {len(sorted_keys)} concepts.",
+                "mock_data": {
+                    "matrix": nivo_matrix, 
+                    "keys": sorted_keys
+                }
+            }
+
+    except Exception as e:
+        print(f"🔥 Error en Heatmap: {e}")
+        return {
+            "tool": "heatmap",
+            "status": "error",
+            "message": str(e),
+            "mock_data": {"matrix": [], "keys": []}
+        }
+    """
+    Genera una matriz de calor basada en la Co-Ocurrencia de conceptos (Jaccard).
+    Versión Optimizada: Pre-calcula grados para evitar errores de agregación.
+    """
+    driver = get_neo4j_driver()
+
+    cypher_query = """
+    // 1. Pre-calcular Nodos y sus Grados (Top 20)
+    // Esto asegura que 'degree' es estático y correcto antes de comparar
+    MATCH (c:Concept)<-[]-(:DigitalAsset)
+    WITH c, count(*) as degree
+    ORDER BY degree DESC 
+    LIMIT 20
+    WITH collect({node: c, name: c.name, degree: degree}) as topNodes
+
+    // 2. Producto Cartesiano
+    UNWIND topNodes as item1
+    UNWIND topNodes as item2
+
+    // 3. Calcular Intersección (Solo buscamos esto, el resto ya lo tenemos)
+    // Usamos elementId para asegurar que macheamos el nodo correcto de la lista
+    OPTIONAL MATCH (c1:Concept)<-[]-(common:DigitalAsset)-[]->(c2:Concept)
+    WHERE elementId(c1) = elementId(item1.node) 
+      AND elementId(c2) = elementId(item2.node)
+    
+    WITH item1, item2, count(distinct common) as intersection
+
+    // 4. Fórmula Jaccard con datos pre-calculados
+    WITH item1.name as x, item2.name as y, 
+         intersection,
+         (item1.degree + item2.degree - intersection) as union_count
+    
+    RETURN x, y, 
+           CASE 
+             WHEN x = y THEN 1.0 
+             WHEN union_count = 0 THEN 0.0
+             ELSE round(toFloat(intersection) / toFloat(union_count), 3)
+           END as weight
+    ORDER BY x, y
+    """
+    
+    try:
+        with driver.session() as session:
+            result = session.run(cypher_query)
+            records = list(result)
+
+            # --- Procesamiento Robusto para Nivo Heatmap ---
+            
+            # 1. Recolectar todos los valores y claves únicas
+            data_map = {}
+            unique_keys = set()
+            
+            for r in records:
+                row = r["x"]
+                col = r["y"]
+                val = r["weight"]
+                
+                unique_keys.add(row)
+                unique_keys.add(col)
+                
+                if row not in data_map: data_map[row] = {}
+                data_map[row][col] = val
+
+            # 2. Ordenar claves para que la matriz se vea bonita
+            sorted_keys = sorted(list(unique_keys))
+
+            # 3. Construir la estructura densa NxN (rellenando huecos con 0)
+            nivo_matrix = []
+            for row_key in sorted_keys:
+                data_points = []
+                for col_key in sorted_keys:
+                    # Si Neo4j no devolvió esa pareja (raro con UNWIND, pero posible), es 0
+                    val = data_map.get(row_key, {}).get(col_key, 0.0)
+                    data_points.append({ "x": col_key, "y": val })
+                
+                nivo_matrix.append({ "id": row_key, "data": data_points })
+
+            return {
+                "tool": "heatmap",
+                "status": "success",
+                "message": f"Generated Jaccard matrix for {len(sorted_keys)} concepts.",
+                "mock_data": {
+                    "matrix": nivo_matrix, 
+                    "keys": sorted_keys # Claves únicas y ordenadas
+                }
+            }
+
+    except Exception as e:
+        # Log del error real para depuración
+        print(f"🔥 Error en Heatmap: {e}")
+        return {
+            "tool": "heatmap",
+            "status": "error",
+            "message": f"Error computing heatmap: {str(e)}",
+            "mock_data": {"matrix": [], "keys": []}
         }
