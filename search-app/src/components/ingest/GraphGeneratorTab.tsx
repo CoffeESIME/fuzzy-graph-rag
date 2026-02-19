@@ -180,11 +180,11 @@ const locationColumns: ColumnDef<LocationRow, any>[] = [
     locationColumnHelper.accessor('description', { header: 'Descripción', meta: { type: 'text' } }),
     locationColumnHelper.accessor('type', {
         header: 'Tipo',
-        meta: { type: 'select', options: ['city', 'country', 'region', 'building', 'landmark', 'other'] }
+        meta: { type: 'text' }
     }),
     locationColumnHelper.accessor('confidence', { header: 'Confianza', meta: { type: 'number' } }),
 ];
-const emptyLocation: LocationRow = { name: '', description: '', type: 'other', confidence: 1.0 };
+const emptyLocation: LocationRow = { name: '', description: '', type: 'Otro', confidence: 1.0 };
 
 const orgColumnHelper = createColumnHelper<OrgRow>();
 const orgColumns: ColumnDef<OrgRow, any>[] = [
