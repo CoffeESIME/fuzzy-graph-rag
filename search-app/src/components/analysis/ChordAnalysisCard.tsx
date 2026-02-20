@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ResponsiveChord } from '@nivo/chord';
 import { RefreshCw, Loader2, Info } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 interface ChordData {
     keys: string[];
     matrix: number[][];
+    method?: string;
 }
 
 interface AnalysisResponse {
@@ -15,6 +16,21 @@ interface AnalysisResponse {
     message: string;
     mock_data: ChordData;
 }
+
+type ChordMode = 'standard' | 'fuzzy';
+
+const NARRATIVES: Record<ChordMode, { title: string; icon: string; desc: string }> = {
+    standard: {
+        title: 'Flujo Literal',
+        icon: '🔗',
+        desc: 'Cuenta el volumen físico de archivos que conectan dos categorías. Ideal para ver la distribución de tu base de datos.',
+    },
+    fuzzy: {
+        title: 'Flujo Semántico',
+        icon: '🧠',
+        desc: 'Filtra el ruido usando los pesos de la IA. Muestra cintas gruesas solo cuando la IA tiene alta certeza de que dos categorías están profundamente relacionadas en el mismo contexto.',
+    },
+};
 
 // Fixed vibrant colors per category (order matches backend categories array)
 // Person, Organization, Location, Concept, Event, Project
@@ -34,13 +50,16 @@ export default function ChordAnalysisCard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState('');
+    const [method, setMethod] = useState<ChordMode>('standard');
     const navigate = useNavigate();
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async (m: ChordMode) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/chord');
+            const res = await axios.post<AnalysisResponse>(
+                `http://localhost:8000/analysis/chord?method=${m}`
+            );
             if (res.data.status === 'error') throw new Error(res.data.message);
             setData(res.data.mock_data);
             setMessage(res.data.message);
@@ -50,19 +69,11 @@ export default function ChordAnalysisCard() {
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        fetchData();
     }, []);
 
-    if (loading)
-        return (
-            <div className="flex flex-col items-center justify-center p-12 text-gray-500 min-h-[400px]">
-                <Loader2 className="animate-spin mb-4" size={32} />
-                <p>Calculando flujos entre categorías...</p>
-            </div>
-        );
+    useEffect(() => { fetchData(method); }, [method, fetchData]);
+
+    const narrative = NARRATIVES[method];
 
     return (
         <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1200, margin: '0 auto' }}>
@@ -79,8 +90,8 @@ export default function ChordAnalysisCard() {
                         </p>
                     </div>
                 </div>
-                <button onClick={fetchData} className="btn-icon">
-                    <RefreshCw size={18} />
+                <button onClick={() => fetchData(method)} className="btn-icon" disabled={loading}>
+                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
 
@@ -93,7 +104,12 @@ export default function ChordAnalysisCard() {
                         className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
                         style={{ flex: 1, height: 620, padding: 16, position: 'relative' }}
                     >
-                        {!data || data.matrix.length === 0 ? (
+                        {loading ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                                <Loader2 className="animate-spin mb-4" size={32} />
+                                <p>Calculando {method === 'fuzzy' ? 'flujo semántico' : 'flujo literal'}...</p>
+                            </div>
+                        ) : !data || data.matrix.length === 0 ? (
                             <div className="absolute inset-0 flex items-center justify-center text-slate-400">
                                 Sin datos de flujo entre categorías.
                             </div>
@@ -132,7 +148,10 @@ export default function ChordAnalysisCard() {
                                         </strong>
                                         <br />
                                         <span style={{ color: '#94a3b8' }}>
-                                            Total flujo: <strong style={{ color: '#e2e8f0' }}>{arc.value}</strong>
+                                            Total {method === 'fuzzy' ? 'peso' : 'flujo'}:{' '}
+                                            <strong style={{ color: '#e2e8f0' }}>
+                                                {typeof arc.value === 'number' ? arc.value.toFixed(method === 'fuzzy' ? 2 : 0) : arc.value}
+                                            </strong>
                                         </span>
                                     </div>
                                 )}
@@ -157,8 +176,12 @@ export default function ChordAnalysisCard() {
                                             </span>
                                         </div>
                                         <span style={{ color: '#94a3b8' }}>
-                                            Archivos compartidos:{' '}
-                                            <strong style={{ color: '#e2e8f0' }}>{ribbon.source.value}</strong>
+                                            {method === 'fuzzy' ? 'Peso difuso' : 'Archivos compartidos'}:{' '}
+                                            <strong style={{ color: '#e2e8f0' }}>
+                                                {typeof ribbon.source.value === 'number'
+                                                    ? ribbon.source.value.toFixed(method === 'fuzzy' ? 2 : 0)
+                                                    : ribbon.source.value}
+                                            </strong>
                                         </span>
                                     </div>
                                 )}
@@ -183,6 +206,43 @@ export default function ChordAnalysisCard() {
                         className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
                         style={{ width: 260, padding: 20, flexShrink: 0 }}
                     >
+                        {/* Mode Toggle */}
+                        <div style={{
+                            display: 'flex', borderRadius: 8, overflow: 'hidden',
+                            border: '1px solid #334155', marginBottom: 16,
+                        }}>
+                            {(['standard', 'fuzzy'] as ChordMode[]).map(m => (
+                                <button
+                                    key={m}
+                                    onClick={() => setMethod(m)}
+                                    style={{
+                                        flex: 1, padding: '8px 4px', fontSize: '0.72rem', fontWeight: 600,
+                                        border: 'none', cursor: 'pointer',
+                                        transition: 'all 0.25s ease',
+                                        background: method === m
+                                            ? (m === 'fuzzy' ? '#7c3aed' : '#0ea5e9')
+                                            : '#0f172a',
+                                        color: method === m ? '#ffffff' : '#64748b',
+                                    }}
+                                >
+                                    {m === 'standard' ? '🔗 Standard' : '🧠 Fuzzy'}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Dynamic Narrative */}
+                        <div style={{
+                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid #334155',
+                        }}>
+                            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc', marginBottom: 6 }}>
+                                {narrative.icon} {narrative.title}
+                            </div>
+                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                                {narrative.desc}
+                            </p>
+                        </div>
+
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                             <Info size={18} className="text-cyan-400" />
                             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
@@ -192,13 +252,17 @@ export default function ChordAnalysisCard() {
 
                         <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>
                             Cada <strong style={{ color: '#e2e8f0' }}>arco</strong> representa una categoría.
-                            Las <strong style={{ color: '#e2e8f0' }}>cintas</strong> muestran cuántos archivos
-                            (DigitalAssets) conectan una categoría con otra.
+                            Las <strong style={{ color: '#e2e8f0' }}>cintas</strong> muestran{' '}
+                            {method === 'fuzzy'
+                                ? 'la fuerza semántica de la conexión entre categorías.'
+                                : 'cuántos archivos (DigitalAssets) conectan una categoría con otra.'}
                         </p>
 
                         <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 20 }}>
-                            Una cinta gruesa = muchos archivos mencionan ambas categorías.
-                            La auto-referencia <em>Concept↔Concept</em> se omite para mayor claridad visual.
+                            {method === 'fuzzy'
+                                ? 'Una cinta gruesa = alta certeza de la IA en esa conexión.'
+                                : 'Una cinta gruesa = muchos archivos mencionan ambas categorías.'}
+                            {' '}La auto-referencia <em>Concept↔Concept</em> se omite para mayor claridad visual.
                         </p>
 
                         {/* Category Legend */}

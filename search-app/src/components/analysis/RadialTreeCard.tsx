@@ -31,8 +31,24 @@ interface AnalysisResponse {
         root: string;
         nodes: GraphNode[];
         edges: GraphEdge[];
+        method?: string;
     };
 }
+
+type RadialMode = 'standard' | 'fuzzy';
+
+const NARRATIVES: Record<RadialMode, { title: string; icon: string; desc: string }> = {
+    standard: {
+        title: 'Órbita Literal',
+        icon: '🌐',
+        desc: 'Muestra los conceptos que coexisten más frecuentemente en tus archivos, sin importar el contexto profundo.',
+    },
+    fuzzy: {
+        title: 'Órbita Semántica',
+        icon: '🧠',
+        desc: 'Muestra los conceptos que resuenan con mayor fuerza y certeza. Los temas secundarios desaparecen, acercando las ideas verdaderamente afines al centro.',
+    },
+};
 
 // Color palette by node type
 const TYPE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -76,14 +92,18 @@ export default function RadialTreeCard() {
     const [rootNode, setRootNode] = useState<string | null>(null);
     const [message, setMessage] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [method, setMethod] = useState<RadialMode>('standard');
     const navigate = useNavigate();
 
-    const fetchTree = useCallback(async (rootName?: string | null) => {
+    const fetchTree = useCallback(async (rootName: string | null | undefined, m: RadialMode) => {
         setLoading(true);
         setError(null);
         try {
             const payload = rootName ? { root_node_name: rootName } : {};
-            const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/radial-tree', payload);
+            const res = await axios.post<AnalysisResponse>(
+                `http://localhost:8000/analysis/radial-tree?method=${m}`,
+                payload
+            );
             if (res.data.status === 'error') throw new Error(res.data.message);
 
             const rawNodes = res.data.mock_data.nodes;
@@ -125,7 +145,6 @@ export default function RadialTreeCard() {
 
             // Level 2: Ring at radius 500, grouped near parent
             const R2 = 500;
-            // Group L2 by parent
             const l2ByParent: Record<string, GraphNode[]> = {};
             l2.forEach(n => {
                 const p = n.parent || '';
@@ -133,8 +152,7 @@ export default function RadialTreeCard() {
                 l2ByParent[p].push(n);
             });
 
-            // Spread L2 children in a small arc around their parent's angle
-            const ARC_SPREAD = 0.35; // radians per child group
+            const ARC_SPREAD = 0.35;
             Object.entries(l2ByParent).forEach(([parentId, children]) => {
                 const parentAngle = l1AngleMap[parentId] ?? 0;
                 const totalSpread = Math.min(ARC_SPREAD * children.length, Math.PI * 0.4);
@@ -172,12 +190,21 @@ export default function RadialTreeCard() {
     }, [setNodes, setEdges]);
 
     useEffect(() => {
-        fetchTree(null);
-    }, [fetchTree]);
+        fetchTree(rootNode, method);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [method]);
+
+    // Initial fetch on mount
+    useEffect(() => {
+        fetchTree(null, method);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleNodeClick = (_event: React.MouseEvent, node: Node) => {
-        fetchTree(node.id);
+        fetchTree(node.id, method);
     };
+
+    const narrative = NARRATIVES[method];
 
     return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -196,9 +223,9 @@ export default function RadialTreeCard() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <button onClick={() => fetchTree(null)} className="btn-secondary text-xs">Reset Root</button>
-                    <button onClick={() => fetchTree(rootNode)} className="btn-icon">
-                        <RefreshCw size={18} />
+                    <button onClick={() => fetchTree(null, method)} className="btn-secondary text-xs">Reset Root</button>
+                    <button onClick={() => fetchTree(rootNode, method)} className="btn-icon" disabled={loading}>
+                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                     </button>
                 </div>
             </div>
@@ -210,7 +237,9 @@ export default function RadialTreeCard() {
                         <div className="absolute inset-0 flex items-center justify-center z-50 bg-white/50 dark:bg-black/50 backdrop-blur-sm">
                             <div className="flex flex-col items-center">
                                 <Loader2 className="animate-spin text-indigo-600 mb-2" size={40} />
-                                <span className="font-medium text-indigo-300">Expandiendo grafo...</span>
+                                <span className="font-medium text-indigo-300">
+                                    Expandiendo {method === 'fuzzy' ? 'órbita semántica' : 'grafo'}...
+                                </span>
                             </div>
                         </div>
                     )}
@@ -241,6 +270,43 @@ export default function RadialTreeCard() {
                     className="bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800"
                     style={{ width: 260, padding: 20, flexShrink: 0, overflowY: 'auto' }}
                 >
+                    {/* Mode Toggle */}
+                    <div style={{
+                        display: 'flex', borderRadius: 8, overflow: 'hidden',
+                        border: '1px solid #334155', marginBottom: 16,
+                    }}>
+                        {(['standard', 'fuzzy'] as RadialMode[]).map(m => (
+                            <button
+                                key={m}
+                                onClick={() => setMethod(m)}
+                                style={{
+                                    flex: 1, padding: '8px 4px', fontSize: '0.72rem', fontWeight: 600,
+                                    border: 'none', cursor: 'pointer',
+                                    transition: 'all 0.25s ease',
+                                    background: method === m
+                                        ? (m === 'fuzzy' ? '#7c3aed' : '#0891b2')
+                                        : '#0f172a',
+                                    color: method === m ? '#ffffff' : '#64748b',
+                                }}
+                            >
+                                {m === 'standard' ? '🌐 Standard' : '🧠 Fuzzy'}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Dynamic Narrative */}
+                    <div style={{
+                        background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                        border: '1px solid #334155',
+                    }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc', marginBottom: 6 }}>
+                            {narrative.icon} {narrative.title}
+                        </div>
+                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                            {narrative.desc}
+                        </p>
+                    </div>
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                         <Info size={18} className="text-cyan-400" />
                         <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
@@ -251,8 +317,8 @@ export default function RadialTreeCard() {
                     <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>
                         El <strong style={{ color: '#e2e8f0' }}>centro</strong> es el concepto raíz.
                         Los <strong style={{ color: '#a5b4fc' }}>nodos del anillo interior</strong> son sus
-                        10 vecinos más frecuentes (comparten archivos).
-                        El <strong style={{ color: '#e0e7ff' }}>anillo exterior</strong> muestra los
+                        {method === 'fuzzy' ? ' 8 vecinos de mayor peso difuso.' : ' 8 vecinos más frecuentes (comparten archivos).'}
+                        {' '}El <strong style={{ color: '#e0e7ff' }}>anillo exterior</strong> muestra los
                         vecinos de los vecinos.
                     </p>
 
@@ -295,8 +361,8 @@ export default function RadialTreeCard() {
                         </div>
                         <p style={{ fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
                             <strong style={{ color: '#e2e8f0' }}>Nivel 0</strong> — Raíz (centro)<br />
-                            <strong style={{ color: '#e2e8f0' }}>Nivel 1</strong> — 10 vecinos directos<br />
-                            <strong style={{ color: '#e2e8f0' }}>Nivel 2</strong> — 5 vecinos por L1
+                            <strong style={{ color: '#e2e8f0' }}>Nivel 1</strong> — 8 vecinos directos<br />
+                            <strong style={{ color: '#e2e8f0' }}>Nivel 2</strong> — 3 vecinos por L1
                         </p>
                     </div>
 

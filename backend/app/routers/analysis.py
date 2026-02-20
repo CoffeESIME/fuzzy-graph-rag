@@ -159,45 +159,45 @@ def analyze_communities(method: str = "standard"):
 
 # 🌉 Semantic Bridges (Bowtie Heuristic — no GDS needed)
 @router.post("/bridges", response_model=AnalysisToolResponse)
-def analyze_bridges():
+def analyze_bridges(method: str = "standard"):
     """
-    Encuentra Conceptos que actúan como puentes semánticos.
-    Heurística: Conceptos que conectan con la mayor diversidad de etiquetas (Labels)
-    y archivos distintos. bridge_score = diversity_score * connected_nodes.
+    Puentes Semánticos Dual: Standard (conteo) vs Fuzzy (pesos difusos).
+    bridge_score = diversity × degree (standard) o diversity × fuzzy_weight (fuzzy).
     """
     driver = get_neo4j_driver()
 
-    cypher_query = """
-    // 1. Conceptos con buena cantidad de conexiones (>= 3 assets)
-    MATCH (bridge:Concept)<-[]-(a:DigitalAsset)
-    WITH bridge, count(distinct a) as asset_count
-    WHERE asset_count >= 3
+    if method == "fuzzy":
+        cypher_query = """
+        MATCH (bridge:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(other)
+        WHERE elementId(bridge) <> elementId(other)
+        WITH bridge, other,
+             CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END AS fuzzy_w
+        WITH bridge, sum(fuzzy_w) AS fuzzy_degree,
+             count(distinct labels(other)) AS diversity
+        WITH bridge, round(fuzzy_degree * diversity, 2) AS score
+        ORDER BY score DESC LIMIT 10
 
-    // 2. Ver a qué OTRAS cosas se conectan esos assets
-    MATCH (bridge)<-[]-(a:DigitalAsset)-->(other)
-    WHERE elementId(bridge) <> elementId(other)
+        MATCH (bridge)<-[r1]-(:DigitalAsset)-[r2]->(o)
+        WHERE elementId(bridge) <> elementId(o)
+        RETURN bridge.name AS id, score,
+               collect(distinct o.name)[0..6] AS context
+        ORDER BY score DESC
+        """
+    else:
+        cypher_query = """
+        MATCH (bridge:Concept)<-[]-(a:DigitalAsset)-->(other)
+        WHERE elementId(bridge) <> elementId(other)
+        WITH bridge, count(distinct other) AS degree,
+             count(distinct labels(other)) AS diversity
+        WITH bridge, round(toFloat(degree * diversity), 2) AS score
+        ORDER BY score DESC LIMIT 10
 
-    // 3. Diversidad: cuántos labels distintos une
-    WITH bridge, asset_count,
-         count(distinct other) as connected_nodes,
-         size(collect(distinct head(
-           [lbl IN labels(other) WHERE lbl IN ['Person','Organization','Location','Concept','Event','Project']]
-         ))) as diversity_score
-
-    // 4. Bridge Score
-    WITH bridge.name as concept, asset_count, connected_nodes, diversity_score,
-         (diversity_score * connected_nodes) as bridge_score
-    ORDER BY bridge_score DESC
-    LIMIT 10
-
-    // 5. Extraer contexto (los "Dos Mundos" que une)
-    MATCH (b:Concept {name: concept})<-[]-(a:DigitalAsset)-->(o)
-    WHERE elementId(b) <> elementId(o)
-    WITH concept, bridge_score, collect(distinct o.name)[0..5] as connected_examples
-
-    RETURN concept as id, bridge_score as score, connected_examples as context
-    ORDER BY score DESC
-    """
+        MATCH (bridge)<-[]-(:DigitalAsset)-->(o)
+        WHERE elementId(bridge) <> elementId(o)
+        RETURN bridge.name AS id, score,
+               collect(distinct o.name)[0..6] AS context
+        ORDER BY score DESC
+        """
 
     try:
         with driver.session() as session:
@@ -207,19 +207,23 @@ def analyze_bridges():
                 for r in result
             ]
 
+            mode_name = "Fuzzy Bridges" if method == "fuzzy" else "Standard Bridges"
             return {
                 "tool": "bridges",
                 "status": "success",
-                "message": f"Found top {len(bridges)} semantic bridges.",
-                "mock_data": {"bridges": bridges}
+                "message": f"{mode_name}: top {len(bridges)} puentes detectados.",
+                "mock_data": {
+                    "bridges": bridges,
+                    "method": method,
+                },
             }
     except Exception as e:
-        print(f"🔥 Error Bridges: {e}")
+        print(f"🔥 Error Bridges ({method}): {e}")
         return {
             "tool": "bridges",
             "status": "error",
             "message": str(e),
-            "mock_data": {"bridges": []}
+            "mock_data": {"bridges": [], "method": method},
         }
 
 # ── MinIO helpers ──
@@ -439,30 +443,38 @@ def analyze_fog_of_war():
 
 # 🍩 Chord Diagram (Category Co-Occurrence via DigitalAssets)
 @router.post("/chord", response_model=AnalysisToolResponse)
-def analyze_chord():
+def analyze_chord(method: str = "standard"):
     """
-    Genera la matriz de flujo entre Categorías (Co-ocurrencia a través de DigitalAssets).
-    Usa head([lbl IN labels(n) WHERE lbl IN allowed]) para extraer label principal.
+    Chord Dual: Standard (conteo de archivos) vs Fuzzy (intersección difusa).
     Zeroes Concept-Concept self-reference to avoid visual domination.
     """
     driver = get_neo4j_driver()
 
     categories = ["Person", "Organization", "Location", "Concept", "Event", "Project"]
 
-    cypher_query = """
-    WITH $categories as allowed_labels
-
-    MATCH (n1)<--(a:DigitalAsset)-->(n2)
-    WHERE elementId(n1) < elementId(n2)
-
-    WITH n1, n2, allowed_labels,
-         head([lbl IN labels(n1) WHERE lbl IN allowed_labels]) as l1,
-         head([lbl IN labels(n2) WHERE lbl IN allowed_labels]) as l2
-
-    WHERE l1 IS NOT NULL AND l2 IS NOT NULL
-
-    RETURN l1 as source, l2 as target, count(*) as weight
-    """
+    if method == "fuzzy":
+        cypher_query = """
+        WITH $categories as allowed_labels
+        MATCH (n1)<-[r1]-(a:DigitalAsset)-[r2]->(n2)
+        WHERE elementId(n1) < elementId(n2)
+        WITH n1, n2, r1, r2, allowed_labels,
+             head([lbl IN labels(n1) WHERE lbl IN allowed_labels]) as l1,
+             head([lbl IN labels(n2) WHERE lbl IN allowed_labels]) as l2
+        WHERE l1 IS NOT NULL AND l2 IS NOT NULL
+        RETURN l1 as source, l2 as target,
+               round(sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END), 2) as weight
+        """
+    else:
+        cypher_query = """
+        WITH $categories as allowed_labels
+        MATCH (n1)<--(a:DigitalAsset)-->(n2)
+        WHERE elementId(n1) < elementId(n2)
+        WITH n1, n2, a, allowed_labels,
+             head([lbl IN labels(n1) WHERE lbl IN allowed_labels]) as l1,
+             head([lbl IN labels(n2) WHERE lbl IN allowed_labels]) as l2
+        WHERE l1 IS NOT NULL AND l2 IS NOT NULL
+        RETURN l1 as source, l2 as target, count(distinct a) as weight
+        """
 
     try:
         with driver.session() as session:
@@ -472,9 +484,7 @@ def analyze_chord():
             matrix_map = {cat: {cat2: 0 for cat2 in categories} for cat in categories}
 
             for r in records:
-                src = r["source"]
-                tgt = r["target"]
-                w = r["weight"]
+                src, tgt, w = r["source"], r["target"], r["weight"]
                 matrix_map[src][tgt] += w
                 if src != tgt:
                     matrix_map[tgt][src] += w
@@ -482,30 +492,27 @@ def analyze_chord():
             # Zero out Concept-Concept to prevent visual domination
             matrix_map["Concept"]["Concept"] = 0
 
-            matrix_list = []
-            for row_cat in categories:
-                row_data = []
-                for col_cat in categories:
-                    row_data.append(matrix_map[row_cat][col_cat])
-                matrix_list.append(row_data)
+            matrix_list = [[matrix_map[row][col] for col in categories] for row in categories]
 
+            mode_name = "Fuzzy" if method == "fuzzy" else "Standard"
             return {
                 "tool": "chord",
                 "status": "success",
-                "message": f"Category flows calculated ({len(categories)} categories).",
+                "message": f"{mode_name} chord: {len(categories)} categorías.",
                 "mock_data": {
                     "keys": categories,
-                    "matrix": matrix_list
-                }
+                    "matrix": matrix_list,
+                    "method": method,
+                },
             }
 
     except Exception as e:
-        print(f"🔥 Error Chord: {e}")
+        print(f"🔥 Error Chord ({method}): {e}")
         return {
             "tool": "chord",
             "status": "error",
             "message": f"Error: {str(e)}",
-            "mock_data": {"keys": [], "matrix": []}
+            "mock_data": {"keys": [], "matrix": [], "method": method},
         }
 
 # 🌳 Radial Tree (Co-Occurrence Expansion)
@@ -513,7 +520,11 @@ class RadialTreeRequest(BaseModel):
     root_node_name: str = None
 
 @router.post("/radial-tree", response_model=AnalysisToolResponse)
-def analyze_radial(payload: RadialTreeRequest = None):
+def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard"):
+    """
+    Radial Tree Dual: Standard (conteo archivos) vs Fuzzy (pesos difusos).
+    L1 = 8 vecinos top, L2 = 3 vecinos por L1.
+    """
     driver = get_neo4j_driver()
     try:
         with driver.session() as session:
@@ -534,17 +545,28 @@ def analyze_radial(payload: RadialTreeRequest = None):
                         "tool": "radial_tree",
                         "status": "error",
                         "message": "Graph is empty.",
-                        "mock_data": {"root": "", "nodes": [], "edges": []}
+                        "mock_data": {"root": "", "nodes": [], "edges": [], "method": method}
                     }
 
-            # Level 1: Top 10 co-occurring concepts with root
-            l1_query = """
-                MATCH (root:Concept {name: $rootName})<--(a:DigitalAsset)-->(l1)
-                WHERE elementId(root) <> elementId(l1)
-                WITH root, l1, count(distinct a) as weight, labels(l1)[0] as ltype
-                ORDER BY weight DESC LIMIT 10
-                RETURN l1.name as name, weight, ltype
-            """
+            # --- Level 1: Top 8 neighbors ---
+            if method == "fuzzy":
+                l1_query = """
+                    MATCH (root:Concept {name: $rootName})<-[r1]-(a:DigitalAsset)-[r2]->(l1)
+                    WHERE elementId(root) <> elementId(l1)
+                    WITH root, l1,
+                         sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight,
+                         labels(l1)[0] AS ltype
+                    ORDER BY weight DESC LIMIT 8
+                    RETURN l1.name AS name, round(weight, 2) AS weight, ltype
+                """
+            else:
+                l1_query = """
+                    MATCH (root:Concept {name: $rootName})<--(a:DigitalAsset)-->(l1)
+                    WHERE elementId(root) <> elementId(l1)
+                    WITH root, l1, count(distinct a) AS weight, labels(l1)[0] AS ltype
+                    ORDER BY weight DESC LIMIT 8
+                    RETURN l1.name AS name, weight, ltype
+                """
             l1_result = session.run(l1_query, rootName=root_name)
             l1_records = list(l1_result)
 
@@ -565,18 +587,32 @@ def analyze_radial(payload: RadialTreeRequest = None):
                     })
                     edges_list.append({"source": root_name, "target": n})
 
-            # Level 2: Top 5 co-occurring per L1 node (excluding seen)
+            # --- Level 2: Top 3 per L1 node ---
             if l1_names:
-                l2_query = """
-                    UNWIND $l1Names as parentName
-                    MATCH (parent {name: parentName})<--(a:DigitalAsset)-->(l2)
-                    WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2)
-                    WITH parentName, l2, count(distinct a) as weight, labels(l2)[0] as ltype
-                    ORDER BY parentName, weight DESC
-                    WITH parentName, collect({name: l2.name, weight: weight, ltype: ltype})[0..5] as children
-                    UNWIND children as child
-                    RETURN parentName, child.name as name, child.weight as weight, child.ltype as ltype
-                """
+                if method == "fuzzy":
+                    l2_query = """
+                        UNWIND $l1Names AS parentName
+                        MATCH (parent {name: parentName})<-[r1]-(a:DigitalAsset)-[r2]->(l2)
+                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2)
+                        WITH parentName, l2,
+                             sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight,
+                             labels(l2)[0] AS ltype
+                        ORDER BY parentName, weight DESC
+                        WITH parentName, collect({name: l2.name, weight: round(weight, 2), ltype: ltype})[0..3] AS children
+                        UNWIND children AS child
+                        RETURN parentName, child.name AS name, child.weight AS weight, child.ltype AS ltype
+                    """
+                else:
+                    l2_query = """
+                        UNWIND $l1Names AS parentName
+                        MATCH (parent {name: parentName})<--(a:DigitalAsset)-->(l2)
+                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2)
+                        WITH parentName, l2, count(distinct a) AS weight, labels(l2)[0] AS ltype
+                        ORDER BY parentName, weight DESC
+                        WITH parentName, collect({name: l2.name, weight: weight, ltype: ltype})[0..3] AS children
+                        UNWIND children AS child
+                        RETURN parentName, child.name AS name, child.weight AS weight, child.ltype AS ltype
+                    """
                 l2_result = session.run(l2_query, l1Names=l1_names, seen=list(seen))
 
                 for r in l2_result:
@@ -591,19 +627,26 @@ def analyze_radial(payload: RadialTreeRequest = None):
                         })
                         edges_list.append({"source": parent, "target": n})
 
+            mode_name = "Fuzzy" if method == "fuzzy" else "Standard"
             return {
                 "tool": "radial_tree",
                 "status": "success",
-                "message": f"Expanded radial tree from '{root_name}' ({len(nodes_list)} nodes).",
-                "mock_data": {"root": root_name, "nodes": nodes_list, "edges": edges_list}
+                "message": f"{mode_name} radial tree from '{root_name}' ({len(nodes_list)} nodes).",
+                "mock_data": {
+                    "root": root_name,
+                    "nodes": nodes_list,
+                    "edges": edges_list,
+                    "method": method,
+                },
             }
 
     except Exception as e:
+        print(f"🔥 Error Radial ({method}): {e}")
         return {
             "tool": "radial_tree",
             "status": "error",
             "message": f"Error: {str(e)}",
-            "mock_data": {"root": "", "nodes": [], "edges": []}
+            "mock_data": {"root": "", "nodes": [], "edges": [], "method": method},
         }
 
 # �️ Abstract Concepts (Scatter Plot)
