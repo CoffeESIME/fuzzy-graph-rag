@@ -71,9 +71,11 @@ class Settings(BaseSettings):
 
 def get_env_file():
     env_state = os.getenv("ENV_STATE", "dev") # Default to dev
+    # Resolve backend directory dynamically (assuming config/settings.py is inside backend/)
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if env_state == "prod":
-        return ".env.production"
-    return ".env.development"
+        return os.path.join(base_dir, ".env.production")
+    return os.path.join(base_dir, ".env.development")
 
 class DynSettings(Settings):
     model_config = SettingsConfigDict(

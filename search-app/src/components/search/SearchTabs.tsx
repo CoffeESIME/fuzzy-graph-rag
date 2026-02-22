@@ -1,11 +1,12 @@
 import * as Tabs from '@radix-ui/react-tabs';
-import { Type, Image, Layers, GitBranch, Radar } from 'lucide-react';
+import { Type, Image, Layers, GitBranch, Radar, GitCompare } from 'lucide-react';
 import { useSearchStore } from '../../store/searchStore';
 import SemanticTextTab from './SemanticTextTab';
 import VisualSigLIPTab from './VisualSigLIPTab';
 import HybridVisualTab from './HybridVisualTab';
 import GraphCrispTab from './GraphCrispTab';
 import GraphFuzzyTab from './GraphFuzzyTab';
+import SystemComparisonTab from './SystemComparisonTab';
 import type { SearchTab } from '../../types/search';
 
 const TABS: { id: SearchTab; label: string; icon: React.ReactNode; comingSoon?: boolean }[] = [
@@ -14,6 +15,7 @@ const TABS: { id: SearchTab; label: string; icon: React.ReactNode; comingSoon?: 
     { id: 'hybrid-visual', label: 'Multimodal', icon: <Layers size={16} /> },
     { id: 'graph-crisp', label: 'Grafo', icon: <GitBranch size={16} /> },
     { id: 'graph-fuzzy', label: 'Grafo Difuso', icon: <Radar size={16} /> },
+    { id: 'comparison', label: 'Comparativa', icon: <GitCompare size={16} /> },
 ];
 
 export default function SearchTabs() {
@@ -70,6 +72,9 @@ export default function SearchTabs() {
             </Tabs.Content>
             <Tabs.Content value="graph-fuzzy">
                 <GraphFuzzyTab />
+            </Tabs.Content>
+            <Tabs.Content value="comparison" style={{ height: 'calc(100vh - 200px)' }}>
+                <SystemComparisonTab />
             </Tabs.Content>
         </Tabs.Root>
     );

@@ -607,7 +607,10 @@ def search_hybrid_visual(request: HybridVisualRequest):
 class GraphCrispRequest(BaseModel):
     query: str = Field(..., min_length=1, description="Text query to resolve against Concept nodes")
     alpha_cut: float = Field(0.9, ge=0.0, le=1.0, description="Minimum relationship weight (crisp threshold)")
+    seed_alpha: float = Field(0.9, ge=0.0, le=1.0, description="Vector vs BM25 weight for initial Weaviate seeds")
+    seed_limit: int = Field(7, ge=1, le=50, description="Number of seeds to extract from Weaviate")
     limit: int = Field(20, ge=1, le=100, description="Max results")
+    debug: bool = Field(False, description="Returns a trace of the execution path if true")
 
 
 class GraphCrispResultItem(SearchResultItem):
@@ -647,6 +650,7 @@ class GraphCrispResponse(BaseModel):
     graph_topology: GraphTopology = Field(
         ..., description="Nodes and edges for dynamic graph visualization"
     )
+    debug_trace: Optional[Dict[str, Any]] = Field(None, description="Debug telemetry if requested")
 
 
 # ==========================================
@@ -829,7 +833,7 @@ def search_graph_crisp(req: GraphCrispRequest):
 # ==========================================
 
 @router.post("/graph-fuzzy", response_model=GraphCrispResponse)
-def search_graph_fuzzy(req: GraphCrispRequest):
+def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
     """
     Graph Fuzzy Search (Vector-First Graph Expansion).
 
@@ -869,8 +873,8 @@ def search_graph_fuzzy(req: GraphCrispRequest):
             hybrid_kwargs = {
                 "query": req.query,
                 "vector": embedding,
-                "alpha": 0.9, 
-                "limit": 5, 
+                "alpha": req.seed_alpha, 
+                "limit": req.seed_limit, 
                 "return_metadata": wq.MetadataQuery(distance=True, score=True),
                 # "return_properties": ... (Let Weaviate return default)
             }
@@ -919,22 +923,40 @@ def search_graph_fuzzy(req: GraphCrispRequest):
       AND r.weight >= $alpha_cut
     
     // C. Expandir 'Hermanos' (Discovery) con Decaimiento
-    // Aquí está el truco: Multiplicamos los pesos. 
-    // Si r=0.8 y r2=0.7 -> Total=0.56. Si alpha=0.6, esto se filtra.
     OPTIONAL MATCH (target)<-[r2]-(discovery:DigitalAsset)
     WHERE discovery.file_hash <> seed.file_hash 
       AND (r.weight * r2.weight) >= $alpha_cut
 
-    // D. Retornar y Ordenar por Fuerza Total del Camino
+    // Factor de Penalización (Penalty Factor) para relaciones estructurales/genéricas
+    WITH seed, r, target, r2, discovery,
+         elementId(seed) as seed_id,
+         elementId(target) as target_id,
+         elementId(discovery) as disc_id,
+         // Penalización a r
+         CASE WHEN type(r) IN ['DEFINES', 'CREATED_BY', 'DEPICTS', 'LOCATED_AT'] 
+              THEN r.weight * 0.3 
+              ELSE r.weight END AS adjusted_w1,
+         // Penalización a r2 (si existe)
+         CASE WHEN r2 IS NOT NULL AND type(r2) IN ['DEFINES', 'CREATED_BY', 'DEPICTS', 'LOCATED_AT'] 
+              THEN r2.weight * 0.3 
+              WHEN r2 IS NOT NULL 
+              THEN r2.weight 
+              ELSE NULL END AS adjusted_w2,
+         r.weight as w1,
+         r2.weight as w2
+
+    // Cálculo del score final basado en pesos ajustados
+    WITH seed, r, target, r2, discovery, seed_id, target_id, disc_id, w1, w2, adjusted_w1, adjusted_w2,
+         (CASE WHEN adjusted_w2 IS NOT NULL THEN adjusted_w1 * adjusted_w2 ELSE adjusted_w1 END) AS score_final
+
+    // D. Retornar y Ordenar por Fuerza Total del Camino Ajustada
     RETURN seed, r, target, r2, discovery,
-           elementId(seed) as seed_id,
-           elementId(target) as target_id,
-           elementId(discovery) as disc_id,
-           r.weight as w1,
-           r2.weight as w2
+           seed_id, target_id, disc_id,
+           w1, w2,
+           score_final
     
-    // Ordenamos priorizando descubrimientos fuertes, luego conexiones directas fuertes
-    ORDER BY (CASE WHEN r2 IS NOT NULL THEN r.weight * r2.weight ELSE r.weight END) DESC
+    // Ordenamos priorizando los scores ajustados
+    ORDER BY score_final DESC
     LIMIT $limit
     """
     try:
@@ -958,6 +980,9 @@ def search_graph_fuzzy(req: GraphCrispRequest):
     seen_edges: set = set()
     concepts_matched: set = set()
     
+    is_debug = debug or req.debug
+    paths_taken = []
+    
     for record in records:
         seed = record["seed"]
         target = record["target"] # Entity
@@ -969,6 +994,7 @@ def search_graph_fuzzy(req: GraphCrispRequest):
         
         w1 = record["w1"]
         w2 = record["w2"] # Can be None
+        score_final = record["score_final"]
         
         rel1 = record["r"]
         rel2 = record["r2"] # Optional
@@ -983,6 +1009,15 @@ def search_graph_fuzzy(req: GraphCrispRequest):
             if label in ["Person", "Location", "Organization", "Event", "Project"]:
                 primary_type = label
                 break
+                
+        if is_debug:
+            seed_filename = seed.get("filename", "Unknown")
+            if discovery:
+                disc_filename = discovery.get("filename", "Unknown")
+                path_str = f"Seed({seed_filename}) --[weight:{w1:.2f}]--> Target({primary_type}:{target_name}) <--[weight:{w2:.2f}]-- Discovery({disc_filename}) = Score: {(w1*w2):.2f}"
+            else:
+                path_str = f"Seed({seed_filename}) --[weight:{w1:.2f}]--> Target({primary_type}:{target_name}) = Score: {w1:.2f}"
+            paths_taken.append(path_str)
                 
         # ── Nodes ──
         
@@ -1022,13 +1057,13 @@ def search_graph_fuzzy(req: GraphCrispRequest):
             ))
             
             # Result Item for Seed
-            if seed_hash not in seen_results or w1 > seen_results[seed_hash].score:
+            if seed_hash not in seen_results or score_final > seen_results[seed_hash].score:
                  seen_results[seed_hash] = GraphCrispResultItem(
                     space="GraphSpace",
                     space_icon="🌱", # Seed icon
                     uuid=seed_hash,
                     filename=seed.get("filename", "Seed"),
-                    score=round(w1, 4),
+                    score=round(score_final, 4),
                     matched_concept=f"{target_name} ({primary_type})",
                     relation_type=rel1.type,
                     distance=0.0,
@@ -1063,13 +1098,13 @@ def search_graph_fuzzy(req: GraphCrispRequest):
                 ))
                 
                 # Result Item for Discovery
-                if disc_hash not in seen_results or w2 > seen_results[disc_hash].score:
+                if disc_hash not in seen_results or score_final > seen_results[disc_hash].score:
                      seen_results[disc_hash] = GraphCrispResultItem(
                         space="GraphSpace",
                         space_icon="🔭", # Telescope
                         uuid=disc_hash,
                         filename=discovery.get("filename", "Discovery"),
-                        score=round(w2, 4),
+                        score=round(score_final, 4),
                         matched_concept=f"{target_name} ({primary_type})",
                         relation_type=rel2.type,
                         distance=0.0,
@@ -1097,6 +1132,14 @@ def search_graph_fuzzy(req: GraphCrispRequest):
             if node_hash and node_hash in url_by_hash:
                 node.properties.update(url_by_hash[node_hash])
 
+    debug_trace = None
+    if is_debug:
+        debug_trace = {
+            "query": req.query,
+            "seeds_from_weaviate": list(seed_hashes),
+            "paths_taken": paths_taken
+        }
+
     return GraphCrispResponse(
         query=req.query,
         concepts_matched=sorted(concepts_matched),
@@ -1107,5 +1150,6 @@ def search_graph_fuzzy(req: GraphCrispRequest):
             nodes=list(topo_nodes.values()),
             edges=topo_edges,
         ),
+        debug_trace=debug_trace,
     )
 

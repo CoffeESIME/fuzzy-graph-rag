@@ -1,27 +1,53 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { X, FileText } from 'lucide-react';
 
 interface TextPreviewModalProps {
     isOpen: boolean;
     onClose: () => void;
     title: string;
-    content: string;
+    content?: string;
+    url?: string;
 }
 
-export default function TextPreviewModal({ isOpen, onClose, title, content }: TextPreviewModalProps) {
-    if (!isOpen) return null;
+export default function TextPreviewModal({ isOpen, onClose, title, content, url }: TextPreviewModalProps) {
+    const [fetchedContent, setFetchedContent] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        if (content) {
+            setFetchedContent(typeof content === 'string' ? content : String(content));
+            setIsLoading(false);
+            return;
+        }
+
+        if (url) {
+            setIsLoading(true);
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.text();
+                })
+                .then(text => setFetchedContent(text))
+                .catch(err => setFetchedContent(`Error al cargar el archivo de texto: ${err.message}`))
+                .finally(() => setIsLoading(false));
+        } else {
+            setFetchedContent('Sin contenido disponible.');
+        }
+    }, [isOpen, content, url]);
 
     // Prevent background scrolling when modal is open
     useEffect(() => {
+        if (!isOpen) return;
         document.body.style.overflow = 'hidden';
         return () => {
             document.body.style.overflow = 'unset';
             document.body.style.paddingRight = '0px';
         };
-    }, []);
+    }, [isOpen]);
 
-    // Safety check for content
-    const displayContent = typeof content === 'string' ? content : String(content || '');
+    if (!isOpen) return null;
 
     return (
         <div style={{
@@ -107,7 +133,13 @@ export default function TextPreviewModal({ isOpen, onClose, title, content }: Te
                     whiteSpace: 'pre-wrap',
                     fontFamily: 'var(--font-sans)'
                 }}>
-                    {displayContent}
+                    {isLoading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+                            <div className="loading-spinner" style={{ marginRight: 10 }} /> Cargando contenido...
+                        </div>
+                    ) : (
+                        fetchedContent
+                    )}
                 </div>
 
                 {/* Footer */}

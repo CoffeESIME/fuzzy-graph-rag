@@ -64,7 +64,10 @@ export interface HybridVisualRequest {
 export interface GraphCrispRequest {
     query: string;
     alpha_cut?: number;
+    seed_alpha?: number;
+    seed_limit?: number;
     limit?: number;
+    debug?: boolean;
 }
 
 export interface GraphNode {
@@ -105,7 +108,10 @@ export interface GraphCrispResponse {
 export interface GraphFuzzyRequest {
     query: string;
     alpha_cut: number;
+    seed_alpha?: number;
+    seed_limit?: number;
     limit: number;
+    debug?: boolean;
 }
 
 // --- Tab Enum ---
@@ -114,7 +120,8 @@ export type SearchTab =
     | 'visual-siglip'
     | 'hybrid-visual'
     | 'graph-crisp'
-    | 'graph-fuzzy';
+    | 'graph-fuzzy'
+    | 'comparison';
 
 export const SEARCH_TABS: {
     id: SearchTab;
@@ -154,5 +161,11 @@ export const SEARCH_TABS: {
             icon: 'radar',
             description: 'Expansión difusa con pesos calibrados',
             comingSoon: true,
+        },
+        {
+            id: 'comparison',
+            label: 'Comparativa',
+            icon: 'git-compare',
+            description: 'Compara resultados entre vector, crisp y fuzzy',
         },
     ];
