@@ -18,6 +18,7 @@ class CandidateNode(BaseModel):
     connections: int
     status: Optional[str] = None
     error: Optional[str] = None
+    fuzzy_applied: Optional[bool] = None
 
 class CandidateResponse(BaseModel):
     candidates: List[CandidateNode]
@@ -27,6 +28,7 @@ class EnrichRequest(BaseModel):
     node_ids: List[str]
 
 class WeightPreviewResult(BaseModel):
+    file_hash: str
     filename: str
     space: str
     relation_type: Optional[str] = None
@@ -65,7 +67,7 @@ def get_enrichment_candidates(
     {where_clause}
     OPTIONAL MATCH (n)<--(asset:DigitalAsset)
     WITH n, count(distinct asset) as connections
-    RETURN elementId(n) as id, n.name as name, labels(n)[0] as type, connections, n.enrichment_status as status, n.enrichment_error as error
+    RETURN elementId(n) as id, n.name as name, labels(n)[0] as type, connections, n.enrichment_status as status, n.enrichment_error as error, n.fuzzy_applied as fuzzy_applied
     ORDER BY connections DESC
     LIMIT $limit
     """
@@ -81,7 +83,8 @@ def get_enrichment_candidates(
                     type=record["type"],
                     connections=record["connections"],
                     status=record["status"],
-                    error=record["error"]
+                    error=record["error"],
+                    fuzzy_applied=record["fuzzy_applied"]
                 ))
             return CandidateResponse(candidates=nodes, total=len(nodes))
     except Exception as e:
@@ -213,13 +216,20 @@ def get_preview_weights(node_id: str):
                 if target_vector:
                     sim = cosine_similarity(desc_vector, target_vector)
                     vector_similarity = round(sim, 3)
-                    # User requested formula: proposed_weight = (current_weight * 0.6) + (vector_sim * 0.4)
-                    blended = (current_weight * 0.7) + (sim * 0.3)
-                    proposed_weight = round(blended, 3)
+                    
+                    relation_type = asset.get("relation_type")
+                    protected_relations = ['CREATED_BY', 'DEFINES', 'LOCATED_AT']
+                    
+                    if relation_type in protected_relations:
+                        proposed_weight = round(current_weight, 3)
+                    else:
+                        blended = (current_weight * 0.7) + (sim * 0.3)
+                        proposed_weight = round(blended, 3)
         except Exception as e:
             logger.warning(f"No se pudo comparar vector para {filename} en {space}: {e}")
             
         preview_results.append(WeightPreviewResult(
+            file_hash=file_hash,
             filename=filename,
             space=space,
             relation_type=asset.get("relation_type"),
@@ -229,3 +239,46 @@ def get_preview_weights(node_id: str):
         ))
         
     return WeightPreviewResponse(results=preview_results)
+
+class WeightUpdateItem(BaseModel):
+    file_hash: str
+    new_weight: float
+
+class ApplyWeightsRequest(BaseModel):
+    updates: List[WeightUpdateItem]
+
+@router.post("/{node_id}/apply-weights")
+def apply_preview_weights(node_id: str, req: ApplyWeightsRequest):
+    """
+    Applies the approved new semantic weights to the relationships in Neo4j.
+    Uses UNWIND for efficient bulk updates.
+    """
+    if not req.updates:
+        raise HTTPException(status_code=400, detail="No updates provided")
+        
+    driver = get_neo4j_driver()
+    
+    # Very fast UNWIND transaction
+    cypher_query = """
+    MATCH (n) WHERE elementId(n) = $node_id
+    SET n.fuzzy_applied = true, n.fuzzy_applied_at = datetime()
+    WITH n
+    UNWIND $updates AS row
+    MATCH (asset:DigitalAsset {file_hash: row.file_hash})
+    MATCH (n)-[r]-(asset)
+    SET r.weight = row.new_weight
+    RETURN count(r) as updated_count
+    """
+    
+    try:
+        with driver.session() as session:
+            updates_list = [{"file_hash": u.file_hash, "new_weight": u.new_weight} for u in req.updates]
+            result = session.run(cypher_query, node_id=node_id, updates=updates_list)
+            record = result.single()
+            count = record["updated_count"] if record else 0
+            
+            logger.info(f"Updated {count} edge weights for node {node_id}")
+            return {"status": "success", "message": f"Se actualizaron {count} pesos correctamente.", "updated_count": count}
+    except Exception as e:
+        logger.error(f"Error applying weights for node {node_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error actualizando los pesos en la base de datos de grafos.")

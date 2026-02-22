@@ -2915,3 +2915,113 @@ def enrich_node_task(self: Task, node_id: str) -> Dict[str, Any]:
         # Reraise to trigger Celery retry mechanism if appropriate
         raise self.retry(exc=e, countdown=60)
 
+
+def apply_incremental_fuzzy_weight(asset_id: str, asset_space: str, node_id: str, relation_type: str, base_weight: float = 1.0) -> float:
+    """
+    Called after ingestion when a new DigitalAsset is connected to a node.
+    If the node has been fuzzy enriched (`fuzzy_applied=True`), this function calculates
+    the vector similarity and updates the specific new edge weight silently without requiring
+    Human-in-the-Loop approval again.
+    """
+    logger.info(f"   [Fuzzy Incremental] Validating incoming edge {asset_id} -> {node_id}")
+    
+    driver = get_neo4j_driver()
+    node_desc = None
+    
+    # 1. Quick check if the node has fuzzy applied and get description
+    query = """
+    MATCH (n) WHERE elementId(n) = $node_id
+    RETURN coalesce(n.fuzzy_applied, false) as is_fuzzy, n.description as description
+    """
+    
+    try:
+        with driver.session() as session:
+            record = session.run(query, node_id=node_id).single()
+            if not record or not record["is_fuzzy"] or not record["description"]:
+                return base_weight  # Not fuzzy applied or no description to vector match
+            node_desc = record["description"]
+    except Exception as e:
+        logger.warning(f"Failed to check fuzzy status for {node_id}: {e}")
+        return base_weight
+        
+    # 2. Immunity Rule
+    protected_relations = ['CREATED_BY', 'DEFINES', 'LOCATED_AT']
+    if relation_type in protected_relations:
+        logger.info(f"   [Fuzzy Incremental] Immune relation '{relation_type}'. Keeping base weight {base_weight}.")
+        return base_weight
+        
+    # 3. Remote vector extraction (Node Description via LLM Gateway)
+    try:
+        from llm.api import call_text_embeddings_api
+        emb_res = call_text_embeddings_api(node_desc)
+        desc_vector = emb_res.get("embedding")
+        if not desc_vector and "data" in emb_res:
+            desc_vector = emb_res["data"][0].get("embedding")
+            
+        if not desc_vector:
+            raise Exception("Invalid embedding format")
+    except Exception as e:
+        logger.warning(f"Failed to vectorize target node {node_id} for incremental fuzzy: {e}")
+        return base_weight
+        
+    # 4. Weaviate Extraction (Asset Vector)
+    vector_name = "default"
+    if asset_space == "VisualSpace":
+        vector_name = "semantic"
+    elif asset_space == "AudioSpace":
+        vector_name = "transcript_semantic"
+        
+    try:
+        from core.weaviate_client import get_weaviate_client
+        from core.utils import generate_collection_uuid
+        
+        weaviate_client = get_weaviate_client()
+        weaviate_uuid = generate_collection_uuid(asset_id, asset_space)
+        collection = weaviate_client.collections.get(asset_space)
+        
+        obj = collection.query.fetch_object_by_id(
+            weaviate_uuid, 
+            include_vector=[vector_name] if vector_name != "default" else True
+        )
+        
+        if not obj or not obj.vector:
+            raise Exception("Asset vector not found in Weaviate")
+            
+        target_vector = obj.vector.get(vector_name) if isinstance(obj.vector, dict) else obj.vector
+        
+        if not target_vector:
+            raise Exception("Specific named vector missing")
+            
+        def cosine_similarity(v1, v2):
+            dot = sum(a * b for a, b in zip(v1, v2))
+            norm1 = sum(a * a for a in v1) ** 0.5
+            norm2 = sum(b * b for b in v2) ** 0.5
+            return 0.0 if norm1 == 0 or norm2 == 0 else dot / (norm1 * norm2)
+            
+        sim = cosine_similarity(desc_vector, target_vector)
+        
+        # 5. Math Blending
+        new_weight = (base_weight * 0.75) + (sim * 0.25)
+        new_weight = round(new_weight, 3)
+        
+    except Exception as e:
+        logger.warning(f"Failed to fetch or compare asset vector {asset_id} in {asset_space}: {e}")
+        return base_weight
+        
+    # 6. Final Update in Neo4j
+    update_query = """
+    MATCH (n) WHERE elementId(n) = $node_id
+    MATCH (asset:DigitalAsset {file_hash: $asset_id})
+    MATCH (n)-[r]-(asset)
+    SET r.weight = $new_weight
+    RETURN id(r)
+    """
+    try:
+        with driver.session() as session:
+            session.run(update_query, node_id=node_id, asset_id=asset_id, new_weight=new_weight)
+            logger.info(f"   ✅ [Fuzzy Incremental] Applied! Weight adjusted to {new_weight} for Edge(node:{node_id} <-> asset:{asset_id})")
+            return new_weight
+    except Exception as e:
+        logger.warning(f"Failed to persist incremental fuzzy weight in Neo4j: {e}")
+        return base_weight
+

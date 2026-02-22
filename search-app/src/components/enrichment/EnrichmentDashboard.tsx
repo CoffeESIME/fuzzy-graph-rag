@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Sparkles, ArrowLeft, Search, CheckSquare, Square, Check, Eye, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getEnrichmentCandidates, requestEnrichment, getPreviewWeights } from '../../lib/api';
-import type { CandidateNode, WeightPreviewResult } from '../../lib/api';
+import { getEnrichmentCandidates, requestEnrichment, getPreviewWeights, applyPreviewWeights } from '../../lib/api';
+import type { CandidateNode, WeightPreviewResult, WeightUpdateItem } from '../../lib/api';
 
 export default function EnrichmentDashboard() {
     const navigate = useNavigate();
@@ -22,6 +22,7 @@ export default function EnrichmentDashboard() {
     const [previewWeights, setPreviewWeights] = useState<WeightPreviewResult[]>([]);
     const [isPreviewLoading, setIsPreviewLoading] = useState(false);
     const [previewError, setPreviewError] = useState<string | null>(null);
+    const [isApplyingWeights, setIsApplyingWeights] = useState(false);
 
     const allowedTypes = ["Person", "Concept", "Location", "Organization", "Event", "Project", "Device", "Method"];
 
@@ -96,6 +97,39 @@ export default function EnrichmentDashboard() {
             setPreviewError(err.response?.data?.detail || err.message || 'Error calculando pesos');
         } finally {
             setIsPreviewLoading(false);
+        }
+    };
+
+    const handleApplyWeights = async () => {
+        if (!previewNode) return;
+
+        // Build array of updates only for items that have a proposed weight
+        const updates: WeightUpdateItem[] = previewWeights
+            .filter(w => w.proposed_weight !== null)
+            .map(w => ({
+                file_hash: w.file_hash,
+                new_weight: w.proposed_weight as number
+            }));
+
+        if (updates.length === 0) {
+            setPreviewNode(null); // Nothing to do
+            return;
+        }
+
+        setIsApplyingWeights(true);
+        setPreviewError(null);
+
+        try {
+            const res = await applyPreviewWeights(previewNode.id, updates);
+            setSuccessMsg(res.message);
+            setPreviewNode(null); // Close modal on success
+            // Note: In a real app we might want to refresh the candidates table here 
+            // but since they are already COMPLETED, they will naturally be filtered out if looking for PENDING
+        } catch (err: any) {
+            console.error(err);
+            setPreviewError(err.response?.data?.detail || err.message || 'Error aplicando los nuevos pesos');
+        } finally {
+            setIsApplyingWeights(false);
         }
     };
 
@@ -315,25 +349,28 @@ export default function EnrichmentDashboard() {
                                                     <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                                                         {cand.connections}
                                                     </td>
-                                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                                        {cand.status === 'COMPLETED' && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handlePreview(cand);
-                                                                }}
-                                                                style={{
-                                                                    background: 'transparent',
-                                                                    border: 'none',
-                                                                    color: 'var(--accent-primary)',
-                                                                    cursor: 'pointer',
-                                                                    padding: '4px',
-                                                                    borderRadius: '4px'
-                                                                }}
-                                                                title="Previsualizar Pesos Semánticos"
-                                                            >
-                                                                <Eye size={18} />
-                                                            </button>
+                                                    <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                                        {cand.fuzzy_applied ? (
+                                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '4px', fontWeight: 500 }}>
+                                                                <Check size={14} /> Pesos Difusos Aplicados
+                                                            </span>
+                                                        ) : (
+                                                            cand.status === 'COMPLETED' && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handlePreview(cand);
+                                                                    }}
+                                                                    style={{
+                                                                        background: 'transparent', border: 'none', color: 'var(--text-secondary)',
+                                                                        cursor: 'pointer', padding: '4px', borderRadius: '4px'
+                                                                    }}
+                                                                    title="Simular Pesos Difusos"
+                                                                    className="hover-bg"
+                                                                >
+                                                                    <Eye size={18} />
+                                                                </button>
+                                                            )
                                                         )}
                                                     </td>
                                                 </tr>
@@ -445,6 +482,23 @@ export default function EnrichmentDashboard() {
                                 </table>
                             )}
                         </div>
+
+                        {!isPreviewLoading && !previewError && previewWeights.length > 0 && (
+                            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', background: 'rgba(0,0,0,0.1)' }}>
+                                <button
+                                    className="btn-primary"
+                                    onClick={handleApplyWeights}
+                                    disabled={isApplyingWeights}
+                                    style={{ background: '#10b981', borderColor: '#10b981' }}
+                                >
+                                    {isApplyingWeights ? (
+                                        <><div className="loading-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Aplicando...</>
+                                    ) : (
+                                        <><Check size={18} /> Aceptar y Aplicar Pesos</>
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

@@ -31,8 +31,8 @@ export default function SystemComparisonTab() {
     const [textPreviewOpen, setTextPreviewOpen] = useState(false);
 
     // Configurable alphas for the fuzzy search
-    const [fuzzyHighAlpha, setFuzzyHighAlpha] = useState(0.7);
-    const [fuzzyLowAlpha, setFuzzyLowAlpha] = useState(0.5);
+    const [fuzzyHighAlpha, setFuzzyHighAlpha] = useState(0.8);
+    const [fuzzyLowAlpha, setFuzzyLowAlpha] = useState(0.6);
 
     // Configurable seed parameters for the graph semantic extraction
     const [seedAlpha, setSeedAlpha] = useState(0.9);
@@ -49,7 +49,7 @@ export default function SystemComparisonTab() {
             // Fire all 4 requests concurrently
             const [vectorRes, crispRes, fuzzy07Res, fuzzy05Res] = await Promise.all([
                 searchSemanticText({ query: query.trim(), limit, alpha: 1.0, spaces: ['TextSpace'] }),
-                searchGraphFuzzy({ query: query.trim(), limit, alpha_cut: 0.9, seed_alpha: seedAlpha, seed_limit: seedLimit }) as unknown as Promise<GraphCrispResponse>,
+                searchGraphFuzzy({ query: query.trim(), limit, alpha_cut: 0.95, seed_alpha: seedAlpha, seed_limit: seedLimit }) as unknown as Promise<GraphCrispResponse>,
                 searchGraphFuzzy({ query: query.trim(), limit, alpha_cut: fuzzyHighAlpha, seed_alpha: seedAlpha, seed_limit: seedLimit }) as unknown as Promise<GraphCrispResponse>,
                 searchGraphFuzzy({ query: query.trim(), limit, alpha_cut: fuzzyLowAlpha, seed_alpha: seedAlpha, seed_limit: seedLimit }) as unknown as Promise<GraphCrispResponse>,
             ]);
@@ -280,7 +280,7 @@ export default function SystemComparisonTab() {
                                 <tr>
                                     <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Elemento Identificado</th>
                                     <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center' }}>Vectorial Puro</th>
-                                    <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center' }}>Grafo Crisp (0.9)</th>
+                                    <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center' }}>Grafo Crisp (0.95)</th>
                                     <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center' }}>Grafo Fuzzy ({fuzzyHighAlpha})</th>
                                     <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'center' }}>Grafo Fuzzy ({fuzzyLowAlpha})</th>
                                 </tr>
