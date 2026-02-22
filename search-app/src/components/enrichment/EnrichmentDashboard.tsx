@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Sparkles, ArrowLeft, Search, CheckSquare, Square, Check } from 'lucide-react';
+import { Sparkles, ArrowLeft, Search, CheckSquare, Square, Check, Eye, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getEnrichmentCandidates, requestEnrichment } from '../../lib/api';
-import type { CandidateNode } from '../../lib/api';
+import { getEnrichmentCandidates, requestEnrichment, getPreviewWeights } from '../../lib/api';
+import type { CandidateNode, WeightPreviewResult } from '../../lib/api';
 
 export default function EnrichmentDashboard() {
     const navigate = useNavigate();
 
     const [nodeType, setNodeType] = useState('Person');
+    const [statusFilter, setStatusFilter] = useState('PENDING');
     const [limit, setLimit] = useState(50);
     const [isLoading, setIsLoading] = useState(false);
     const [candidates, setCandidates] = useState<CandidateNode[]>([]);
@@ -15,6 +16,12 @@ export default function EnrichmentDashboard() {
     const [error, setError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Preview Modal State
+    const [previewNode, setPreviewNode] = useState<CandidateNode | null>(null);
+    const [previewWeights, setPreviewWeights] = useState<WeightPreviewResult[]>([]);
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+    const [previewError, setPreviewError] = useState<string | null>(null);
 
     const allowedTypes = ["Person", "Concept", "Location", "Organization", "Event", "Project", "Device", "Method"];
 
@@ -26,7 +33,7 @@ export default function EnrichmentDashboard() {
         setSelectedIds(new Set());
 
         try {
-            const res = await getEnrichmentCandidates(nodeType, limit);
+            const res = await getEnrichmentCandidates(nodeType, limit, statusFilter);
             setCandidates(res.candidates);
         } catch (err: any) {
             console.error(err);
@@ -72,6 +79,23 @@ export default function EnrichmentDashboard() {
             setError(err.response?.data?.detail || err.message || 'Error requesting enrichment');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handlePreview = async (node: CandidateNode) => {
+        setPreviewNode(node);
+        setPreviewWeights([]);
+        setIsPreviewLoading(true);
+        setPreviewError(null);
+
+        try {
+            const res = await getPreviewWeights(node.id);
+            setPreviewWeights(res.results);
+        } catch (err: any) {
+            console.error(err);
+            setPreviewError(err.response?.data?.detail || err.message || 'Error calculando pesos');
+        } finally {
+            setIsPreviewLoading(false);
         }
     };
 
@@ -134,6 +158,24 @@ export default function EnrichmentDashboard() {
                                 {allowedTypes.map(t => (
                                     <option key={t} value={t}>{t}</option>
                                 ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 8 }}>
+                                Estado
+                            </label>
+                            <select
+                                className="search-input"
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                style={{ width: '100%' }}
+                            >
+                                <option value="PENDING">Pendientes</option>
+                                <option value="PROCESSING">Procesando</option>
+                                <option value="COMPLETED">Completados</option>
+                                <option value="FAILED">Fallidos</option>
+                                <option value="ALL">Todos</option>
                             </select>
                         </div>
 
@@ -225,7 +267,9 @@ export default function EnrichmentDashboard() {
                                                 </th>
                                                 <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Nombre / Entidad</th>
                                                 <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, width: 120 }}>Tipo</th>
-                                                <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, width: 150, textAlign: 'center' }}>Referencias (Assets)</th>
+                                                <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, width: 100, textAlign: 'center' }}>Estado</th>
+                                                <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, width: 100, textAlign: 'center' }}>Refs</th>
+                                                <th style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, width: 80, textAlign: 'center' }}>Acción</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -258,8 +302,39 @@ export default function EnrichmentDashboard() {
                                                             {cand.type}
                                                         </span>
                                                     </td>
+                                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                                        <span style={{
+                                                            fontSize: '0.75rem', padding: '4px 8px', borderRadius: 4, whiteSpace: 'nowrap',
+                                                            background: cand.status === 'COMPLETED' ? 'rgba(16, 185, 129, 0.1)' : cand.status === 'PROCESSING' ? 'rgba(59, 130, 246, 0.1)' : cand.status === 'FAILED' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                                                            color: cand.status === 'COMPLETED' ? '#10b981' : cand.status === 'PROCESSING' ? '#3b82f6' : cand.status === 'FAILED' ? '#ef4444' : 'var(--text-muted)',
+                                                            border: `1px solid ${cand.status === 'COMPLETED' ? 'rgba(16, 185, 129, 0.2)' : cand.status === 'PROCESSING' ? 'rgba(59, 130, 246, 0.2)' : cand.status === 'FAILED' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)'}`
+                                                        }} title={cand.error || ''}>
+                                                            {cand.status || 'PENDING'}
+                                                        </span>
+                                                    </td>
                                                     <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                                                         {cand.connections}
+                                                    </td>
+                                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                                        {cand.status === 'COMPLETED' && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handlePreview(cand);
+                                                                }}
+                                                                style={{
+                                                                    background: 'transparent',
+                                                                    border: 'none',
+                                                                    color: 'var(--accent-primary)',
+                                                                    cursor: 'pointer',
+                                                                    padding: '4px',
+                                                                    borderRadius: '4px'
+                                                                }}
+                                                                title="Previsualizar Pesos Semánticos"
+                                                            >
+                                                                <Eye size={18} />
+                                                            </button>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -275,6 +350,105 @@ export default function EnrichmentDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Preview Weights Modal */}
+            {previewNode && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <div style={{
+                        background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)',
+                        borderRadius: 16, width: 1200, maxWidth: '95vw', maxHeight: '90vh',
+                        display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4)'
+                    }}>
+                        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Simulación de Pesos Difusos</h3>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 4 }}>
+                                    Entidad: <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{previewNode.name}</span>
+                                </p>
+                            </div>
+                            <button onClick={() => setPreviewNode(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div style={{ padding: 24, overflowY: 'auto', flex: 1 }}>
+                            {isPreviewLoading ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
+                                    Calculando distancias del vector en memoria contra Weaviate...
+                                </div>
+                            ) : previewError ? (
+                                <div style={{ padding: 16, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 8, border: '1px solid #ef4444' }}>
+                                    {previewError}
+                                </div>
+                            ) : previewWeights.length === 0 ? (
+                                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>
+                                    No se encontraron conexiones para previsualización.
+                                </div>
+                            ) : (
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem' }}>Archivo</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem' }}>Tipo Relación</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'center' }}>Espacio Vectorial</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Peso Actual</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Sim. Vectorial</th>
+                                            <th style={{ padding: '12px 16px', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Peso Fusión (Propuesto)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {previewWeights.map((w, i) => {
+                                            let proposedColor = 'var(--text-muted)';
+                                            let proposedBg = 'transparent';
+                                            if (w.proposed_weight !== null) {
+                                                if (w.proposed_weight > 0.7) {
+                                                    proposedColor = '#10b981'; // Green
+                                                    proposedBg = 'rgba(16, 185, 129, 0.1)';
+                                                } else if (w.proposed_weight >= 0.4) {
+                                                    proposedColor = '#f59e0b'; // Amber
+                                                    proposedBg = 'rgba(245, 158, 11, 0.1)';
+                                                } else {
+                                                    proposedColor = '#ef4444'; // Red
+                                                    proposedBg = 'rgba(239, 68, 68, 0.1)';
+                                                }
+                                            }
+
+                                            return (
+                                                <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                                    <td style={{ padding: '12px 16px', fontSize: '0.9rem' }}>{w.filename}</td>
+                                                    <td style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--accent-primary)' }}>{w.relation_type || 'N/A'}</td>
+                                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                                        <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: 4, background: 'var(--bg-tertiary)' }}>
+                                                            {w.space}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                                                        {w.current_weight.toFixed(3)}
+                                                    </td>
+                                                    <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                                                        {w.vector_similarity !== null ? w.vector_similarity.toFixed(3) : 'N/A'}
+                                                    </td>
+                                                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>
+                                                        <span style={{ color: proposedColor, background: proposedBg, padding: '4px 8px', borderRadius: '4px' }}>
+                                                            {w.proposed_weight !== null ? w.proposed_weight.toFixed(3) : 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style>{`
                 .text-pink-500 { color: #ec4899; }
                 .search-input {

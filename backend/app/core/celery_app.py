@@ -65,6 +65,7 @@ app.conf.update(
         'worker.tasks.process_audio_clap': {'queue': 'heavy_gpu'},
         'worker.tasks.process_audio_transcript': {'queue': 'heavy_gpu'},  # Whisper
         'worker.tasks.process_user_memory': {'queue': 'heavy_gpu'},  # LLM memory analysis
+        'worker.tasks.enrich_node_task': {'queue': 'heavy_gpu'},  # Graph enrichment LLM processing
         
         # ===========================================
         # FAST CPU QUEUE - Quick I/O tasks

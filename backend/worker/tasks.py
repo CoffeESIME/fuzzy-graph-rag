@@ -2539,3 +2539,379 @@ def process_user_memory_task(asset: Asset, vector_status: VectorStatus, session)
         'message': 'Memory analyzed and drafted. Review required before storage.'
     }
 
+
+def get_node_context(node_id: str) -> Tuple[Optional[str], Optional[str], str]:
+    """
+    Extracts the local context of a node from Neo4j.
+    
+    Finds the node's name, its primary label, and any connected DigitalAssets.
+    It concatenates the filenames and tags of those assets to provide context 
+    about how this node is used locally in the graph.
+    
+    Args:
+        node_id: The Neo4j elementId of the node.
+        
+    Returns:
+        Tuple containing:
+        - node_name: The name of the node (or None if not found).
+        - node_label: The primary label of the node (e.g. 'Person', 'Concept', or None).
+        - context_text: A concatenated string describing the connected assets.
+    """
+    driver = get_neo4j_driver()
+    
+    query = """
+    MATCH (n) WHERE elementId(n) = $node_id
+    
+    // Get basic node properties
+    WITH n, n.name as node_name, labels(n)[0] as node_label
+    
+    // Find connected assets
+    OPTIONAL MATCH (n)<-[r]-(asset:DigitalAsset)
+    
+    // Group everything
+    WITH node_name, node_label, 
+         collect({
+            filename: asset.filename, 
+            type: asset.mime_type, 
+            tags: asset.tags,
+            relation: type(r)
+         }) as connected_assets
+         
+    RETURN node_name, node_label, connected_assets
+    """
+    
+    try:
+        with driver.session() as session:
+            result = session.run(query, node_id=node_id)
+            record = result.single()
+            
+            if not record or not record["node_name"]:
+                return None, None, "Nodo no encontrado en Neo4j."
+                
+            node_name = record["node_name"]
+            node_label = record["node_label"]
+            assets = record["connected_assets"]
+            
+            # Format the context text
+            context_pieces = []
+            
+            # Filter out empty assets (due to OPTIONAL MATCH returning a list with one null-like dict)
+            valid_assets = [a for a in assets if a.get("filename")]
+            
+            if not valid_assets:
+                context_text = "No se encontraron documentos o archivos conectados a este nodo en el grafo."
+            else:
+                context_pieces.append(f"El nodo '{node_name}' aparece en los siguientes archivos locales:")
+                for asset in valid_assets:
+                    filename = asset.get("filename", "Archivo Desconocido")
+                    rel_type = asset.get("relation", "CONNECTIONS")
+                    
+                    piece = f"- Archivo: {filename} (Relación: {rel_type})"
+                    
+                    tags = asset.get("tags")
+                    if tags:
+                        # Handle Neo4j list properties
+                        tag_str = ", ".join(tags) if isinstance(tags, list) else str(tags)
+                        piece += f" | Etiquetas del archivo: {tag_str}"
+                        
+                    context_pieces.append(piece)
+                
+                context_text = "\n".join(context_pieces)
+                
+            return node_name, node_label, context_text
+            
+    except Exception as e:
+        logger.error(f"Error fetching context for node {node_id}: {e}")
+        return None, None, f"Error al extraer contexto local: {str(e)}"
+
+
+def fetch_wikipedia_summary(node_name: str, lang: str = "es") -> str:
+    """
+    Fetch a brief summary from Wikipedia for external grounding.
+    
+    Attempts to find the exact page for `node_name`. Handles disambiguation
+    errors by selecting the first option. Returns up to 1500 chars.
+    
+    Args:
+        node_name: The name to search on Wikipedia.
+        lang: The language code for the Wikipedia API (default "es").
+        
+    Returns:
+        The summary text (up to 1500 chars), or empty string if not found.
+    """
+    try:
+        import wikipedia
+        wikipedia.set_lang(lang)
+        wikipedia.API_URL = f"https://{lang}.wikipedia.org/w/api.php"
+        
+        # Try finding the exact page
+        logger.info(f"   📚 Buscando '{node_name}' en Wikipedia...")
+        page = wikipedia.page(node_name, auto_suggest=True)
+        summary = page.summary[:1500]
+        logger.info(f"      ✅ Encontrado: '{page.title}' ({len(summary)} chars)")
+        return summary
+        
+    except ImportError:
+        logger.warning("   ⚠️  Wikipedia library not installed. Skipping grounding.")
+        return ""
+    except wikipedia.exceptions.DisambiguationError as e:
+        # If ambiguous, pick the first suggestion typically
+        try:
+            first_option = e.options[0]
+            logger.info(f"      ⚠️  Desambiguación: Probando primera opción '{first_option}'")
+            page = wikipedia.page(first_option)
+            summary = page.summary[:1500]
+            return summary
+        except Exception:
+            logger.info(f"      ❌ Desambiguación fallida para '{node_name}'")
+            return ""
+    except wikipedia.exceptions.PageError:
+        logger.info(f"      ❌ No se encontró página para '{node_name}'")
+        return ""
+    except Exception as e:
+        logger.error(f"      ❌ Error inesperado con Wikipedia: {e}")
+        return ""
+
+
+def generate_enrichment_text(node_name: str, node_label: str, context_text: str, wiki_grounding: str) -> str:
+    """
+    Generate a semantic profile or biography for a node using the local LLM.
+    
+    Constructs a specific prompt depending on the entity type (Person vs Concept/Other)
+    and grounds the LLM exclusively in the provided local context and external Wikipedia truth.
+    
+    Args:
+        node_name: The name of the entity.
+        node_label: The type of the entity (e.g. 'Person', 'Concept').
+        context_text: The concatenated text of connected local assets.
+        wiki_grounding: Summary from Wikipedia (or empty if none).
+        
+    Returns:
+        The generated enrichment text (str).
+    """
+    logger.info(f"   🧠 Generando texto de enriquecimiento para {node_name}...")
+    
+    # 1. Build the dynamic system prompt
+    if node_label == "Person":
+        system_instructions = (
+            f"Eres un biógrafo experto. Genera una biografía profesional concisa para '{node_name}'. "
+            "Destaca su área de especialidad y relevancia."
+        )
+    elif node_label == "Location":
+        system_instructions = (
+            f"Eres un experto en geografía e historia. Genera una descripción enciclopédica clara "
+            f"y contextual para el lugar '{node_name}', destacando su importancia."
+        )
+    elif node_label == "Event":
+        system_instructions = (
+            f"Eres un historiador experto. Describe objetivamente el evento '{node_name}', "
+            "su contexto, desarrollo e impacto principal."
+        )
+    elif node_label == "Organization":
+        system_instructions = (
+            f"Eres un analista experto. Proporciona un perfil corporativo o institucional para "
+            f"la organización '{node_name}', incluyendo su propósito e impacto."
+        )
+    else:  # Concept, Project, Device, Method, etc.
+        system_instructions = (
+            f"Eres un enciclopedista experto. Genera una definición clara, objetiva y profunda "
+            f"para el término/concepto '{node_name}', explicando su significado e impacto."
+        )
+        
+    # Reinforce constraints
+    system_prompt = f"""{system_instructions}
+
+REGLAS ESTRICTAS:
+1. SINTETIZA un perfil usando la "Verdad Factual" (Wikipedia) y el "Contexto Local" proporcionados.
+2. Si el contexto local contradice a Wikipedia, prioriza Wikipedia para hechos históricos, pero explica el enfoque peculiar del contexto local.
+3. Si el 'CONTEXTO LOCAL' es insuficiente, compleméntalo sutilmente con la Verdad Factual.
+4. BAJO NINGUNA CIRCUNSTANCIA inventes archivos, relaciones o datos locales que no aparezcan en el contexto proporcionado.
+5. Tu respuesta final debe ser directamente el texto descriptivo estructurado en 1 o 2 párrafos bien redactados.
+6. NO incluyas saludos, despedidas, ni formato markdown como (```) alrededor del texto.
+"""
+
+    wiki_section = f"--- VERDAD FACTUAL (WIKIPEDIA) ---\n{wiki_grounding}\n----------------------------------\n" if wiki_grounding else "--- VERDAD FACTUAL (WIKIPEDIA) ---\n(Sin información externa)\n----------------------------------\n"
+
+    user_prompt = f"""{wiki_section}
+--- CONTEXTO LOCAL ---
+{context_text}
+----------------------
+
+Escribe el perfil para: {node_name}"""
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
+    
+    url = f"{LLM_GATEWAY_BASE_URL}/chat/completions"
+    
+    # Using 'chat' task type to route to the text generation model (e.g. Llama3)
+    data = {
+        "task": "chat",
+        "privacy_mode": "flexible",
+        "messages": json.dumps(messages),
+        "temperature": 0.3  # Low temp for factual generation
+    }
+    
+    try:
+        response = requests.post(url, data=data, timeout=120)
+        
+        if response.status_code != 200:
+            logger.error(f"   ❌ LLM returned {response.status_code}: {response.text[:200]}")
+            return "Error al generar texto de enriquecimiento (Fallo en la API)."
+            
+        result = response.json()
+        llm_text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+        
+        # Clean up possible markdown artifacts (if the LLM disobeys)
+        llm_text = llm_text.strip()
+        if llm_text.startswith("```"):
+            llm_text = re.sub(r'^```[a-zA-Z]*\n', '', llm_text)
+            llm_text = re.sub(r'\n```$', '', llm_text)
+            
+        logger.info(f"   ✅ Texto generado exitosamente ({len(llm_text)} chars)")
+        return llm_text.strip()
+        
+    except requests.exceptions.ConnectionError:
+        logger.error(f"   ❌ Cannot connect to LLM Gateway at {url}")
+        return "Error: No se pudo conectar al LLM Gateway."
+    except Exception as e:
+        logger.error(f"   ❌ LLM call failed: {e}")
+        return f"Error en generación: {str(e)}"
+
+
+def update_node_status(node_id: str, status: str, error_message: Optional[str] = None, generated_text: Optional[str] = None) -> bool:
+    """
+    Update the enrichment status of a Neo4j node.
+    
+    States:
+    - PROCESSING: Sets enrichment_status to 'PROCESSING'
+    - FAILED: Sets status to 'FAILED' and saves the error_message
+    - COMPLETED: Sets status to 'COMPLETED', saves the generated_text to description,
+                 marks enriched=True and updates enriched_at timestamp.
+                 
+    Args:
+        node_id: The Neo4j elementId of the node.
+        status: The new status ('PROCESSING', 'FAILED', 'COMPLETED').
+        error_message: The error string if status is FAILED.
+        generated_text: The generated profile if status is COMPLETED.
+        
+    Returns:
+        True if successful, False otherwise.
+    """
+    logger.info(f"   🔄 Actualizando estado de enriquecimiento a '{status}' para nodo {node_id}...")
+    
+    driver = get_neo4j_driver()
+    
+    # Base query
+    query = "MATCH (n) WHERE elementId(n) = $node_id\n"
+    
+    # Dynamic SET based on status
+    if status == "PROCESSING":
+        query += "SET n.enrichment_status = 'PROCESSING'\n"
+    elif status == "FAILED":
+        query += "SET n.enrichment_status = 'FAILED', n.enrichment_error = $error_message\n"
+    elif status == "COMPLETED":
+        query += """
+        SET n.enrichment_status = 'COMPLETED',
+            n.description = $description,
+            n.enriched = true,
+            n.enriched_at = datetime(),
+            n.enrichment_error = null
+        """
+        
+    query += "RETURN n.name as node_name"
+    
+    try:
+        with driver.session() as session:
+            result = session.run(query, node_id=node_id, error_message=error_message, description=generated_text)
+            record = result.single()
+            
+            if record:
+                if status == "COMPLETED":
+                    logger.info(f"      ✅ El nodo '{record['node_name']}' está ahora enriquecido totalmente.")
+                return True
+            else:
+                logger.error(f"      ❌ Mismatched ID. Nodo {node_id} no encontrado durante actualización de estado.")
+                return False
+    except Exception as e:
+        logger.error(f"      ❌ Error al actualizar estado en Neo4j: {str(e)}")
+        return False
+
+
+@app.task(bind=True, name="worker.tasks.enrich_node_task", max_retries=3)
+def enrich_node_task(self: Task, node_id: str) -> Dict[str, Any]:
+    """
+    Enrich a single node in the knowledge graph.
+    
+    This task will:
+    1. Fetch local context from Neo4j (co-occurring entities, connected assets).
+    2. Fetch external grounding (Wikipedia summary).
+    3. Call the LLM to synthesize a semantic profile.
+    4. Save the profile to Neo4j (as properties and relationships) and MinIO (for vectorization).
+    
+    Args:
+        node_id: The elementId of the node to enrich.
+        
+    Returns:
+        Dict with status and results.
+    """
+    logger.info("=" * 50)
+    logger.info(f"🌟 INICIANDO ENRIQUECIMIENTO PARA EL NODO: {node_id}")
+    logger.info("=" * 50)
+    
+    try:
+        # Mark as PROCESSING immediately
+        update_node_status(node_id, "PROCESSING")
+        
+        # 1. Local context extraction
+        node_name, node_label, context_text = get_node_context(node_id)
+        
+        if not node_name:
+            error_msg = context_text
+            logger.error(f"❌ Abortando: {error_msg}")
+            update_node_status(node_id, "FAILED", error_message=error_msg)
+            return {"status": "error", "message": error_msg}
+            
+        logger.info(f"   📋 Nodo identificado: {node_name} ({node_label})")
+        logger.info(f"   🔍 Contexto local extraído ({len(context_text)} chars)")
+        
+        # 2. Wikipedia grounding
+        wiki_grounding = fetch_wikipedia_summary(node_name)
+        
+        # 3. LLM analysis
+        generated_text = generate_enrichment_text(node_name, node_label, context_text, wiki_grounding)
+        
+        if generated_text.startswith("Error"):
+            update_node_status(node_id, "FAILED", error_message=generated_text)
+            return {"status": "error", "message": generated_text}
+            
+        logger.info(f"   📝 Extracto generado: {generated_text[:100]}...")
+        
+        # 4. Persistence (COMPLETED)
+        success = update_node_status(node_id, "COMPLETED", generated_text=generated_text)
+        
+        if not success:
+            error_msg = "Fallo en la persistencia de Neo4j."
+            update_node_status(node_id, "FAILED", error_message=error_msg)
+            raise Exception(error_msg)
+            
+        logger.info(f"✅ ¡Enriquecimiento completado con éxito para: {node_name}!")
+        return {
+            "status": "success",
+            "node_id": node_id,
+            "node_name": node_name,
+            "generated_text_preview": generated_text[:100] + "...",
+            "message": "Enrichment pipeline executed successfully (Phase 1-4 completed)."
+        }
+        
+    except Exception as e:
+        error_detail = str(e)
+        logger.error(f"❌ Error durante el enriquecimiento del nodo {node_id}: {error_detail}", exc_info=True)
+        # Update Neo4j to FAILED state before retrying or failing permanently
+        update_node_status(node_id, "FAILED", error_message=error_detail)
+        
+        # Reraise to trigger Celery retry mechanism if appropriate
+        raise self.retry(exc=e, countdown=60)
+
