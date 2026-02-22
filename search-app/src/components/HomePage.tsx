@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Search, Activity, Database, Upload } from 'lucide-react';
+import { Search, Activity, Database, Upload, Sparkles } from 'lucide-react';
 
 export default function HomePage() {
     const navigate = useNavigate();
@@ -104,6 +104,29 @@ export default function HomePage() {
                         Ingesta de archivos, control de tareas de procesamiento, cola de revisión y generación de nodos.
                     </p>
                 </div>
+
+                {/* Enrichment Card */}
+                <div
+                    onClick={() => navigate('/enrichment')}
+                    className="home-card"
+                    style={{
+                        background: 'var(--bg-secondary)', borderRadius: 24, padding: 40,
+                        border: '1px solid var(--border-subtle)', cursor: 'pointer',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                >
+                    <div style={{
+                        width: 64, height: 64, borderRadius: 16, background: 'rgba(236, 72, 153, 0.1)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24
+                    }}>
+                        <Sparkles size={32} className="text-pink-500" />
+                    </div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>Graph Enrichment</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                        Descubrimiento automático, deducción de relaciones ocultas y expansión semántica del conocimiento.
+                    </p>
+                </div>
             </div>
 
             <div style={{ marginTop: 60, display: 'flex', gap: 24, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -126,6 +149,7 @@ export default function HomePage() {
                 .text-blue-500 { color: #3b82f6; }
                 .text-purple-500 { color: #a855f7; }
                 .text-yellow-500 { color: #eab308; }
+                .text-pink-500 { color: #ec4899; }
             `}</style>
         </div>
     );
