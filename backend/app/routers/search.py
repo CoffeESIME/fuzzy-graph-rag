@@ -209,6 +209,46 @@ def _enrich_with_minio(results: List["SearchResultItem"]) -> None:
                 except Exception as e:
                     logger.error(f"Signing failed for {found_path}: {e}")
 
+            # 2. Text / Lyrics Content Injection (Fallback for Graph results)
+            # If the item doesn't have textual data in properties, we fetch the sidecar
+            props = r.properties
+            has_text = any(k in props for k in ["text", "content", "transcript", "lyrics_summary", "ocr_text", "ai_summary"])
+            if not has_text and file_hash:
+                try:
+                    import json
+                    sidecar_path = f"master_records/sidecars/{file_hash}.json"
+                    response = minio_client.get_object(Bucket=bucket_name, Key=sidecar_path)
+                    sidecar_data = json.loads(response['Body'].read().decode('utf-8'))
+                    
+                    data_layers = sidecar_data.get('data_layers', {})
+                    analysis_json = (
+                        data_layers.get('analysis_json') or 
+                        data_layers.get('raw_debug_data', {}).get('visual_semantic_json') or 
+                        data_layers.get('raw_debug_data', {}).get('memory_analysis_json') or 
+                        data_layers.get('text_summary_analysis') or 
+                        data_layers.get('raw_debug_data', {}).get('text_analysis_json') or 
+                        {}
+                    )
+                    
+                    # Update properties with found texts so the UI can use them
+                    if text_val := sidecar_data.get("text"):
+                        props["text"] = text_val
+                        
+                    if transcript := data_layers.get('intermediate_results', {}).get('audio_transcript'):
+                        props["transcript"] = transcript
+                        
+                    if lyrics := analysis_json.get("audio_specifics", {}).get("lyrics_summary"):
+                        props["lyrics_summary"] = lyrics
+                        
+                    if ocr := analysis_json.get('visual_specifics', {}).get('ocr_text'):
+                        props["ocr_text"] = ocr
+                        
+                    if ai_summary := analysis_json.get('graph_core', {}).get('summary'):
+                        props["ai_summary"] = ai_summary
+                        
+                except Exception as e:
+                    logger.debug(f"Missing sidecar for text fallback enrichment {file_hash}: {e}")
+
     except Exception as e:
         logger.error(f"MinIO Discovery failed: {e}")
 

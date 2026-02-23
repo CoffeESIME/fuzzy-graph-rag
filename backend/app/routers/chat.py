@@ -96,30 +96,85 @@ def deduplicate_results(req: SynthesizeRequest) -> List[Dict[str, Any]]:
 
 def extract_sidecar_context(item: Dict[str, Any]) -> str:
     """
-    Extracts the most relevant context text based on the item's space.
+    Extracts the most relevant context text based on the item's space and search origin.
+    Handles both Weaviate (Vector) and Neo4j (Graph) structures.
     """
     props = item.get("properties", {})
-    space = item.get("space", "UnknownSpace")
-    filename = props.get("filename", item.get("filename", "Unknown File"))
+    space = item.get("space", props.get("space", "UnknownSpace"))
+    filename = props.get("filename") or item.get("filename") or item.get("id", "Unknown File")
     
-    content = ""
-    # Extract optimized context based on asset type
-    if space == "TextSpace":
-        content = props.get("ai_summary") or props.get("text") or props.get("description", "")
-    elif space == "VisualSpace":
-        content = props.get("description_ai") or props.get("ocr_text", "")
-    elif space == "AudioSpace":
-        content = props.get("lyrics_summary") or props.get("transcript") or props.get("themes", "")
-    elif space == "MemorySpace":
-        content = props.get("text", "")
-    else:
-        content = props.get("ai_summary", str(props))
+    # Check multiple possible locations for text content (Vector vs Graph schemas)
+    content = (
+        props.get("text") or 
+        props.get("content") or 
+        item.get("text") or
+        item.get("content") or
+        props.get("ai_summary") or 
+        props.get("description") or 
+        props.get("description_ai") or
+        props.get("ocr_text") or
+        props.get("transcript") or
+        props.get("lyrics_summary") or 
+        ""
+    )
+    
+    # Fallback: If content is still empty (common for Graph-only results), fetch directly from MinIO sidecar
+    if not content:
+        file_hash = props.get("hash") or props.get("file_hash") or item.get("uuid") or item.get("id")
+        # Neo4j Graph Topology ids are typically the hash if we used file_hash as elementId/id.
+        if file_hash:
+            try:
+                from shared.clients import get_minio_client
+                minio_client = get_minio_client()
+                bucket = settings.MINIO_BUCKET if hasattr(settings, 'MINIO_BUCKET') else "rag-dataset"
+                
+                # Check if file_hash looks like a hex string hash to avoid querying native Neo4j elementIds if they leaked
+                sidecar_path = f"master_records/sidecars/{file_hash}.json"
+                response = minio_client.get_object(Bucket=bucket, Key=sidecar_path)
+                sidecar_data = json.loads(response['Body'].read().decode('utf-8'))
+                
+                data_layers = sidecar_data.get('data_layers', {})
+                analysis_json = (
+                    data_layers.get('analysis_json') or 
+                    data_layers.get('raw_debug_data', {}).get('visual_semantic_json') or 
+                    data_layers.get('raw_debug_data', {}).get('memory_analysis_json') or 
+                    data_layers.get('text_summary_analysis') or 
+                    data_layers.get('raw_debug_data', {}).get('text_analysis_json') or 
+                    {}
+                )
+                
+                # Try to extract audio transcript / lyrics
+                audio_spec = analysis_json.get("audio_specifics", {})
+                transcript = data_layers.get('intermediate_results', {}).get('audio_transcript', '')
+                lyrics = audio_spec.get('lyrics_summary', '')
+                
+                # Try to extract image OCR
+                ocr = analysis_json.get('visual_specifics', {}).get('ocr_text', '')
+                
+                content = (
+                    sidecar_data.get("text") or 
+                    transcript or 
+                    lyrics or 
+                    ocr or 
+                    analysis_json.get('graph_core', {}).get('summary') or
+                    str(analysis_json)
+                )
+            except Exception as e:
+                logger.debug(f"Could not fetch sidecar fallback for {file_hash}: {e}")
+                
+    # If the search result has a specific matched concept from the Knowledge Graph, inject it into the context
+    kg_context = ""
+    matched_concept = item.get("matched_concept")
+    relation_type = item.get("relation_type")
+    
+    if matched_concept and relation_type:
+        kg_context = f"\n[Graph Relation: Este archivo tiene una relación de tipo '{relation_type}' con el concepto '{matched_concept}']\n"
         
     # Truncate if insanely long (just in case)
     if len(content) > 3000:
         content = content[:3000] + "..."
         
-    return f"📄 [Archivo: {filename} | Tipo: {space}]\n{content}"
+    return f"📄 [Archivo: {filename} | Tipo: {space}]{kg_context}\n{content}"
 
 # --- Endpoints ---
 

@@ -488,7 +488,7 @@ export default function SystemComparisonTab() {
                             {/* Text Content Preview Button */}
                             {(() => {
                                 const props = selectedItem.properties || {};
-                                const hasTextData = !!(props.text || props.content || props.transcript);
+                                const hasTextData = !!(props.text || props.content || props.transcript || props.lyrics_summary || props.ocr_text);
                                 const isTextFormat = props.mime_type?.includes('text') || props.mime_type?.includes('json') || props.mime_type?.includes('csv') || (props.minio_path && /\.(txt|md|csv|json|py|js|ts|html|css|xml|log)$/i.test(props.minio_path));
                                 const hasUrl = !!props.download_url;
 
@@ -692,6 +692,8 @@ export default function SystemComparisonTab() {
                                 props.text ||
                                 props.content ||
                                 props.transcript ||
+                                props.lyrics_summary ||
+                                props.ocr_text ||
                                 ''
                             }
                             url={urlToPass}
