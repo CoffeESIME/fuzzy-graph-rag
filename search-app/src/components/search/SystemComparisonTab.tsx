@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Search, Box, FileText, Image as ImageIcon } from 'lucide-react';
-import { searchSemanticText, searchGraphFuzzy } from '../../lib/api';
-import type { GraphCrispResponse } from '../../types/search';
+import { searchSemanticText, searchGraphFuzzy, synthesizeComparison } from '../../lib/api';
+import type { GraphCrispResponse, RAGConfig, SynthesizeResponse } from '../../types/search';
 import MediaPreview from './MediaPreview';
 import TextPreviewModal from './TextPreviewModal';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Interface for matched item in the comparison table
 interface ComparisonItem {
@@ -38,6 +40,22 @@ export default function SystemComparisonTab() {
     const [seedAlpha, setSeedAlpha] = useState(0.9);
     const [seedLimit, setSeedLimit] = useState(7);
 
+    // Context arrays for synthesis
+    const [vectorData, setVectorData] = useState<any[]>([]);
+    const [crispData, setCrispData] = useState<any[]>([]);
+    const [normalData, setNormalData] = useState<any[]>([]);
+    const [fuzzyData, setFuzzyData] = useState<any[]>([]);
+
+    // RAG Synthesis State
+    const [ragConfig, setRagConfig] = useState<RAGConfig>({
+        model: 'cloud',
+        privacy_mode: false,
+        strategy: 'hibrido_total',
+        top_n: 5
+    });
+    const [isSynthesizing, setIsSynthesizing] = useState(false);
+    const [synthResponse, setSynthResponse] = useState<SynthesizeResponse | null>(null);
+
     const handleSearch = async () => {
         if (!query.trim()) return;
 
@@ -53,6 +71,12 @@ export default function SystemComparisonTab() {
                 searchGraphFuzzy({ query: query.trim(), limit, alpha_cut: fuzzyHighAlpha, seed_alpha: seedAlpha, seed_limit: seedLimit }) as unknown as Promise<GraphCrispResponse>,
                 searchGraphFuzzy({ query: query.trim(), limit, alpha_cut: fuzzyLowAlpha, seed_alpha: seedAlpha, seed_limit: seedLimit }) as unknown as Promise<GraphCrispResponse>,
             ]);
+
+            // Store raw results for complete RAG Context payload
+            setVectorData(vectorRes?.results || []);
+            setCrispData(crispRes?.results || []);
+            setNormalData(fuzzy07Res?.results || []);
+            setFuzzyData(fuzzy05Res?.results || []);
 
             // Map to aggregate by unique node/asset identifier
             const itemMap = new Map<string, ComparisonItem>();
@@ -80,19 +104,20 @@ export default function SystemComparisonTab() {
             // 1. Process Vector Results
             if (vectorRes && vectorRes.results) {
                 vectorRes.results.forEach((item: any) => {
-                    const id = item.uuid || item.properties?.uuid || item.properties?.name || 'unknown-vector';
+                    // Prioritize file_hash from properties to match the Graph results identifier
+                    const id = item.properties?.file_hash || item.properties?.neo4j_hash || item.properties?.hash || item.uuid || item.properties?.name || 'unknown-vector';
                     const label = item.properties?.name || item.properties?.title || item.filename || id;
                     const compItem = getOrCreateItem(id, label, 'VectorAsset', item.properties);
                     compItem.vectorScore = item.score || item.distance;
                 });
             }
 
-            // Helper for Graph Results to ensure we group by file/asset UUID, not by concept,
-            // so we don't overwrite files that match the same concept.
+            // Helper for Graph Results to ensure we group by file/asset hash/UUID
             const processGraphResult = (res: any, weightKey: 'crispWeight' | 'fuzzy07Weight' | 'fuzzy05Weight', dataKey: 'crispData' | 'fuzzy07Data' | 'fuzzy05Data', fallbackWeight: number) => {
                 if (res && res.results) {
                     res.results.forEach((item: any) => {
-                        const id = item.uuid || item.properties?.uuid || item.properties?.name || 'unknown-graph';
+                        // Graph results generally override uuid = file_hash, but check properties to be completely safe
+                        const id = item.properties?.file_hash || item.properties?.neo4j_hash || item.properties?.hash || item.uuid || item.properties?.name || 'unknown-graph';
                         const baseLabel = item.properties?.name || item.properties?.title || item.filename || id;
 
                         const compItem = getOrCreateItem(id, baseLabel, 'GraphNode', item.properties);
@@ -151,12 +176,35 @@ export default function SystemComparisonTab() {
         }
     };
 
+    const handleSynthesize = async () => {
+        if (!query.trim() || comparisonData.length === 0) return;
+        setIsSynthesizing(true);
+        setSynthResponse(null);
+        setError(null);
+        try {
+            const res = await synthesizeComparison({
+                query: query.trim(),
+                config: ragConfig,
+                vector_results: vectorData,
+                crisp_results: crispData,
+                normal_results: normalData,
+                fuzzy_results: fuzzyData
+            });
+            setSynthResponse(res);
+        } catch (err: any) {
+            console.error("Synthesis failed:", err);
+            setError(err.response?.data?.detail || err.message || "Failed to synthesize comparison");
+        } finally {
+            setIsSynthesizing(false);
+        }
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') handleSearch();
     };
 
     return (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
             {/* Controls */}
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
@@ -265,10 +313,11 @@ export default function SystemComparisonTab() {
                 </div>
             )}
 
-            {/* Content Area: Table and Details Stacked */}
-            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {/* Results Table */}
-                <div style={{ flex: 1, minHeight: 250, overflowY: 'auto', background: 'var(--bg-secondary)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+            {/* Scrollable Layout for Content and RAG Panel */}
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4, paddingBottom: 16 }}>
+
+                {/* Table Area (Scrollable internally but maintains a good height) */}
+                <div style={{ flex: '1 0 350px', minHeight: 650, overflowY: 'auto', border: '1px solid var(--border-subtle)', borderRadius: 12, background: 'var(--bg-secondary)', padding: '0 12px 12px 12px' }}>
                     {isLoading ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
                             <div className="loading-spinner" />
@@ -385,7 +434,7 @@ export default function SystemComparisonTab() {
                     <div style={{
                         width: '100%',
                         flexShrink: 0,
-                        maxHeight: '40vh',
+                        maxHeight: '90vh',
                         border: '1px solid var(--border-subtle)',
                         borderRadius: 12,
                         background: 'var(--bg-secondary)',
@@ -458,11 +507,11 @@ export default function SystemComparisonTab() {
                                             width: '100%', marginTop: 12,
                                             transition: 'all 0.2s'
                                         }}
-                                        onMouseEnter={e => {
+                                        onMouseEnter={(e: any) => {
                                             e.currentTarget.style.borderColor = 'var(--accent-primary)';
                                             e.currentTarget.style.color = 'var(--accent-primary)';
                                         }}
-                                        onMouseLeave={e => {
+                                        onMouseLeave={(e: any) => {
                                             e.currentTarget.style.borderColor = 'var(--border-subtle)';
                                             e.currentTarget.style.color = 'var(--text-secondary)';
                                         }}
@@ -475,48 +524,181 @@ export default function SystemComparisonTab() {
                         </div>
                     </div>
                 )}
+
+                {/* RAG Generation Panel */}
+                {comparisonData.length > 0 && (
+                    <div style={{
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 12,
+                        background: 'var(--bg-secondary)',
+                        padding: 16,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 16,
+                        flexShrink: 0
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                🧠 Panel de Generación RAG (Control de Usuario)
+                            </h4>
+                            <button
+                                className="btn-primary"
+                                onClick={handleSynthesize}
+                                disabled={isSynthesizing || comparisonData.length === 0}
+                                style={{ padding: '8px 16px' }}
+                            >
+                                {isSynthesizing ? <div className="loading-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> : <FileText size={16} />}
+                                {isSynthesizing ? 'Sintetizando...' : 'Sintetizar Respuesta'}
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', padding: '12px 0' }}>
+                            {/* Selector de Modelo */}
+                            <div style={{ flex: 1, minWidth: 200 }}>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)', display: 'block', marginBottom: 4 }}>
+                                    Modelo de Inferencia
+                                </label>
+                                <select
+                                    className="search-input"
+                                    value={ragConfig.model}
+                                    onChange={(e) => setRagConfig(prev => ({ ...prev, model: e.target.value as 'local' | 'cloud' }))}
+                                    style={{ width: '100%', cursor: 'pointer' }}
+                                >
+                                    <option value="cloud">☁️ Cloud Advanced (Mejor razonamiento)</option>
+                                    <option value="local">💻 Local Edge (Privacidad absoluta)</option>
+                                </select>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                    Usa Cloud (ej. OpenAI/Gemini) para razonamiento complejo. Usa Local Edge para procesar todo en tu máquina.
+                                </div>
+                            </div>
+
+                            {/* Estrategia de Contexto */}
+                            <div style={{ flex: 1, minWidth: 220 }}>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)', display: 'block', marginBottom: 4 }}>
+                                    Metodología de Recuperación (Ablation Mode)
+                                </label>
+                                <select
+                                    className="search-input"
+                                    value={ragConfig.strategy}
+                                    onChange={(e) => setRagConfig(prev => ({ ...prev, strategy: e.target.value as RAGConfig['strategy'] }))}
+                                    style={{ width: '100%', cursor: 'pointer', marginTop: 4 }}
+                                >
+                                    <option value="baseline_vectorial">Baseline Vectorial (Solo Weaviate)</option>
+                                    <option value="hibrido_estandar">RAG Híbrido Estándar (Weaviate + Crisp Graph)</option>
+                                    <option value="difuso_puro">RAG Difuso Puro (Crisp + Normal + Fuzzy)</option>
+                                    <option value="hibrido_total">Híbrido Total (Blended)</option>
+                                </select>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 8 }}>
+                                    Permite comparar el rendimiento de diferentes paradigmas de recuperación de información.
+                                </div>
+                            </div>
+
+                            {/* Top N y Privacidad */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 200 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                    <div>
+                                        <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)', display: 'block', marginBottom: 4 }}>
+                                            Límite de Docs (Top N)
+                                        </label>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', maxWidth: 160 }}>
+                                            Nº de archivos a enviar al LLM. Más contexto = más tokens consumidos.
+                                        </div>
+                                    </div>
+                                    <input
+                                        className="search-input"
+                                        type="number"
+                                        min={1} max={30}
+                                        value={ragConfig.top_n}
+                                        onChange={(e) => setRagConfig(prev => ({ ...prev, top_n: parseInt(e.target.value) || 5 }))}
+                                        style={{ width: 60, textAlign: 'center' }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px', background: ragConfig.privacy_mode ? 'rgba(239, 68, 68, 0.1)' : 'transparent', border: `1px solid ${ragConfig.privacy_mode ? '#ef4444' : 'var(--border-subtle)'}`, borderRadius: 8, transition: 'all 0.2s', marginTop: 'auto' }}>
+                                    <div style={{ fontSize: '0.8rem', color: ragConfig.privacy_mode ? '#ef4444' : 'var(--text-primary)', fontWeight: ragConfig.privacy_mode ? 600 : 400 }}>
+                                        🕵️‍♂️ Modo Incógnito
+                                    </div>
+                                    <div className={`toggle-switch ${ragConfig.privacy_mode ? 'on' : 'off'}`} onClick={() => setRagConfig(prev => ({ ...prev, privacy_mode: !prev.privacy_mode }))} style={{ cursor: 'pointer' }}>
+                                        <div className="toggle-slider" style={{
+                                            width: 32, height: 18, background: ragConfig.privacy_mode ? '#ef4444' : 'var(--border-subtle)', borderRadius: 16, position: 'relative', transition: '0.2s'
+                                        }}>
+                                            <div style={{ width: 14, height: 14, background: 'var(--bg-primary)', borderRadius: '50%', position: 'absolute', top: 2, left: ragConfig.privacy_mode ? 16 : 2, transition: '0.2s' }} />
+                                        </div>
+                                    </div>
+                                </div>
+                                {ragConfig.privacy_mode && (
+                                    <div style={{ fontSize: '0.65rem', color: '#ef4444', marginTop: -6 }}>
+                                        *Petición no registrada en el historial.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Synthesized Response Area */}
+                        {synthResponse && (
+                            <div style={{
+                                marginTop: 8,
+                                paddingTop: 16,
+                                borderTop: '1px solid var(--border-subtle)',
+                                animation: 'fadeIn 0.5s ease-out'
+                            }}>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Métricas RAG:</span>
+                                    {synthResponse.is_private && <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 12, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444' }}>Incógnito ✅</span>}
+                                    <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 12, background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-indigo)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>{synthResponse.sources_used.length} Fuentes Citadas</span>
+                                </div>
+
+                                <div className="markdown-body" style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'var(--text-primary)' }}>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {synthResponse.answer}
+                                    </ReactMarkdown>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Context legend or summary below */}
+                {comparisonData.length > 0 && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: 16, flexWrap: 'wrap', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#34d399' }} /> Puro (Solo Weaviate Text)
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#60a5fa' }} /> Crisp (Weaviate + Neo4j peso ≥ 0.9)
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#a78bfa' }} /> Fuzzy (Weaviate + Neo4j peso ≥ {fuzzyHighAlpha})
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f472b6' }} /> Fuzzy (Weaviate + Neo4j peso ≥ {fuzzyLowAlpha})
+                        </div>
+                    </div>
+                )}
+
+                {/* Text Preview Modal */}
+                {selectedItem && (() => {
+                    const props = selectedItem.properties || {};
+                    const hasTextData = !!(props.text || props.content || props.transcript);
+                    const isTextFormat = props.mime_type?.includes('text') || props.mime_type?.includes('json') || props.mime_type?.includes('csv') || (props.minio_path && /\.(txt|md|csv|json|py|js|ts|html|css|xml|log)$/i.test(props.minio_path));
+                    const urlToPass = (!hasTextData && isTextFormat && props.download_url) ? props.download_url : undefined;
+
+                    return (
+                        <TextPreviewModal
+                            isOpen={textPreviewOpen}
+                            onClose={() => setTextPreviewOpen(false)}
+                            title={selectedItem.label || 'Contenido de detalle'}
+                            content={
+                                props.text ||
+                                props.content ||
+                                props.transcript ||
+                                ''
+                            }
+                            url={urlToPass}
+                        />
+                    );
+                })()}
             </div>
-
-            {/* Context legend or summary below */}
-            {comparisonData.length > 0 && (
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: 16, flexWrap: 'wrap', flexShrink: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#34d399' }} /> Puro (Solo Weaviate Text)
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#60a5fa' }} /> Crisp (Weaviate + Neo4j peso ≥ 0.9)
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#a78bfa' }} /> Fuzzy (Weaviate + Neo4j peso ≥ {fuzzyHighAlpha})
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f472b6' }} /> Fuzzy (Weaviate + Neo4j peso ≥ {fuzzyLowAlpha})
-                    </div>
-                </div>
-            )}
-
-            {/* Text Preview Modal */}
-            {selectedItem && (() => {
-                const props = selectedItem.properties || {};
-                const hasTextData = !!(props.text || props.content || props.transcript);
-                const isTextFormat = props.mime_type?.includes('text') || props.mime_type?.includes('json') || props.mime_type?.includes('csv') || (props.minio_path && /\.(txt|md|csv|json|py|js|ts|html|css|xml|log)$/i.test(props.minio_path));
-                const urlToPass = (!hasTextData && isTextFormat && props.download_url) ? props.download_url : undefined;
-
-                return (
-                    <TextPreviewModal
-                        isOpen={textPreviewOpen}
-                        onClose={() => setTextPreviewOpen(false)}
-                        title={selectedItem.label || 'Contenido de detalle'}
-                        content={
-                            props.text ||
-                            props.content ||
-                            props.transcript ||
-                            ''
-                        }
-                        url={urlToPass}
-                    />
-                );
-            })()}
         </div>
     );
 }

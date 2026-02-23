@@ -858,8 +858,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
     # Search all spaces for seeds
     # We focus on DigitalAssets, so TextSpace, VisualSpace, AudioSpace.
     # MemorySpace might be relevant too? Let's include all.
-    seed_uuids = set()
-    seed_hashes = set()
+    seed_nodes_dict = {}
     weaviate_client = get_weaviate_client()
     
     for space_name, vector_name in SEARCHABLE_SPACES.items():
@@ -883,17 +882,22 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
 
             response = collection.query.hybrid(**hybrid_kwargs)
             for obj in response.objects:
-                seed_uuids.add(str(obj.uuid))
                 # Robust extraction of hash from Weaviate
                 props = obj.properties
                 found_hash = props.get("file_hash") or props.get("hash") or props.get("neo4j_hash")
                 if found_hash:
-                    seed_hashes.add(found_hash)
+                    # Get hybrid score from metadata
+                    score = obj.metadata.score if obj.metadata and obj.metadata.score is not None else 1.0
+                    # Keep the highest score if asset appears in multiple spaces
+                    if found_hash not in seed_nodes_dict or score > seed_nodes_dict[found_hash]:
+                        seed_nodes_dict[found_hash] = score
                 
         except Exception as e:
             logger.warning(f"Vector seed search failed for {space_name}: {e}")
 
-    if not seed_uuids and not seed_hashes:
+    seed_nodes = [{"file_hash": k, "score": v} for k, v in seed_nodes_dict.items()]
+
+    if not seed_nodes:
         # No semantic matches found
         return GraphCrispResponse(
             query=req.query,
@@ -914,40 +918,41 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
     
     cypher_query = """
     // A. Encontrar los nodos semilla
+    UNWIND $seed_nodes AS seed_node
     MATCH (seed:DigitalAsset)
-    WHERE seed.file_hash IN $seed_hashes
+    WHERE seed.file_hash = seed_node.file_hash
     
     // B. Expandir a Entidades Conectadas (Puente)
     MATCH (seed)-[r]->(target)
     WHERE (target:Concept OR target:Person OR target:Location OR target:Organization OR target:Event OR target:Project)
-      AND r.weight >= $alpha_cut
+      AND coalesce(r.weight, 1.0) >= $alpha_cut
     
     // C. Expandir 'Hermanos' (Discovery) con Decaimiento
     OPTIONAL MATCH (target)<-[r2]-(discovery:DigitalAsset)
     WHERE discovery.file_hash <> seed.file_hash 
-      AND (r.weight * r2.weight) >= $alpha_cut
+      AND (coalesce(r.weight, 1.0) * coalesce(r2.weight, 1.0)) >= $alpha_cut
 
     // Factor de Penalización (Penalty Factor) para relaciones estructurales/genéricas
-    WITH seed, r, target, r2, discovery,
+    WITH seed, r, target, r2, discovery, seed_node.score AS semantic_score,
          elementId(seed) as seed_id,
          elementId(target) as target_id,
          elementId(discovery) as disc_id,
          // Penalización a r
          CASE WHEN type(r) IN ['DEFINES', 'CREATED_BY', 'DEPICTS', 'LOCATED_AT'] 
-              THEN r.weight * 0.3 
-              ELSE r.weight END AS adjusted_w1,
+              THEN coalesce(r.weight, 1.0) * 0.3 
+              ELSE coalesce(r.weight, 1.0) END AS adjusted_w1,
          // Penalización a r2 (si existe)
          CASE WHEN r2 IS NOT NULL AND type(r2) IN ['DEFINES', 'CREATED_BY', 'DEPICTS', 'LOCATED_AT'] 
-              THEN r2.weight * 0.3 
+              THEN coalesce(r2.weight, 1.0) * 0.3 
               WHEN r2 IS NOT NULL 
-              THEN r2.weight 
+              THEN coalesce(r2.weight, 1.0) 
               ELSE NULL END AS adjusted_w2,
-         r.weight as w1,
-         r2.weight as w2
+         coalesce(r.weight, 1.0) as w1,
+         coalesce(r2.weight, 1.0) as w2
 
-    // Cálculo del score final basado en pesos ajustados
-    WITH seed, r, target, r2, discovery, seed_id, target_id, disc_id, w1, w2, adjusted_w1, adjusted_w2,
-         (CASE WHEN adjusted_w2 IS NOT NULL THEN adjusted_w1 * adjusted_w2 ELSE adjusted_w1 END) AS score_final
+    // Cálculo del score final basado en pesos ajustados multiplicado por la relevancia de Weaviate
+    WITH seed, r, target, r2, discovery, seed_id, target_id, disc_id, w1, w2, adjusted_w1, adjusted_w2, semantic_score,
+         (CASE WHEN adjusted_w2 IS NOT NULL THEN (adjusted_w1 * adjusted_w2) ELSE adjusted_w1 END) * semantic_score AS score_final
 
     // D. Retornar y Ordenar por Fuerza Total del Camino Ajustada
     RETURN seed, r, target, r2, discovery,
@@ -963,8 +968,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
         with driver.session() as session:
             result = session.run(
                 cypher_query,
-                seed_uuids=list(seed_uuids),
-                seed_hashes=list(seed_hashes),
+                seed_nodes=seed_nodes,
                 alpha_cut=req.alpha_cut,
                 limit=req.limit * 2
             )

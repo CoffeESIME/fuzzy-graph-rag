@@ -114,6 +114,29 @@ export interface GraphFuzzyRequest {
     debug?: boolean;
 }
 
+// --- Tab 6: Comparison RAG Synthesis ---
+export interface RAGConfig {
+    model: 'local' | 'cloud';
+    privacy_mode: boolean;
+    strategy: 'baseline_vectorial' | 'hibrido_estandar' | 'difuso_puro' | 'hibrido_total';
+    top_n: number;
+}
+
+export interface SynthesizeRequest {
+    query: string;
+    config: RAGConfig;
+    vector_results: any[];
+    crisp_results: any[];
+    normal_results: any[];
+    fuzzy_results: any[];
+}
+
+export interface SynthesizeResponse {
+    answer: string;
+    sources_used: string[];
+    is_private: boolean;
+}
+
 // --- Tab Enum ---
 export type SearchTab =
     | 'semantic-text'
