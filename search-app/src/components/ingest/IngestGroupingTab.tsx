@@ -263,6 +263,14 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
         });
     };
 
+    const handleSelectAll = () => {
+        if (selectedFiles.size === ungroupedNames.length) {
+            setSelectedFiles(new Set());
+        } else {
+            setSelectedFiles(new Set(ungroupedNames));
+        }
+    };
+
     const handleCreate = () => {
         setError(null);
         if (selectedFiles.size === 0) { setError('Selecciona al menos un archivo.'); return; }
@@ -305,9 +313,19 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
 
             {/* File selection */}
             <div style={{ marginBottom: 16 }}>
-                <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Selecciona archivos para el grupo
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block' }}>
+                        Selecciona archivos para el grupo
+                    </label>
+                    <button onClick={handleSelectAll} style={{
+                        background: 'transparent', border: '1px solid #334155', borderRadius: 4,
+                        padding: '2px 8px', fontSize: '0.65rem', color: '#cbd5e1', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 4
+                    }}>
+                        <Check size={10} />
+                        {selectedFiles.size === ungroupedNames.length ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                    </button>
+                </div>
                 <div style={{
                     display: 'flex', flexDirection: 'column', gap: 4,
                     maxHeight: 180, overflow: 'auto', padding: 8, borderRadius: 6,

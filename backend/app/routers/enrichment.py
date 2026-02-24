@@ -67,7 +67,7 @@ def get_enrichment_candidates(
     {where_clause}
     OPTIONAL MATCH (n)<--(asset:DigitalAsset)
     WITH n, count(distinct asset) as connections
-    RETURN elementId(n) as id, n.name as name, labels(n)[0] as type, connections, n.enrichment_status as status, n.enrichment_error as error, n.fuzzy_applied as fuzzy_applied
+    RETURN elementId(n) as id, coalesce(n.name, n.title) as name, labels(n)[0] as type, connections, n.enrichment_status as status, n.enrichment_error as error, n.fuzzy_applied as fuzzy_applied
     ORDER BY connections DESC
     LIMIT $limit
     """

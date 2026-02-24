@@ -5,6 +5,7 @@ import { RefreshCw, Crown, Loader2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface RankItem {
+    [key: string]: string | number;
     id: string;
     value: number;
 }
@@ -40,14 +41,23 @@ export default function PageRankCard() {
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState('');
     const [method, setMethod] = useState<PRMode>('standard');
+    const [minWeight, setMinWeight] = useState<number>(0.0);
+    const [debouncedWeight, setDebouncedWeight] = useState<number>(0.0);
     const navigate = useNavigate();
 
-    const fetchData = useCallback(async (m: PRMode) => {
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedWeight(minWeight);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [minWeight]);
+
+    const fetchData = useCallback(async (m: PRMode, w: number) => {
         setLoading(true);
         setError(null);
         try {
             const res = await axios.post<AnalysisResponse>(
-                `http://localhost:8000/analysis/pagerank?method=${m}`
+                `http://localhost:8000/analysis/pagerank?method=${m}&min_weight=${w}`
             );
             if (res.data.status === 'error') throw new Error(res.data.message);
             // Reverse for Nivo horizontal bar (index 0 at bottom)
@@ -61,7 +71,7 @@ export default function PageRankCard() {
         }
     }, []);
 
-    useEffect(() => { fetchData(method); }, [method, fetchData]);
+    useEffect(() => { fetchData(method, debouncedWeight); }, [method, debouncedWeight, fetchData]);
 
     const narrative = NARRATIVES[method];
     const barColor = method === 'fuzzy' ? '#a78bfa' : '#f59e0b';
@@ -85,7 +95,7 @@ export default function PageRankCard() {
     };
 
     return (
-        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -98,7 +108,7 @@ export default function PageRankCard() {
                         <p className="text-gray-500">Ranking de influencia topológica en el grafo de conocimiento.</p>
                     </div>
                 </div>
-                <button onClick={() => fetchData(method)} className="btn-icon" disabled={loading}>
+                <button onClick={() => fetchData(method, debouncedWeight)} className="btn-icon" disabled={loading}>
                     <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
@@ -200,6 +210,31 @@ export default function PageRankCard() {
                                     {m === 'standard' ? '👑 Standard' : '🎯 Fuzzy'}
                                 </button>
                             ))}
+                        </div>
+
+                        {/* Threshold Slider */}
+                        <div style={{
+                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid #334155',
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                                    UMBRAL DE CONFIANZA
+                                </div>
+                                <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 700 }}>
+                                    {minWeight.toFixed(1)}
+                                </div>
+                            </div>
+                            <input
+                                type="range"
+                                min="0" max="0.9" step="0.1"
+                                value={minWeight}
+                                onChange={(e) => setMinWeight(parseFloat(e.target.value))}
+                                style={{ width: '100%', cursor: 'pointer', accentColor: barColor }}
+                            />
+                            <p style={{ fontSize: '0.65rem', color: '#64748b', margin: '8px 0 0 0', lineHeight: 1.4 }}>
+                                Ignora conexiones menores al umbral para reducir el ruido.
+                            </p>
                         </div>
 
                         {/* Dynamic Narrative */}

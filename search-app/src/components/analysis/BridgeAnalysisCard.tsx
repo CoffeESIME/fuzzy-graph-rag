@@ -180,7 +180,7 @@ export default function BridgeAnalysisCard() {
     const narrative = NARRATIVES[method];
 
     return (
-        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1400, width: '100%', margin: '0 auto' }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">

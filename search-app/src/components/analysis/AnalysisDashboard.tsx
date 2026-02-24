@@ -35,7 +35,7 @@ export default function AnalysisDashboard() {
     const navigate = useNavigate();
 
     return (
-        <div style={{ padding: '24px 48px', maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ padding: '24px 48px', maxWidth: 1400, width: '100%', margin: '0 auto' }}>
             <div style={{ marginBottom: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                     <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8, background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>

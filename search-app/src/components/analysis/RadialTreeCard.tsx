@@ -65,7 +65,7 @@ const TYPE_ICONS: Record<string, string> = {
 
 function getNodeStyle(level: number, type: string) {
     const palette = TYPE_COLORS[type] || TYPE_COLORS.Concept;
-    const sizes = [{ w: 70, h: 70, fs: 11 }, { w: 54, h: 54, fs: 10 }, { w: 42, h: 42, fs: 9 }];
+    const sizes = [{ w: 90, h: 90, fs: 14 }, { w: 75, h: 75, fs: 12 }, { w: 60, h: 60, fs: 11 }];
     const s = sizes[level] || sizes[2];
     return {
         backgroundColor: level === 0 ? palette.bg : `${palette.bg}cc`,
@@ -93,15 +93,24 @@ export default function RadialTreeCard() {
     const [message, setMessage] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [method, setMethod] = useState<RadialMode>('standard');
+    const [minWeight, setMinWeight] = useState<number>(0.0);
+    const [debouncedWeight, setDebouncedWeight] = useState<number>(0.0);
     const navigate = useNavigate();
 
-    const fetchTree = useCallback(async (rootName: string | null | undefined, m: RadialMode) => {
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedWeight(minWeight);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [minWeight]);
+
+    const fetchTree = useCallback(async (rootName: string | null | undefined, m: RadialMode, w: number) => {
         setLoading(true);
         setError(null);
         try {
             const payload = rootName ? { root_node_name: rootName } : {};
             const res = await axios.post<AnalysisResponse>(
-                `http://localhost:8000/analysis/radial-tree?method=${m}`,
+                `http://localhost:8000/analysis/radial-tree?method=${m}&min_weight=${w}`,
                 payload
             );
             if (res.data.status === 'error') throw new Error(res.data.message);
@@ -129,8 +138,8 @@ export default function RadialTreeCard() {
                 });
             }
 
-            // Level 1: Ring at radius 250
-            const R1 = 250;
+            // Level 1: Ring at radius 300
+            const R1 = 300;
             const l1AngleMap: Record<string, number> = {};
             l1.forEach((node, i) => {
                 const angle = (2 * Math.PI * i) / l1.length;
@@ -143,8 +152,8 @@ export default function RadialTreeCard() {
                 });
             });
 
-            // Level 2: Ring at radius 500, grouped near parent
-            const R2 = 500;
+            // Level 2: Ring at radius 600, grouped near parent
+            const R2 = 600;
             const l2ByParent: Record<string, GraphNode[]> = {};
             l2.forEach(n => {
                 const p = n.parent || '';
@@ -190,18 +199,18 @@ export default function RadialTreeCard() {
     }, [setNodes, setEdges]);
 
     useEffect(() => {
-        fetchTree(rootNode, method);
+        fetchTree(rootNode, method, debouncedWeight);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [method]);
+    }, [method, debouncedWeight]);
 
     // Initial fetch on mount
     useEffect(() => {
-        fetchTree(null, method);
+        fetchTree(null, method, debouncedWeight);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleNodeClick = (_event: React.MouseEvent, node: Node) => {
-        fetchTree(node.id, method);
+        fetchTree(node.id, method, debouncedWeight);
     };
 
     const narrative = NARRATIVES[method];
@@ -223,8 +232,8 @@ export default function RadialTreeCard() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <button onClick={() => fetchTree(null, method)} className="btn-secondary text-xs">Reset Root</button>
-                    <button onClick={() => fetchTree(rootNode, method)} className="btn-icon" disabled={loading}>
+                    <button onClick={() => fetchTree(null, method, debouncedWeight)} className="btn-secondary text-xs">Reset Root</button>
+                    <button onClick={() => fetchTree(rootNode, method, debouncedWeight)} className="btn-icon" disabled={loading}>
                         <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                     </button>
                 </div>
@@ -292,6 +301,34 @@ export default function RadialTreeCard() {
                                 {m === 'standard' ? '🌐 Standard' : '🧠 Fuzzy'}
                             </button>
                         ))}
+                    </div>
+
+                    {/* Threshold Slider */}
+                    <div style={{
+                        background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                        border: '1px solid #334155',
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                                UMBRAL DE CONFIANZA
+                            </div>
+                            <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 700 }}>
+                                {minWeight.toFixed(1)}
+                            </div>
+                        </div>
+                        <input
+                            type="range"
+                            min="0" max="0.9" step="0.1"
+                            value={minWeight}
+                            onChange={(e) => setMinWeight(parseFloat(e.target.value))}
+                            style={{
+                                width: '100%', cursor: 'pointer',
+                                accentColor: method === 'fuzzy' ? '#7c3aed' : '#0ea5e9'
+                            }}
+                        />
+                        <p style={{ fontSize: '0.65rem', color: '#64748b', margin: '8px 0 0 0', lineHeight: 1.4 }}>
+                            Ignora conexiones menores al umbral para reducir el ruido.
+                        </p>
                     </div>
 
                     {/* Dynamic Narrative */}

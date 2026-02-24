@@ -43,14 +43,23 @@ export default function HeatmapAnalysisCard() {
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState('');
     const [method, setMethod] = useState<JaccardMode>('standard');
+    const [minWeight, setMinWeight] = useState<number>(0.0);
+    const [debouncedWeight, setDebouncedWeight] = useState<number>(0.0);
     const navigate = useNavigate();
 
-    const fetchData = useCallback(async (m: JaccardMode) => {
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedWeight(minWeight);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [minWeight]);
+
+    const fetchData = useCallback(async (m: JaccardMode, w: number) => {
         setLoading(true);
         setError(null);
         try {
             const res = await axios.post<AnalysisResponse>(
-                `http://localhost:8000/analysis/heatmap?method=${m}`
+                `http://localhost:8000/analysis/heatmap?method=${m}&min_weight=${w}`
             );
             if (res.data.status === 'error') throw new Error(res.data.message);
             setData(res.data.mock_data.matrix);
@@ -63,7 +72,7 @@ export default function HeatmapAnalysisCard() {
         }
     }, []);
 
-    useEffect(() => { fetchData(method); }, [method, fetchData]);
+    useEffect(() => { fetchData(method, debouncedWeight); }, [method, debouncedWeight, fetchData]);
 
     const narrative = NARRATIVES[method];
 
@@ -93,7 +102,7 @@ export default function HeatmapAnalysisCard() {
         : 'linear-gradient(90deg, #0f172a, #7f1d1d, #dc2626, #ef4444, #fca5a5)';
 
     return (
-        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -108,7 +117,7 @@ export default function HeatmapAnalysisCard() {
                         </p>
                     </div>
                 </div>
-                <button onClick={() => fetchData(method)} className="btn-icon" disabled={loading}>
+                <button onClick={() => fetchData(method, debouncedWeight)} className="btn-icon" disabled={loading}>
                     <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
@@ -160,9 +169,6 @@ export default function HeatmapAnalysisCard() {
                                     }
                                     theme={theme}
                                     hoverTarget="cell"
-                                    cellOpacity={1}
-                                    cellHoverOpacity={0.85}
-                                    cellHoverOthersOpacity={0.2}
                                     animate={true}
                                     motionConfig="gentle"
                                     tooltip={({ cell }) => (
@@ -218,6 +224,31 @@ export default function HeatmapAnalysisCard() {
                                     {m.icon} {m.label}
                                 </button>
                             ))}
+                        </div>
+
+                        {/* Threshold Slider */}
+                        <div style={{
+                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid #334155',
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                                    UMBRAL DE CONFIANZA
+                                </div>
+                                <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 700 }}>
+                                    {minWeight.toFixed(1)}
+                                </div>
+                            </div>
+                            <input
+                                type="range"
+                                min="0" max="0.9" step="0.1"
+                                value={minWeight}
+                                onChange={(e) => setMinWeight(parseFloat(e.target.value))}
+                                style={{ width: '100%', cursor: 'pointer', accentColor }}
+                            />
+                            <p style={{ fontSize: '0.65rem', color: '#64748b', margin: '8px 0 0 0', lineHeight: 1.4 }}>
+                                Ignora conexiones menores al umbral para reducir el ruido.
+                            </p>
                         </div>
 
                         {/* Dynamic Title */}

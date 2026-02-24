@@ -20,7 +20,7 @@ class AnalysisToolResponse(BaseModel):
     message: str
     mock_data: Dict[str, Any]
 
-def _safe_gds_project(session, graph_name: str, project_query: str):
+def _safe_gds_project(session, graph_name: str, project_query: str, **kwargs):
     """Project a GDS graph, dropping any stale version first. Retry-safe."""
     # Try dropping first (might not exist, that's fine)
     try:
@@ -29,7 +29,7 @@ def _safe_gds_project(session, graph_name: str, project_query: str):
         pass
     # Now project — if STILL fails (race condition), drop hard and retry
     try:
-        session.run(project_query).consume()
+        session.run(project_query, **kwargs).consume()
     except Exception as e:
         if 'already loaded' in str(e).lower():
             # Nuclear option: list and drop, then retry
@@ -37,7 +37,7 @@ def _safe_gds_project(session, graph_name: str, project_query: str):
                 session.run(f"CALL gds.graph.drop('{graph_name}')").consume()
             except Exception:
                 pass
-            session.run(project_query).consume()
+            session.run(project_query, **kwargs).consume()
         else:
             raise
 
@@ -443,7 +443,7 @@ def analyze_fog_of_war():
 
 # 🍩 Chord Diagram (Category Co-Occurrence via DigitalAssets)
 @router.post("/chord", response_model=AnalysisToolResponse)
-def analyze_chord(method: str = "standard"):
+def analyze_chord(method: str = "standard", min_weight: float = 0.0):
     """
     Chord Dual: Standard (conteo de archivos) vs Fuzzy (intersección difusa).
     Zeroes Concept-Concept self-reference to avoid visual domination.
@@ -456,7 +456,7 @@ def analyze_chord(method: str = "standard"):
         cypher_query = """
         WITH $categories as allowed_labels
         MATCH (n1)<-[r1]-(a:DigitalAsset)-[r2]->(n2)
-        WHERE elementId(n1) < elementId(n2)
+        WHERE elementId(n1) < elementId(n2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
         WITH n1, n2, r1, r2, allowed_labels,
              head([lbl IN labels(n1) WHERE lbl IN allowed_labels]) as l1,
              head([lbl IN labels(n2) WHERE lbl IN allowed_labels]) as l2
@@ -467,8 +467,8 @@ def analyze_chord(method: str = "standard"):
     else:
         cypher_query = """
         WITH $categories as allowed_labels
-        MATCH (n1)<--(a:DigitalAsset)-->(n2)
-        WHERE elementId(n1) < elementId(n2)
+        MATCH (n1)<-[r1]-(a:DigitalAsset)-[r2]->(n2)
+        WHERE elementId(n1) < elementId(n2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
         WITH n1, n2, a, allowed_labels,
              head([lbl IN labels(n1) WHERE lbl IN allowed_labels]) as l1,
              head([lbl IN labels(n2) WHERE lbl IN allowed_labels]) as l2
@@ -478,7 +478,7 @@ def analyze_chord(method: str = "standard"):
 
     try:
         with driver.session() as session:
-            result = session.run(cypher_query, categories=categories)
+            result = session.run(cypher_query, categories=categories, min_weight=min_weight)
             records = list(result)
 
             matrix_map = {cat: {cat2: 0 for cat2 in categories} for cat in categories}
@@ -520,7 +520,7 @@ class RadialTreeRequest(BaseModel):
     root_node_name: str = None
 
 @router.post("/radial-tree", response_model=AnalysisToolResponse)
-def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard"):
+def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard", min_weight: float = 0.0):
     """
     Radial Tree Dual: Standard (conteo archivos) vs Fuzzy (pesos difusos).
     L1 = 8 vecinos top, L2 = 3 vecinos por L1.
@@ -533,7 +533,7 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard"):
             # If no root, pick highest-degree Concept
             if not root_name:
                 res = session.run("""
-                    MATCH (c:Concept)<--(d:DigitalAsset)
+                    MATCH (c)<--(d:DigitalAsset)
                     WITH c, count(d) as deg ORDER BY deg DESC LIMIT 1
                     RETURN c.name as name
                 """)
@@ -551,8 +551,8 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard"):
             # --- Level 1: Top 8 neighbors ---
             if method == "fuzzy":
                 l1_query = """
-                    MATCH (root:Concept {name: $rootName})<-[r1]-(a:DigitalAsset)-[r2]->(l1)
-                    WHERE elementId(root) <> elementId(l1)
+                    MATCH (root {name: $rootName})<-[r1]-(a:DigitalAsset)-[r2]->(l1)
+                    WHERE elementId(root) <> elementId(l1) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
                     WITH root, l1,
                          sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight,
                          labels(l1)[0] AS ltype
@@ -561,16 +561,21 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard"):
                 """
             else:
                 l1_query = """
-                    MATCH (root:Concept {name: $rootName})<--(a:DigitalAsset)-->(l1)
-                    WHERE elementId(root) <> elementId(l1)
+                    MATCH (root {name: $rootName})<-[r1]-(a:DigitalAsset)-[r2]->(l1)
+                    WHERE elementId(root) <> elementId(l1) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
                     WITH root, l1, count(distinct a) AS weight, labels(l1)[0] AS ltype
                     ORDER BY weight DESC LIMIT 8
                     RETURN l1.name AS name, weight, ltype
                 """
-            l1_result = session.run(l1_query, rootName=root_name)
+            l1_result = session.run(l1_query, rootName=root_name, min_weight=min_weight)
             l1_records = list(l1_result)
 
-            nodes_list = [{"id": root_name, "level": 0, "type": "Concept", "parent": None}]
+            # Determine root type
+            root_res = session.run("MATCH (r {name: $rootName}) RETURN labels(r)[0] as rtype", rootName=root_name)
+            root_rec = root_res.single()
+            root_type = root_rec["rtype"] if (root_rec and root_rec["rtype"]) else "Concept"
+
+            nodes_list = [{"id": root_name, "level": 0, "type": root_type, "parent": None}]
             edges_list = []
             seen = {root_name}
 
@@ -593,7 +598,7 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard"):
                     l2_query = """
                         UNWIND $l1Names AS parentName
                         MATCH (parent {name: parentName})<-[r1]-(a:DigitalAsset)-[r2]->(l2)
-                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2)
+                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
                         WITH parentName, l2,
                              sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight,
                              labels(l2)[0] AS ltype
@@ -605,15 +610,15 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard"):
                 else:
                     l2_query = """
                         UNWIND $l1Names AS parentName
-                        MATCH (parent {name: parentName})<--(a:DigitalAsset)-->(l2)
-                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2)
+                        MATCH (parent {name: parentName})<-[r1]-(a:DigitalAsset)-[r2]->(l2)
+                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
                         WITH parentName, l2, count(distinct a) AS weight, labels(l2)[0] AS ltype
                         ORDER BY parentName, weight DESC
                         WITH parentName, collect({name: l2.name, weight: weight, ltype: ltype})[0..3] AS children
                         UNWIND children AS child
                         RETURN parentName, child.name AS name, child.weight AS weight, child.ltype AS ltype
                     """
-                l2_result = session.run(l2_query, l1Names=l1_names, seen=list(seen))
+                l2_result = session.run(l2_query, l1Names=l1_names, seen=list(seen), min_weight=min_weight)
 
                 for r in l2_result:
                     n = r["name"]
@@ -698,7 +703,7 @@ def analyze_abstract_concepts():
 
 # �👑 PageRank
 @router.post("/pagerank", response_model=AnalysisToolResponse)
-def analyze_pagerank(method: str = "standard"):
+def analyze_pagerank(method: str = "standard", min_weight: float = 0.0):
     """
     PageRank Dual: Standard (conteo de archivos) vs Fuzzy (pesos semánticos).
     Usa proyección dirigida para que PageRank distribuya influencia correctamente.
@@ -709,7 +714,7 @@ def analyze_pagerank(method: str = "standard"):
     if method == "fuzzy":
         query_project = """
         MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
-        WHERE elementId(c1) <> elementId(c2)
+        WHERE elementId(c1) <> elementId(c2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
         WITH c1, c2, sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight
         WITH gds.graph.project(
           'conceptPR', c1, c2,
@@ -719,8 +724,8 @@ def analyze_pagerank(method: str = "standard"):
         """
     else:
         query_project = """
-        MATCH (c1:Concept)<--(a:DigitalAsset)-->(c2:Concept)
-        WHERE elementId(c1) <> elementId(c2)
+        MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
+        WHERE elementId(c1) <> elementId(c2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
         WITH c1, c2, count(a) AS weight
         WITH gds.graph.project(
           'conceptPR', c1, c2,
@@ -740,7 +745,7 @@ def analyze_pagerank(method: str = "standard"):
 
     try:
         with driver.session() as session:
-            _safe_gds_project(session, 'conceptPR', query_project)
+            _safe_gds_project(session, 'conceptPR', query_project, min_weight=min_weight)
             result = session.run(query_pagerank)
             data = [{"id": r["id"], "value": r["value"]} for r in result]
             _safe_gds_drop(session, 'conceptPR')
@@ -843,7 +848,7 @@ def analyze_weight_distribution():
         }
 
 @router.post("/heatmap", response_model=AnalysisToolResponse)
-def analyze_heatmap(method: str = "standard"):
+def analyze_heatmap(method: str = "standard", min_weight: float = 0.0):
     """
     Genera matriz de calor Jaccard con soporte Dual (Standard y Fuzzy).
     """
@@ -852,6 +857,10 @@ def analyze_heatmap(method: str = "standard"):
     # Query para Jaccard Estándar (Basado en conteo de archivos)
     query_standard = """
     MATCH (c:Concept)<--(d:DigitalAsset)
+    // In standard, we might not have explicit weights on all relations, but if we do, filter them
+    OPTIONAL MATCH (c)<-[r]-(d)
+    WITH c, d, coalesce(r.weight, 1.0) as w
+    WHERE w >= $min_weight
     WITH c, count(d) as degree
     ORDER BY degree DESC LIMIT 20
     WITH collect(c) as topConcepts
@@ -861,12 +870,13 @@ def analyze_heatmap(method: str = "standard"):
     
     CALL {
         WITH c1, c2
-        MATCH (c1)<--(a:DigitalAsset)-->(c2)
+        MATCH (c1)<-[r1]-(a:DigitalAsset)-[r2]->(c2)
+        WHERE coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
         RETURN count(distinct a) as intersection
     }
 
-    CALL { WITH c1 MATCH (c1)<--(a1:DigitalAsset) RETURN count(distinct a1) as degree1 }
-    CALL { WITH c2 MATCH (c2)<--(a2:DigitalAsset) RETURN count(distinct a2) as degree2 }
+    CALL { WITH c1 MATCH (c1)<-[r1]-(a1:DigitalAsset) WHERE coalesce(r1.weight, 1.0) >= $min_weight RETURN count(distinct a1) as degree1 }
+    CALL { WITH c2 MATCH (c2)<-[r2]-(a2:DigitalAsset) WHERE coalesce(r2.weight, 1.0) >= $min_weight RETURN count(distinct a2) as degree2 }
     
     WITH c1.name as x, c2.name as y, intersection, degree1, degree2
     WITH x, y, (degree1 + degree2 - intersection) as union_count, intersection
@@ -883,6 +893,7 @@ def analyze_heatmap(method: str = "standard"):
     # Query para Fuzzy Jaccard (Basado en pesos de relaciones difusas)
     query_fuzzy = """
     MATCH (c:Concept)<-[r]-(d:DigitalAsset)
+    WHERE coalesce(r.weight, 1.0) >= $min_weight
     WITH c, sum(r.weight) as weighted_degree
     ORDER BY weighted_degree DESC LIMIT 20
     WITH collect(c) as topConcepts
@@ -893,11 +904,12 @@ def analyze_heatmap(method: str = "standard"):
     CALL {
         WITH c1, c2
         MATCH (c1)<-[r1]-(a:DigitalAsset)-[r2]->(c2)
+        WHERE coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
         RETURN sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) as fuzzy_intersection
     }
 
-    CALL { WITH c1 MATCH (c1)<-[r1]-(:DigitalAsset) RETURN sum(r1.weight) as sum_w1 }
-    CALL { WITH c2 MATCH (c2)<-[r2]-(:DigitalAsset) RETURN sum(r2.weight) as sum_w2 }
+    CALL { WITH c1 MATCH (c1)<-[r1]-(:DigitalAsset) WHERE coalesce(r1.weight, 1.0) >= $min_weight RETURN sum(r1.weight) as sum_w1 }
+    CALL { WITH c2 MATCH (c2)<-[r2]-(:DigitalAsset) WHERE coalesce(r2.weight, 1.0) >= $min_weight RETURN sum(r2.weight) as sum_w2 }
     
     WITH c1.name as x, c2.name as y, fuzzy_intersection, sum_w1, sum_w2
     WITH x, y, (sum_w1 + sum_w2 - fuzzy_intersection) as fuzzy_union, fuzzy_intersection
@@ -915,7 +927,7 @@ def analyze_heatmap(method: str = "standard"):
 
     try:
         with driver.session() as session:
-            result = session.run(cypher_query)
+            result = session.run(cypher_query, min_weight=min_weight)
             records = list(result)
 
             data_map = {}

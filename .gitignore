@@ -50,3 +50,4 @@ dist/
 graph-rag/
 frontend/.streamlit/secrets.toml.template
 backend/poetry.lock
+tumblr/

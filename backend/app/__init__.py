@@ -11,6 +11,7 @@ from app.routers.lyrics import router as lyrics_router
 from app.routers.search import router as search_router
 from app.routers.analysis import router as analysis_router
 from app.routers.enrichment import router as enrichment_router
+from app.routers.enrichment_health import router as enrichment_health_router
 from app.routers.chat import router as chat_router
 
 @asynccontextmanager
@@ -49,6 +50,7 @@ app.include_router(lyrics_router)
 app.include_router(search_router)
 app.include_router(analysis_router)
 app.include_router(enrichment_router)
+app.include_router(enrichment_health_router)
 app.include_router(chat_router)
 
 @app.get("/")

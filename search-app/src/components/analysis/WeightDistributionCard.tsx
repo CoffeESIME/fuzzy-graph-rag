@@ -5,6 +5,7 @@ import { RefreshCw, BarChart3, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface HistogramBin {
+    [key: string]: string | number;
     range: string; // "0.0-0.1"
     count: number;
     bucket: number;
@@ -73,7 +74,7 @@ export default function WeightDistributionCard() {
     );
 
     return (
-        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1000, margin: '0 auto' }}>
+        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1000, width: '100%', margin: '0 auto' }}>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate('/analysis')} className="btn-secondary">Back</button>
@@ -107,13 +108,8 @@ export default function WeightDistributionCard() {
                             padding={0.3}
                             valueScale={{ type: 'linear' }}
                             indexScale={{ type: 'band', round: true }}
-                            colors={{ scheme: 'category10' }} // Cyan distinct? Or distinct per bar?
-                            // Custom color per bar based on index?
-                            colors={({ indexValue }) => {
-                                // Gradient from left (fuzzy) to right (strict)
-                                // Not easy with indexValue string.
-                                return '#06b6d4'
-                            }}
+                            // Custom color per bar
+                            colors={() => '#06b6d4'}
                             axisTop={null}
                             axisRight={null}
                             axisBottom={{
