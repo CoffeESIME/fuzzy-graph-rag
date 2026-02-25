@@ -13,6 +13,7 @@ from app.routers.analysis import router as analysis_router
 from app.routers.enrichment import router as enrichment_router
 from app.routers.enrichment_health import router as enrichment_health_router
 from app.routers.chat import router as chat_router
+from app.routers.explore import router as explore_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,6 +53,7 @@ app.include_router(analysis_router)
 app.include_router(enrichment_router)
 app.include_router(enrichment_health_router)
 app.include_router(chat_router)
+app.include_router(explore_router)
 
 @app.get("/")
 def read_root():

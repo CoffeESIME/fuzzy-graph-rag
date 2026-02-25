@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { Sparkles, ArrowLeft, Search, CheckSquare, Square, Check, Eye, X, Network, Activity } from 'lucide-react';
+import { Sparkles, ArrowLeft, Search, CheckSquare, Square, Check, Eye, X, Network, Activity, Layers } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getEnrichmentCandidates, requestEnrichment, getPreviewWeights, applyPreviewWeights } from '../../lib/api';
 import type { CandidateNode, WeightPreviewResult, WeightUpdateItem } from '../../lib/api';
 import MusicHealthCard from './MusicHealthCard';
+import LatentExplorer from './LatentExplorer';
 
 export default function EnrichmentDashboard() {
     const navigate = useNavigate();
 
-    const [activeTab, setActiveTab] = useState<'semantic' | 'health'>('semantic');
+    const [activeTab, setActiveTab] = useState<'semantic' | 'health' | 'explorer'>('semantic');
 
     const [nodeType, setNodeType] = useState('Person');
     const [statusFilter, setStatusFilter] = useState('PENDING');
@@ -194,6 +195,19 @@ export default function EnrichmentDashboard() {
                     >
                         <Activity size={18} />
                         Salud de Música y Arte
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('explorer')}
+                        style={{
+                            padding: '12px 24px', background: 'transparent',
+                            border: 'none', borderBottom: activeTab === 'explorer' ? '2px solid #ec4899' : '2px solid transparent',
+                            color: activeTab === 'explorer' ? '#ec4899' : 'var(--text-secondary)',
+                            fontWeight: 600, fontSize: '1rem', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 8
+                        }}
+                    >
+                        <Layers size={18} />
+                        Explorador Latente
                     </button>
                 </div>
 
@@ -425,6 +439,10 @@ export default function EnrichmentDashboard() {
 
                 {activeTab === 'health' && (
                     <MusicHealthCard />
+                )}
+
+                {activeTab === 'explorer' && (
+                    <LatentExplorer />
                 )}
             </div>
 
