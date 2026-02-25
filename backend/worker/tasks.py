@@ -2582,10 +2582,11 @@ def get_node_context(node_id: str) -> Tuple[Optional[str], Optional[str], str]:
     // Group everything
     WITH node_name, node_label, 
          collect({
-            filename: asset.filename, 
             type: asset.mime_type, 
             tags: asset.tags,
-            relation: type(r)
+            relation: type(r),
+            weight: coalesce(r.weight, 1.0),
+            reasoning: r.reasoning
          }) as connected_assets
          
     RETURN node_name, node_label, connected_assets
@@ -2607,23 +2608,27 @@ def get_node_context(node_id: str) -> Tuple[Optional[str], Optional[str], str]:
             context_pieces = []
             
             # Filter out empty assets (due to OPTIONAL MATCH returning a list with one null-like dict)
-            valid_assets = [a for a in assets if a.get("filename")]
+            valid_assets = [a for a in assets if a.get("relation")]
             
             if not valid_assets:
                 context_text = "No se encontraron documentos o archivos conectados a este nodo en el grafo."
             else:
-                context_pieces.append(f"El nodo '{node_name}' aparece en los siguientes archivos locales:")
+                context_pieces.append(f"El nodo '{node_name}' aparece referenciado localmente de las siguientes formas:")
                 for asset in valid_assets:
-                    filename = asset.get("filename", "Archivo Desconocido")
                     rel_type = asset.get("relation", "CONNECTIONS")
+                    mime = asset.get("type", "unknown")
+                    weight = asset.get("weight", 1.0)
+                    reasoning = asset.get("reasoning")
                     
-                    piece = f"- Archivo: {filename} (Relación: {rel_type})"
+                    piece = f"- Tipo Archivo: {mime} | Relación: {rel_type} (Peso: {weight:.2f})"
+                    if reasoning:
+                        piece += f" | Razón de la conexión: {reasoning}"
                     
                     tags = asset.get("tags")
                     if tags:
                         # Handle Neo4j list properties
                         tag_str = ", ".join(tags) if isinstance(tags, list) else str(tags)
-                        piece += f" | Etiquetas del archivo: {tag_str}"
+                        piece += f" | Etiquetas asociadas: {tag_str}"
                         
                     context_pieces.append(piece)
                 

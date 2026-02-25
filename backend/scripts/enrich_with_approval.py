@@ -226,9 +226,8 @@ def extract_local_context(driver, node_id: str) -> Dict[str, Any]:
     MATCH (n)<-[r]-(asset:DigitalAsset)
     
     WITH n, 
-         collect(distinct type(r)) as relation_types,
+         collect(distinct {type: type(r), reasoning: r.reasoning, weight: r.weight}) as relations_detailed,
          collect(distinct asset.mime_type)[..5] as file_types,
-         collect(distinct asset.filename)[..8] as filenames,
          collect(distinct asset.file_hash)[..8] as file_hashes,
          count(distinct asset) as total_connections
     
@@ -237,7 +236,7 @@ def extract_local_context(driver, node_id: str) -> Dict[str, Any]:
     WHERE sibling <> n 
       AND (sibling:Person OR sibling:Concept OR sibling:Organization OR sibling:Event OR sibling:Project)
     
-    WITH n, relation_types, file_types, filenames, file_hashes, total_connections,
+    WITH n, relations_detailed, file_types, file_hashes, total_connections,
          collect(distinct {name: sibling.name, label: labels(sibling)[0]})[..10] as co_entities
     
     // Tags from connected assets
@@ -247,9 +246,8 @@ def extract_local_context(driver, node_id: str) -> Dict[str, Any]:
     RETURN
         n.name as name,
         total_connections,
-        relation_types,
+        relations_detailed,
         file_types,
-        filenames,
         file_hashes,
         co_entities,
         collect(distinct tagged_asset.tags)[..3] as tag_groups
@@ -281,10 +279,9 @@ def extract_local_context(driver, node_id: str) -> Dict[str, Any]:
         return {
             "name": record["name"],
             "total_connections": record["total_connections"],
-            "relation_types": record["relation_types"],
+            "relations_detailed": record["relations_detailed"],
             "media_categories": list(media_categories),
             "file_types": ftypes,
-            "filenames": [f for f in record["filenames"] if f],
             "file_hashes": [h for h in record["file_hashes"] if h],
             "co_entities": [e for e in record["co_entities"] if e.get("name")],
             "tags": list(all_tags)
@@ -348,9 +345,8 @@ def call_enrichment_llm(
 
 === Relevance_Source (Grafo Local) ===
 - Conexiones totales: {local_context.get('total_connections', 0)}
-- Tipos de relación en el grafo: {local_context.get('relation_types', [])}
 - Categorías de archivos conectados: {local_context.get('media_categories', [])}
-- Archivos ejemplo: {local_context.get('filenames', [])[:5]}
+- Relaciones detalladas en el grafo (con reasoning y peso): {json.dumps(local_context.get('relations_detailed', []), ensure_ascii=False)}
 - Tags co-ocurrentes: {local_context.get('tags', [])[:10]}
 - Entidades que co-ocurren: {json.dumps([e.get('name', '') for e in local_context.get('co_entities', [])[:8]], ensure_ascii=False)}
 
