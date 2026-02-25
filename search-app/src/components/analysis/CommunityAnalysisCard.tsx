@@ -50,16 +50,17 @@ export default function CommunityAnalysisCard() {
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState('');
     const [method, setMethod] = useState<CommunityMode>('standard');
+    const [minWeight, setMinWeight] = useState<number>(0.9);
     const [selectedCommunity, setSelectedCommunity] = useState<PackingNode | null>(null);
     const navigate = useNavigate();
 
-    const fetchData = useCallback(async (m: CommunityMode) => {
+    const fetchData = useCallback(async (m: CommunityMode, weight: number) => {
         setLoading(true);
         setError(null);
         setSelectedCommunity(null);
         try {
             const res = await axios.post<AnalysisResponse>(
-                `http://localhost:8000/analysis/communities?method=${m}`
+                `http://localhost:8000/analysis/communities?method=${m}&min_weight=${weight}`
             );
             if (res.data.status === 'error') throw new Error(res.data.message);
             setData(res.data.mock_data.packing_data || null);
@@ -71,7 +72,13 @@ export default function CommunityAnalysisCard() {
         }
     }, []);
 
-    useEffect(() => { fetchData(method); }, [method, fetchData]);
+    useEffect(() => { fetchData(method, minWeight); }, [method, minWeight, fetchData]);
+
+    // Handle method change and reset weight appropriately
+    const handleMethodChange = (m: CommunityMode) => {
+        setMethod(m);
+        setMinWeight(m === 'fuzzy' ? 0.5 : 0.9);
+    };
 
     const communityCount = data?.children?.length || 0;
     const narrative = NARRATIVES[method];
@@ -105,7 +112,7 @@ export default function CommunityAnalysisCard() {
                         </p>
                     </div>
                 </div>
-                <button onClick={() => fetchData(method)} className="btn-icon" disabled={loading}>
+                <button onClick={() => fetchData(method, minWeight)} className="btn-icon" disabled={loading}>
                     <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
@@ -224,7 +231,7 @@ export default function CommunityAnalysisCard() {
                         {(['standard', 'fuzzy'] as CommunityMode[]).map(m => (
                             <button
                                 key={m}
-                                onClick={() => setMethod(m)}
+                                onClick={() => handleMethodChange(m)}
                                 style={{
                                     flex: 1, padding: '8px 4px', fontSize: '0.72rem', fontWeight: 600,
                                     border: 'none', cursor: 'pointer',
@@ -238,6 +245,27 @@ export default function CommunityAnalysisCard() {
                                 {m === 'standard' ? '🌍 Standard' : '🧠 Fuzzy'}
                             </button>
                         ))}
+                    </div>
+
+                    {/* Filtro de Umbral (Slider) */}
+                    <div style={{ marginBottom: 20 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Umbral Mínimo:</span>
+                            <span style={{ fontSize: '0.75rem', color: '#f8fafc', fontWeight: 700, fontFamily: 'monospace' }}>
+                                {minWeight.toFixed(2)}
+                            </span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0" max="1" step="0.05"
+                            value={minWeight}
+                            onChange={(e) => setMinWeight(parseFloat(e.target.value))}
+                            style={{ width: '100%', accentColor: method === 'fuzzy' ? '#7c3aed' : '#8b5cf6' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                            <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Más Ruido</span>
+                            <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Más Estricto</span>
+                        </div>
                     </div>
 
                     {/* Dynamic narrative */}

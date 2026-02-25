@@ -8,7 +8,6 @@ export default function SearchPage() {
     return (
         <div style={{
             maxWidth: 1200, // Increased max width
-            margin: '0 auto',
             padding: '24px 24px',
         }}>
             {/* Header + Nav */}

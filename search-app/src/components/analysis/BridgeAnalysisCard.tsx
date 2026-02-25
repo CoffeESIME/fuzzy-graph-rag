@@ -141,9 +141,10 @@ export default function BridgeAnalysisCard() {
     const [flowEdges, setFlowEdges] = useState<Edge[]>([]);
     const [message, setMessage] = useState('');
     const [method, setMethod] = useState<BridgeMode>('standard');
+    const [minWeight, setMinWeight] = useState<number>(0.9);
     const navigate = useNavigate();
 
-    const fetchData = useCallback(async (m: BridgeMode) => {
+    const fetchData = useCallback(async (m: BridgeMode, weight: number) => {
         setLoading(true);
         setError(null);
         setActiveBridge(null);
@@ -151,7 +152,7 @@ export default function BridgeAnalysisCard() {
         setFlowEdges([]);
         try {
             const res = await axios.post<AnalysisResponse>(
-                `http://localhost:8000/analysis/bridges?method=${m}`
+                `http://localhost:8000/analysis/bridges?method=${m}&min_weight=${weight}`
             );
             if (res.data.status === 'error') throw new Error(res.data.message);
             const items = res.data.mock_data.bridges;
@@ -175,7 +176,13 @@ export default function BridgeAnalysisCard() {
         setFlowEdges(edges);
     };
 
-    useEffect(() => { fetchData(method); }, [method, fetchData]);
+    useEffect(() => { fetchData(method, minWeight); }, [method, minWeight, fetchData]);
+
+    // Handle method change and reset weight appropriately
+    const handleMethodChange = (m: BridgeMode) => {
+        setMethod(m);
+        setMinWeight(m === 'fuzzy' ? 0.5 : 0.9);
+    };
 
     const narrative = NARRATIVES[method];
 
@@ -195,7 +202,7 @@ export default function BridgeAnalysisCard() {
                         </p>
                     </div>
                 </div>
-                <button onClick={() => fetchData(method)} className="btn-icon" disabled={loading}>
+                <button onClick={() => fetchData(method, minWeight)} className="btn-icon" disabled={loading}>
                     <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
@@ -218,7 +225,7 @@ export default function BridgeAnalysisCard() {
                                 {(['standard', 'fuzzy'] as BridgeMode[]).map(m => (
                                     <button
                                         key={m}
-                                        onClick={() => setMethod(m)}
+                                        onClick={() => handleMethodChange(m)}
                                         style={{
                                             flex: 1, padding: '8px 4px', fontSize: '0.72rem', fontWeight: 600,
                                             border: 'none', cursor: 'pointer',
@@ -232,6 +239,27 @@ export default function BridgeAnalysisCard() {
                                         {m === 'standard' ? '🌉 Standard' : '✨ Fuzzy'}
                                     </button>
                                 ))}
+                            </div>
+
+                            {/* Filtro de Umbral (Slider) */}
+                            <div style={{ marginBottom: 20 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Umbral Mínimo:</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#f8fafc', fontWeight: 700, fontFamily: 'monospace' }}>
+                                        {minWeight.toFixed(2)}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0" max="1" step="0.05"
+                                    value={minWeight}
+                                    onChange={(e) => setMinWeight(parseFloat(e.target.value))}
+                                    style={{ width: '100%', accentColor: method === 'fuzzy' ? '#7c3aed' : '#ef4444' }}
+                                />
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                                    <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Más Ruido</span>
+                                    <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Más Estricto</span>
+                                </div>
                             </div>
 
                             <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>

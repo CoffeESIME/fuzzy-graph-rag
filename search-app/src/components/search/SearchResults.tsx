@@ -130,6 +130,10 @@ export default function SearchResults({ data, loading, error }: Props) {
                         item.properties.filename ||
                         item.properties.name ||
                         item.properties.title ||
+                        item.label ||
+                        item.properties.label ||
+                        item.properties.id ||
+                        item.uuid ||
                         item.properties.ai_summary ||
                         'Sin título'
                     );

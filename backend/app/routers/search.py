@@ -735,7 +735,7 @@ def search_graph_crisp(req: GraphCrispRequest):
            elementId(n) AS c_id,
            r.weight AS score,
            r.reasoning AS reasoning,
-           n.name AS matched_node_name,
+           coalesce(n.name, n.title, n.id, elementId(n)) AS matched_node_name,
            labels(n) AS matched_node_labels,
            type(r) AS rel_type
     ORDER BY score DESC
@@ -1043,7 +1043,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
         rel1 = record["r"]
         rel2 = record["r2"] # Optional
         
-        target_name = target.get("name", "Unknown")
+        target_name = target.get("name") or target.get("title") or target.get("id") or "Unknown"
         concepts_matched.add(target_name)
         
         # Determine Target Type

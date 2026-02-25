@@ -237,7 +237,9 @@ from app.schemas.task_schemas import (
     ResetToHoldRequest,
     ResetToHoldResponse,
     ApproveTaskRequest,
-    ApproveTaskResponse
+    ApproveTaskResponse,
+    RetryAnalysisRequest,
+    RetryAnalysisResponse
 )
 from shared.clients import get_minio_client
 import json as json_lib
@@ -977,4 +979,75 @@ async def approve_tasks(
         tasks_approved=approved_count,
         success=True,
         message=f"Successfully approved {approved_count} task(s)"
+    )
+
+
+@router.post("/retry-analysis", response_model=RetryAnalysisResponse)
+async def retry_analysis(
+    request: RetryAnalysisRequest,
+    session: Session = Depends(get_session)
+):
+    """
+    Retry analysis for tasks in REVIEW_REQUIRED or FAILED status.
+    Moves tasks directly back to PENDING and dispatches them to Celery,
+    without clearing their sidecar data or losing user context.
+    """
+    logger.info(f"🔄 Retrying analysis for {len(request.vector_status_ids)} task(s)")
+    
+    # Helper for queue assignment
+    def get_queue_for_vector_type(vector_type: VectorType) -> str:
+        if vector_type in [VectorType.VISUAL_SEMANTIC, VectorType.TEXT_OCR]:
+            return "heavy_gpu"
+        return "fast_cpu"
+        
+    retried_count = 0
+    celery_task_ids = []
+    
+    for vs_id in request.vector_status_ids:
+        try:
+            vs_uuid = uuid.UUID(vs_id)
+            vector_status = session.get(VectorStatus, vs_uuid)
+            
+            if not vector_status:
+                logger.warning(f"   VectorStatus {vs_id} not found")
+                continue
+            
+            # Allow retrying from REVIEW_REQUIRED or FAILED
+            if vector_status.status in [JobStatus.REVIEW_REQUIRED, JobStatus.FAILED]:
+                old_status = vector_status.status
+                vector_status.status = JobStatus.PENDING
+                vector_status.error_message = None  # Clear error message
+                vector_status.updated_at = datetime.utcnow()
+                
+                # Dispatch to Celery
+                queue_name = get_queue_for_vector_type(vector_status.vector_type)
+                
+                try:
+                    from app.core.celery_app import app as celery_app
+                    celery_task = celery_app.send_task(
+                        'worker.tasks.process_vector_task',
+                        args=[str(vector_status.id)],
+                        queue=queue_name
+                    )
+                    celery_task_ids.append(celery_task.id)
+                    retried_count += 1
+                    logger.info(f"   ✅ Sent to Celery ({queue_name}): {vs_id} ({old_status} → PENDING)")
+                except Exception as e:
+                    logger.error(f"   ❌ Failed to dispatch {vs_id} to Celery: {e}")
+                    # Revert status if dispatch fails
+                    vector_status.status = old_status
+            else:
+                logger.warning(f"   ⚠️ Skipping {vs_id}: status={vector_status.status} (must be REVIEW_REQUIRED or FAILED)")
+                
+        except Exception as e:
+            logger.error(f"   ❌ Error processing {vs_id}: {e}")
+            
+    session.commit()
+    logger.info(f"   Retried analysis for {retried_count} task(s)")
+    
+    return RetryAnalysisResponse(
+        tasks_retried=retried_count,
+        celery_task_ids=celery_task_ids,
+        success=True,
+        message=f"Successfully queued {retried_count} task(s) for re-analysis"
     )

@@ -153,3 +153,16 @@ class ApproveTaskResponse(BaseModel):
     tasks_approved: int
     success: bool = True
     message: str = ""
+
+
+class RetryAnalysisRequest(BaseModel):
+    """Request to retry analysis for tasks in REVIEW_REQUIRED or FAILED status."""
+    vector_status_ids: List[str]
+
+
+class RetryAnalysisResponse(BaseModel):
+    """Response from retrying analysis."""
+    tasks_retried: int
+    celery_task_ids: List[str] = []
+    success: bool = True
+    message: str = ""

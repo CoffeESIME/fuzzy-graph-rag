@@ -2,14 +2,16 @@
    TypeScript Types for Multimodal Search
    ========================================== */
 
-// --- Shared Result Type (Matching Real Backend) ---
 export interface SearchResult {
     space: string;
     space_icon: string;
     uuid: string;
     distance: number;
     score: number;
+    label?: string;
+    type?: string;
     properties: Record<string, any>;
+    filename?: string;
 }
 
 export interface SearchResponse {

@@ -50,11 +50,12 @@ def _safe_gds_drop(session, graph_name: str):
 
 # 🧬 Community Detection (Louvain via Cypher Projection)
 @router.post("/communities", response_model=AnalysisToolResponse)
-def analyze_communities(method: str = "standard"):
+def analyze_communities(method: str = "standard", min_weight: float = 0.9):
     """
     Detecta comunidades usando GDS Louvain con soporte Dual (Standard y Fuzzy).
     Standard: aristas = conteo de archivos compartidos, nodos = count(archivos).
     Fuzzy: aristas = sum(min(w1,w2)), nodos = sum(pesos relaciones).
+    Aplica el filtro MIN_WEIGHT.
     """
     driver = get_neo4j_driver()
 
@@ -62,7 +63,9 @@ def analyze_communities(method: str = "standard"):
     if method == "fuzzy":
         query_project = """
         MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
-        WHERE id(c1) < id(c2)
+        WHERE id(c1) < id(c2) 
+          AND coalesce(r1.weight, 1.0) >= $min_weight 
+          AND coalesce(r2.weight, 1.0) >= $min_weight
         WITH c1, c2, sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight
         WITH gds.graph.project(
           'conceptCommunities',
@@ -72,11 +75,13 @@ def analyze_communities(method: str = "standard"):
         ) AS g
         RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
         """
-        node_size_clause = "MATCH (n)<-[r]-(:DigitalAsset) WITH n, communityId, round(sum(r.weight), 2) AS degree"
+        node_size_clause = "MATCH (n)<-[r]-(:DigitalAsset) WHERE coalesce(r.weight, 1.0) >= $min_weight WITH n, communityId, round(sum(r.weight), 2) AS degree"
     else:
         query_project = """
-        MATCH (c1:Concept)<--(a:DigitalAsset)-->(c2:Concept)
+        MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
         WHERE id(c1) < id(c2)
+          AND coalesce(r1.weight, 1.0) >= $min_weight 
+          AND coalesce(r2.weight, 1.0) >= $min_weight
         WITH c1, c2, count(a) AS weight
         WITH gds.graph.project(
           'conceptCommunities',
@@ -86,7 +91,7 @@ def analyze_communities(method: str = "standard"):
         ) AS g
         RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
         """
-        node_size_clause = "MATCH (n)<--(a:DigitalAsset) WITH n, communityId, count(distinct a) AS degree"
+        node_size_clause = "MATCH (n)<-[r]-(a:DigitalAsset) WHERE coalesce(r.weight, 1.0) >= $min_weight WITH n, communityId, count(distinct a) AS degree"
 
     # --- Louvain + enriquecer con tamaño real ---
     query_louvain = f"""
@@ -106,8 +111,8 @@ def analyze_communities(method: str = "standard"):
 
     try:
         with driver.session() as session:
-            _safe_gds_project(session, 'conceptCommunities', query_project)
-            result = session.run(query_louvain)
+            _safe_gds_project(session, 'conceptCommunities', query_project, min_weight=min_weight)
+            result = session.run(query_louvain, min_weight=min_weight)
             records = list(result)
             _safe_gds_drop(session, 'conceptCommunities')
 
@@ -159,10 +164,11 @@ def analyze_communities(method: str = "standard"):
 
 # 🌉 Semantic Bridges (Bowtie Heuristic — no GDS needed)
 @router.post("/bridges", response_model=AnalysisToolResponse)
-def analyze_bridges(method: str = "standard"):
+def analyze_bridges(method: str = "standard", min_weight: float = 0.9):
     """
     Puentes Semánticos Dual: Standard (conteo) vs Fuzzy (pesos difusos).
     bridge_score = diversity × degree (standard) o diversity × fuzzy_weight (fuzzy).
+    Aplica el filtro MIN_WEIGHT.
     """
     driver = get_neo4j_driver()
 
@@ -170,8 +176,10 @@ def analyze_bridges(method: str = "standard"):
         cypher_query = """
         MATCH (bridge:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(other)
         WHERE elementId(bridge) <> elementId(other)
+          AND coalesce(r1.weight, 1.0) >= $min_weight 
+          AND coalesce(r2.weight, 1.0) >= $min_weight
         WITH bridge, other,
-             CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END AS fuzzy_w
+             CASE WHEN coalesce(r1.weight, 1.0) < coalesce(r2.weight, 1.0) THEN coalesce(r1.weight, 1.0) ELSE coalesce(r2.weight, 1.0) END AS fuzzy_w
         WITH bridge, sum(fuzzy_w) AS fuzzy_degree,
              count(distinct labels(other)) AS diversity
         WITH bridge, round(fuzzy_degree * diversity, 2) AS score
@@ -179,21 +187,27 @@ def analyze_bridges(method: str = "standard"):
 
         MATCH (bridge)<-[r1]-(:DigitalAsset)-[r2]->(o)
         WHERE elementId(bridge) <> elementId(o)
+          AND coalesce(r1.weight, 1.0) >= $min_weight 
+          AND coalesce(r2.weight, 1.0) >= $min_weight
         RETURN bridge.name AS id, score,
                collect(distinct o.name)[0..6] AS context
         ORDER BY score DESC
         """
     else:
         cypher_query = """
-        MATCH (bridge:Concept)<-[]-(a:DigitalAsset)-->(other)
+        MATCH (bridge:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(other)
         WHERE elementId(bridge) <> elementId(other)
+          AND coalesce(r1.weight, 1.0) >= $min_weight 
+          AND coalesce(r2.weight, 1.0) >= $min_weight
         WITH bridge, count(distinct other) AS degree,
              count(distinct labels(other)) AS diversity
         WITH bridge, round(toFloat(degree * diversity), 2) AS score
         ORDER BY score DESC LIMIT 10
 
-        MATCH (bridge)<-[]-(:DigitalAsset)-->(o)
+        MATCH (bridge)<-[r1]-(:DigitalAsset)-[r2]->(o)
         WHERE elementId(bridge) <> elementId(o)
+          AND coalesce(r1.weight, 1.0) >= $min_weight 
+          AND coalesce(r2.weight, 1.0) >= $min_weight
         RETURN bridge.name AS id, score,
                collect(distinct o.name)[0..6] AS context
         ORDER BY score DESC
@@ -201,7 +215,7 @@ def analyze_bridges(method: str = "standard"):
 
     try:
         with driver.session() as session:
-            result = session.run(cypher_query)
+            result = session.run(cypher_query, min_weight=min_weight)
             bridges = [
                 {"id": r["id"], "score": r["score"], "context": r["context"]}
                 for r in result

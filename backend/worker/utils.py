@@ -99,11 +99,11 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
         style_segment = f"Type: {specs.get('image_type', 'unknown')} style {specs.get('art_style', 'unknown')}."
         
         # Prioridad 4: Tags for additional semantic richness
-        tags = core.get("tags", [])
+        tags = core.get("tags") or []
         tags_segment = f"Tags: {', '.join(tags)}." if tags else ""
         
         # Prioridad 5: Extracted Concepts (Fuzzy semantic bridge)
-        concepts = core.get("extracted_concepts", [])
+        concepts = core.get("extracted_concepts") or []
         concepts_segment = f"Linked Concepts: {', '.join(concepts)}." if concepts else ""
         
         return f"{style_segment} {desc_segment} {ocr_segment} {mood_segment} {concepts_segment} {tags_segment}".strip()
@@ -117,7 +117,7 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
         meta_segment = f"Audio Type: {specs.get('audio_type', 'unknown')} Genre: {specs.get('genre', 'unknown')}."
         
         # Prioridad 2: Emoción e Instrumentos (Para búsquedas por 'vibe')
-        instruments = specs.get('instruments', [])
+        instruments = specs.get('instruments') or []
         vibe_segment = f"Emotion: {specs.get('emotional_tone', '')}. Instruments: {', '.join(instruments)}."
         
         # Prioridad 3: Contenido Lírico o Temático
@@ -128,7 +128,7 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
         summary = core.get('summary', '')
         
         # Prioridad 5: Extracted Concepts (Fuzzy semantic bridge)
-        concepts = core.get("extracted_concepts", [])
+        concepts = core.get("extracted_concepts") or []
         concepts_segment = f"Linked Concepts: {', '.join(concepts)}." if concepts else ""
         
         return f"{meta_segment} {vibe_segment} {content_segment} {concepts_segment} Description: {summary}".strip()
@@ -148,11 +148,11 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
         summary_segment = f"Summary: {summary}." if summary else ""
         
         # Prioridad 3: Key arguments
-        key_args = specs.get('key_arguments', [])
+        key_args = specs.get('key_arguments') or []
         args_segment = f"Key Points: {'; '.join(key_args)}." if key_args else ""
         
         # Prioridad 4: Extracted Concepts (Fuzzy semantic bridge)
-        concepts = core.get("extracted_concepts", [])
+        concepts = core.get("extracted_concepts") or []
         concepts_segment = f"Linked Concepts: {', '.join(concepts)}." if concepts else ""
         
         # Prioridad 5: El Texto Original (Chunk)
@@ -182,7 +182,7 @@ def build_vector_content(task_type: str, llm_json: dict, raw_text: str = "") -> 
         
         # Extracted Concepts from graph_core (also present in memories)
         core = llm_json.get("graph_core", {})
-        concepts = core.get("extracted_concepts", [])
+        concepts = core.get("extracted_concepts") or []
         concepts_segment = f"Linked Concepts: {', '.join(concepts)}." if concepts else ""
             
         return f"User Memory: {enriched_narrative} {sentiment_segment} {conn_segment} {concepts_segment}".strip()

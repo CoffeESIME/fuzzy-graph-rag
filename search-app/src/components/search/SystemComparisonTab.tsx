@@ -105,8 +105,8 @@ export default function SystemComparisonTab() {
             if (vectorRes && vectorRes.results) {
                 vectorRes.results.forEach((item: any) => {
                     // Prioritize file_hash from properties to match the Graph results identifier
-                    const id = item.properties?.file_hash || item.properties?.neo4j_hash || item.properties?.hash || item.uuid || item.properties?.name || 'unknown-vector';
-                    const label = item.properties?.name || item.properties?.title || item.filename || id;
+                    const id = item.properties?.file_hash || item.properties?.neo4j_hash || item.properties?.hash || item.uuid || item.properties?.name || item.properties?.id || 'unknown-vector';
+                    const label = item.properties?.name || item.properties?.title || item.properties?.id || item.filename || id;
                     const compItem = getOrCreateItem(id, label, 'VectorAsset', item.properties);
                     compItem.vectorScore = item.score || item.distance;
                 });
@@ -117,24 +117,27 @@ export default function SystemComparisonTab() {
                 if (res && res.results) {
                     res.results.forEach((item: any) => {
                         // Graph results generally override uuid = file_hash, but check properties to be completely safe
-                        const id = item.properties?.file_hash || item.properties?.neo4j_hash || item.properties?.hash || item.uuid || item.properties?.name || 'unknown-graph';
-                        const baseLabel = item.properties?.name || item.properties?.title || item.filename || id;
+                        const id = item.properties?.file_hash || item.properties?.neo4j_hash || item.properties?.hash || item.uuid || item.properties?.name || item.properties?.id || 'unknown-graph';
+
+                        // Grab the label using item.label if present (common for graph nodes), or fallbacks
+                        const baseLabel = item.properties?.name || item.properties?.title || item.label || item.properties?.label || item.properties?.id || item.filename || id;
 
                         const compItem = getOrCreateItem(id, baseLabel, 'GraphNode', item.properties);
                         compItem[weightKey] = item.score ?? item.distance ?? fallbackWeight;
                         compItem[dataKey] = {
-                            matched_concept: item.matched_concept,
+                            matched_concept: item.matched_concept || item.label,
                             relation_type: item.relation_type,
                             distance: item.distance
                         };
 
                         // Store matched concept in properties to show importance/context
-                        if (item.matched_concept) {
+                        const conceptToStore = item.matched_concept || item.label;
+                        if (conceptToStore) {
                             if (!compItem.properties.matched_concepts) {
                                 compItem.properties.matched_concepts = [];
                             }
-                            if (!compItem.properties.matched_concepts.includes(item.matched_concept)) {
-                                compItem.properties.matched_concepts.push(item.matched_concept);
+                            if (!compItem.properties.matched_concepts.includes(conceptToStore)) {
+                                compItem.properties.matched_concepts.push(conceptToStore);
                             }
                         }
                     });
@@ -383,7 +386,26 @@ export default function SystemComparisonTab() {
                                                 <div style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>
                                                     {item.label}
                                                 </div>
-                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ID: {item.id}</div>
+
+                                                {/* Excerpt Summary (truncated) */}
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 6, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                    {item.properties?.ai_summary || item.properties?.description || item.properties?.content || item.properties?.text || item.properties?.ocr_text || item.properties?.transcript || ''}
+                                                </div>
+
+                                                {/* Tags (if available) */}
+                                                {Array.isArray(item.properties?.tags) && item.properties.tags.length > 0 && (
+                                                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
+                                                        {item.properties.tags.slice(0, 4).map((tag: string) => (
+                                                            <span key={tag} style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: 6, background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                        {item.properties.tags.length > 4 && (
+                                                            <span style={{ fontSize: '0.65rem', padding: '1px 3px', color: 'var(--text-muted)' }}>+{item.properties.tags.length - 4}</span>
+                                                        )}
+                                                    </div>
+                                                )}
+
                                                 {item.properties?.matched_concepts && item.properties.matched_concepts.length > 0 && (
                                                     <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
                                                         {item.properties.matched_concepts.map((concept: string) => (

@@ -1272,7 +1272,7 @@ export default function ReviewQueueTab() {
         }
     };
 
-    const handleAction = async (action: 'reset' | 'approve') => {
+    const handleAction = async (action: 'reset' | 'approve' | 'retry') => {
         const ids = Array.from(selectedIds);
         if (ids.length === 0) return;
         setActing(true);
@@ -1281,9 +1281,12 @@ export default function ReviewQueueTab() {
             if (action === 'reset') {
                 const res = await axios.post(`${API}/tasks/reset-to-hold`, { vector_status_ids: ids });
                 setActionResult(`✅ ${res.data.tasks_reset || 0} tarea(s) reseteadas a ON_HOLD`);
-            } else {
+            } else if (action === 'approve') {
                 const res = await axios.post(`${API}/tasks/approve`, { vector_status_ids: ids });
                 setActionResult(`✅ ${res.data.tasks_approved || 0} tarea(s) aprobadas como COMPLETED`);
+            } else if (action === 'retry') {
+                const res = await axios.post(`${API}/tasks/retry-analysis`, { vector_status_ids: ids });
+                setActionResult(`✅ ${res.data.tasks_retried || 0} tarea(s) enviadas a re-analizar`);
             }
             setSelectedIds(new Set());
             setTimeout(() => fetchQueue(), 1500);
@@ -1420,7 +1423,7 @@ export default function ReviewQueueTab() {
                         | {selectedIds.size} seleccionada(s)
                     </span>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button onClick={() => handleAction('reset')}
                         disabled={selectedIds.size === 0 || acting}
                         style={{
@@ -1432,6 +1435,18 @@ export default function ReviewQueueTab() {
                             opacity: selectedIds.size > 0 ? 1 : 0.5
                         }}>
                         <RotateCcw size={12} /> Reset a ON_HOLD
+                    </button>
+                    <button onClick={() => handleAction('retry')}
+                        disabled={selectedIds.size === 0 || acting}
+                        style={{
+                            padding: '6px 14px', borderRadius: 6, fontSize: '0.75rem',
+                            background: selectedIds.size > 0 ? '#3b82f6' : '#334155',
+                            color: '#fff', border: 'none',
+                            cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed',
+                            display: 'flex', alignItems: 'center', gap: 4,
+                            opacity: selectedIds.size > 0 ? 1 : 0.5
+                        }}>
+                        <RefreshCw size={12} /> Reanalizar
                     </button>
                     <button onClick={() => handleAction('approve')}
                         disabled={selectedIds.size === 0 || acting}

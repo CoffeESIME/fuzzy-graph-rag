@@ -1135,24 +1135,34 @@ def process_vector_task(self, vector_status_id: str):
         logger.error("Full traceback:")
         logger.error(traceback.format_exc())
         
-        # Update status to FAILED
+        # Calculate retry delay
+        retry_count = self.request.retries
+        max_retries = 3
+        retry_delay = 60 * (2 ** retry_count)
+        
+        if vector_status and vector_status.vector_type == VectorType.TEXT_SUMMARY:
+            max_retries = 4
+            if retry_count == 3:  # 4th retry (last one)
+                retry_delay = 3600  # 1 hour
+                
+        will_retry = retry_count < max_retries
+        
+        # Update status to PENDING if retrying, else FAILED
         if vector_status:
-            logger.info(f"📝 Updating VectorStatus to FAILED...")
-            vector_status.status = JobStatus.FAILED
+            new_status = JobStatus.PENDING if will_retry else JobStatus.FAILED
+            logger.info(f"📝 Updating VectorStatus to {new_status} (will_retry={will_retry})...")
+            vector_status.status = new_status
             vector_status.error_message = str(exc)[:500]  # Limit length
             vector_status.updated_at = datetime.utcnow()
             session.commit()
             logger.info(f"✅ Error message saved to database")
         else:
             logger.warning(f"⚠️  Cannot update VectorStatus (not found in DB)")
-        
-        # Calculate retry delay
-        retry_count = self.request.retries
-        retry_delay = 60 * (2 ** retry_count)
-        logger.warning(f"🔄 Retry #{retry_count + 1} scheduled in {retry_delay} seconds")
+                
+        logger.warning(f"🔄 Retry #{retry_count + 1}/{max_retries} scheduled in {retry_delay} seconds")
         
         # Retry with exponential backoff
-        raise self.retry(exc=exc, countdown=retry_delay)
+        raise self.retry(exc=exc, countdown=retry_delay, max_retries=max_retries)
     
     finally:
         logger.debug("🔒 Closing database session")
@@ -2156,7 +2166,8 @@ def process_text_summary_task(asset: Asset, vector_status: VectorStatus, session
                     summary_text = llm_response[:200]
                     logger.warning(f"   ⚠️ Text LLM: {status}")
             else:
-                raise Exception(f"Text analysis LLM returned {response.status_code}")
+                error_body = response.text[:500] if response.text else "No response body"
+                raise Exception(f"Text analysis LLM returned {response.status_code}: {error_body}")
         
         # ============================================
         # AUDIO FILES - Transcribe + Analysis LLM
