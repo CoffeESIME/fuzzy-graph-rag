@@ -52,9 +52,55 @@ class ProcessTasksResponse(BaseModel):
     celery_task_ids: List[str]
 
 
+class PrivacyUpdateRequest(BaseModel):
+    """Request schema for updating asset privacy level."""
+    privacy_level: str
+
+
 # ==========================================
 # ENDPOINTS
 # ==========================================
+
+@router.put("/asset/{asset_id}/privacy")
+async def update_asset_privacy(
+    asset_id: str,
+    request: PrivacyUpdateRequest,
+    session: Session = Depends(get_session)
+):
+    """
+    Update the privacy level of an asset (e.g. strict_local vs public_cloud)
+    so that tasks subsequently dispatched for this asset respect the new setting.
+    """
+    try:
+        asset_uuid = uuid.UUID(asset_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Formato UUID de Asset inválido"
+        )
+        
+    if request.privacy_level not in ["strict_local", "public_cloud"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Nivel de privacidad inválido. Debe ser 'strict_local' o 'public_cloud'"
+        )
+        
+    statement = select(Asset).where(Asset.id == asset_uuid)
+    asset = session.exec(statement).first()
+    
+    if not asset:
+        raise HTTPException(
+            status_code=404,
+            detail="Asset no encontrado"
+        )
+        
+    asset.privacy_level = request.privacy_level
+    session.add(asset)
+    session.commit()
+    
+    return {"success": True, "message": f"Privacidad actualizada a {request.privacy_level}"}
+
+
 
 @router.get("/on-hold", response_model=List[TaskResponse])
 async def get_on_hold_tasks(

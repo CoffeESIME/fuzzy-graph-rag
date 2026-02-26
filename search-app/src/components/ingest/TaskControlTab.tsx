@@ -255,7 +255,7 @@ function FailedTasksSection({ assets, onRetry }: { assets: Asset[]; onRetry: () 
 // COLLAPSIBLE TASK MATRIX TABLE
 // ==========================================
 
-function TaskMatrix({ assets }: { assets: Asset[] }) {
+function TaskMatrix({ assets, onPrivacyChange }: { assets: Asset[], onPrivacyChange?: (assetId: string, level: string) => void }) {
     const [isOpen, setIsOpen] = useState(false);
 
     // Find which vector types are actually in use
@@ -338,13 +338,21 @@ function TaskMatrix({ assets }: { assets: Asset[] }) {
                                             {asset.filename}
                                         </td>
                                         <td style={tdStyle}>
-                                            <span style={{
-                                                padding: '2px 8px', borderRadius: 4, fontSize: '0.7rem',
-                                                background: asset.privacy_level === 'strict_local' ? '#3b82f620' : '#eab30820',
-                                                color: asset.privacy_level === 'strict_local' ? '#60a5fa' : '#fbbf24'
-                                            }}>
-                                                {asset.privacy_level === 'strict_local' ? '🔒 Local' : '☁️ Cloud'}
-                                            </span>
+                                            <select
+                                                value={asset.privacy_level}
+                                                onChange={(e) => onPrivacyChange && onPrivacyChange(asset.id, e.target.value)}
+                                                style={{
+                                                    padding: '2px 8px', borderRadius: 4, fontSize: '0.7rem',
+                                                    background: asset.privacy_level === 'strict_local' ? '#3b82f620' : '#eab30820',
+                                                    color: asset.privacy_level === 'strict_local' ? '#60a5fa' : '#fbbf24',
+                                                    border: '1px solid transparent', cursor: 'pointer', outline: 'none',
+                                                    appearance: 'none', textAlign: 'center', fontWeight: 600
+                                                }}
+                                                title="Cambiar proveedor Local ↔ Cloud"
+                                            >
+                                                <option value="strict_local" style={{ background: '#0f172a', color: '#60a5fa' }}>🔒 Local</option>
+                                                <option value="public_cloud" style={{ background: '#0f172a', color: '#fbbf24' }}>☁️ Cloud</option>
+                                            </select>
                                         </td>
                                         {columns.map(col => {
                                             const vs = statusMap[col];
@@ -731,7 +739,7 @@ function TaskMetadataPanel({
 // ON_HOLD TASK LIST MAIN COMPONENT
 // ==========================================
 
-function OnHoldTaskList({ assets, onDispatch }: { assets: Asset[]; onDispatch: () => void }) {
+function OnHoldTaskList({ assets, onDispatch, onPrivacyChange }: { assets: Asset[]; onDispatch: () => void; onPrivacyChange?: (assetId: string, level: string) => void }) {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
     const [dispatching, setDispatching] = useState(false);
@@ -1076,13 +1084,22 @@ function OnHoldTaskList({ assets, onDispatch }: { assets: Asset[]; onDispatch: (
                                 <span style={{ color: '#f8fafc', fontSize: '0.85rem', fontWeight: 600 }}>
                                     {first.filename}
                                 </span>
-                                <span style={{
-                                    padding: '1px 8px', borderRadius: 4, fontSize: '0.65rem',
-                                    background: first.privacyLevel === 'strict_local' ? '#3b82f620' : '#eab30820',
-                                    color: first.privacyLevel === 'strict_local' ? '#60a5fa' : '#fbbf24'
-                                }}>
-                                    {first.privacyLevel === 'strict_local' ? '🔒' : '☁️'}
-                                </span>
+                                <select
+                                    value={first.privacyLevel}
+                                    onChange={(e) => onPrivacyChange && onPrivacyChange(assetId, e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                        padding: '1px 8px', borderRadius: 4, fontSize: '0.65rem',
+                                        background: first.privacyLevel === 'strict_local' ? '#3b82f620' : '#eab30820',
+                                        color: first.privacyLevel === 'strict_local' ? '#60a5fa' : '#fbbf24',
+                                        border: '1px solid transparent', cursor: 'pointer', outline: 'none',
+                                        appearance: 'none', textAlign: 'center', fontWeight: 600
+                                    }}
+                                    title="Cambiar proveedor Local ↔ Cloud"
+                                >
+                                    <option value="strict_local" style={{ background: '#0f172a', color: '#60a5fa' }}>🔒 Local</option>
+                                    <option value="public_cloud" style={{ background: '#0f172a', color: '#fbbf24' }}>☁️ Cloud</option>
+                                </select>
                                 <span style={{
                                     marginLeft: 'auto', color: '#64748b', fontSize: '0.7rem'
                                 }}>
@@ -1265,6 +1282,20 @@ export default function TaskControlTab() {
         }
     }, []);
 
+    const handlePrivacyChange = async (assetId: string, newPrivacyLevel: string) => {
+        try {
+            await axios.put(`http://localhost:8000/tasks/asset/${assetId}/privacy`, { privacy_level: newPrivacyLevel });
+
+            // Optimistic update
+            setAssets(prev => prev.map(a =>
+                a.id === assetId ? { ...a, privacy_level: newPrivacyLevel } : a
+            ));
+        } catch (err: any) {
+            console.error("Failed to update privacy level:", err);
+            alert("Error al actualizar la privacidad: " + (err.response?.data?.detail || err.message));
+        }
+    };
+
     useEffect(() => {
         fetchAssets();
     }, [fetchAssets]);
@@ -1350,10 +1381,10 @@ export default function TaskControlTab() {
             <FailedTasksSection assets={assets} onRetry={fetchAssets} />
 
             {/* ON_HOLD Task List with Filters & Selection */}
-            <OnHoldTaskList assets={assets} onDispatch={fetchAssets} />
+            <OnHoldTaskList assets={assets} onDispatch={fetchAssets} onPrivacyChange={handlePrivacyChange} />
 
             {/* Collapsible Processing Matrix */}
-            <TaskMatrix assets={assets} />
+            <TaskMatrix assets={assets} onPrivacyChange={handlePrivacyChange} />
 
             {/* Completed */}
             <CompletedSection assets={assets} />

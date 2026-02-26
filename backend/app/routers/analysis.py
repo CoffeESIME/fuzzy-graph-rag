@@ -331,17 +331,17 @@ def analyze_serendipity():
 
     // 6. Formatear como secuencia de pasos (incluir propiedades de Asset)
     RETURN
-        start.name as step1_node, 'Concept' as step1_type,
+        elementId(start) as step1_id, start.name as step1_node, 'Concept' as step1_type,
         r1.weight as edge1_weight,
-        a1.filename as step2_node, 'Asset' as step2_type,
+        elementId(a1) as step2_id, coalesce(a1.name, a1.filename) as step2_node, 'Asset' as step2_type,
         a1.file_hash as a1_hash, a1.mime_type as a1_mime,
         r2.weight as edge2_weight,
-        mid.name as step3_node, 'Concept' as step3_type,
+        elementId(mid) as step3_id, mid.name as step3_node, 'Concept' as step3_type,
         r3.weight as edge3_weight,
-        a2.filename as step4_node, 'Asset' as step4_type,
+        elementId(a2) as step4_id, coalesce(a2.name, a2.filename) as step4_node, 'Asset' as step4_type,
         a2.file_hash as a2_hash, a2.mime_type as a2_mime,
         r4.weight as edge4_weight,
-        end.name as step5_node, 'Concept' as step5_type
+        elementId(end) as step5_id, end.name as step5_node, 'Concept' as step5_type
     """
 
     try:
@@ -365,23 +365,25 @@ def analyze_serendipity():
             a2_minio = _resolve_minio_url(record.get("a2_hash"), record.get("a2_mime"))
 
             path_sequence = [
-                {"id": record["step1_node"], "type": record["step1_type"], "weight": None},
+                {"id": record["step1_id"], "name": record["step1_node"], "type": record["step1_type"], "weight": None},
                 {
-                    "id": record["step2_node"], "type": record["step2_type"],
+                    "id": record["step2_id"],
+                    "name": record["step2_node"], "type": record["step2_type"],
                     "weight": _rw(record["edge1_weight"]),
                     "file_hash": record.get("a1_hash"),
                     "mime_type": record.get("a1_mime"),
                     **a1_minio,
                 },
-                {"id": record["step3_node"], "type": record["step3_type"], "weight": _rw(record["edge2_weight"])},
+                {"id": record["step3_id"], "name": record["step3_node"], "type": record["step3_type"], "weight": _rw(record["edge2_weight"])},
                 {
-                    "id": record["step4_node"], "type": record["step4_type"],
+                    "id": record["step4_id"],
+                    "name": record["step4_node"], "type": record["step4_type"],
                     "weight": _rw(record["edge3_weight"]),
                     "file_hash": record.get("a2_hash"),
                     "mime_type": record.get("a2_mime"),
                     **a2_minio,
                 },
-                {"id": record["step5_node"], "type": record["step5_type"], "weight": _rw(record["edge4_weight"])},
+                {"id": record["step5_id"], "name": record["step5_node"], "type": record["step5_type"], "weight": _rw(record["edge4_weight"])},
             ]
 
             return {

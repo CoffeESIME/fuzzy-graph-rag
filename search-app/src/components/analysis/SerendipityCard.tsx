@@ -1,11 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { Loader2, RefreshCw, Dice5, Info, FileText, X, Image, Music, Video, File } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MediaPreview from '../search/MediaPreview';
+import { getAssetPreview, type AssetPreviewResponse } from '../../lib/api';
 
 interface PathStep {
     id: string;
+    name?: string;
     type: 'Concept' | 'Asset';
     weight: number | null;
     file_hash?: string | null;
@@ -127,7 +129,7 @@ function StepNode({
                     wordBreak: 'break-word',
                 }}
             >
-                {step.id}
+                {step.name || step.id}
             </span>
             <span
                 style={{
@@ -182,7 +184,31 @@ export default function SerendipityCard() {
     const [message, setMessage] = useState('');
     const [generated, setGenerated] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState<PathStep | null>(null);
+    const [previewAsset, setPreviewAsset] = useState<AssetPreviewResponse | null>(null);
+    const [isLoadingPreview, setIsLoadingPreview] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!selectedAsset || selectedAsset.type !== 'Asset') {
+            setPreviewAsset(null);
+            return;
+        }
+        let isMounted = true;
+
+        const fetchPreview = async () => {
+            setIsLoadingPreview(true);
+            try {
+                const res = await getAssetPreview(selectedAsset.id);
+                if (isMounted) setPreviewAsset(res);
+            } catch (err: any) {
+                console.error("Failed to fetch asset preview:", err);
+            } finally {
+                if (isMounted) setIsLoadingPreview(false);
+            }
+        };
+        fetchPreview();
+        return () => { isMounted = false; };
+    }, [selectedAsset]);
 
     const generate = useCallback(async () => {
         setLoading(true);
@@ -360,7 +386,7 @@ export default function SerendipityCard() {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                             <FileText size={16} className="text-amber-400" />
                                             <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f8fafc' }}>
-                                                {selectedAsset.id}
+                                                {selectedAsset.name || selectedAsset.id}
                                             </span>
                                             <span
                                                 style={{
@@ -387,78 +413,106 @@ export default function SerendipityCard() {
 
                                     {/* Body */}
                                     <div style={{ padding: 20 }}>
-                                        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                                            {/* Properties column */}
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 200, flex: '0 0 240px' }}>
-                                                <div>
-                                                    <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                                                        FILENAME
+                                        {isLoadingPreview ? (
+                                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 120 }}>
+                                                <Loader2 className="animate-spin text-amber-500" size={32} />
+                                            </div>
+                                        ) : previewAsset ? (
+                                            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                                                {/* Properties column */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 200, flex: '0 0 240px' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                                                            FILENAME
+                                                        </div>
+                                                        <div style={{ fontSize: '0.85rem', color: '#e2e8f0', wordBreak: 'break-word' }}>
+                                                            {previewAsset.name || selectedAsset.id}
+                                                        </div>
                                                     </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#e2e8f0', wordBreak: 'break-word' }}>
-                                                        {selectedAsset.id}
+                                                    <div>
+                                                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                                                            TIPO
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#e2e8f0', fontSize: '0.85rem' }}>
+                                                            {getMimeIcon(previewAsset.mime_type || selectedAsset.mime_type)}
+                                                            <span>{getMimeLabel(previewAsset.mime_type || selectedAsset.mime_type)}</span>
+                                                        </div>
+                                                        {(previewAsset.mime_type || selectedAsset.mime_type) && (
+                                                            <div style={{ fontSize: '0.7rem', color: '#475569', marginTop: 2, fontFamily: 'monospace' }}>
+                                                                {previewAsset.mime_type || selectedAsset.mime_type}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {previewAsset.tags && previewAsset.tags.length > 0 && (
+                                                        <div>
+                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                                                                ETIQUETAS
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {previewAsset.tags.map((tag, idx) => (
+                                                                    <span key={idx} className="bg-amber-900/30 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full text-[0.65rem]">#{tag}</span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {(selectedAsset.file_hash) && (
+                                                        <div>
+                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                                                                HASH
+                                                            </div>
+                                                            <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                                                {selectedAsset.file_hash}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {/* Connection context */}
+                                                    <div style={{
+                                                        background: '#1e293b', borderRadius: 8, padding: 10,
+                                                        border: '1px solid #334155', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6
+                                                    }}>
+                                                        Peso: <WeightBadge weight={selectedAsset.weight} />{' '}
+                                                        {selectedAsset.weight !== null && selectedAsset.weight < 0.8
+                                                            ? '— conexión difusa, fuente de serendipia'
+                                                            : '— conexión sólida'}
                                                     </div>
                                                 </div>
-                                                <div>
-                                                    <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                                                        TIPO
-                                                    </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#e2e8f0', fontSize: '0.85rem' }}>
-                                                        {getMimeIcon(selectedAsset.mime_type)}
-                                                        <span>{getMimeLabel(selectedAsset.mime_type)}</span>
-                                                    </div>
-                                                    {selectedAsset.mime_type && (
-                                                        <div style={{ fontSize: '0.7rem', color: '#475569', marginTop: 2, fontFamily: 'monospace' }}>
-                                                            {selectedAsset.mime_type}
+
+                                                {/* Media and Content Prep column */}
+                                                <div style={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                                    {(previewAsset.download_url || previewAsset.minio_path) ? (
+                                                        <div>
+                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                                                                VISTA PREVIA
+                                                            </div>
+                                                            <MediaPreview
+                                                                url={previewAsset.download_url || undefined}
+                                                                path={previewAsset.minio_path || undefined}
+                                                            />
+                                                        </div>
+                                                    ) : <></>}
+
+                                                    {previewAsset.content && (
+                                                        <div>
+                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                                                                CONTENIDO EXTRAÍDO
+                                                            </div>
+                                                            <div style={{
+                                                                background: 'rgba(0,0,0,0.3)', border: '1px solid #334155', borderRadius: 8, padding: 16,
+                                                                fontSize: '0.8rem', color: '#cbd5e1', whiteSpace: 'pre-wrap', fontFamily: 'monospace',
+                                                                lineHeight: 1.6, maxHeight: 300, overflowY: 'auto'
+                                                            }} className="custom-scrollbar">
+                                                                {previewAsset.content}
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
-                                                {selectedAsset.file_hash && (
-                                                    <div>
-                                                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                                                            HASH
-                                                        </div>
-                                                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                                                            {selectedAsset.file_hash}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {/* Connection context */}
-                                                <div style={{
-                                                    background: '#1e293b', borderRadius: 8, padding: 10,
-                                                    border: '1px solid #334155', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6
-                                                }}>
-                                                    Peso: <WeightBadge weight={selectedAsset.weight} />{' '}
-                                                    {selectedAsset.weight !== null && selectedAsset.weight < 0.8
-                                                        ? '— conexión difusa, fuente de serendipia'
-                                                        : '— conexión sólida'}
-                                                </div>
                                             </div>
-
-                                            {/* Media Preview column */}
-                                            <div style={{ flex: 1, minWidth: 240 }}>
-                                                {(selectedAsset.download_url || selectedAsset.minio_path) ? (
-                                                    <>
-                                                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                                                            VISTA PREVIA
-                                                        </div>
-                                                        <MediaPreview
-                                                            url={selectedAsset.download_url || undefined}
-                                                            path={selectedAsset.minio_path || undefined}
-                                                        />
-                                                    </>
-                                                ) : (
-                                                    <div style={{
-                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                                        height: 120, background: '#1e293b', borderRadius: 12, border: '1px dashed #334155',
-                                                    }}>
-                                                        <File size={28} color="#475569" />
-                                                        <span style={{ fontSize: '0.75rem', color: '#475569', marginTop: 8 }}>
-                                                            Vista previa no disponible
-                                                        </span>
-                                                    </div>
-                                                )}
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 120, color: '#475569' }}>
+                                                <File size={32} className="mb-2 opacity-50" />
+                                                <span style={{ fontSize: '0.85rem' }}>No se pudo cargar la vista previa</span>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -499,8 +553,8 @@ export default function SerendipityCard() {
                             </div>
                             <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
                                 Hemos conectado{' '}
-                                <strong style={{ color: '#c4b5fd' }}>{firstConcept.id}</strong> con{' '}
-                                <strong style={{ color: '#c4b5fd' }}>{lastConcept.id}</strong>.
+                                <strong style={{ color: '#c4b5fd' }}>{firstConcept.name || firstConcept.id}</strong> con{' '}
+                                <strong style={{ color: '#c4b5fd' }}>{lastConcept.name || lastConcept.id}</strong>.
                                 Este camino fue posible gracias a asociaciones sutiles en tus archivos
                                 que normalmente pasarían desapercibidas.
                             </p>

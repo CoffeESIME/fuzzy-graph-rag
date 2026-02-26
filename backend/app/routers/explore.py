@@ -494,6 +494,16 @@ def get_asset_preview(asset_id: str):
                         res_dict["minio_path"] = found_path
                         res_dict["download_url"] = new_url
                         
+                        # NEW: If it's a raw text file, download it and use it as content!
+                        if (res_dict["content"] == 'No textual content available' or not res_dict["content"]) and (found_path.endswith('.txt') or found_path.endswith('.md')):
+                            try:
+                                text_obj = minio_client.get_object(Bucket=bucket, Key=found_path)
+                                raw_text = text_obj['Body'].read().decode('utf-8', errors='replace')
+                                res_dict["content"] = raw_text[:5000] + ("..." if len(raw_text) > 5000 else "")
+                                logger.info(f"   📄 Loaded raw text from MinIO: {len(raw_text)} chars")
+                            except Exception as text_err:
+                                logger.warning(f"Failed to read raw text for {found_path}: {text_err}")
+                        
                     # 2. Text Content Injection (Fallback for Graph results)
                     if res_dict["content"] == 'No textual content available' or not res_dict["content"]:
                         sidecar_path = f"master_records/sidecars/{file_hash}.json"
@@ -503,10 +513,14 @@ def get_asset_preview(asset_id: str):
                         fallback_text = sidecar_data.get("text")
                         if not fallback_text:
                             data_layers = sidecar_data.get('data_layers', {})
-                            fallback_text = data_layers.get('intermediate_results', {}).get('audio_transcript')
+                            fallback_text = (
+                                data_layers.get('intermediate_results', {}).get('audio_transcript') or
+                                data_layers.get('intermediate_results', {}).get('ocr_text') or
+                                sidecar_data.get('user_notes')
+                            )
                             
                         if fallback_text:
-                            res_dict["content"] = fallback_text[:800] + ("..." if len(fallback_text) > 800 else "")
+                            res_dict["content"] = fallback_text[:3000] + ("..." if len(fallback_text) > 3000 else "")
                             
                 except Exception as minio_err:
                     logger.warning(f"Failed to resolve MinIO link or sidecar for {file_hash}: {minio_err}")

@@ -228,6 +228,9 @@ export default function AbstractConceptsCard() {
                                 <strong style={{ color: '#34d399' }}>↗ Arriba-derecha:</strong> Conceptos concretos y
                                 frecuentes (pilares).
                                 <br />
+                                <strong style={{ color: '#60a5fa' }}>↖ Arriba-izquierda:</strong> Muy seguros pero poco
+                                frecuentes (especializados).
+                                <br />
                                 <strong style={{ color: '#fbbf24' }}>↙ Abajo-izquierda:</strong> Conceptos vagos y
                                 raros.
                                 <br />
