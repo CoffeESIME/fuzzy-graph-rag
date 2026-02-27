@@ -680,12 +680,45 @@ def explain_analytical_path(req: PathExplanationRequest):
                             summary = analysis_json.get('graph_core', {}).get('summary') or ""
                             
                             text_content = sidecar_data.get("text") or data_layers.get('intermediate_results', {}).get('ocr_text') or ""
-                            if text_content and len(text_content) > 400:
-                                text_content = text_content[:400] + "... [Texto Truncado]"
+                            
+                            # Fallback: if it's a text file and we have no text, try to read the original object directly
+                            if not text_content and sidecar_data.get("mime_type", "").startswith("text/"):
+                                try:
+                                    orig_key = n.get("minio_path") or props.get("minio_path")
+                                    
+                                    # Try the explicit minio_path first
+                                    try:
+                                        if orig_key:
+                                            orig_resp = minio_client.get_object(Bucket=bucket, Key=orig_key)
+                                            text_content = orig_resp['Body'].read().decode('utf-8')
+                                    except Exception:
+                                        text_content = ""
+                                        
+                                    if not text_content:
+                                        # Fallback to standard text storage path
+                                        orig_name = sidecar_data.get("original_filename", "")
+                                        candidates = [
+                                            f"master_records/texts/{f_hash}.txt",
+                                            f"master_records/texts/{f_hash}_{orig_name}",
+                                            f"master_records/binaries/{f_hash}_{orig_name}"
+                                        ]
+                                        for cand_key in candidates:
+                                            try:
+                                                orig_resp = minio_client.get_object(Bucket=bucket, Key=cand_key)
+                                                text_content = orig_resp['Body'].read().decode('utf-8')
+                                                break
+                                            except Exception:
+                                                continue
+                                                
+                                except Exception as e_orig:
+                                    logger.debug(f"Could not read original binary for {f_hash}: {e_orig}")
+
+                            if text_content and len(text_content) > 1000:
+                                text_content = text_content[:1000] + "... [Texto Truncado]"
                                 
                             transcript = data_layers.get('intermediate_results', {}).get('audio_transcript', '') or ""
-                            if transcript and len(transcript) > 400:
-                                transcript = transcript[:400] + "... [Transcript Truncado]"
+                            if transcript and len(transcript) > 1000:
+                                transcript = transcript[:1000] + "... [Transcript Truncado]"
                                 
                             visual_spec = analysis_json.get('visual_specifics', {})
                             ocr = visual_spec.get('ocr_text', '') or visual_spec.get('text_content', '') or ""
