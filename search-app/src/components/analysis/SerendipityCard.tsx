@@ -190,6 +190,7 @@ export default function SerendipityCard() {
     // LLM Explanation State
     const [explanation, setExplanation] = useState<string | null>(null);
     const [explaining, setExplaining] = useState(false);
+    const [privacyMode, setPrivacyMode] = useState(false);
 
     const navigate = useNavigate();
 
@@ -244,7 +245,8 @@ export default function SerendipityCard() {
         const nodes = path.map(p => ({
             id: p.id,
             name: p.name,
-            node_type: p.type
+            node_type: p.type,
+            file_hash: p.file_hash
         }));
 
         const edges = [];
@@ -262,6 +264,7 @@ export default function SerendipityCard() {
                 tool_name: 'serendipity',
                 nodes,
                 edges,
+                privacy_mode: privacyMode,
             });
             if (res.status === 'success') {
                 setExplanation(res.explanation);
@@ -393,7 +396,7 @@ export default function SerendipityCard() {
                             </div>
 
                             {/* Regenerate and Explain */}
-                            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16 }}>
+                            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16, alignItems: 'center' }}>
                                 <button
                                     onClick={generate}
                                     style={{
@@ -407,6 +410,30 @@ export default function SerendipityCard() {
                                 >
                                     <Dice5 size={16} /> Otro Camino
                                 </button>
+
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title="Proteger datos: El modelo LLM no entrenará con esta consulta ni su contexto">
+                                    <div style={{
+                                        width: 32, height: 18, borderRadius: 16,
+                                        background: privacyMode ? '#f59e0b' : '#334155',
+                                        position: 'relative',
+                                        transition: 'background 0.2s',
+                                    }}>
+                                        <div style={{
+                                            position: 'absolute', top: 2, left: privacyMode ? 16 : 2,
+                                            width: 14, height: 14, borderRadius: '50%',
+                                            background: '#fff', transition: 'left 0.2s'
+                                        }} />
+                                    </div>
+                                    <span style={{ fontSize: '0.75rem', color: privacyMode ? '#f59e0b' : '#64748b', fontWeight: 600 }}>
+                                        Privacidad
+                                    </span>
+                                    <input
+                                        type="checkbox"
+                                        checked={privacyMode}
+                                        onChange={(e) => setPrivacyMode(e.target.checked)}
+                                        style={{ display: 'none' }}
+                                    />
+                                </label>
 
                                 <button
                                     onClick={handleExplain}

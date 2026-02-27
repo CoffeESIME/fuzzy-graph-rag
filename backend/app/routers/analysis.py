@@ -601,6 +601,7 @@ class PathExplanationRequest(BaseModel):
     tool_name: str  # 'serendipity' or 'pathfinder'
     nodes: List[Dict[str, Any]]
     edges: List[Dict[str, Any]]
+    privacy_mode: bool = False
 
 class PathExplanationResponse(BaseModel):
     explanation: str
@@ -639,20 +640,100 @@ def explain_analytical_path(req: PathExplanationRequest):
 
         path_context = "\n".join(path_str_parts)
 
+        # 1.5 Fetch minio sidecars for contextual richness
+        minio_contexts = []
+        try:
+            from shared.clients import get_minio_client
+            minio_client = get_minio_client()
+            bucket = settings.MINIO_BUCKET if hasattr(settings, 'MINIO_BUCKET') else "rag-dataset"
+            
+            for n in req.nodes:
+                # Handle both 'Asset' (from serendipity UI mapper) and 'DigitalAsset' (from pathfinder)
+                n_type = n.get("node_type") or n.get("type") or ""
+                labels = n.get("labels", [])
+                
+                if n_type in ("DigitalAsset", "Asset") or "DigitalAsset" in labels:
+                    props = n.get("properties", {})
+                    f_hash = n.get("file_hash") or props.get("file_hash") or props.get("hash") or n.get("id")
+                    
+                    if f_hash and len(str(f_hash)) > 10: # Rough check for hex hash
+                        # Prevent using neo4j element Ids as minio paths
+                        if ":" in str(f_hash):
+                            continue
+                            
+                        try:
+                            sidecar_path = f"master_records/sidecars/{f_hash}.json"
+                            response = minio_client.get_object(Bucket=bucket, Key=sidecar_path)
+                            sidecar_data = json.loads(response['Body'].read().decode('utf-8'))
+                            
+                            data_layers = sidecar_data.get('data_layers', {})
+                            analysis_json = (
+                                data_layers.get('analysis_json') or 
+                                data_layers.get('raw_debug_data', {}).get('visual_semantic_json') or 
+                                data_layers.get('raw_debug_data', {}).get('memory_analysis_json') or 
+                                data_layers.get('text_summary_analysis') or 
+                                data_layers.get('raw_debug_data', {}).get('text_analysis_json') or 
+                                {}
+                            )
+                            
+                            # Content extraction - combine everything available
+                            summary = analysis_json.get('graph_core', {}).get('summary') or ""
+                            
+                            text_content = sidecar_data.get("text") or data_layers.get('intermediate_results', {}).get('ocr_text') or ""
+                            if text_content and len(text_content) > 400:
+                                text_content = text_content[:400] + "... [Texto Truncado]"
+                                
+                            transcript = data_layers.get('intermediate_results', {}).get('audio_transcript', '') or ""
+                            if transcript and len(transcript) > 400:
+                                transcript = transcript[:400] + "... [Transcript Truncado]"
+                                
+                            visual_spec = analysis_json.get('visual_specifics', {})
+                            ocr = visual_spec.get('ocr_text', '') or visual_spec.get('text_content', '') or ""
+                            img_desc = f"{visual_spec.get('composition', '')} {visual_spec.get('visual_mood', '')}".strip()
+                            
+                            lyrics = analysis_json.get("audio_specifics", {}).get('lyrics_summary', '') or ""
+                            
+                            content_parts = []
+                            if summary: content_parts.append(f"Resumen: {summary}")
+                            if text_content: content_parts.append(f"Contenido texto: {text_content}")
+                            if transcript: content_parts.append(f"Transcripción de audio: {transcript}")
+                            if ocr: content_parts.append(f"Texto ocr: {ocr}")
+                            if img_desc: content_parts.append(f"Descripción de imagen: {img_desc}")
+                            if lyrics: content_parts.append(f"Letra de canción: {lyrics}")
+                            
+                            content = "\n".join(content_parts)
+                            
+                            if content:
+                                if len(content) > 3000:
+                                    content = content[:3000] + "..."
+                                
+                                minio_contexts.append(f"Archivo '{n.get('name') or n.get('label', 'Unknown')}':\n{content}")
+                        except Exception as inner_e:
+                            logger.debug(f"Could not load minio sidecar for {f_hash}: {inner_e}")
+        except Exception as e:
+            logger.debug(f"Minio client error: {e}")
+            
+        context_block = ""
+        if minio_contexts:
+            joined_contexts = "\n\n---\n\n".join(minio_contexts)
+            context_block = f"\n\n<CONTEXTO_ARCHIVOS>\n{joined_contexts}\n</CONTEXTO_ARCHIVOS>\n\nUsa este contexto de los archivos para explicar más a fondo DE QUÉ tratan y dar sentido narrativo a las asociaciones conceptuales."
+
         # 2. Build Prompt
         system_prompt = f"""Eres un analista de datos y experto en grafos de conocimiento.
 Tu tarea es explicar un camino asociativo descubierto por la herramienta '{req.tool_name}'.
 El usuario quiere entender POR QUÉ y CÓMO el primer nodo de este camino se conecta con el último nodo, a través de los pasos intermedios.
 
 Instrucciones:
-1. Escribe un párrafo narrativo y fluido explicando la conexión. No hagas una simple lista.
-2. Menciona los pesos (weights) si son bajos (< 0.8), indicando que es una conexión "latente", "débil" o "sorprendente".
-3. Si el camino pasa por un Concepto central (hub), menciónalo como el "puente conceptual" que une ambas ideas o archivos.
-4. Mantén un tono analítico, interesante y conciso (máximo 3 párrafos cortos).
-5. Responde en el mismo idioma que los nombres de los nodos (asume Español por defecto).
+1. Usa la información de <CONTEXTO_ARCHIVOS> para fundamentar la conexión (ej. letras de canciones, resúmenes, textos). Es vital utilizar este contenido extraído.
+2. Escribe una narrativa fluida explicando paso a paso la conexión.
+3. Menciona los pesos (weights) si son bajos (< 0.8), indicando que es una conexión "latente", "débil" o "sorprendente".
+4. Si el camino pasa por un Concepto central (hub), menciónalo como el "puente conceptual".
+5. OBLIGATORIO: Finaliza con un párrafo llamado "Conclusión del Subsistema" resumiendo el hallazgo general o la idea central que une todo el camino.
+6. Mantén un tono analítico, profundo y fluido.
+7. Responde en Español.
 """
 
-        user_prompt = f"Aquí está el camino exacto extraído de Neo4j:\n\n{path_context}\n\nPor favor, explica esta cadena de asociaciones."
+        user_prompt = f"Aquí está el camino exacto extraído de Neo4j:\n\n{path_context}{context_block}\n\nPor favor, explica detalladamente esta cadena de asociaciones."
 
         # 3. Request to LLM Gateway
         url = f"{LLM_GATEWAY_URL}/v1/chat/completions"
@@ -663,11 +744,10 @@ Instrucciones:
         
         data = {
             "task": "chat",
-            "privacy_mode": "strict",
+            "privacy_mode": "strict" if req.privacy_mode else "flexible",
             "messages": json.dumps(messages),
             "temperature": 0.6,
-            "provider": "openai", # Default explicitly to cloud for better reasoning
-            "max_tokens": 1000
+            "provider": "openai" # Default explicitly to cloud for better reasoning
         }
         
         logger.info(f"Requesting path explanation for {len(req.nodes)} nodes via {LLM_GATEWAY_URL}")

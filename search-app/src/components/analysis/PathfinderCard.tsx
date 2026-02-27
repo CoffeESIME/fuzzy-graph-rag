@@ -429,6 +429,7 @@ export default function PathfinderCard() {
     // LLM Explanation State
     const [explanation, setExplanation] = useState<string | null>(null);
     const [explaining, setExplaining] = useState(false);
+    const [privacyMode, setPrivacyMode] = useState(false);
 
     // React Flow
     const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
@@ -478,6 +479,7 @@ export default function PathfinderCard() {
                 tool_name: 'pathfinder',
                 nodes: result.nodes,
                 edges: result.edges,
+                privacy_mode: privacyMode,
             });
             if (res.status === 'success') {
                 setExplanation(res.explanation);
@@ -611,28 +613,55 @@ export default function PathfinderCard() {
                             💡 Haz clic en cualquier nodo para ver sus detalles abajo.
                         </span>
 
-                        <button
-                            onClick={handleExplain}
-                            disabled={explaining}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                padding: '6px 14px',
-                                background: 'linear-gradient(to right, #4c1d95, #7e22ce)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: 8,
-                                fontSize: '0.8rem',
-                                fontWeight: 600,
-                                cursor: explaining ? 'not-allowed' : 'pointer',
-                                opacity: explaining ? 0.7 : 1,
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            {explaining ? <Loader2 size={14} className="animate-spin" /> : <span>🪄</span>}
-                            Explicar Camino con IA
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            {/* Privacy Selector */}
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title="Proteger datos: El modelo LLM no entrenará con esta consulta ni su contexto">
+                                <div style={{
+                                    width: 32, height: 18, borderRadius: 16,
+                                    background: privacyMode ? '#f59e0b' : '#334155',
+                                    position: 'relative',
+                                    transition: 'background 0.2s',
+                                }}>
+                                    <div style={{
+                                        position: 'absolute', top: 2, left: privacyMode ? 16 : 2,
+                                        width: 14, height: 14, borderRadius: '50%',
+                                        background: '#fff', transition: 'left 0.2s'
+                                    }} />
+                                </div>
+                                <span style={{ fontSize: '0.75rem', color: privacyMode ? '#f59e0b' : '#64748b', fontWeight: 600 }}>
+                                    Privacidad
+                                </span>
+                                <input
+                                    type="checkbox"
+                                    checked={privacyMode}
+                                    onChange={(e) => setPrivacyMode(e.target.checked)}
+                                    style={{ display: 'none' }}
+                                />
+                            </label>
+
+                            <button
+                                onClick={handleExplain}
+                                disabled={explaining}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    padding: '6px 14px',
+                                    background: 'linear-gradient(to right, #4c1d95, #7e22ce)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 8,
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                    cursor: explaining ? 'not-allowed' : 'pointer',
+                                    opacity: explaining ? 0.7 : 1,
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {explaining ? <Loader2 size={14} className="animate-spin" /> : <span>🪄</span>}
+                                Explicar Camino con IA
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
