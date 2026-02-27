@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { Loader2, RefreshCw, Dice5, Info, FileText, X, Image, Music, Video, File } from 'lucide-react';
+import { Loader2, RefreshCw, Dice5, Info, FileText, X, Sparkles, Image, Music, Video, File } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MediaPreview from '../search/MediaPreview';
-import { getAssetPreview, type AssetPreviewResponse } from '../../lib/api';
+import { getAssetPreview, explainAnalyticalPath, type AssetPreviewResponse } from '../../lib/api';
 
 interface PathStep {
     id: string;
@@ -186,6 +186,11 @@ export default function SerendipityCard() {
     const [selectedAsset, setSelectedAsset] = useState<PathStep | null>(null);
     const [previewAsset, setPreviewAsset] = useState<AssetPreviewResponse | null>(null);
     const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
+    // LLM Explanation State
+    const [explanation, setExplanation] = useState<string | null>(null);
+    const [explaining, setExplaining] = useState(false);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -214,6 +219,7 @@ export default function SerendipityCard() {
         setLoading(true);
         setError(null);
         setSelectedAsset(null);
+        setExplanation(null);
         try {
             const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/serendipity');
             if (res.data.status === 'error') throw new Error(res.data.message);
@@ -227,6 +233,47 @@ export default function SerendipityCard() {
             setLoading(false);
         }
     }, []);
+
+    const handleExplain = async () => {
+        if (!path.length) return;
+        setExplaining(true);
+        setExplanation(null);
+
+        // Convert Serendipity PathStep array to generic nodes/edges for the explain-path endpoint
+        // This is a rough approximation since serendipity path is just an array of alternating objects
+        const nodes = path.map(p => ({
+            id: p.id,
+            name: p.name,
+            node_type: p.type
+        }));
+
+        const edges = [];
+        for (let i = 0; i < path.length - 1; i++) {
+            edges.push({
+                source: path[i].id,
+                target: path[i + 1].id,
+                weight: path[i + 1].weight, // The weight represents the incoming edge
+                rel_type: 'CONECTADO_A' // Generic for serendipity
+            });
+        }
+
+        try {
+            const res = await explainAnalyticalPath({
+                tool_name: 'serendipity',
+                nodes,
+                edges,
+            });
+            if (res.status === 'success') {
+                setExplanation(res.explanation);
+            } else {
+                setExplanation(`⚠️ ${res.explanation}`);
+            }
+        } catch (err: unknown) {
+            setExplanation('⚠️ Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
+        } finally {
+            setExplaining(false);
+        }
+    };
 
     const firstConcept = path.length > 0 ? path[0] : null;
     const lastConcept = path.length > 0 ? path[path.length - 1] : null;
@@ -345,21 +392,68 @@ export default function SerendipityCard() {
                                 ))}
                             </div>
 
-                            {/* Regenerate */}
-                            <div style={{ textAlign: 'center', marginTop: 16 }}>
+                            {/* Regenerate and Explain */}
+                            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16 }}>
                                 <button
                                     onClick={generate}
                                     style={{
                                         padding: '10px 28px', fontSize: '0.85rem', fontWeight: 600,
                                         borderRadius: 12, border: 'none', cursor: 'pointer',
-                                        background: 'linear-gradient(135deg, #f97316, #fbbf24)',
-                                        color: '#fff', boxShadow: '0 2px 12px #f9731644',
+                                        background: 'transparent',
+                                        borderBottom: '2px solid #f97316',
+                                        color: '#f97316',
                                         display: 'inline-flex', alignItems: 'center', gap: 8,
                                     }}
                                 >
                                     <Dice5 size={16} /> Otro Camino
                                 </button>
+
+                                <button
+                                    onClick={handleExplain}
+                                    disabled={explaining}
+                                    style={{
+                                        padding: '10px 28px', fontSize: '0.85rem', fontWeight: 600,
+                                        borderRadius: 12, border: 'none', cursor: explaining ? 'not-allowed' : 'pointer',
+                                        background: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+                                        color: '#fff', boxShadow: '0 2px 12px #ec489944',
+                                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                                        opacity: explaining ? 0.7 : 1,
+                                    }}
+                                >
+                                    {explaining ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                                    Explicar Camino con IA
+                                </button>
                             </div>
+
+                            {/* Explanation Panel */}
+                            {explanation && (
+                                <div style={{
+                                    background: '#0f172a',
+                                    borderRadius: 16,
+                                    border: '1px solid #1e293b',
+                                    padding: '24px',
+                                    marginTop: '24px',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(to right, #ec4899, #8b5cf6)' }} />
+                                    <h3 style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc', fontSize: '1.1rem' }}>
+                                        <Sparkles size={20} className="text-pink-400" /> Explicación del Camino
+                                    </h3>
+                                    <div style={{
+                                        color: '#cbd5e1',
+                                        lineHeight: 1.6,
+                                        fontSize: '0.95rem',
+                                        whiteSpace: 'pre-wrap',
+                                        background: '#02061750',
+                                        padding: 16,
+                                        borderRadius: 12,
+                                        border: '1px solid #1e293b'
+                                    }}>
+                                        {explanation}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* ── Asset Detail Panel (bottom) ── */}
                             {selectedAsset && (

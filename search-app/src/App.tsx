@@ -8,6 +8,7 @@ import AnalysisPlaceholder from './components/analysis/AnalysisPlaceholder';
 import CommunityAnalysisCard from './components/analysis/CommunityAnalysisCard';
 import BridgeAnalysisCard from './components/analysis/BridgeAnalysisCard';
 import SerendipityCard from './components/analysis/SerendipityCard';
+import PathfinderCard from './components/analysis/PathfinderCard';
 import FogOfWarCard from './components/analysis/FogOfWarCard';
 import HeatmapAnalysisCard from './components/analysis/HeatmapAnalysisCard';
 import ChordAnalysisCard from './components/analysis/ChordAnalysisCard';
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/analysis/communities" element={<CommunityAnalysisCard />} />
             <Route path="/analysis/bridges" element={<BridgeAnalysisCard />} />
             <Route path="/analysis/serendipity" element={<SerendipityCard />} />
+            <Route path="/analysis/pathfinder" element={<PathfinderCard />} />
             <Route path="/analysis/fog-of-war" element={<FogOfWarCard />} />
             <Route path="/analysis/heatmap" element={<HeatmapAnalysisCard />} />
             <Route path="/analysis/chord" element={<ChordAnalysisCard />} />

@@ -12,6 +12,7 @@ import {
     Shapes, // Abstract Concepts
     Unplug, // Orphans
     BarChart3, // Weight Distribution
+    Route, // Pathfinder
     ArrowRight,
     Search,
     BrainCircuit
@@ -20,7 +21,8 @@ import {
 const ANALYSIS_TOOLS = [
     { id: 'communities', title: 'Detección de Comunidades', description: 'Clusters semánticos (Louvain)', icon: Dna, color: '#8b5cf6' },
     { id: 'bridges', title: 'Puentes Semánticos', description: 'Nodos conectores y centralidad', icon: Network, color: '#3b82f6' },
-    { id: 'serendipity', title: 'Camino de Serendipia', description: 'Rutas extrañas entre nodos', icon: BrainCircuit, color: '#ec4899' }, // BrainCircuit as Serendipity
+    { id: 'serendipity', title: 'Camino de Serendipia', description: 'Rutas extrañas entre nodos', icon: BrainCircuit, color: '#ec4899' },
+    { id: 'pathfinder', title: 'Navegador Latente', description: 'Traza el camino entre dos ideas', icon: Route, color: '#06b6d4' },
     { id: 'fog-of-war', title: 'Niebla de Guerra', description: 'Filtrado progresivo por confianza', icon: CloudFog, color: '#64748b' },
     { id: 'heatmap', title: 'Matriz de Calor', description: 'Adyacencia de conceptos', icon: Grid3X3, color: '#ef4444' },
     { id: 'chord', title: 'Diagrama de Cuerdas', description: 'Relaciones entre categorías', icon: CircleDot, color: '#f59e0b' },

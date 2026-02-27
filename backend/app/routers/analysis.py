@@ -5,9 +5,13 @@ from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
 import re
 import logging
+import json
+import requests
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+LLM_GATEWAY_URL = settings.LLM_GATEWAY_URL
 
 router = APIRouter(
     prefix="/analysis",
@@ -297,6 +301,174 @@ def _resolve_minio_url(file_hash: Optional[str], mime_type: Optional[str] = None
     return {}
 
 
+# 🧭 Pathfinder (Navegador Latente)
+class PathfinderRequest(BaseModel):
+    source_element_id: str
+    target_element_id: str
+    mode: str = "direct"  # "direct" | "lateral"
+
+class PathfinderNodeData(BaseModel):
+    id: str
+    label: str
+    node_type: str  # "Concept", "DigitalAsset", "Person", etc.
+    weight_to_next: Optional[float] = None
+    file_hash: Optional[str] = None
+    mime_type: Optional[str] = None
+    download_url: Optional[str] = None
+    minio_path: Optional[str] = None
+
+class PathfinderEdgeData(BaseModel):
+    source: str
+    target: str
+    weight: Optional[float]
+    rel_type: str
+
+class PathfinderResponse(BaseModel):
+    status: str
+    message: str
+    nodes: List[PathfinderNodeData]
+    edges: List[PathfinderEdgeData]
+    path_length: int
+    mode: str
+
+@router.post("/pathfinder", response_model=PathfinderResponse)
+def pathfind(request: PathfinderRequest):
+    """
+    K-Shortest Paths entre dos nodos (hasta 3 rutas distintas).
+    mode='direct'  → minimiza 1 - weight (prefiere aristas fuertes).
+    mode='lateral' → aplica penalización extra a aristas con weight > 0.85,
+                     forzando rutas creativas/serendípicas.
+    """
+    driver = get_neo4j_driver()
+
+    if request.mode == "lateral":
+        cypher = """
+        MATCH (src), (tgt)
+        WHERE elementId(src) = $source AND elementId(tgt) = $target
+        MATCH p = (src)-[*1..8]-(tgt)
+        WITH p,
+             // Costo de aristas: penaliza aristas fuertes (> 0.85) para forzar rutas creativas
+             REDUCE(cost = 0.0, r IN relationships(p) |
+               cost + (1.0 - coalesce(r.weight, 0.5))
+                    + CASE WHEN coalesce(r.weight, 0.5) > 0.85 THEN 2.0 ELSE 0.0 END
+             ) AS edgeCost,
+             // Costo de nodos: penaliza Conceptos hub (muchas conexiones)
+             // size([(n)<--(:DigitalAsset)|1]) cuenta el grado sin CALL{}
+             // Formula: 1 - exp(-0.015 * degree) → 0.0 para nichos, ~0.99 para mega-hubs
+             REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |
+               hubCost + (1.0 - exp(-0.015 * toFloat(size([(n)<--(:DigitalAsset) | 1]))))
+             ) AS hubCost
+        WITH p, edgeCost + hubCost AS totalCost
+        ORDER BY totalCost ASC
+        LIMIT 3
+        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
+        """
+    else:
+        cypher = """
+        MATCH (src), (tgt)
+        WHERE elementId(src) = $source AND elementId(tgt) = $target
+        MATCH p = (src)-[*1..8]-(tgt)
+        WITH p,
+             REDUCE(cost = 0.0, r IN relationships(p) |
+               cost + (1.0 - coalesce(r.weight, 0.5))
+             ) AS totalCost
+        ORDER BY totalCost ASC
+        LIMIT 3
+        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
+        """
+
+    try:
+        with driver.session() as session:
+            result = session.run(
+                cypher,
+                source=request.source_element_id,
+                target=request.target_element_id
+            )
+            records = list(result)
+
+            if not records:
+                return PathfinderResponse(
+                    status="not_found",
+                    message=f"No path found in '{request.mode}' mode. Try 'direct' mode or select closer nodes.",
+                    nodes=[], edges=[], path_length=0, mode=request.mode
+                )
+
+            # ── Deduplicate across all K paths ──
+            seen_nodes: dict = {}     # elementId str → PathfinderNodeData
+            seen_edge_keys: set = set()
+            out_edges: List[PathfinderEdgeData] = []
+            total_hops = 0
+
+            for record in records:
+                path_nodes = record["path_nodes"]
+                path_rels = record["path_rels"]
+                total_hops = max(total_hops, len(path_rels))
+
+                # Build a local id map for this path so edges match exactly
+                local_id_map: dict = {}  # neo4j internal id → our string elementId key
+
+                for n in path_nodes:
+                    nid = str(n.element_id)
+                    local_id_map[n.element_id] = nid
+
+                    if nid not in seen_nodes:
+                        node_labels = list(n.labels)
+                        node_type = "Concept"
+                        for lbl in node_labels:
+                            if lbl in ["DigitalAsset", "Person", "Location", "Organization", "Event", "Project"]:
+                                node_type = lbl
+                                break
+
+                        file_hash = n.get("file_hash") or n.get("neo4j_hash") or n.get("hash")
+                        mime_type = n.get("mime_type")
+                        minio_data = {}
+                        if node_type == "DigitalAsset" and file_hash:
+                            minio_data = _resolve_minio_url(file_hash, mime_type)
+
+                        seen_nodes[nid] = PathfinderNodeData(
+                            id=nid,
+                            label=n.get("name") or n.get("filename") or n.get("title") or "?",
+                            node_type=node_type,
+                            file_hash=file_hash,
+                            mime_type=mime_type,
+                            **minio_data
+                        )
+
+                for rel in path_rels:
+                    src_id = str(rel.start_node.element_id)
+                    tgt_id = str(rel.end_node.element_id)
+                    edge_key = (src_id, tgt_id, rel.type)
+                    if edge_key not in seen_edge_keys:
+                        seen_edge_keys.add(edge_key)
+                        w = rel.get("weight")
+                        out_edges.append(PathfinderEdgeData(
+                            source=src_id,
+                            target=tgt_id,
+                            weight=round(w, 3) if w is not None else None,
+                            rel_type=rel.type
+                        ))
+
+            out_nodes = list(seen_nodes.values())
+            num_paths = len(records)
+
+            return PathfinderResponse(
+                status="success",
+                message=f"{num_paths} camino(s) encontrado(s): {len(out_nodes)} nodos únicos, {len(out_edges)} aristas únicas.",
+                nodes=out_nodes,
+                edges=out_edges,
+                path_length=total_hops,
+                mode=request.mode
+            )
+
+    except Exception as e:
+        logger.error(f"🔥 Pathfinder error: {e}")
+        return PathfinderResponse(
+            status="error",
+            message=str(e),
+            nodes=[], edges=[], path_length=0, mode=request.mode
+        )
+
+
 # 🎲 Serendipity Path (Fuzzy Random Walk)
 @router.post("/serendipity", response_model=AnalysisToolResponse)
 def analyze_serendipity():
@@ -307,41 +479,63 @@ def analyze_serendipity():
     driver = get_neo4j_driver()
 
     cypher_query = """
-    // 1. Elegir un nodo de inicio aleatorio que tenga conexiones difusas
+    // 1. Elegir un nodo de inicio aleatorio con al menos una conexión no obvia
     MATCH (start:Concept)<-[r]-(:DigitalAsset)
-    WHERE r.weight < 0.9
+    WHERE coalesce(r.weight, 1.0) < 0.9
     WITH start ORDER BY rand() LIMIT 1
 
-    // 2. Trazar un camino de 2 Assets de profundidad
+    // 2. Trazar el camino de 5 nodos: Concept -> Asset -> Concept -> Asset -> Concept
     MATCH path = (start)<-[r1]-(a1:DigitalAsset)-[r2]->(mid:Concept)<-[r3]-(a2:DigitalAsset)-[r4]->(end:Concept)
 
-    // 3. Evitar bucles
+    // 3. Evitar bucles estructurales
     WHERE elementId(start) <> elementId(mid)
-      AND elementId(mid) <> elementId(end)
       AND elementId(start) <> elementId(end)
-      AND elementId(a1) <> elementId(a2)
+      AND elementId(mid)   <> elementId(end)
+      AND elementId(a1)    <> elementId(a2)
+      // Factor Serendipia: al menos una arista débil/latente
+      AND (coalesce(r1.weight, 1.0) <= 0.7 OR coalesce(r2.weight, 1.0) <= 0.7
+        OR coalesce(r3.weight, 1.0) <= 0.7 OR coalesce(r4.weight, 1.0) <= 0.7)
 
-    // 4. Factor Serendipia: Al menos una relación verdaderamente difusa
-      AND (r1.weight <= 0.7 OR r2.weight <= 0.7 OR r3.weight <= 0.7 OR r4.weight <= 0.7)
+    // 4. Calcular el grado del nodo puente (hub) — penaliza mega-hubs
+    CALL {
+        WITH mid
+        RETURN count { (mid)<--(:DigitalAsset) } AS mid_degree
+    }
 
-    // 5. Elegir un camino al azar
-    WITH path, start, a1, mid, a2, end, r1, r2, r3, r4
-    ORDER BY rand()
+    // 5. Random Walk Penalizado: rand() × exp(-0.015 × mid_degree)
+    //    Hub de 200 conexiones → penalty≈0.05, incluso rand=0.99 da 0.049
+    //    Concepto nicho de 3 conexiones → penalty≈0.96, fácilmente gana
+    WITH path, start, a1, mid, a2, end, r1, r2, r3, r4, mid_degree,
+         rand() * exp(-0.015 * toFloat(mid_degree)) AS serendipity_score
+    ORDER BY serendipity_score DESC
     LIMIT 1
 
-    // 6. Formatear como secuencia de pasos (incluir propiedades de Asset)
+    // 6. Retornar cada nodo/arista con nombre explícito (compatible con parser Python)
     RETURN
-        elementId(start) as step1_id, start.name as step1_node, 'Concept' as step1_type,
-        r1.weight as edge1_weight,
-        elementId(a1) as step2_id, coalesce(a1.name, a1.filename) as step2_node, 'Asset' as step2_type,
-        a1.file_hash as a1_hash, a1.mime_type as a1_mime,
-        r2.weight as edge2_weight,
-        elementId(mid) as step3_id, mid.name as step3_node, 'Concept' as step3_type,
-        r3.weight as edge3_weight,
-        elementId(a2) as step4_id, coalesce(a2.name, a2.filename) as step4_node, 'Asset' as step4_type,
-        a2.file_hash as a2_hash, a2.mime_type as a2_mime,
-        r4.weight as edge4_weight,
-        elementId(end) as step5_id, end.name as step5_node, 'Concept' as step5_type
+        elementId(start)            AS step1_id,
+        start.name                  AS step1_node,
+        'Concept'                   AS step1_type,
+        coalesce(r1.weight, 1.0)   AS edge1_weight,
+        elementId(a1)               AS step2_id,
+        coalesce(a1.name, a1.filename) AS step2_node,
+        'Asset'                     AS step2_type,
+        a1.file_hash                AS a1_hash,
+        a1.mime_type                AS a1_mime,
+        coalesce(r2.weight, 1.0)   AS edge2_weight,
+        elementId(mid)              AS step3_id,
+        mid.name                    AS step3_node,
+        'Concept'                   AS step3_type,
+        mid_degree                  AS mid_hub_degree,
+        coalesce(r3.weight, 1.0)   AS edge3_weight,
+        elementId(a2)               AS step4_id,
+        coalesce(a2.name, a2.filename) AS step4_node,
+        'Asset'                     AS step4_type,
+        a2.file_hash                AS a2_hash,
+        a2.mime_type                AS a2_mime,
+        coalesce(r4.weight, 1.0)   AS edge4_weight,
+        elementId(end)              AS step5_id,
+        end.name                    AS step5_node,
+        'Concept'                   AS step5_type
     """
 
     try:
@@ -374,7 +568,7 @@ def analyze_serendipity():
                     "mime_type": record.get("a1_mime"),
                     **a1_minio,
                 },
-                {"id": record["step3_id"], "name": record["step3_node"], "type": record["step3_type"], "weight": _rw(record["edge2_weight"])},
+                {"id": record["step3_id"], "name": record["step3_node"], "type": record["step3_type"], "weight": _rw(record["edge2_weight"]), "hub_degree": record.get("mid_hub_degree")},
                 {
                     "id": record["step4_id"],
                     "name": record["step4_node"], "type": record["step4_type"],
@@ -400,6 +594,101 @@ def analyze_serendipity():
             "message": str(e),
             "mock_data": {"path": []}
         }
+
+
+# 🧠 Explainer (LLM Path Narrative)
+class PathExplanationRequest(BaseModel):
+    tool_name: str  # 'serendipity' or 'pathfinder'
+    nodes: List[Dict[str, Any]]
+    edges: List[Dict[str, Any]]
+
+class PathExplanationResponse(BaseModel):
+    explanation: str
+    status: str
+
+@router.post("/explain-path", response_model=PathExplanationResponse)
+def explain_analytical_path(req: PathExplanationRequest):
+    """
+    Takes a graph path (nodes + edges) and asks the LLM to write a narrative 
+    explanation of how and why the start node connects to the end node.
+    """
+    if not req.nodes or not req.edges:
+        return PathExplanationResponse(status="error", explanation="El camino está vacío.")
+
+    try:
+        # 1. Reconstruct path as a readable string
+        path_str_parts = []
+        node_map = {n.get("id"): n for n in req.nodes}
+        
+        # Sort edges assuming they are mostly sequential, but handle flexibly
+        for i, edge in enumerate(req.edges):
+            src = node_map.get(edge.get("source"), {})
+            tgt = node_map.get(edge.get("target"), {})
+            
+            src_name = src.get("name") or src.get("label") or "Unknown"
+            tgt_name = tgt.get("name") or tgt.get("label") or "Unknown"
+            src_type = src.get("type") or src.get("node_type") or "Node"
+            tgt_type = tgt.get("type") or tgt.get("node_type") or "Node"
+            
+            rel = edge.get("rel_type") or edge.get("type") or "CONECTADO_A"
+            weight = edge.get("weight")
+            w_str = f" (peso: {weight})" if weight is not None else ""
+            
+            step = f"Paso {i+1}: [{src_type}] '{src_name}' --({rel}){w_str}--> [{tgt_type}] '{tgt_name}'"
+            path_str_parts.append(step)
+
+        path_context = "\n".join(path_str_parts)
+
+        # 2. Build Prompt
+        system_prompt = f"""Eres un analista de datos y experto en grafos de conocimiento.
+Tu tarea es explicar un camino asociativo descubierto por la herramienta '{req.tool_name}'.
+El usuario quiere entender POR QUÉ y CÓMO el primer nodo de este camino se conecta con el último nodo, a través de los pasos intermedios.
+
+Instrucciones:
+1. Escribe un párrafo narrativo y fluido explicando la conexión. No hagas una simple lista.
+2. Menciona los pesos (weights) si son bajos (< 0.8), indicando que es una conexión "latente", "débil" o "sorprendente".
+3. Si el camino pasa por un Concepto central (hub), menciónalo como el "puente conceptual" que une ambas ideas o archivos.
+4. Mantén un tono analítico, interesante y conciso (máximo 3 párrafos cortos).
+5. Responde en el mismo idioma que los nombres de los nodos (asume Español por defecto).
+"""
+
+        user_prompt = f"Aquí está el camino exacto extraído de Neo4j:\n\n{path_context}\n\nPor favor, explica esta cadena de asociaciones."
+
+        # 3. Request to LLM Gateway
+        url = f"{LLM_GATEWAY_URL}/v1/chat/completions"
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        data = {
+            "task": "chat",
+            "privacy_mode": "strict",
+            "messages": json.dumps(messages),
+            "temperature": 0.6,
+            "provider": "openai", # Default explicitly to cloud for better reasoning
+            "max_tokens": 1000
+        }
+        
+        logger.info(f"Requesting path explanation for {len(req.nodes)} nodes via {LLM_GATEWAY_URL}")
+        response = requests.post(url, data=data, timeout=60)
+        
+        if response.status_code == 200:
+            result = response.json()
+            answer = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+            if not answer:
+                answer = "Error: El LLM devolvió una respuesta vacía."
+            return PathExplanationResponse(status="success", explanation=answer)
+        else:
+            logger.error(f"LLM Gateway error: HTTP {response.status_code} - {response.text}")
+            return PathExplanationResponse(status="error", explanation=f"Error del LLM: HTTP {response.status_code}.")
+
+    except requests.exceptions.Timeout:
+        return PathExplanationResponse(status="error", explanation="El LLM tardó demasiado en responder (Timeout).")
+    except Exception as e:
+        logger.error(f"Error generating path explanation: {e}", exc_info=True)
+        return PathExplanationResponse(status="error", explanation=f"Error interno: {str(e)}")
+
 
 # 🌫️ Fog of War (Distribution)
 @router.post("/fog-distribution", response_model=AnalysisToolResponse)

@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 import math
+import json
+import re
+import requests
 from shared.clients import get_neo4j_driver, get_weaviate_client, get_minio_client
 from worker.utils import generate_collection_uuid
 import weaviate.classes.query as wq
@@ -61,6 +64,25 @@ class AssetPreviewResponse(BaseModel):
     minio_path: Optional[str] = None
     download_url: Optional[str] = None
 
+class ValidateConnectionSuggestion(BaseModel):
+    key: str           # unique identifier: asset_id-target_concept_id-relation_type-direction
+    asset_name: str
+    target_concept_name: str
+    relation_type: str
+    direction: str
+    reasoning: str
+
+class ValidateConnectionsRequest(BaseModel):
+    asset_name: str
+    asset_content: str  # text content or empty for media; tags as comma-separated string
+    asset_mime_type: Optional[str] = None
+    suggestions: List[ValidateConnectionSuggestion]
+
+class ValidateConnectionsResponse(BaseModel):
+    valid_keys: List[str]
+    removed_count: int
+    llm_explanation: str
+
 # Helper functions
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     dot = sum(a * b for a, b in zip(v1, v2))
@@ -74,36 +96,204 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
 # Endpoints
 # ----------------------------
 
+@router.post("/validate-connections", response_model=ValidateConnectionsResponse)
+def validate_connections_with_llm(req: ValidateConnectionsRequest):
+    """
+    Sends the asset context + proposed latent connections to the local LLM.
+    The LLM validates which connections semantically make sense and returns
+    only the valid ones as a JSON array. Invalid/noise connections are filtered out.
+    """
+    llm_url = f"{settings.LLM_GATEWAY_URL}/v1/chat/completions"
+
+    is_image = req.asset_mime_type and req.asset_mime_type.startswith("image/")
+    is_audio = req.asset_mime_type and req.asset_mime_type.startswith("audio/")
+
+    # Build asset context block
+    if is_image:
+        asset_context = f"Asset: \"{req.asset_name}\" (image)\nContextual tags/description: {req.asset_content or 'none'}"
+    elif is_audio:
+        asset_context = f"Asset: \"{req.asset_name}\" (audio file)\nContextual tags/description: {req.asset_content or 'none'}"
+    else:
+        content_snippet = req.asset_content[:1200] if req.asset_content else "no content available"
+        asset_context = f"Asset: \"{req.asset_name}\"\nContent snippet:\n---\n{content_snippet}\n---"
+
+    # Build numbered connection list using SHORT INDICES (not full keys!)
+    # This keeps the LLM response tiny — it only needs to return numbers, not 100-char Neo4j IDs
+    connection_lines = []
+    for i, s in enumerate(req.suggestions):
+        direction_label = "asset → concept" if s.direction == "seed_to_neighbor" else "concept → asset"
+        connection_lines.append(
+            f'{i+1}. [{direction_label}] {s.relation_type}: "{s.target_concept_name}"'
+        )
+    connections_text = "\n".join(connection_lines)
+
+    system_prompt = """You are a strict semantic knowledge graph validator.
+Your job: decide which proposed connections between an asset and semantic concepts are GENUINELY supported by the asset's actual content.
+
+APPROVE a connection only if the concept:
+- Is explicitly mentioned or directly discussed in the asset, OR
+- Is a core subject/technology/entity the asset is clearly about.
+
+REJECT a connection if it requires:
+- Metaphorical or allegorical interpretation ("spy animals evoke Sisyphus")
+- Symbolic or mythological stretch ("craftiness → Odysseus")
+- Indirect thematic association ("endless tasks → frustration → Greek myth")
+- Concepts from a different domain that are not actually present in the asset.
+
+Be very strict. When in doubt, reject.
+Return ONLY valid JSON: {"valid_indices": [1, 3, 5, ...], "explanation": "one sentence"}
+Use 1-based index numbers. Do NOT include any text outside the JSON."""
+
+    user_prompt = f"""{asset_context}
+
+Proposed connections (use the number to refer to each):
+{connections_text}
+
+Return JSON only: {{"valid_indices": [1, 2, ...], "explanation": "..."}}"""
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    data = {
+        "task": "chat",
+        "privacy_mode": "flexible",
+        "messages": json.dumps(messages),
+        "temperature": 0.1,
+        "max_tokens": 512,  # Small: only needs to return numbers like [1,3,5,...]
+    }
+
+    all_keys = [s.key for s in req.suggestions]
+
+    try:
+        response = requests.post(llm_url, data=data, timeout=60)
+        if response.status_code != 200:
+            logger.error(f"LLM validation HTTP {response.status_code}: {response.text[:300]}")
+            raise HTTPException(status_code=502, detail=f"LLM gateway error: HTTP {response.status_code}")
+
+        result = response.json()
+
+        # Log the actual response structure for diagnosis
+        logger.info(f"LLM gateway response keys: {list(result.keys())}")
+        logger.info(f"LLM gateway response preview: {str(result)[:300]}")
+
+        # Try every possible response field — OpenAI format, SynthesizeResponse, plain content
+        raw_content = (
+            result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            or result.get("answer", "")
+            or result.get("content", "")
+            or result.get("text", "")
+            or result.get("response", "")
+        ).strip()
+
+        logger.info(f"Extracted raw_content ({len(raw_content)} chars): {raw_content[:200]}")
+
+        # Parse JSON from LLM response — robust multi-attempt strategy
+        parsed = None
+        try:
+            parsed = json.loads(raw_content)
+        except json.JSONDecodeError as decode_err:
+            logger.warning(f"First json.loads failed ({decode_err}), trying find/rfind extraction ({len(raw_content)} chars)")
+            start = raw_content.find('{')
+            end = raw_content.rfind('}')
+            if start != -1 and end != -1 and end > start:
+                candidate = raw_content[start:end + 1]
+                try:
+                    parsed = json.loads(candidate)
+                except json.JSONDecodeError as decode_err2:
+                    logger.warning(f"Extraction also failed ({decode_err2}): {candidate[:200]}")
+
+        if parsed is None:
+            logger.warning(f"Could not parse LLM JSON — returning all keys. Raw: {raw_content[:200]}")
+            return ValidateConnectionsResponse(
+                valid_keys=all_keys,
+                removed_count=0,
+                llm_explanation="No se pudo parsear la respuesta del LLM. Se devuelven todas las conexiones."
+            )
+
+        # Map 1-based indices back to actual keys
+        raw_indices = parsed.get("valid_indices", None)
+        if raw_indices is None:
+            # Fallback: if model returned valid_keys strings instead of indices, try that
+            raw_keys = parsed.get("valid_keys", None)
+            if raw_keys is not None:
+                valid_keys = [k for k in raw_keys if k in set(all_keys)]
+            else:
+                valid_keys = all_keys  # could not determine — keep all
+        else:
+            valid_keys = []
+            for idx in raw_indices:
+                try:
+                    i = int(idx) - 1  # convert 1-based to 0-based
+                    if 0 <= i < len(all_keys):
+                        valid_keys.append(all_keys[i])
+                except (ValueError, TypeError):
+                    pass
+
+        explanation = parsed.get("explanation", "Validación completada.")
+        removed = len(all_keys) - len(valid_keys)
+        logger.info(f"LLM validation: {len(valid_keys)} valid / {removed} removed from {len(all_keys)} suggestions")
+
+        return ValidateConnectionsResponse(
+            valid_keys=valid_keys,
+            removed_count=removed,
+            llm_explanation=explanation,
+        )
+
+    except requests.Timeout:
+        raise HTTPException(status_code=504, detail="LLM gateway timeout during validation")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in validate_connections_with_llm: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/seeds", response_model=SeedResponse)
 def get_explorable_seeds(
     node_type: str = Query("Person", description="Node type to search for seeds"),
-    limit: int = Query(50, ge=1, le=200)
+    limit: int = Query(50, ge=1, le=200),
+    sort_by: str = Query("top_connected", description="Sorting strategy: top_connected | random | least_connected"),
+    search: str = Query("", description="Text filter on asset name/filename/title"),
 ):
     """
-    Returns eligible nodes to be used as 'seeds' for latent exploration.
-    Eligible nodes: DigitalAssets or enriched Concept/Person/etc.
-    Sorted by connectivity.
+    Returns eligible DigitalAsset nodes for latent exploration.
+    sort_by options:
+      - top_connected   → most connections first (default, same as before)
+      - random          → random sample each time using rand()
+      - least_connected → assets with fewest graph connections (underexplored)
+    search filters by substring on name/filename/title (case-insensitive).
     """
     driver = get_neo4j_driver()
-    
-    allowed_types = ["Person", "Concept", "Location", "Organization", "Event", "Project", "Device", "Method", "DigitalAsset"]
-    if node_type not in allowed_types:
-        raise HTTPException(status_code=400, detail=f"Invalid node type. Allowed types: {', '.join(allowed_types)}")
 
-    # DigitalAsset is implicitly eligible, others need enriched = true
-    # V2: We strictly limit to DigitalAsset to avoid cyclic Asset->Asset relationships implicitly
+    search_clause = ""
+    if search.strip():
+        search_clause = "AND toLower(coalesce(n.name, n.filename, n.title, '')) CONTAINS toLower($search)"
+
+    if sort_by == "random":
+        order_clause = "ORDER BY rand()"
+    elif sort_by == "least_connected":
+        order_clause = "ORDER BY connections ASC"
+    else:  # top_connected (default)
+        order_clause = "ORDER BY connections DESC"
+
     query = f"""
     MATCH (n:DigitalAsset)
-    OPTIONAL MATCH (n)--()
-    WITH n, count(*) as connections
-    RETURN elementId(n) as id, coalesce(n.name, n.title, n.filename, 'Unknown') as name, labels(n)[0] as type, connections
-    ORDER BY connections DESC
+    OPTIONAL MATCH (n)--(nb)
+    WITH n, count(nb) as connections
+    WHERE 1=1 {search_clause}
+    RETURN elementId(n) as id,
+           coalesce(n.name, n.filename, n.title, 'Unknown') as name,
+           labels(n)[0] as type,
+           connections
+    {order_clause}
     LIMIT $limit
     """
-    
+
     try:
         with driver.session() as session:
-            result = session.run(query, limit=limit)
+            result = session.run(query, limit=limit, search=search.strip())
             nodes = [
                 SeedNode(
                     id=record["id"],
@@ -301,9 +491,16 @@ def get_latent_connections(
                 
                 WITH concept, r, existing_r
                 WHERE existing_r IS NULL
+
+                // Count hub degree for penalty calculation
+                CALL {
+                    WITH concept
+                    RETURN count { (concept)<--(:DigitalAsset) } AS concept_degree
+                }
                 
                 RETURN elementId(concept) as concept_id, coalesce(concept.name, concept.title) as concept_name,
-                       type(r) as relation_type, coalesce(r.weight, 1.0) as current_weight
+                       type(r) as relation_type, coalesce(r.weight, 1.0) as current_weight,
+                       concept_degree
                 """
                 
                 seed_to_neigh_results = session.run(q_seed_to_neighbor, seed_id=node_id, neigh_id=neigh_id)
@@ -312,9 +509,12 @@ def get_latent_connections(
                     c_name = record["concept_name"]
                     r_type = record["relation_type"]
                     c_weight = record["current_weight"]
+                    c_degree = record.get("concept_degree", 0)
+                    hub_penalty = math.exp(-0.015 * float(c_degree))
                     
                     beta = 1.0 - alpha
                     prop_weight = round((c_weight * beta) + (n_sim * alpha), 3)
+                    prop_weight = round(prop_weight * hub_penalty, 4)  # apply hub penalty
                     
                     if prop_weight >= 0.5:
                         sugg = LatentConnectionSuggestion(
@@ -327,7 +527,7 @@ def get_latent_connections(
                             cosine_similarity=round(n_sim, 3),
                             proposed_weight=max(min(prop_weight, 1.0), 0.0),
                             direction="seed_to_neighbor",
-                            reasoning=f"Similarity: {round(n_sim*100)}% in Weaviate ({space}). Semantic Transfer: [{seed_name}] -> [{neigh_name}]."
+                            reasoning=f"Similarity: {round(n_sim*100)}% ({space}). Hub degree: {c_degree} (penalty: {round(hub_penalty,2)}x). Transfer: [{seed_name}] -> [{neigh_name}]."
                         )
                         suggestions.append(sugg)
 
@@ -344,9 +544,16 @@ def get_latent_connections(
                 
                 WITH concept, r, existing_r
                 WHERE existing_r IS NULL
+
+                // Count hub degree for penalty calculation
+                CALL {
+                    WITH concept
+                    RETURN count { (concept)<--(:DigitalAsset) } AS concept_degree
+                }
                 
                 RETURN elementId(concept) as concept_id, coalesce(concept.name, concept.title) as concept_name,
-                       type(r) as relation_type, coalesce(r.weight, 1.0) as current_weight
+                       type(r) as relation_type, coalesce(r.weight, 1.0) as current_weight,
+                       concept_degree
                 """
 
                 neigh_to_seed_results = session.run(q_neighbor_to_seed, seed_id=node_id, neigh_id=neigh_id)
@@ -355,9 +562,12 @@ def get_latent_connections(
                     c_name = record["concept_name"]
                     r_type = record["relation_type"]
                     c_weight = record["current_weight"]
+                    c_degree = record.get("concept_degree", 0)
+                    hub_penalty = math.exp(-0.015 * float(c_degree))
                     
                     beta = 1.0 - alpha
                     prop_weight = round((c_weight * beta) + (n_sim * alpha), 3)
+                    prop_weight = round(prop_weight * hub_penalty, 4)  # apply hub penalty
                     
                     if prop_weight >= 0.5:
                         sugg = LatentConnectionSuggestion(
@@ -370,7 +580,7 @@ def get_latent_connections(
                             cosine_similarity=round(n_sim, 3),
                             proposed_weight=max(min(prop_weight, 1.0), 0.0),
                             direction="neighbor_to_seed",
-                            reasoning=f"Similarity: {round(n_sim*100)}% in Weaviate ({space}). Semantic Transfer: [{neigh_name}] -> [{seed_name}]."
+                            reasoning=f"Similarity: {round(n_sim*100)}% ({space}). Hub degree: {c_degree} (penalty: {round(hub_penalty,2)}x). Transfer: [{neigh_name}] -> [{seed_name}]."
                         )
                         suggestions.append(sugg)
 

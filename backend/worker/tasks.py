@@ -42,13 +42,17 @@ from worker.utils import (
 # Configure logging at module level
 import logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='[%(asctime)s: %(levelname)s/%(name)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
+# Silence noisy third-party loggers
+for _noisy_lib in ('botocore', 'boto3', 'urllib3', 's3transfer'):
+    logging.getLogger(_noisy_lib).setLevel(logging.WARNING)
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # Log module load
 logger.info("=" * 60)

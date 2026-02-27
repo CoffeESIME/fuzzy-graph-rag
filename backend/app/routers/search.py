@@ -656,6 +656,10 @@ class GraphCrispRequest(BaseModel):
 class GraphCrispResultItem(SearchResultItem):
     matched_concept: str
     relation_type: str
+    hub_name: Optional[str] = None           # Name of the hub concept used as bridge
+    edge_reasoning: Optional[str] = None     # LLM reasoning stored on the Neo4j edge
+    hub_degree: Optional[int] = None         # Number of DigitalAssets linked to this hub
+    hub_exp_penalty: Optional[float] = None  # Exponential penalty applied (debug)
 
 
 class GraphNode(BaseModel):
@@ -972,16 +976,14 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
     WHERE discovery.file_hash <> seed.file_hash 
       AND (coalesce(r.weight, 1.0) * coalesce(r2.weight, 1.0)) >= $alpha_cut
 
-    // Factor de Penalización (Penalty Factor) para relaciones estructurales/genéricas
+    // A. Penalización por tipo de relación (estructural vs semántica)
     WITH seed, r, target, r2, discovery, seed_node.score AS semantic_score,
          elementId(seed) as seed_id,
          elementId(target) as target_id,
          elementId(discovery) as disc_id,
-         // Penalización a r
          CASE WHEN type(r) IN ['DEFINES', 'CREATED_BY', 'DEPICTS', 'LOCATED_AT'] 
               THEN coalesce(r.weight, 1.0) * 0.3 
               ELSE coalesce(r.weight, 1.0) END AS adjusted_w1,
-         // Penalización a r2 (si existe)
          CASE WHEN r2 IS NOT NULL AND type(r2) IN ['DEFINES', 'CREATED_BY', 'DEPICTS', 'LOCATED_AT'] 
               THEN coalesce(r2.weight, 1.0) * 0.3 
               WHEN r2 IS NOT NULL 
@@ -990,14 +992,33 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
          coalesce(r.weight, 1.0) as w1,
          coalesce(r2.weight, 1.0) as w2
 
-    // Cálculo del score final basado en pesos ajustados multiplicado por la relevancia de Weaviate
-    WITH seed, r, target, r2, discovery, seed_id, target_id, disc_id, w1, w2, adjusted_w1, adjusted_w2, semantic_score,
-         (CASE WHEN adjusted_w2 IS NOT NULL THEN (adjusted_w1 * adjusted_w2) ELSE adjusted_w1 END) * semantic_score AS score_final
+    // B. Graph IDF: contar cuántos DigitalAssets apuntan a este concepto-hub
+    CALL {
+        WITH target
+        RETURN count { (target)<--(:DigitalAsset) } AS concept_degree
+    }
+
+    // C. Decaimiento Exponencial Agresivo: exp(-0.015 * degree)
+    //    degree=10  → 0.86x   (leve penalización)
+    //    degree=50  → 0.47x   (penalización media)
+    //    degree=100 → 0.22x   (hub fuerte, muy penalizado)
+    //    degree=200 → 0.05x   (mega-hub prácticamente eliminado)
+    WITH seed, r, target, r2, discovery, seed_id, target_id, disc_id, w1, w2,
+         adjusted_w1, adjusted_w2, semantic_score, concept_degree,
+         exp(-0.015 * toFloat(concept_degree)) AS exponential_penalty
+
+    // D. Score final: path_strength × semantic_relevance × hub_exponential_penalty
+    WITH seed, r, target, r2, discovery, seed_id, target_id, disc_id, w1, w2, exponential_penalty, concept_degree,
+         (CASE WHEN adjusted_w2 IS NOT NULL THEN (adjusted_w1 * adjusted_w2) ELSE adjusted_w1 END) * semantic_score * exponential_penalty AS score_final
 
     // D. Retornar y Ordenar por Fuerza Total del Camino Ajustada
     RETURN seed, r, target, r2, discovery,
            seed_id, target_id, disc_id,
            w1, w2,
+           concept_degree, exponential_penalty,
+           target.name AS hub_name,
+           r.reasoning AS edge_reasoning_r1,
+           r2.reasoning AS edge_reasoning_r2,
            score_final
     
     // Ordenamos priorizando los scores ajustados
@@ -1039,11 +1060,18 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
         w1 = record["w1"]
         w2 = record["w2"] # Can be None
         score_final = record["score_final"]
-        
+        concept_degree = record.get("concept_degree", 0)
+        exponential_penalty = record.get("exponential_penalty", 1.0)
+        # LLM reasoning stored on edges when the connection was originally created
+        edge_reasoning_r1 = record.get("edge_reasoning_r1")  # seed -> hub
+        edge_reasoning_r2 = record.get("edge_reasoning_r2")  # discovery -> hub
+
         rel1 = record["r"]
         rel2 = record["r2"] # Optional
-        
+
         target_name = target.get("name") or target.get("title") or target.get("id") or "Unknown"
+        # hub_name must be assigned AFTER target_name (used as fallback)
+        hub_name = record.get("hub_name") or target_name
         concepts_matched.add(target_name)
         
         # Determine Target Type
@@ -1058,9 +1086,9 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
             seed_filename = seed.get("filename", "Unknown")
             if discovery:
                 disc_filename = discovery.get("filename", "Unknown")
-                path_str = f"Seed({seed_filename}) --[weight:{w1:.2f}]--> Target({primary_type}:{target_name}) <--[weight:{w2:.2f}]-- Discovery({disc_filename}) = Score: {(w1*w2):.2f}"
+                path_str = f"Seed({seed_filename}) --[w:{w1:.2f}]--> Hub({target_name})[deg:{concept_degree} exp:{exponential_penalty:.2f}] <--[w:{w2:.2f}]-- Discovery({disc_filename}) = {score_final:.3f}"
             else:
-                path_str = f"Seed({seed_filename}) --[weight:{w1:.2f}]--> Target({primary_type}:{target_name}) = Score: {w1:.2f}"
+                path_str = f"Seed({seed_filename}) --[w:{w1:.2f}]--> Hub({target_name})[deg:{concept_degree} exp:{exponential_penalty:.2f}] = {score_final:.3f}"
             paths_taken.append(path_str)
                 
         # ── Nodes ──
@@ -1110,6 +1138,10 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
                     score=round(score_final, 4),
                     matched_concept=f"{target_name} ({primary_type})",
                     relation_type=rel1.type,
+                    hub_name=hub_name,
+                    edge_reasoning=edge_reasoning_r1,
+                    hub_degree=concept_degree,
+                    hub_exp_penalty=round(exponential_penalty, 4),
                     distance=0.0,
                     properties=_sanitize_neo4j_props(dict(seed.items()))
                 )
@@ -1151,14 +1183,37 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
                         score=round(score_final, 4),
                         matched_concept=f"{target_name} ({primary_type})",
                         relation_type=rel2.type,
+                        hub_name=hub_name,
+                        edge_reasoning=edge_reasoning_r2,
+                        hub_degree=concept_degree,
+                        hub_exp_penalty=round(exponential_penalty, 4),
                         distance=0.0,
                         properties=_sanitize_neo4j_props(dict(discovery.items()))
                     )
 
-    # ── Finalize ──
-    formatted = list(seen_results.values())
+    # ── Finalize: Soft-MMR Hub Diversity Re-ranking ──
+    # Results are first ranked by Cypher score (which already has exponential hub penalty).
+    # Then we apply an additional per-hub repetition penalty in Python:
+    #   - 1st & 2nd appearance of the same hub concept → full score
+    #   - 3rd & 4th appearance → 0.50× (moderate penalty)
+    #   - 5th+ appearance → 0.25× (strong penalty, push to tail)
+    formatted_raw = list(seen_results.values())
+    formatted_raw.sort(key=lambda r: r.score, reverse=True)
+
+    seen_hubs: Dict[str, int] = {}
+    formatted = []
+    for item in formatted_raw:
+        hub = item.matched_concept  # already set to "ConceptName (Type)"
+        seen_hubs[hub] = seen_hubs.get(hub, 0) + 1
+        if seen_hubs[hub] > 4:
+            item = item.model_copy(update={"score": round(item.score * 0.25, 4)})
+        elif seen_hubs[hub] > 2:
+            item = item.model_copy(update={"score": round(item.score * 0.50, 4)})
+        formatted.append(item)
+
+    # Re-sort after MMR adjustment and apply final limit
     formatted.sort(key=lambda r: r.score, reverse=True)
-    
+    formatted = formatted[:req.limit]
     _enrich_with_minio(formatted)
     
     # Enriched URLs propagation (reuse logic)

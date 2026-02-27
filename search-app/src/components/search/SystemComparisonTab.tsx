@@ -8,6 +8,15 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 // Interface for matched item in the comparison table
+interface GraphPath {
+    engine: string;
+    hub: string;
+    edge_type: string;
+    reasoning: string | null;
+    hub_degree?: number;
+    hub_exp_penalty?: number;
+}
+
 interface ComparisonItem {
     id: string;
     label: string;
@@ -20,6 +29,8 @@ interface ComparisonItem {
     fuzzy07Data?: any;
     fuzzy05Data?: any;
     properties: Record<string, any>;
+    appearance_reasons?: Record<string, string>;
+    graph_paths?: GraphPath[];
 }
 
 export default function SystemComparisonTab() {
@@ -116,10 +127,7 @@ export default function SystemComparisonTab() {
             const processGraphResult = (res: any, weightKey: 'crispWeight' | 'fuzzy07Weight' | 'fuzzy05Weight', dataKey: 'crispData' | 'fuzzy07Data' | 'fuzzy05Data', fallbackWeight: number) => {
                 if (res && res.results) {
                     res.results.forEach((item: any) => {
-                        // Graph results generally override uuid = file_hash, but check properties to be completely safe
                         const id = item.properties?.file_hash || item.properties?.neo4j_hash || item.properties?.hash || item.uuid || item.properties?.name || item.properties?.id || 'unknown-graph';
-
-                        // Grab the label using item.label if present (common for graph nodes), or fallbacks
                         const baseLabel = item.properties?.name || item.properties?.title || item.label || item.properties?.label || item.properties?.id || item.filename || id;
 
                         const compItem = getOrCreateItem(id, baseLabel, 'GraphNode', item.properties);
@@ -127,18 +135,18 @@ export default function SystemComparisonTab() {
                         compItem[dataKey] = {
                             matched_concept: item.matched_concept || item.label,
                             relation_type: item.relation_type,
-                            distance: item.distance
+                            distance: item.distance,
+                            hub_name: item.hub_name || null,
+                            edge_reasoning: item.edge_reasoning || null,
+                            hub_degree: item.hub_degree ?? null,
+                            hub_exp_penalty: item.hub_exp_penalty ?? null,
                         };
 
-                        // Store matched concept in properties to show importance/context
                         const conceptToStore = item.matched_concept || item.label;
                         if (conceptToStore) {
-                            if (!compItem.properties.matched_concepts) {
-                                compItem.properties.matched_concepts = [];
-                            }
-                            if (!compItem.properties.matched_concepts.includes(conceptToStore)) {
+                            if (!compItem.properties.matched_concepts) compItem.properties.matched_concepts = [];
+                            if (!compItem.properties.matched_concepts.includes(conceptToStore))
                                 compItem.properties.matched_concepts.push(conceptToStore);
-                            }
                         }
                     });
                 }
@@ -153,13 +161,45 @@ export default function SystemComparisonTab() {
             // 4. Process Fuzzy Low Alpha Results
             processGraphResult(fuzzy05Res, 'fuzzy05Weight', 'fuzzy05Data', fuzzyLowAlpha);
 
-            // Convert map to array and sort by number of occurrences (most found system first), then score
+            // Convert map to array
             const aggregated = Array.from(itemMap.values());
+
+            // Build appearance_reasons + graph_paths per item
+            aggregated.forEach(item => {
+                const reasons: Record<string, string> = {};
+                const paths: GraphPath[] = [];
+
+                if (item.vectorScore !== undefined)
+                    reasons['vector'] = `Similitud semántica directa (score: ${item.vectorScore.toFixed(3)}) — búsqueda vectorial BGE-M3.`;
+
+                const addGraphReason = (engineKey: string, engineLabel: string, data: any, score?: number) => {
+                    if (!data) return;
+                    const hub = data.hub_name || data.matched_concept || '?';
+                    const deg = data.hub_degree != null ? ` (grado hub: ${data.hub_degree})` : '';
+                    reasons[engineKey] = `Encontrado vía concepto puente "${hub}"${deg} — ${engineLabel} (score: ${score?.toFixed(3) ?? '?'}).`;
+                    paths.push({
+                        engine: engineKey,
+                        hub: hub,
+                        edge_type: data.relation_type || '',
+                        reasoning: data.edge_reasoning || null,
+                        hub_degree: data.hub_degree,
+                        hub_exp_penalty: data.hub_exp_penalty,
+                    });
+                };
+
+                addGraphReason('graph_crisp', 'Graph Crisp (α≥0.95)', item.crispData, item.crispWeight);
+                addGraphReason('graph_fuzzy_high', `Graph Fuzzy Alto (α≥${fuzzyHighAlpha})`, item.fuzzy07Data, item.fuzzy07Weight);
+                addGraphReason('graph_fuzzy_low', `Graph Fuzzy Bajo (α≥${fuzzyLowAlpha})`, item.fuzzy05Data, item.fuzzy05Weight);
+
+                item.appearance_reasons = reasons;
+                item.graph_paths = paths;
+            });
+
             aggregated.sort((a, b) => {
                 const countA = (a.vectorScore !== undefined ? 1 : 0) + (a.crispWeight !== undefined ? 1 : 0) + (a.fuzzy07Weight !== undefined ? 1 : 0) + (a.fuzzy05Weight !== undefined ? 1 : 0);
                 const countB = (b.vectorScore !== undefined ? 1 : 0) + (b.crispWeight !== undefined ? 1 : 0) + (b.fuzzy07Weight !== undefined ? 1 : 0) + (b.fuzzy05Weight !== undefined ? 1 : 0);
                 if (countB !== countA) return countB - countA;
-                return (b.vectorScore || 0) - (a.vectorScore || 0); // fallback sort
+                return (b.vectorScore || 0) - (a.vectorScore || 0);
             });
 
             setComparisonData(aggregated);
@@ -204,6 +244,83 @@ export default function SystemComparisonTab() {
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') handleSearch();
+    };
+
+    const handleExport = () => {
+        const exportPayload = {
+            // ── Search metadata ──────────────────────────────────────────────
+            export_info: {
+                exported_at: new Date().toISOString(),
+                query,
+                result_limit_per_engine: limit,
+            },
+            search_config: {
+                vector_search: {
+                    engine: 'Weaviate TextSpace',
+                    alpha: 1.0,
+                    description: 'Pure semantic vector similarity (cosine distance)',
+                },
+                graph_crisp: {
+                    engine: 'Neo4j fuzzy graph',
+                    alpha_cut: 0.95,
+                    seed_alpha: seedAlpha,
+                    seed_limit: seedLimit,
+                    description: 'Crisp graph traversal — only edges with weight >= 0.95',
+                },
+                graph_fuzzy_high: {
+                    engine: 'Neo4j fuzzy graph',
+                    alpha_cut: fuzzyHighAlpha,
+                    seed_alpha: seedAlpha,
+                    seed_limit: seedLimit,
+                    description: `Fuzzy graph traversal — edges with weight >= ${fuzzyHighAlpha}`,
+                },
+                graph_fuzzy_low: {
+                    engine: 'Neo4j fuzzy graph',
+                    alpha_cut: fuzzyLowAlpha,
+                    seed_alpha: seedAlpha,
+                    seed_limit: seedLimit,
+                    description: `Fuzzy graph traversal — edges with weight >= ${fuzzyLowAlpha}`,
+                },
+            },
+            // ── Merged comparison table ───────────────────────────────────────
+            comparison_table: comparisonData.map((item, rank) => ({
+                rank: rank + 1,
+                id: item.id,
+                label: item.label,
+                type: item.type,
+                appearances: [
+                    item.vectorScore !== undefined ? 'vector' : null,
+                    item.crispWeight !== undefined ? 'graph_crisp' : null,
+                    item.fuzzy07Weight !== undefined ? 'graph_fuzzy_high' : null,
+                    item.fuzzy05Weight !== undefined ? 'graph_fuzzy_low' : null,
+                ].filter(Boolean),
+                scores: {
+                    vector_score: item.vectorScore ?? null,
+                    crisp_weight: item.crispWeight ?? null,
+                    fuzzy_high_weight: item.fuzzy07Weight ?? null,
+                    fuzzy_low_weight: item.fuzzy05Weight ?? null,
+                },
+                properties: item.properties,
+                appearance_reasons: item.appearance_reasons ?? {},
+                graph_paths: item.graph_paths ?? [],
+            })),
+            // ── Raw API results ───────────────────────────────────────────────
+            raw_results: {
+                vector: vectorData,
+                graph_crisp: crispData,
+                graph_fuzzy_high: normalData,
+                graph_fuzzy_low: fuzzyData,
+            },
+        };
+
+        const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const safeQuery = query.trim().replace(/[^a-z0-9_-]/gi, '_').slice(0, 40);
+        a.href = url;
+        a.download = `comparacion_${safeQuery}_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -308,6 +425,16 @@ export default function SystemComparisonTab() {
                     <Search size={16} />
                     Comparar
                 </button>
+
+                {comparisonData.length > 0 && (
+                    <button
+                        onClick={handleExport}
+                        title="Exportar resultados como JSON"
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.5)', background: 'rgba(99,102,241,0.1)', color: '#818cf8', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap' }}
+                    >
+                        📥 Exportar JSON
+                    </button>
+                )}
             </div>
 
             {error && (

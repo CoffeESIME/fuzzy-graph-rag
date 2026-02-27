@@ -1,3 +1,9 @@
+import logging
+
+# Silence verbose third-party loggers (botocore/MinIO HTTP traces)
+for _lib in ('botocore', 'boto3', 'urllib3', 's3transfer'):
+    logging.getLogger(_lib).setLevel(logging.WARNING)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager

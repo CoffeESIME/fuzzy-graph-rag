@@ -1,20 +1,236 @@
-import { useState } from 'react';
-import { Search, Network, Check, X, Layers, RefreshCw, Eye, FileText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Network, Check, X, Layers, RefreshCw, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import {
     getExplorableSeeds,
     getLatentConnections,
     approveLatentConnection,
     getAssetPreview,
 } from '../../lib/api';
-import type { SeedNode, LatentConnectionSuggestion, AssetPreviewResponse } from '../../lib/api';
+import type { SeedNode, LatentConnectionSuggestion, AssetPreviewResponse, ValidateConnectionItem } from '../../lib/api';
+import { validateLatentConnections } from '../../lib/api';
 import MediaPreview from '../search/MediaPreview';
 
-export default function LatentExplorer() {
-    const allowedTypes = ["DigitalAsset"];
+// =================== AssetGroupCard ===================
+interface AssetGroupProps {
+    group: { assetId: string; assetName: string; items: LatentConnectionSuggestion[] };
+    editedWeights: Record<string, number>;
+    approvingIds: Set<string>;
+    onPreview: (id: string) => void;
+    onApprove: (s: LatentConnectionSuggestion, key: string) => void;
+    onDiscard: (key: string) => void;
+    onWeightChange: (key: string, val: string) => void;
+    onFilterByKeys: (assetId: string, validKeys: string[]) => void;
+}
 
+function AssetGroupCard({ group, editedWeights, approvingIds, onApprove, onDiscard, onWeightChange, onFilterByKeys }: AssetGroupProps) {
+    const [preview, setPreview] = useState<AssetPreviewResponse | null>(null);
+    const [loadingPreview, setLoadingPreview] = useState(false);
+    const [expanded, setExpanded] = useState(true);
+    const [textExpanded, setTextExpanded] = useState(false);
+    const [validating, setValidating] = useState(false);
+    const [llmNote, setLlmNote] = useState<{ text: string; removed: number } | null>(null);
+
+    useEffect(() => {
+        setLoadingPreview(true);
+        getAssetPreview(group.assetId)
+            .then(setPreview)
+            .catch(() => setPreview(null))
+            .finally(() => setLoadingPreview(false));
+    }, [group.assetId]);
+
+    const handleValidateWithLLM = async () => {
+        setValidating(true);
+        setLlmNote(null);
+        try {
+            const suggestions: ValidateConnectionItem[] = group.items.map(s => ({
+                key: `${s.asset_id}-${s.target_concept_id}-${s.relation_type}-${s.direction}`,
+                asset_name: s.asset_name,
+                target_concept_name: s.target_concept_name,
+                relation_type: s.relation_type,
+                direction: s.direction,
+                reasoning: s.reasoning,
+            }));
+            const assetContent = preview?.content && preview.content !== 'No textual content available'
+                ? preview.content.slice(0, 1200)
+                : (preview?.tags ?? []).join(', ');
+            const res = await validateLatentConnections({
+                asset_name: group.assetName,
+                asset_content: assetContent,
+                asset_mime_type: preview?.mime_type ?? undefined,
+                suggestions,
+            });
+            onFilterByKeys(group.assetId, res.valid_keys);
+            setLlmNote({ text: res.llm_explanation, removed: res.removed_count });
+        } catch (e: any) {
+            setLlmNote({ text: `Error: ${e?.response?.data?.detail || e?.message || 'Error desconocido'}`, removed: 0 });
+        } finally {
+            setValidating(false);
+        }
+    };
+
+    return (
+        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden' }}>
+
+            {/* Parent Card Header */}
+            <div style={{ padding: '16px 20px', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(236,72,153,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={18} color="#ec4899" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Archivo Semilla</div>
+                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={group.assetName}>
+                        {group.assetName}
+                    </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <span style={{ fontSize: '0.7rem', background: 'rgba(236,72,153,0.15)', color: '#f472b6', padding: '2px 10px', borderRadius: 12, fontWeight: 600 }}>
+                        {group.items.length} conexión{group.items.length > 1 ? 'es' : ''}
+                    </span>
+                    <button
+                        onClick={handleValidateWithLLM}
+                        disabled={validating || group.items.length === 0}
+                        title="Validar conexiones con el LLM local"
+                        style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.7rem', fontWeight: 600, padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.4)', background: 'rgba(99,102,241,0.1)', color: '#818cf8', cursor: validating ? 'not-allowed' : 'pointer', opacity: group.items.length === 0 ? 0.4 : 1 }}
+                    >
+                        {validating ? <RefreshCw size={12} className="animate-spin" /> : '🤖'}
+                        {validating ? 'Validando…' : 'Validar con LLM'}
+                    </button>
+                    <button onClick={() => setExpanded(e => !e)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}>
+                        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                </div>
+            </div>
+
+            {/* LLM validation result note */}
+            {llmNote && (
+                <div style={{ padding: '8px 20px', background: llmNote.removed > 0 ? 'rgba(99,102,241,0.08)' : 'rgba(16,185,129,0.08)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>{llmNote.removed > 0 ? '🧠' : '✅'}</span>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: llmNote.removed > 0 ? '#818cf8' : '#34d399', marginBottom: 2 }}>
+                            {llmNote.removed > 0 ? `${llmNote.removed} conexión(es) descartada(s) por el LLM` : 'El LLM validó todas las conexiones'}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>{llmNote.text}</div>
+                    </div>
+                    <button onClick={() => setLlmNote(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2, flexShrink: 0 }}>×</button>
+                </div>
+            )}
+
+            {expanded && (
+                <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                    {/* Inline Asset Preview */}
+                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                        {(preview?.download_url || preview?.minio_path) && (
+                            <div style={{ flexShrink: 0, width: 160 }}>
+                                <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Vista Previa</div>
+                                <MediaPreview url={preview.download_url || undefined} path={preview.minio_path || undefined} />
+                            </div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {preview && preview.tags?.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                    {preview.tags.map((t, i) => (
+                                        <span key={i} style={{ fontSize: '0.65rem', background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)', padding: '1px 8px', borderRadius: 12 }}>#{t}</span>
+                                    ))}
+                                </div>
+                            )}
+                            {loadingPreview && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Cargando metadatos…</div>}
+                            {preview?.content && preview.content !== 'No textual content available' && (
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '8px 12px', fontFamily: 'monospace', lineHeight: 1.5, maxHeight: textExpanded ? 400 : 100, overflowY: 'auto', transition: 'max-height 0.2s ease' }} className="custom-scrollbar">
+                                        {textExpanded ? preview.content : preview.content.slice(0, 400)}
+                                        {!textExpanded && preview.content.length > 400 ? '…' : ''}
+                                    </div>
+                                    {preview.content.length > 400 && (
+                                        <button
+                                            onClick={() => setTextExpanded(e => !e)}
+                                            style={{ marginTop: 4, fontSize: '0.68rem', color: '#818cf8', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 4px' }}
+                                        >
+                                            {textExpanded ? 'Ver menos ▴' : 'Ver todo ▾'}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                            {preview && !preview.download_url && !preview.minio_path && !loadingPreview && (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{preview.type} — sin vista previa de medios</div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Connection Suggestion Rows */}
+                    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Conexiones Sugeridas</div>
+                        {group.items.map(s => {
+                            const uniqueKey = `${s.asset_id}-${s.target_concept_id}-${s.relation_type}-${s.direction}`;
+                            const isApproving = approvingIds.has(uniqueKey);
+                            const currentW = editedWeights[uniqueKey] !== undefined ? editedWeights[uniqueKey] : s.proposed_weight;
+                            return (
+                                <div key={uniqueKey} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: 3 }}>
+                                                {s.direction === 'seed_to_neighbor' ? 'Semilla ➞ Vecino' : 'Vecino ➞ Semilla'}
+                                            </div>
+                                            <div style={{ fontWeight: 700, color: '#f472b6', fontSize: '1rem' }}>{s.target_concept_name}</div>
+                                        </div>
+                                        <span style={{ fontSize: '0.65rem', background: 'var(--bg-secondary)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', padding: '2px 8px', borderRadius: 6, flexShrink: 0, fontFamily: 'monospace' }}>
+                                            {s.relation_type}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', borderRadius: 6, padding: '4px 8px', textAlign: 'center' }}>
+                                            <div style={{ fontSize: '0.55rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Grafo</div>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{s.current_weight.toFixed(2)}</div>
+                                        </div>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>+</span>
+                                        <div style={{ flex: 1, background: 'rgba(99,102,241,0.1)', borderRadius: 6, padding: '4px 8px', textAlign: 'center' }}>
+                                            <div style={{ fontSize: '0.55rem', color: '#818cf8', textTransform: 'uppercase' }}>Vector</div>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#a5b4fc' }}>{s.cosine_similarity.toFixed(2)}</div>
+                                        </div>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>=</span>
+                                        <div style={{ flex: 1, background: 'rgba(236,72,153,0.1)', borderRadius: 6, padding: '4px 8px', textAlign: 'center' }}>
+                                            <div style={{ fontSize: '0.55rem', color: '#f472b6', textTransform: 'uppercase' }}>Final</div>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f472b6' }}>{s.proposed_weight.toFixed(2)}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.15)', borderRadius: 6, padding: '6px 10px', lineHeight: 1.5 }}>
+                                        <strong style={{ color: 'var(--text-primary)' }}>Motivación: </strong>{s.reasoning}
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                                        <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Peso:</label>
+                                        <input
+                                            type="number" step="0.05" min="0" max="1"
+                                            value={currentW}
+                                            onChange={e => onWeightChange(uniqueKey, e.target.value)}
+                                            style={{ width: 64, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: '3px 8px', fontSize: '0.8rem', textAlign: 'center', color: 'var(--text-primary)' }}
+                                        />
+                                        <button onClick={() => onDiscard(uniqueKey)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px 8px', borderRadius: 6 }} title="Descartar">
+                                            <X size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => onApprove(s, uniqueKey)}
+                                            disabled={isApproving}
+                                            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#059669', color: '#fff', border: 'none', borderRadius: 7, padding: '5px 14px', fontSize: '0.82rem', fontWeight: 700, cursor: isApproving ? 'not-allowed' : 'pointer' }}
+                                        >
+                                            {isApproving ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
+                                            Aprobar
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default function LatentExplorer() {
     // Search State
-    const [nodeType, setNodeType] = useState('DigitalAsset');
-    const [limit, setLimit] = useState(20);
+    const [limit] = useState(40);
+    const [sortBy, setSortBy] = useState<'top_connected' | 'random' | 'least_connected'>('top_connected');
+    const [seedSearch, setSeedSearch] = useState('');
     const [seeds, setSeeds] = useState<SeedNode[]>([]);
     const [isLoadingSeeds, setIsLoadingSeeds] = useState(false);
 
@@ -41,12 +257,12 @@ export default function LatentExplorer() {
     // Weights local edits
     const [editedWeights, setEditedWeights] = useState<Record<string, number>>({});
 
-    const fetchSeeds = async () => {
+    const fetchSeeds = async (overrideSortBy?: string) => {
         setIsLoadingSeeds(true);
         setSelectedSeed(null);
         setSuggestions([]);
         try {
-            const res = await getExplorableSeeds(nodeType, limit);
+            const res = await getExplorableSeeds('DigitalAsset', limit, overrideSortBy ?? sortBy, seedSearch);
             setSeeds(res.seeds);
         } catch (err: any) {
             console.error('Failed to fetch seeds:', err);
@@ -65,8 +281,17 @@ export default function LatentExplorer() {
 
         try {
             const res = await getLatentConnections(selectedSeed.id, 5, alpha);
-            setSuggestions(res.suggestions);
-            if (res.suggestions.length === 0) {
+
+            // Deduplicate by the same key used for rendering to prevent broken weight-edit state
+            const seen = new Map<string, LatentConnectionSuggestion>();
+            for (const s of res.suggestions) {
+                const key = `${s.asset_id}-${s.target_concept_id}-${s.relation_type}-${s.direction}`;
+                if (!seen.has(key)) seen.set(key, s);
+            }
+            const unique = Array.from(seen.values());
+
+            setSuggestions(unique);
+            if (unique.length === 0) {
                 setError('No se encontraron conexiones latentes nuevas para este nodo.');
             }
         } catch (err: any) {
@@ -109,6 +334,15 @@ export default function LatentExplorer() {
 
     const handleDiscard = (uniqueKey: string) => {
         setSuggestions(prev => prev.filter(s => `${s.asset_id}-${s.target_concept_id}-${s.relation_type}-${s.direction}` !== uniqueKey));
+    };
+
+    const handleFilterByKeys = (assetId: string, validKeys: string[]) => {
+        const validSet = new Set(validKeys);
+        setSuggestions(prev => prev.filter(s => {
+            if (s.asset_id !== assetId) return true; // keep other assets untouched
+            const key = `${s.asset_id}-${s.target_concept_id}-${s.relation_type}-${s.direction}`;
+            return validSet.has(key);
+        }));
     };
 
     const handleWeightChange = (uniqueKey: string, val: string) => {
@@ -158,44 +392,55 @@ export default function LatentExplorer() {
                     </h2>
 
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 8 }}>
-                            Tipo de Entidad Semilla
-                        </label>
-                        <select
-                            className="search-input"
-                            value={nodeType}
-                            onChange={(e) => setNodeType(e.target.value)}
-                            style={{ width: '100%', marginBottom: 12 }}
-                        >
-                            {allowedTypes.map(t => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </select>
-
-                        <div className="flex justify-between items-center mb-4">
-                            <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Límite</label>
+                        {/* Search input */}
+                        <div style={{ position: 'relative', marginBottom: 10 }}>
+                            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                             <input
-                                type="number"
-                                className="search-input w-20 py-1 text-center"
-                                value={limit}
-                                onChange={e => setLimit(parseInt(e.target.value))}
-                                min={5} max={100}
+                                value={seedSearch}
+                                onChange={e => setSeedSearch(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && fetchSeeds()}
+                                placeholder="Filtrar por nombre…"
+                                style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '8px 12px 8px 32px', fontSize: '0.83rem', color: 'var(--text-primary)', outline: 'none' }}
                             />
                         </div>
 
+                        {/* Sort mode buttons */}
+                        <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
+                            {([
+                                { id: 'top_connected', label: '🏆 Top', title: 'Más conectados' },
+                                { id: 'random', label: '🎲 Aleatorio', title: 'Muestra aleatoria' },
+                                { id: 'least_connected', label: '🌱 Menos explorados', title: 'Menos conexiones' },
+                            ] as const).map(opt => (
+                                <button
+                                    key={opt.id}
+                                    title={opt.title}
+                                    onClick={() => { setSortBy(opt.id); fetchSeeds(opt.id); }}
+                                    style={{
+                                        flex: 1, fontSize: '0.65rem', fontWeight: 600, padding: '5px 4px', borderRadius: 6, border: '1px solid var(--border-subtle)', cursor: 'pointer',
+                                        background: sortBy === opt.id ? 'rgba(236,72,153,0.2)' : 'var(--bg-tertiary)',
+                                        color: sortBy === opt.id ? '#f472b6' : 'var(--text-muted)',
+                                    }}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Fetch button */}
                         <button
-                            className="btn-primary w-full justify-center mb-4"
-                            onClick={fetchSeeds}
+                            className="btn-primary w-full justify-center mb-3"
+                            onClick={() => fetchSeeds()}
                             disabled={isLoadingSeeds}
                             style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: isLoadingSeeds ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                         >
                             <Search size={16} />
-                            {isLoadingSeeds ? 'Cargando...' : 'Buscar Semillas'}
+                            {isLoadingSeeds ? 'Cargando...' : `Buscar Seeds (${sortBy === 'top_connected' ? 'Top' : sortBy === 'random' ? 'Aleatorio' : 'Menos explorados'})`}
                         </button>
 
-                        <div style={{ marginTop: 8, maxHeight: 240, overflowY: 'auto', background: 'var(--bg-tertiary)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
+                        {/* Seeds list */}
+                        <div style={{ maxHeight: 280, overflowY: 'auto', background: 'var(--bg-tertiary)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
                             {seeds.length === 0 && !isLoadingSeeds ? (
-                                <div className="p-4 text-center text-sm text-gray-500">Haz clic en Buscar</div>
+                                <div className="p-4 text-center text-sm text-gray-500">Selecciona un modo y haz clic en Buscar</div>
                             ) : isLoadingSeeds ? (
                                 <div className="p-4 text-center text-sm text-gray-500">Cargando...</div>
                             ) : (
@@ -282,100 +527,32 @@ export default function LatentExplorer() {
                         </div>
                     )}
 
-                    {!isLoadingLatent && suggestions.length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {suggestions.map(s => {
-                                const uniqueKey = `${s.asset_id}-${s.target_concept_id}-${s.relation_type}-${s.direction}`;
-                                const isApproving = approvingIds.has(uniqueKey);
-                                const currentEditedWeight = editedWeights[uniqueKey] !== undefined ? editedWeights[uniqueKey] : s.proposed_weight;
+                    {!isLoadingLatent && suggestions.length > 0 && (() => {
+                        // ── Group suggestions by asset_id ──
+                        const grouped = suggestions.reduce<Record<string, { assetName: string; assetId: string; items: typeof suggestions }>>((acc, s) => {
+                            if (!acc[s.asset_id]) acc[s.asset_id] = { assetName: s.asset_name, assetId: s.asset_id, items: [] };
+                            acc[s.asset_id].items.push(s);
+                            return acc;
+                        }, {});
 
-                                return (
-                                    <div key={uniqueKey} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }} className="shadow-lg">
-
-                                        <div className="flex justify-between items-start gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-xs text-gray-500 mb-1">
-                                                    Transferencia Ontológica: {s.direction === 'seed_to_neighbor' ? 'Semilla ➔ Vecino' : 'Vecino ➔ Semilla'}
-                                                </div>
-                                                <div className="font-medium text-gray-300 text-sm mb-1">
-                                                    Agregar concepto a <span className="text-white font-bold">{s.asset_name}</span>
-                                                </div>
-                                                <div className="font-semibold text-pink-400 break-all text-lg">
-                                                    {s.target_concept_name}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                                <div className="bg-gray-800 text-xs px-2 py-1 rounded text-gray-400 border border-gray-700 whitespace-nowrap">
-                                                    {s.relation_type}
-                                                </div>
-                                                <button
-                                                    onClick={() => handlePreviewAsset(s.asset_id)}
-                                                    className="text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-1 rounded text-xs border border-indigo-500/20 whitespace-nowrap"
-                                                    title="Previsualizar metadatos del archivo"
-                                                >
-                                                    <Eye size={12} /> Detalles
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            <div className="bg-gray-800/50 flex-1 p-2 rounded border border-gray-700/50 text-center">
-                                                <div className="text-[0.65rem] text-gray-500 uppercase tracking-wider">Grafo Origen</div>
-                                                <div className="text-sm font-medium">{s.current_weight.toFixed(2)}</div>
-                                            </div>
-                                            <div className="text-gray-600">+</div>
-                                            <div className="bg-indigo-900/20 flex-1 p-2 rounded border border-indigo-900/40 text-center">
-                                                <div className="text-[0.65rem] text-indigo-400 uppercase tracking-wider">Similitud Vectorial</div>
-                                                <div className="text-sm font-medium text-indigo-300">{s.cosine_similarity.toFixed(2)}</div>
-                                            </div>
-                                            <div className="text-gray-600">=</div>
-                                            <div className="bg-pink-900/20 flex-1 p-2 rounded border border-pink-900/40 text-center">
-                                                <div className="text-[0.65rem] text-pink-400 uppercase tracking-wider">Peso Final</div>
-                                                <div className="text-sm font-bold text-pink-400">{s.proposed_weight.toFixed(2)}</div>
-                                            </div>
-                                        </div>
-
-                                        <div className="text-xs text-gray-400 bg-black/20 p-3 rounded-lg border border-gray-800">
-                                            <strong className="text-gray-300 block mb-1">Motivación:</strong>
-                                            {s.reasoning}
-                                        </div>
-
-                                        <div className="flex items-center gap-4 mt-auto pt-4 border-t border-gray-800">
-                                            <div className="flex items-center gap-2">
-                                                <label className="text-xs text-gray-500">Ajuste Manual:</label>
-                                                <input
-                                                    type="number"
-                                                    step="0.05" min="0" max="1"
-                                                    value={currentEditedWeight}
-                                                    onChange={e => handleWeightChange(uniqueKey, e.target.value)}
-                                                    className="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-center"
-                                                />
-                                            </div>
-
-                                            <div className="flex gap-2 ml-auto">
-                                                <button
-                                                    onClick={() => handleDiscard(uniqueKey)}
-                                                    className="p-2 rounded hover:bg-red-900/20 text-gray-500 hover:text-red-400 transition-colors"
-                                                    title="Descartar"
-                                                >
-                                                    <X size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleApprove(s, uniqueKey)}
-                                                    disabled={isApproving}
-                                                    className="flex items-center gap-2 px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition-colors shadow-lg shadow-emerald-900/20"
-                                                >
-                                                    {isApproving ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
-                                                    Aprobar
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                        return (
+                            <div className="flex flex-col gap-6">
+                                {Object.values(grouped).map(group => (
+                                    <AssetGroupCard
+                                        key={group.assetId}
+                                        group={group}
+                                        editedWeights={editedWeights}
+                                        approvingIds={approvingIds}
+                                        onPreview={handlePreviewAsset}
+                                        onApprove={handleApprove}
+                                        onDiscard={handleDiscard}
+                                        onWeightChange={handleWeightChange}
+                                        onFilterByKeys={handleFilterByKeys}
+                                    />
+                                ))}
+                            </div>
+                        );
+                    })()}
 
                 </div>
             </div>
