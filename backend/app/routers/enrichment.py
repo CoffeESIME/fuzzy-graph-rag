@@ -282,3 +282,253 @@ def apply_preview_weights(node_id: str, req: ApplyWeightsRequest):
     except Exception as e:
         logger.error(f"Error applying weights for node {node_id}: {e}")
         raise HTTPException(status_code=500, detail="Error actualizando los pesos en la base de datos de grafos.")
+
+# ==========================================
+# ONTOLOGICAL CLEANUP ENDPOINTS
+# ==========================================
+
+class ConceptNode(BaseModel):
+    id: str
+    name: str
+    domain: Optional[str] = None
+
+class ConceptListResponse(BaseModel):
+    concepts: List[ConceptNode]
+    total: int
+
+class MergeRecommendation(BaseModel):
+    cluster_id: int
+    concepts: List[ConceptNode]
+    similarity_score: float
+
+class RecommendMergesResponse(BaseModel):
+    recommendations: List[MergeRecommendation]
+    total_clusters: int
+
+class MergeConceptsRequest(BaseModel):
+    target_name: str
+    target_domain: str
+    source_names: List[str]
+
+@router.get("/concepts", response_model=ConceptListResponse)
+def get_all_concepts():
+    """
+    Fetch all Concept nodes from Neo4j for ontological cleanup.
+    """
+    driver = get_neo4j_driver()
+    query = """
+    MATCH (c:Concept)
+    RETURN elementId(c) as id, c.name as name, c.domain as domain
+    ORDER BY c.name ASC
+    """
+    try:
+        with driver.session() as session:
+            result = session.run(query)
+            concepts = [
+                ConceptNode(
+                    id=record["id"],
+                    name=record["name"],
+                    domain=record["domain"]
+                )
+                for record in result
+            ]
+            return {"concepts": concepts, "total": len(concepts)}
+    except Exception as e:
+        logger.error(f"Error fetching concepts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if driver:
+            driver.close()
+
+@router.post("/concepts/recommend-merges", response_model=RecommendMergesResponse)
+def recommend_concept_merges():
+    """
+    Use BGE-M3 embeddings to find semantically similar concepts that should be merged.
+    """
+    # 1. Fetch all concepts
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            result = session.run("MATCH (c:Concept) RETURN elementId(c) as id, c.name as name, c.domain as domain")
+            concepts = [{"id": r["id"], "name": r["name"], "domain": r["domain"] or ""} for r in result]
+            
+        if not concepts:
+            return {"recommendations": [], "total_clusters": 0}
+            
+        # 2. Get Embeddings (Batching if necessary, but LLM Gateway handles it)
+        import requests
+        from config.settings import get_settings
+        settings = get_settings()
+        LLM_GATEWAY_URL = f"{settings.LLM_GATEWAY_URL}/v1"
+        
+        # Prepare text strings for embedding: "Name (Domain)"
+        texts = [f"{c['name']} ({c['domain']})" if c['domain'] else c['name'] for c in concepts]
+        
+        embeddings = []
+        # Process in batches of 50 to avoid gateway limits
+        batch_size = 50
+        for i in range(0, len(texts), batch_size):
+            batch_texts = texts[i:i+batch_size]
+            try:
+                resp = requests.post(
+                    f"{LLM_GATEWAY_URL}/embeddings/text/batch",
+                    json={"texts": batch_texts, "normalize": True},
+                    timeout=60
+                )
+                
+                # Fallback to individual calls if batch fails (or endpoint doesn't exist)
+                if resp.status_code == 404:
+                    for text in batch_texts:
+                        single_resp = requests.post(
+                            f"{LLM_GATEWAY_URL}/embeddings/text",
+                            json={"text": text, "normalize": True},
+                            timeout=30
+                        )
+                        single_resp.raise_for_status()
+                        embeddings.append(single_resp.json().get("embedding", []))
+                else:
+                    resp.raise_for_status()
+                    batch_embs = resp.json().get("embeddings", [])
+                    embeddings.extend(batch_embs)
+            except Exception as e:
+                logger.error(f"Error getting embeddings for batch: {e}")
+                
+        if len(embeddings) != len(concepts):
+            logger.warning("Could not get embeddings for all concepts. Skipping clustering.")
+            return {"recommendations": [], "total_clusters": 0}
+            
+        # 3. Compute pairwise similarities and group clusters (cosine similarity > 0.85)
+        # Using a simple greedy clustering algorithm
+        import numpy as np
+        emb_matrix = np.array(embeddings)
+        
+        # Check if matrix is valid
+        if len(emb_matrix) == 0 or len(emb_matrix.shape) < 2:
+            return {"recommendations": [], "total_clusters": 0}
+            
+        # Normalize just in case
+        norms = np.linalg.norm(emb_matrix, axis=1, keepdims=True)
+        # Avoid division by zero
+        norms[norms == 0] = 1 
+        emb_matrix = emb_matrix / norms
+        
+        # Dot product gives cosine similarity for normalized vectors
+        similarity_matrix = np.dot(emb_matrix, emb_matrix.T)
+        
+        clusters = []
+        visited = set()
+        SIMILARITY_THRESHOLD = 0.85
+        
+        for i in range(len(concepts)):
+            if i in visited:
+                continue
+                
+            cluster = [i]
+            visited.add(i)
+            
+            for j in range(i + 1, len(concepts)):
+                if j not in visited and similarity_matrix[i, j] > SIMILARITY_THRESHOLD:
+                    cluster.append(j)
+                    visited.add(j)
+                    
+            # Only keep clusters with > 1 item
+            if len(cluster) > 1:
+                # Calculate avg internal similarity
+                sub_matrix = similarity_matrix[np.ix_(cluster, cluster)]
+                # Average ignoring the diagonal (self-similarity = 1)
+                n = len(cluster)
+                avg_sim = (np.sum(sub_matrix) - n) / (n * (n - 1)) if n > 1 else 1.0
+                
+                cluster_concepts = [
+                    ConceptNode(id=concepts[idx]["id"], name=concepts[idx]["name"], domain=concepts[idx]["domain"])
+                    for idx in cluster
+                ]
+                
+                clusters.append(MergeRecommendation(
+                    cluster_id=len(clusters) + 1,
+                    concepts=cluster_concepts,
+                    similarity_score=round(float(avg_sim), 4)
+                ))
+                
+        # Sort clusters by similarity score and size
+        clusters.sort(key=lambda c: (len(c.concepts), c.similarity_score), reverse=True)
+        
+        return {"recommendations": clusters, "total_clusters": len(clusters)}
+        
+    except Exception as e:
+        logger.error(f"Error in recommend_concept_merges: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if driver:
+            driver.close()
+
+@router.post("/concepts/merge")
+def merge_concepts(request: MergeConceptsRequest):
+    """
+    Merge multiple source concepts into a single target concept.
+    Rewires all EVOKES_CONCEPT relationships and drops the old nodes.
+    """
+    if not request.source_names:
+        raise HTTPException(status_code=400, detail="Must provide at least one source concept to merge.")
+        
+    driver = get_neo4j_driver()
+    
+    # Using pure Cypher
+    merge_query = """
+    // 1. Ensure target node exists
+    MERGE (target:Concept {name: $target_name})
+    ON CREATE SET target.domain = $target_domain, target.created_at = datetime()
+    ON MATCH SET target.domain = $target_domain
+    
+    WITH target
+    
+    // 2. Find all sources
+    MATCH (source:Concept)
+    WHERE source.name IN $source_names AND source.name <> $target_name
+    
+    // 3. Keep track of how many we found
+    WITH target, collect(source) as sources
+    
+    // 4. Rewire all incoming relationships to the target
+    UNWIND sources as source
+    MATCH (other)-[r]->(source)
+    
+    // Use APOC if available for generic relationship merge, 
+    // but here we know it's always EVOKES_CONCEPT or similar incoming links
+    MERGE (other)-[new_r:EVOKES_CONCEPT]->(target)
+    ON CREATE SET new_r = r, new_r.weight = coalesce(r.weight, 1.0)
+    
+    // 5. Delete the old relationship
+    DELETE r
+    
+    // 6. Delete the source node
+    WITH sources
+    UNWIND sources as source
+    // Use DETACH DELETE just to be completely safe against dangling edges
+    DETACH DELETE source
+    
+    RETURN size(sources) as merged_count
+    """
+    
+    try:
+        with driver.session() as session:
+            result = session.run(
+                merge_query, 
+                target_name=request.target_name, 
+                target_domain=request.target_domain,
+                source_names=request.source_names
+            )
+            record = result.single()
+            merged_count = record["merged_count"] if record else 0
+            
+            return {
+                "status": "success", 
+                "message": f"Successfully merged {merged_count} concepts into '{request.target_name}'.",
+                "merged_count": merged_count
+            }
+    except Exception as e:
+        logger.error(f"Error merging concepts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if driver:
+            driver.close()

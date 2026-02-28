@@ -5,11 +5,12 @@ import { getEnrichmentCandidates, requestEnrichment, getPreviewWeights, applyPre
 import type { CandidateNode, WeightPreviewResult, WeightUpdateItem } from '../../lib/api';
 import MusicHealthCard from './MusicHealthCard';
 import LatentExplorer from './LatentExplorer';
+import OntologicalCleanup from './OntologicalCleanup';
 
 export default function EnrichmentDashboard() {
     const navigate = useNavigate();
 
-    const [activeTab, setActiveTab] = useState<'semantic' | 'health' | 'explorer'>('semantic');
+    const [activeTab, setActiveTab] = useState<'semantic' | 'health' | 'explorer' | 'cleanup'>('semantic');
 
     const [nodeType, setNodeType] = useState('Person');
     const [statusFilter, setStatusFilter] = useState('PENDING');
@@ -197,20 +198,21 @@ export default function EnrichmentDashboard() {
                         Salud de Música y Arte
                     </button>
                     <button
-                        onClick={() => setActiveTab('explorer')}
+                        onClick={() => setActiveTab('cleanup')}
                         style={{
                             padding: '12px 24px', background: 'transparent',
-                            border: 'none', borderBottom: activeTab === 'explorer' ? '2px solid #ec4899' : '2px solid transparent',
-                            color: activeTab === 'explorer' ? '#ec4899' : 'var(--text-secondary)',
+                            border: 'none', borderBottom: activeTab === 'cleanup' ? '2px solid #ec4899' : '2px solid transparent',
+                            color: activeTab === 'cleanup' ? '#ec4899' : 'var(--text-secondary)',
                             fontWeight: 600, fontSize: '1rem', cursor: 'pointer',
                             display: 'flex', alignItems: 'center', gap: 8
                         }}
                     >
                         <Layers size={18} />
-                        Explorador Latente
+                        Limpieza Ontológica
                     </button>
                 </div>
 
+                {/* Content Area */}
                 {activeTab === 'semantic' && (
                     <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
 
@@ -435,131 +437,145 @@ export default function EnrichmentDashboard() {
                         </div>
 
                     </div>
-                )}
+                )
+                }
 
-                {activeTab === 'health' && (
-                    <MusicHealthCard />
-                )}
+                {/* Tab Content */}
+                {
+                    activeTab === 'cleanup' && (
+                        <OntologicalCleanup />
+                    )
+                }
 
-                {activeTab === 'explorer' && (
-                    <LatentExplorer />
-                )}
+                {
+                    activeTab === 'health' && (
+                        <MusicHealthCard />
+                    )
+                }
+
+                {
+                    activeTab === 'explorer' && (
+                        <LatentExplorer />
+                    )
+                }
             </div>
 
             {/* Preview Weights Modal */}
-            {previewNode && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-                    zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
+            {
+                previewNode && (
                     <div style={{
-                        background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)',
-                        borderRadius: 16, width: 1200, maxWidth: '95vw', maxHeight: '90vh',
-                        display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4)'
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                        zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                                <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Simulación de Pesos Difusos</h3>
-                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 4 }}>
-                                    Entidad: <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{previewNode.name}</span>
-                                </p>
-                            </div>
-                            <button onClick={() => setPreviewNode(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div style={{ padding: 24, overflowY: 'auto', flex: 1 }}>
-                            {isPreviewLoading ? (
-                                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                                    <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
-                                    Calculando distancias del vector en memoria contra Weaviate...
+                        <div style={{
+                            background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)',
+                            borderRadius: 16, width: 1200, maxWidth: '95vw', maxHeight: '90vh',
+                            display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4)'
+                        }}>
+                            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Simulación de Pesos Difusos</h3>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 4 }}>
+                                        Entidad: <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{previewNode.name}</span>
+                                    </p>
                                 </div>
-                            ) : previewError ? (
-                                <div style={{ padding: 16, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 8, border: '1px solid #ef4444' }}>
-                                    {previewError}
-                                </div>
-                            ) : previewWeights.length === 0 ? (
-                                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>
-                                    No se encontraron conexiones para previsualización.
-                                </div>
-                            ) : (
-                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem' }}>Archivo</th>
-                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem' }}>Tipo Relación</th>
-                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'center' }}>Espacio Vectorial</th>
-                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Peso Actual</th>
-                                            <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Sim. Vectorial</th>
-                                            <th style={{ padding: '12px 16px', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Peso Fusión (Propuesto)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {previewWeights.map((w, i) => {
-                                            let proposedColor = 'var(--text-muted)';
-                                            let proposedBg = 'transparent';
-                                            if (w.proposed_weight !== null) {
-                                                if (w.proposed_weight > 0.7) {
-                                                    proposedColor = '#10b981'; // Green
-                                                    proposedBg = 'rgba(16, 185, 129, 0.1)';
-                                                } else if (w.proposed_weight >= 0.4) {
-                                                    proposedColor = '#f59e0b'; // Amber
-                                                    proposedBg = 'rgba(245, 158, 11, 0.1)';
-                                                } else {
-                                                    proposedColor = '#ef4444'; // Red
-                                                    proposedBg = 'rgba(239, 68, 68, 0.1)';
-                                                }
-                                            }
-
-                                            return (
-                                                <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                                                    <td style={{ padding: '12px 16px', fontSize: '0.9rem' }}>{w.filename}</td>
-                                                    <td style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--accent-primary)' }}>{w.relation_type || 'N/A'}</td>
-                                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                                        <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: 4, background: 'var(--bg-tertiary)' }}>
-                                                            {w.space}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                                                        {w.current_weight.toFixed(3)}
-                                                    </td>
-                                                    <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                                                        {w.vector_similarity !== null ? w.vector_similarity.toFixed(3) : 'N/A'}
-                                                    </td>
-                                                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>
-                                                        <span style={{ color: proposedColor, background: proposedBg, padding: '4px 8px', borderRadius: '4px' }}>
-                                                            {w.proposed_weight !== null ? w.proposed_weight.toFixed(3) : 'N/A'}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-
-                        {!isPreviewLoading && !previewError && previewWeights.length > 0 && (
-                            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', background: 'rgba(0,0,0,0.1)' }}>
-                                <button
-                                    className="btn-primary"
-                                    onClick={handleApplyWeights}
-                                    disabled={isApplyingWeights}
-                                    style={{ background: '#10b981', borderColor: '#10b981' }}
-                                >
-                                    {isApplyingWeights ? (
-                                        <><div className="loading-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Aplicando...</>
-                                    ) : (
-                                        <><Check size={18} /> Aceptar y Aplicar Pesos</>
-                                    )}
+                                <button onClick={() => setPreviewNode(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                    <X size={24} />
                                 </button>
                             </div>
-                        )}
+
+                            <div style={{ padding: 24, overflowY: 'auto', flex: 1 }}>
+                                {isPreviewLoading ? (
+                                    <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                        <div className="loading-spinner" style={{ margin: '0 auto 16px' }} />
+                                        Calculando distancias del vector en memoria contra Weaviate...
+                                    </div>
+                                ) : previewError ? (
+                                    <div style={{ padding: 16, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 8, border: '1px solid #ef4444' }}>
+                                        {previewError}
+                                    </div>
+                                ) : previewWeights.length === 0 ? (
+                                    <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>
+                                        No se encontraron conexiones para previsualización.
+                                    </div>
+                                ) : (
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                                <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem' }}>Archivo</th>
+                                                <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem' }}>Tipo Relación</th>
+                                                <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'center' }}>Espacio Vectorial</th>
+                                                <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Peso Actual</th>
+                                                <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Sim. Vectorial</th>
+                                                <th style={{ padding: '12px 16px', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'right' }}>Peso Fusión (Propuesto)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {previewWeights.map((w, i) => {
+                                                let proposedColor = 'var(--text-muted)';
+                                                let proposedBg = 'transparent';
+                                                if (w.proposed_weight !== null) {
+                                                    if (w.proposed_weight > 0.7) {
+                                                        proposedColor = '#10b981'; // Green
+                                                        proposedBg = 'rgba(16, 185, 129, 0.1)';
+                                                    } else if (w.proposed_weight >= 0.4) {
+                                                        proposedColor = '#f59e0b'; // Amber
+                                                        proposedBg = 'rgba(245, 158, 11, 0.1)';
+                                                    } else {
+                                                        proposedColor = '#ef4444'; // Red
+                                                        proposedBg = 'rgba(239, 68, 68, 0.1)';
+                                                    }
+                                                }
+
+                                                return (
+                                                    <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                                        <td style={{ padding: '12px 16px', fontSize: '0.9rem' }}>{w.filename}</td>
+                                                        <td style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--accent-primary)' }}>{w.relation_type || 'N/A'}</td>
+                                                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                                            <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: 4, background: 'var(--bg-tertiary)' }}>
+                                                                {w.space}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                                                            {w.current_weight.toFixed(3)}
+                                                        </td>
+                                                        <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                                                            {w.vector_similarity !== null ? w.vector_similarity.toFixed(3) : 'N/A'}
+                                                        </td>
+                                                        <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>
+                                                            <span style={{ color: proposedColor, background: proposedBg, padding: '4px 8px', borderRadius: '4px' }}>
+                                                                {w.proposed_weight !== null ? w.proposed_weight.toFixed(3) : 'N/A'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+
+                            {!isPreviewLoading && !previewError && previewWeights.length > 0 && (
+                                <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', background: 'rgba(0,0,0,0.1)' }}>
+                                    <button
+                                        className="btn-primary"
+                                        onClick={handleApplyWeights}
+                                        disabled={isApplyingWeights}
+                                        style={{ background: '#10b981', borderColor: '#10b981' }}
+                                    >
+                                        {isApplyingWeights ? (
+                                            <><div className="loading-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Aplicando...</>
+                                        ) : (
+                                            <><Check size={18} /> Aceptar y Aplicar Pesos</>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <style>{`
                 .text-pink-500 { color: #ec4899; }
@@ -588,9 +604,8 @@ export default function EnrichmentDashboard() {
                 select.search-input option {
                     background-color: var(--bg-secondary);
                     color: var(--text-primary);
-                    padding: 8px;
                 }
             `}</style>
-        </div>
+        </div >
     );
 }
