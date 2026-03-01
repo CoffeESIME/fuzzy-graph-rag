@@ -381,22 +381,34 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             raw_rel = concept.get("relation_type", "EVOKES")
             rel_type = sanitize_rel_type(raw_rel, "EVOKES")
 
+            # 1. Look for exact name match OR match inside the aliases array
+            # 2. If it exists, use it. If not, create a new node with $name
             query = f"""
             MATCH (a:DigitalAsset {{file_hash: $file_hash}})
-            MERGE (c:Concept {{name: $name}})
+            
+            // Try to find an existing concept by name or alias
+            OPTIONAL MATCH (existing:Concept)
+            WHERE existing.name = $name OR $name IN coalesce(existing.aliases, [])
+            
+            // If we found one, use it. If not, create a new one.
+            CALL apoc.merge.node(['Concept'], {{name: coalesce(existing.name, $name)}}) YIELD node AS c
+            
+            // Set properties if just created
             ON CREATE SET 
                 c.created_at = datetime(),
                 c.domain = $domain,
                 c.definition = $definition,
-                c.source = 'ai_extraction'
+                c.source = 'ai_extraction',
+                c.aliases = []
             
+            // Link asset to concept
             MERGE (a)-[r:{rel_type}]->(c)
             ON CREATE SET 
                 r.created_at = datetime(),
                 r.weight = $weight,
                 r.reasoning = $reasoning
             ON MATCH SET
-                r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END,
+                r.weight = CASE WHEN coalesce(r.weight, 1.0) + coalesce($weight, 0.5) > 1.0 THEN 1.0 ELSE coalesce(r.weight, 1.0) + coalesce($weight, 0.5) END,
                 r.reasoning = CASE WHEN $weight > r.weight THEN $reasoning ELSE r.reasoning END
             """
             session.run(query, 

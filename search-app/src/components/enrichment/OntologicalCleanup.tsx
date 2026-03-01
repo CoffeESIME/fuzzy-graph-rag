@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Network, Search, Merge, AlertTriangle, AlertCircle, Sparkles, CheckSquare, Square, Check, X, ArrowRight, Loader2 } from 'lucide-react';
 import { getConcepts, recommendConceptMerges, mergeConcepts } from '../../lib/api';
-import type { ConceptNode, MergeRecommendation, MergeConceptsRequest } from '../../lib/api';
+import type { ConceptNode, MergeConceptsRequest } from '../../lib/api';
+
+export interface MergeRecommendation {
+    cluster_id: number;
+    concepts: ConceptNode[];
+    similarity_score: number;
+    recommended_hub_name?: string;
+}
 
 export default function OntologicalCleanup() {
     const [activeView, setActiveView] = useState<'list' | 'recommendations'>('list');
-
-    // List State
     const [concepts, setConcepts] = useState<ConceptNode[]>([]);
     const [isLoadingConcepts, setIsLoadingConcepts] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -385,8 +390,7 @@ export default function OntologicalCleanup() {
                                 <MergeRecommendationCard
                                     key={cluster.cluster_id}
                                     cluster={cluster}
-                                    onMerge={(targetName, targetDomain) => {
-                                        const sourceNames = cluster.concepts.map(c => c.name);
+                                    onMerge={(targetName, targetDomain, sourceNames) => {
                                         handleExecuteMerge(sourceNames, targetName, targetDomain, cluster.cluster_id);
                                     }}
                                     isMerging={isMerging}
@@ -403,14 +407,17 @@ export default function OntologicalCleanup() {
 // Sub-component for recommendation cards
 function MergeRecommendationCard({ cluster, onMerge, isMerging }: {
     cluster: MergeRecommendation,
-    onMerge: (targetName: string, targetDomain: string) => void,
+    onMerge: (targetName: string, targetDomain: string, sourceNames: string[]) => void,
     isMerging: boolean
 }) {
-    // Pick the shortest or most "generic" name as default target usually, or just the first one
-    const defaultTarget = cluster.concepts.reduce((prev, current) => (prev.name.length < current.name.length) ? prev : current);
+    // Pick the recommended name if available, else shortest generic
+    const targetCandidate = cluster.recommended_hub_name || cluster.concepts.reduce((prev, current) => (prev.name.length < current.name.length) ? prev : current).name;
 
-    const [targetName, setTargetName] = useState(defaultTarget.name);
-    const [targetDomain, setTargetDomain] = useState(defaultTarget.domain || '');
+    const [targetName, setTargetName] = useState(targetCandidate);
+    const [targetDomain, setTargetDomain] = useState('');
+    const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
+
+    const activeConcepts = cluster.concepts.filter(c => !rejectedIds.has(c.id));
 
     return (
         <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: 20 }}>
@@ -418,24 +425,49 @@ function MergeRecommendationCard({ cluster, onMerge, isMerging }: {
                 <div>
                     <h4 style={{ margin: '0 0 4px', fontSize: 16, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
                         Grupo #{cluster.cluster_id}
-                        <span style={{ fontSize: 12, padding: '2px 8px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderRadius: 10, fontWeight: 500 }}>
-                            {(cluster.similarity_score * 100).toFixed(0)}% Similar
-                        </span>
+                        {cluster.recommended_hub_name ? (
+                            <span style={{ fontSize: 12, padding: '2px 8px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderRadius: 10, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <Sparkles size={12} /> Sugerido por IA
+                            </span>
+                        ) : (
+                            <span style={{ fontSize: 12, padding: '2px 8px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderRadius: 10, fontWeight: 500 }}>
+                                {(cluster.similarity_score * 100).toFixed(0)}% Similar
+                            </span>
+                        )}
                     </h4>
                     <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        {cluster.concepts.length} conceptos a fusionar
+                        {activeConcepts.length} conceptos a fusionar
                     </p>
                 </div>
             </div>
 
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: 12, marginBottom: 16 }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {cluster.concepts.map(c => (
-                        <div key={c.id} style={{ display: 'inline-flex', flexDirection: 'column', background: 'var(--bg-secondary)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
-                            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{c.name}</span>
-                            {c.domain && <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{c.domain}</span>}
-                        </div>
-                    ))}
+                    {cluster.concepts.map(c => {
+                        const isRejected = rejectedIds.has(c.id);
+                        return (
+                            <div key={c.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isRejected ? 'transparent' : 'var(--bg-secondary)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: `1px solid ${isRejected ? 'transparent' : 'var(--border-subtle)'}`, opacity: isRejected ? 0.5 : 1 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', textDecoration: isRejected ? 'line-through' : 'none' }}>
+                                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{c.name}</span>
+                                    {c.domain && <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{c.domain}</span>}
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setRejectedIds(prev => {
+                                            const newSet = new Set(prev);
+                                            if (newSet.has(c.id)) newSet.delete(c.id);
+                                            else newSet.add(c.id);
+                                            return newSet;
+                                        });
+                                    }}
+                                    style={{ background: 'none', border: 'none', color: isRejected ? 'var(--brand-primary)' : 'var(--text-disabled)', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4 }}
+                                    title={isRejected ? "Restaurar concepto" : "Excluir concepto de esta fusión"}
+                                >
+                                    {isRejected ? <Check size={14} /> : <X size={14} />}
+                                </button>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
 
@@ -462,8 +494,11 @@ function MergeRecommendationCard({ cluster, onMerge, isMerging }: {
             </div>
 
             <button
-                disabled={isMerging || !targetName.trim()}
-                onClick={() => onMerge(targetName, targetDomain)}
+                disabled={isMerging || !targetName.trim() || activeConcepts.length < 2}
+                onClick={() => {
+                    const sourceNames = activeConcepts.map(c => c.name);
+                    onMerge(targetName, targetDomain, sourceNames);
+                }}
                 style={{
                     width: '100%', padding: '10px', background: 'var(--brand-primary)', color: '#fff',
                     border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 500, cursor: 'pointer',

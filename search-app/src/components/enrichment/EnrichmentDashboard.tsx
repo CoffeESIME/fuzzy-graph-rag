@@ -198,6 +198,19 @@ export default function EnrichmentDashboard() {
                         Salud de Música y Arte
                     </button>
                     <button
+                        onClick={() => setActiveTab('explorer')}
+                        style={{
+                            padding: '12px 24px', background: 'transparent',
+                            border: 'none', borderBottom: activeTab === 'explorer' ? '2px solid #ec4899' : '2px solid transparent',
+                            color: activeTab === 'explorer' ? '#ec4899' : 'var(--text-secondary)',
+                            fontWeight: 600, fontSize: '1rem', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 8
+                        }}
+                    >
+                        <Search size={18} />
+                        Búsqueda Latente
+                    </button>
+                    <button
                         onClick={() => setActiveTab('cleanup')}
                         style={{
                             padding: '12px 24px', background: 'transparent',

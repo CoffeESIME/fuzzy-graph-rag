@@ -300,6 +300,7 @@ class MergeRecommendation(BaseModel):
     cluster_id: int
     concepts: List[ConceptNode]
     similarity_score: float
+    recommended_hub_name: Optional[str] = None
 
 class RecommendMergesResponse(BaseModel):
     recommendations: List[MergeRecommendation]
@@ -349,118 +350,165 @@ def recommend_concept_merges():
     driver = get_neo4j_driver()
     try:
         with driver.session() as session:
-            result = session.run("MATCH (c:Concept) RETURN elementId(c) as id, c.name as name, c.domain as domain")
+            # To process little by little, we grab 200 alphabetically contiguous concepts from a random starting point.
+            # This ensures synonyms (which often share prefixes) are analyzed together, but every click is a new batch.
+            # First, find total number of concepts to calculate a safe random offset in Python
+            # Neo4j does not allow variables inside SKIP clauses directly.
+            count_res = session.run("MATCH (c:Concept) RETURN count(c) as total")
+            total_concepts = count_res.single()["total"]
+            
+            if total_concepts == 0:
+                return {"recommendations": [], "total_clusters": 0}
+            
+            import random
+            skip_val = random.randint(0, max(0, total_concepts - 200))
+            
+            query = """
+            MATCH (c:Concept) WITH c ORDER BY c.name
+            SKIP $skip LIMIT 250
+            RETURN elementId(c) as id, c.name as name, c.domain as domain
+            """
+            result = session.run(query, skip=skip_val)
             concepts = [{"id": r["id"], "name": r["name"], "domain": r["domain"] or ""} for r in result]
             
         if not concepts:
             return {"recommendations": [], "total_clusters": 0}
             
-        # 2. Get Embeddings (Batching if necessary, but LLM Gateway handles it)
         import requests
+        import json
+        import re
         from config.settings import get_settings
         settings = get_settings()
         LLM_GATEWAY_URL = f"{settings.LLM_GATEWAY_URL}/v1"
         
-        # Prepare text strings for embedding: "Name (Domain)"
-        texts = [f"{c['name']} ({c['domain']})" if c['domain'] else c['name'] for c in concepts]
+        system_prompt = """You are an expert Ontological Data Curator specializing in strict deduplication.
+Your task is to identify concepts that are **interchangeable** or **strict synonyms** to merge them into a single canonical entity.
+
+CRITICAL DISTINCTION: 
+- You are performing DEDUPLICATION, not THEMATIC CLUSTERING.
+- Do NOT group concepts just because they are related, belong to the same broad topic, or share a root word.
+- ONLY group them if a user searching for Concept A would be 100% satisfied with results for Concept B.
+
+Input format: A list of concepts with their specific domains (e.g., "Concept Name [Domain]").
+Output format: You MUST return ONLY a valid JSON array. No markdown, no explanations.
+
+Structure:
+[
+  {
+    "hub_name": "Nombre unificado en español",
+    "concept_indices": [1, 5] 
+  }
+]
+
+STRICT RULES FOR MERGING:
+1. **Semantic Equivalence:** Only merge if the concepts refer to the exact same entity, definition, or phenomenon. 
+   - GOOD: "Cancer" and "Neoplasia", "EE.UU." and "Estados Unidos".
+   - BAD: "Interacción Biológica" and "Interacción Humana" (These are different types of interactions).
+   - BAD: "Manipulación" (Psychology) and "Manipulación Genética" (Biology) (Different domains, different meanings).
+
+2. **Domain Consistency:** Check the domain tag provided in the input. 
+   - If Domain A is "Medicine" and Domain B is "Philosophy", DO NOT merge them unless it is a direct translation of the same term.
+   - Specific sub-types (e.g., "Ingeniería Mecánica") should generally NOT be merged with the broad category ("Ingeniería") unless the context implies they are being used as synonyms.
+
+3. **Root Word Trap:** Do not group items simply because they start with the same word (e.g., "Libertad" and "Libertad de elección" are related, but distinct. Only merge if they are effectively synonyms in this context).
+
+4. **Language:** The "hub_name" MUST be in Spanish.
+
+Example Output (Spanish):
+[
+  {
+    "hub_name": "Inteligencia Artificial",
+    "concept_indices": [1, 4]
+  },
+  {
+    "hub_name": "Estados Unidos",
+    "concept_indices": [2, 10]
+  }
+]
+"""
+
+        all_clusters = []
+        global_cluster_id = 1
         
-        embeddings = []
-        # Process in batches of 50 to avoid gateway limits
-        batch_size = 50
-        for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i:i+batch_size]
+        concepts_list_text = "\n".join([f"{i+1}. {c['name']} (Domain: {c['domain'] or 'None'})" for i, c in enumerate(concepts)])
+        
+        user_prompt = f"Here are the concepts to analyze:\n\n{concepts_list_text}\n\nReturn ONLY the JSON array."
+        
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+
+        data = {
+            "task": "chat",
+            "privacy_mode": "flexible",
+            "messages": json.dumps(messages),
+            "temperature": 0.1,
+        }
+        
+        try:
+            # Send all 200 elements in a single shot
+            response = requests.post(f"{LLM_GATEWAY_URL}/chat/completions", data=data, timeout=60)
+            if response.status_code != 200:
+                logger.error(f"LLM validation HTTP {response.status_code}: {response.text[:300]}")
+                return {"recommendations": [], "total_clusters": 0}
+                
+            result = response.json()
+            raw_content = (
+                result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                or result.get("answer", "")
+                or result.get("content", "")
+                or result.get("text", "")
+                or result.get("response", "")
+            ).strip()
+            
+            parsed_clusters = []
             try:
-                resp = requests.post(
-                    f"{LLM_GATEWAY_URL}/embeddings/text/batch",
-                    json={"texts": batch_texts, "normalize": True},
-                    timeout=60
-                )
-                
-                # Fallback to individual calls if batch fails (or endpoint doesn't exist)
-                if resp.status_code == 404:
-                    for text in batch_texts:
-                        single_resp = requests.post(
-                            f"{LLM_GATEWAY_URL}/embeddings/text",
-                            json={"text": text, "normalize": True},
-                            timeout=30
-                        )
-                        single_resp.raise_for_status()
-                        embeddings.append(single_resp.json().get("embedding", []))
+                match = re.search(r'\[.*\]', raw_content, re.DOTALL)
+                if match:
+                    json_str = match.group(0)
+                    parsed_clusters = json.loads(json_str)
                 else:
-                    resp.raise_for_status()
-                    batch_embs = resp.json().get("embeddings", [])
-                    embeddings.extend(batch_embs)
+                    parsed_clusters = json.loads(raw_content)
             except Exception as e:
-                logger.error(f"Error getting embeddings for batch: {e}")
+                logger.error(f"Failed to parse LLM JSON response: {e}")
                 
-        if len(embeddings) != len(concepts):
-            logger.warning("Could not get embeddings for all concepts. Skipping clustering.")
-            return {"recommendations": [], "total_clusters": 0}
-            
-        # 3. Compute pairwise similarities and group clusters (cosine similarity > 0.85)
-        # Using a simple greedy clustering algorithm
-        import numpy as np
-        emb_matrix = np.array(embeddings)
-        
-        # Check if matrix is valid
-        if len(emb_matrix) == 0 or len(emb_matrix.shape) < 2:
-            return {"recommendations": [], "total_clusters": 0}
-            
-        # Normalize just in case
-        norms = np.linalg.norm(emb_matrix, axis=1, keepdims=True)
-        # Avoid division by zero
-        norms[norms == 0] = 1 
-        emb_matrix = emb_matrix / norms
-        
-        # Dot product gives cosine similarity for normalized vectors
-        similarity_matrix = np.dot(emb_matrix, emb_matrix.T)
-        
-        clusters = []
-        visited = set()
-        SIMILARITY_THRESHOLD = 0.85
-        
-        for i in range(len(concepts)):
-            if i in visited:
-                continue
-                
-            cluster = [i]
-            visited.add(i)
-            
-            for j in range(i + 1, len(concepts)):
-                if j not in visited and similarity_matrix[i, j] > SIMILARITY_THRESHOLD:
-                    cluster.append(j)
-                    visited.add(j)
+            if isinstance(parsed_clusters, list):
+                for cluster_data in parsed_clusters:
+                    hub_name = cluster_data.get("hub_name")
+                    indices = cluster_data.get("concept_indices", [])
                     
-            # Only keep clusters with > 1 item
-            if len(cluster) > 1:
-                # Calculate avg internal similarity
-                sub_matrix = similarity_matrix[np.ix_(cluster, cluster)]
-                # Average ignoring the diagonal (self-similarity = 1)
-                n = len(cluster)
-                avg_sim = (np.sum(sub_matrix) - n) / (n * (n - 1)) if n > 1 else 1.0
+                    if not hub_name or not isinstance(indices, list) or len(indices) < 2:
+                        continue
+                        
+                    cluster_concepts = []
+                    for idx in indices:
+                        # 1-based to 0-based local index
+                        if isinstance(idx, int) and 1 <= idx <= len(concepts):
+                            c = concepts[idx - 1]
+                            cluster_concepts.append(ConceptNode(id=c["id"], name=c["name"], domain=c["domain"]))
+                            
+                    if len(cluster_concepts) > 1:
+                        all_clusters.append(MergeRecommendation(
+                            cluster_id=global_cluster_id,
+                            concepts=cluster_concepts,
+                            similarity_score=1.0,
+                            recommended_hub_name=hub_name
+                        ))
+                        global_cluster_id += 1
+                        
+        except requests.exceptions.Timeout:
+            logger.error(f"LLM timeout while computing recommendations")
+        except Exception as e:
+            logger.error(f"Error computing LLM recommendations: {e}")
                 
-                cluster_concepts = [
-                    ConceptNode(id=concepts[idx]["id"], name=concepts[idx]["name"], domain=concepts[idx]["domain"])
-                    for idx in cluster
-                ]
-                
-                clusters.append(MergeRecommendation(
-                    cluster_id=len(clusters) + 1,
-                    concepts=cluster_concepts,
-                    similarity_score=round(float(avg_sim), 4)
-                ))
-                
-        # Sort clusters by similarity score and size
-        clusters.sort(key=lambda c: (len(c.concepts), c.similarity_score), reverse=True)
-        
-        return {"recommendations": clusters, "total_clusters": len(clusters)}
+        # Sort by size just to have the biggest clusters first        
+        all_clusters.sort(key=lambda c: len(c.concepts), reverse=True)
+        return {"recommendations": all_clusters, "total_clusters": len(all_clusters)}
         
     except Exception as e:
         logger.error(f"Error in recommend_concept_merges: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if driver:
-            driver.close()
 
 @router.post("/concepts/merge")
 def merge_concepts(request: MergeConceptsRequest):
@@ -477,7 +525,7 @@ def merge_concepts(request: MergeConceptsRequest):
     merge_query = """
     // 1. Ensure target node exists
     MERGE (target:Concept {name: $target_name})
-    ON CREATE SET target.domain = $target_domain, target.created_at = datetime()
+    ON CREATE SET target.domain = $target_domain, target.created_at = datetime(), target.aliases = []
     ON MATCH SET target.domain = $target_domain
     
     WITH target
@@ -486,22 +534,35 @@ def merge_concepts(request: MergeConceptsRequest):
     MATCH (source:Concept)
     WHERE source.name IN $source_names AND source.name <> $target_name
     
-    // 3. Keep track of how many we found
+    // 3. Keep track of how many we found and safely extract aliases
     WITH target, collect(source) as sources
     
-    // 4. Rewire all incoming relationships to the target
+    // 4. Extract all names and existing aliases from sources to append to target
+    UNWIND sources as source_for_alias
+    WITH target, sources, collect(source_for_alias.name) + 
+         reduce(acc = [], s IN sources | acc + coalesce(s.aliases, [])) as all_new_aliases,
+         reduce(acc = [], s IN sources | acc + coalesce(s.tags, [])) as all_new_tags
+    
+    // 5. Deduplicate aliases and tags, add to target
+    WITH target, sources, 
+         apoc.coll.toSet(coalesce(target.aliases, []) + all_new_aliases) as final_aliases,
+         apoc.coll.toSet(coalesce(target.tags, []) + all_new_tags) as final_tags
+    SET target.aliases = final_aliases, target.tags = final_tags
+    
+    // 6. Rewire all incoming relationships to the target
+    WITH target, sources
     UNWIND sources as source
-    MATCH (other)-[r]->(source)
+    OPTIONAL MATCH (other)-[r]->(source)
     
-    // Use APOC if available for generic relationship merge, 
-    // but here we know it's always EVOKES_CONCEPT or similar incoming links
-    MERGE (other)-[new_r:EVOKES_CONCEPT]->(target)
-    ON CREATE SET new_r = r, new_r.weight = coalesce(r.weight, 1.0)
+    // Only merge relation if there was actually an incoming one
+    CALL apoc.do.when(
+        r IS NOT NULL,
+        'MERGE (o)-[new_r:EVOKES_CONCEPT]->(t) ON CREATE SET new_r = rel, new_r.weight = coalesce(rel.weight, 1.0) ON MATCH SET new_r.weight = CASE WHEN coalesce(new_r.weight, 1.0) + coalesce(rel.weight, 1.0) > 1.0 THEN 1.0 ELSE coalesce(new_r.weight, 1.0) + coalesce(rel.weight, 1.0) END DELETE rel RETURN new_r',
+        '',
+        {o: other, t: target, rel: r}
+    ) YIELD value
     
-    // 5. Delete the old relationship
-    DELETE r
-    
-    // 6. Delete the source node
+    // 7. Delete the source node
     WITH sources
     UNWIND sources as source
     // Use DETACH DELETE just to be completely safe against dangling edges
@@ -529,6 +590,3 @@ def merge_concepts(request: MergeConceptsRequest):
     except Exception as e:
         logger.error(f"Error merging concepts: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if driver:
-            driver.close()
