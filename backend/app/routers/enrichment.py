@@ -342,30 +342,45 @@ def get_all_concepts():
             driver.close()
 
 @router.post("/concepts/recommend-merges", response_model=RecommendMergesResponse)
-def recommend_concept_merges():
+def recommend_concept_merges(strategy: str = "middle"):
     """
     Use BGE-M3 embeddings to find semantically similar concepts that should be merged.
+    Supported strategies: top, bottom, middle, upper-mid, lower-mid, random
     """
-    # 1. Fetch all concepts
     driver = get_neo4j_driver()
     try:
         with driver.session() as session:
-            # To process little by little, we grab 200 alphabetically contiguous concepts from a random starting point.
-            # This ensures synonyms (which often share prefixes) are analyzed together, but every click is a new batch.
-            # First, find total number of concepts to calculate a safe random offset in Python
-            # Neo4j does not allow variables inside SKIP clauses directly.
             count_res = session.run("MATCH (c:Concept) RETURN count(c) as total")
             total_concepts = count_res.single()["total"]
             
             if total_concepts == 0:
                 return {"recommendations": [], "total_clusters": 0}
+                
+            skip_val = 0
+            order_clause = "ORDER BY refs DESC"
             
-            import random
-            skip_val = random.randint(0, max(0, total_concepts - 200))
+            if strategy == "top":
+                skip_val = 0
+            elif strategy == "bottom":
+                # Or just order ASC
+                order_clause = "ORDER BY refs ASC"
+            elif strategy == "upper-mid":
+                skip_val = max(0, (total_concepts // 4) - 100)
+            elif strategy == "lower-mid":
+                skip_val = max(0, (total_concepts * 3 // 4) - 100)
+            elif strategy == "random":
+                import random
+                skip_val = random.randint(0, max(0, total_concepts - 200))
+            else: # middle default
+                skip_val = max(0, (total_concepts // 2) - 100)
             
-            query = """
-            MATCH (c:Concept) WITH c ORDER BY c.name
-            SKIP $skip LIMIT 250
+            query = f"""
+            MATCH (c:Concept)
+            OPTIONAL MATCH (c)-[r]-()
+            WITH c, count(r) as refs
+            {order_clause}
+            SKIP $skip
+            LIMIT 200
             RETURN elementId(c) as id, c.name as name, c.domain as domain
             """
             result = session.run(query, skip=skip_val)

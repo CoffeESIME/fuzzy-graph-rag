@@ -15,6 +15,7 @@ export default function OntologicalCleanup() {
     const [concepts, setConcepts] = useState<ConceptNode[]>([]);
     const [isLoadingConcepts, setIsLoadingConcepts] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [strategy, setStrategy] = useState('middle');
 
     // Recommendation State
     const [recommendations, setRecommendations] = useState<MergeRecommendation[]>([]);
@@ -54,7 +55,7 @@ export default function OntologicalCleanup() {
         setError(null);
         setSuccessMessage(null);
         try {
-            const res = await recommendConceptMerges();
+            const res = await recommendConceptMerges(strategy);
             setRecommendations(res.recommendations);
             setSuccessMessage(`Se encontraron ${res.total_clusters} grupos de conceptos similares.`);
             setActiveView('recommendations');
@@ -183,6 +184,21 @@ export default function OntologicalCleanup() {
                 </div>
 
                 <div style={{ display: 'flex', gap: 12 }}>
+                    <select
+                        value={strategy}
+                        onChange={(e) => setStrategy(e.target.value)}
+                        style={{
+                            padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)',
+                            color: 'var(--text-primary)', borderRadius: 'var(--radius-md)', outline: 'none', cursor: 'pointer'
+                        }}
+                    >
+                        <option value="top">Conexiones: Alta (Top 200)</option>
+                        <option value="upper-mid">Conexiones: Media-Alta</option>
+                        <option value="middle">Conexiones: Media (Centro)</option>
+                        <option value="lower-mid">Conexiones: Media-Baja</option>
+                        <option value="bottom">Conexiones: Baja/Huérfanos</option>
+                        <option value="random">Lote Aleatorio</option>
+                    </select>
                     <button
                         onClick={handleRecommendMerges}
                         disabled={isRecommending || concepts.length === 0}
