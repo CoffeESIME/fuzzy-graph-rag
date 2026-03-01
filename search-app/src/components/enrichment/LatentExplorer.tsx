@@ -5,8 +5,9 @@ import {
     getLatentConnections,
     approveLatentConnection,
     getAssetPreview,
+    getConcepts,
 } from '../../lib/api';
-import type { SeedNode, LatentConnectionSuggestion, AssetPreviewResponse, ValidateConnectionItem } from '../../lib/api';
+import type { SeedNode, LatentConnectionSuggestion, AssetPreviewResponse, ValidateConnectionItem, ConceptNode } from '../../lib/api';
 import { validateLatentConnections } from '../../lib/api';
 import MediaPreview from '../search/MediaPreview';
 
@@ -15,20 +16,32 @@ interface AssetGroupProps {
     group: { assetId: string; assetName: string; items: LatentConnectionSuggestion[] };
     editedWeights: Record<string, number>;
     approvingIds: Set<string>;
+    allConcepts: ConceptNode[];
     onPreview: (id: string) => void;
-    onApprove: (s: LatentConnectionSuggestion, key: string) => void;
+    onApprove: (s: LatentConnectionSuggestion | {
+        asset_id: string;
+        target_concept_id: string;
+        relation_type: string;
+        proposed_weight: number;
+        reasoning: string;
+    }, key: string) => void;
     onDiscard: (key: string) => void;
     onWeightChange: (key: string, val: string) => void;
     onFilterByKeys: (assetId: string, validKeys: string[]) => void;
 }
 
-function AssetGroupCard({ group, editedWeights, approvingIds, onApprove, onDiscard, onWeightChange, onFilterByKeys }: AssetGroupProps) {
+function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApprove, onDiscard, onWeightChange, onFilterByKeys }: AssetGroupProps) {
     const [preview, setPreview] = useState<AssetPreviewResponse | null>(null);
     const [loadingPreview, setLoadingPreview] = useState(false);
     const [expanded, setExpanded] = useState(true);
     const [textExpanded, setTextExpanded] = useState(false);
     const [validating, setValidating] = useState(false);
     const [llmNote, setLlmNote] = useState<{ text: string; removed: number } | null>(null);
+
+    // Manual Connection State
+    const [manualSearch, setManualSearch] = useState('');
+    const [manualWeight, setManualWeight] = useState(0.8);
+    const [selectedManualConceptId, setSelectedManualConceptId] = useState('');
 
     useEffect(() => {
         setLoadingPreview(true);
@@ -67,6 +80,31 @@ function AssetGroupCard({ group, editedWeights, approvingIds, onApprove, onDisca
             setValidating(false);
         }
     };
+
+    const handleManualApprove = () => {
+        if (!selectedManualConceptId || Number.isNaN(manualWeight)) return;
+
+        const concept = allConcepts.find(c => c.id === selectedManualConceptId);
+        if (!concept) return;
+
+        const uniqueKey = `manual-${group.assetId}-${selectedManualConceptId}`;
+        const manualSuggestion = {
+            asset_id: group.assetId,
+            target_concept_id: concept.id,
+            relation_type: "EVOKES_CONCEPT",
+            proposed_weight: Math.min(Math.max(manualWeight, 0), 1),
+            reasoning: "Manual connection via Latent Explorer"
+        };
+
+        onApprove(manualSuggestion, uniqueKey);
+
+        // Reset manual form
+        setManualSearch('');
+        setSelectedManualConceptId('');
+        setManualWeight(0.8);
+    };
+
+    const filteredManualConcepts = manualSearch.trim() ? allConcepts.filter(c => c.name.toLowerCase().includes(manualSearch.toLowerCase())).slice(0, 15) : [];
 
     return (
         <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden' }}>
@@ -154,6 +192,64 @@ function AssetGroupCard({ group, editedWeights, approvingIds, onApprove, onDisca
                             {preview && !preview.download_url && !preview.minio_path && !loadingPreview && (
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{preview.type} — sin vista previa de medios</div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Manual Connection Section */}
+                    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Agregar Conexión Manual</div>
+                        <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Buscar Concepto en Neo4j</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                        <input
+                                            value={manualSearch}
+                                            onChange={e => {
+                                                setManualSearch(e.target.value);
+                                                setSelectedManualConceptId('');
+                                            }}
+                                            placeholder="Escribe para buscar..."
+                                            style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: '6px 12px 6px 30px', fontSize: '0.8rem', color: 'var(--text-primary)', outline: 'none' }}
+                                        />
+                                        {filteredManualConcepts.length > 0 && !selectedManualConceptId && (
+                                            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, marginTop: 4, zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }} className="custom-scrollbar">
+                                                {filteredManualConcepts.map(c => (
+                                                    <div
+                                                        key={c.id}
+                                                        onClick={() => {
+                                                            setSelectedManualConceptId(c.id);
+                                                            setManualSearch(c.name);
+                                                        }}
+                                                        style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', borderBottom: '1px solid var(--border-subtle)' }}
+                                                    >
+                                                        {c.name} {c.domain && <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>({c.domain})</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 80 }}>
+                                    <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Peso (0-1)</label>
+                                    <input
+                                        type="number" step="0.05" min="0" max="1"
+                                        value={manualWeight}
+                                        onChange={e => setManualWeight(parseFloat(e.target.value))}
+                                        style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: '6px 8px', fontSize: '0.8rem', textAlign: 'center', color: 'var(--text-primary)' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end', height: 47 }}>
+                                    <button
+                                        onClick={handleManualApprove}
+                                        disabled={!selectedManualConceptId || Number.isNaN(manualWeight)}
+                                        style={{ background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 16px', fontSize: '0.8rem', fontWeight: 600, cursor: (!selectedManualConceptId || Number.isNaN(manualWeight)) ? 'not-allowed' : 'pointer', opacity: (!selectedManualConceptId || Number.isNaN(manualWeight)) ? 0.5 : 1, height: 29 }}
+                                    >
+                                        Vincular
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -257,6 +353,16 @@ export default function LatentExplorer() {
     // Weights local edits
     const [editedWeights, setEditedWeights] = useState<Record<string, number>>({});
 
+    // Graph Concepts for manual linking
+    const [allConcepts, setAllConcepts] = useState<ConceptNode[]>([]);
+
+    useEffect(() => {
+        // Pre-fetch concepts on mount once, for manual linking combo box
+        getConcepts()
+            .then(res => setAllConcepts(res.concepts))
+            .catch(err => console.error("Failed to load concepts for manual linking", err));
+    }, []);
+
     const fetchSeeds = async (overrideSortBy?: string) => {
         setIsLoadingSeeds(true);
         setSelectedSeed(null);
@@ -302,7 +408,13 @@ export default function LatentExplorer() {
         }
     };
 
-    const handleApprove = async (suggestion: LatentConnectionSuggestion, uniqueKey: string) => {
+    const handleApprove = async (suggestion: LatentConnectionSuggestion | {
+        asset_id: string;
+        target_concept_id: string;
+        relation_type: string;
+        proposed_weight: number;
+        reasoning: string;
+    }, uniqueKey: string) => {
         setApprovingIds(prev => new Set(prev).add(uniqueKey));
 
         const finalWeight = editedWeights[uniqueKey] !== undefined ? editedWeights[uniqueKey] : suggestion.proposed_weight;
@@ -548,6 +660,7 @@ export default function LatentExplorer() {
                                         onDiscard={handleDiscard}
                                         onWeightChange={handleWeightChange}
                                         onFilterByKeys={handleFilterByKeys}
+                                        allConcepts={allConcepts}
                                     />
                                 ))}
                             </div>

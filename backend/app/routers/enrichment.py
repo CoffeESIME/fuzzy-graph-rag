@@ -305,6 +305,7 @@ class MergeRecommendation(BaseModel):
 class RecommendMergesResponse(BaseModel):
     recommendations: List[MergeRecommendation]
     total_clusters: int
+    demote_recommendations: List[ConceptNode] = []
 
 class MergeConceptsRequest(BaseModel):
     target_name: str
@@ -380,7 +381,7 @@ def recommend_concept_merges(strategy: str = "middle"):
             WITH c, count(r) as refs
             {order_clause}
             SKIP $skip
-            LIMIT 200
+            LIMIT 250
             RETURN elementId(c) as id, c.name as name, c.domain as domain
             """
             result = session.run(query, skip=skip_val)
@@ -396,58 +397,44 @@ def recommend_concept_merges(strategy: str = "middle"):
         settings = get_settings()
         LLM_GATEWAY_URL = f"{settings.LLM_GATEWAY_URL}/v1"
         
-        system_prompt = """You are an expert Ontological Data Curator specializing in strict deduplication.
-Your task is to identify concepts that are **interchangeable** or **strict synonyms** to merge them into a single canonical entity.
+        system_prompt = """You are an expert Ontological Data Curator and Knowledge Graph Architect.
+Your task is twofold:
+1. STRICT DEDUPLICATION: Identify concepts that are interchangeable synonyms to merge them into a single canonical Hub.
+2. ONTOLOGICAL CLASSIFICATION (DEMOTION): Identify terms that represent physical objects, generic locations, aesthetic descriptors, or media formats, and flag them to be demoted to "Metadata Tags" (they must not exist as structural Hubs in the graph).
 
-CRITICAL DISTINCTION: 
-- You are performing DEDUPLICATION, not THEMATIC CLUSTERING.
-- Do NOT group concepts just because they are related, belong to the same broad topic, or share a root word.
-- ONLY group them if a user searching for Concept A would be 100% satisfied with results for Concept B.
+CRITICAL DISTINCTIONS FOR MERGING: 
+- Do NOT group concepts just because they are related. 
+- "Evolución biológica" and "Evolución de ideas" MUST remain separate. Do not merge across different domains (e.g., Biology vs. Sociology).
+- ONLY group them if a user searching for Concept A would be 100% satisfied with results for Concept B (e.g., "Muerte" and "Finitud humana", or "IA" and "Inteligencia Artificial").
 
-Input format: A list of concepts with their specific domains (e.g., "Concept Name [Domain]").
-Output format: You MUST return ONLY a valid JSON array. No markdown, no explanations.
+
+Input format: A list of concepts with their indices (e.g., "1. Concept Name").
+Output format: You MUST return ONLY a valid JSON object. No markdown, no explanations.
 
 Structure:
-[
-  {
-    "hub_name": "Nombre unificado en español",
-    "concept_indices": [1, 5] 
-  }
-]
+{
+  "merges": [
+    {
+      "hub_name": "Nombre unificado en español",
+      "concept_indices": [1, 5] 
+    }
+  ]
+}
 
-STRICT RULES FOR MERGING:
-1. **Semantic Equivalence:** Only merge if the concepts refer to the exact same entity, definition, or phenomenon. 
-   - GOOD: "Cancer" and "Neoplasia", "EE.UU." and "Estados Unidos".
-   - BAD: "Interacción Biológica" and "Interacción Humana" (These are different types of interactions).
-   - BAD: "Manipulación" (Psychology) and "Manipulación Genética" (Biology) (Different domains, different meanings).
-
-2. **Domain Consistency:** Check the domain tag provided in the input. 
-   - If Domain A is "Medicine" and Domain B is "Philosophy", DO NOT merge them unless it is a direct translation of the same term.
-   - Specific sub-types (e.g., "Ingeniería Mecánica") should generally NOT be merged with the broad category ("Ingeniería") unless the context implies they are being used as synonyms.
-
-3. **Root Word Trap:** Do not group items simply because they start with the same word (e.g., "Libertad" and "Libertad de elección" are related, but distinct. Only merge if they are effectively synonyms in this context).
-
-4. **Language:** The "hub_name" MUST be in Spanish.
-
-Example Output (Spanish):
-[
-  {
-    "hub_name": "Inteligencia Artificial",
-    "concept_indices": [1, 4]
-  },
-  {
-    "hub_name": "Estados Unidos",
-    "concept_indices": [2, 10]
-  }
-]
+STRICT RULES:
+1. Semantic Equivalence: Only merge exact same entities. "Manipulación psicológica" and "Manipulación genética" are DIFFERENT.
+2. Root Word Trap: Do not group items simply because they share a word (e.g., "Libertad" and "Libertad financiera").
+3. Demotion is Crucial: Be aggressive in demoting anything that you can touch, see, or that describes a file format. Only pure knowledge, entities, and abstractions deserve to be Graph Hubs.
+4. The "hub_name" MUST be in Spanish and represent the most academic/standard term for the cluster.
 """
 
         all_clusters = []
+        demote_list = []
         global_cluster_id = 1
         
         concepts_list_text = "\n".join([f"{i+1}. {c['name']} (Domain: {c['domain'] or 'None'})" for i, c in enumerate(concepts)])
         
-        user_prompt = f"Here are the concepts to analyze:\n\n{concepts_list_text}\n\nReturn ONLY the JSON array."
+        user_prompt = f"Here are the concepts to analyze:\n\n{concepts_list_text}\n\nReturn ONLY the JSON object."
         
         messages = [
             {"role": "system", "content": system_prompt},
@@ -477,19 +464,22 @@ Example Output (Spanish):
                 or result.get("response", "")
             ).strip()
             
-            parsed_clusters = []
+            parsed_json = {}
             try:
-                match = re.search(r'\[.*\]', raw_content, re.DOTALL)
+                match = re.search(r'\{.*\}', raw_content, re.DOTALL)
                 if match:
                     json_str = match.group(0)
-                    parsed_clusters = json.loads(json_str)
+                    parsed_json = json.loads(json_str)
                 else:
-                    parsed_clusters = json.loads(raw_content)
+                    parsed_json = json.loads(raw_content)
             except Exception as e:
                 logger.error(f"Failed to parse LLM JSON response: {e}")
                 
-            if isinstance(parsed_clusters, list):
-                for cluster_data in parsed_clusters:
+            merges_data = parsed_json.get("merges", [])
+            demotes_data = parsed_json.get("demote_to_tags", [])
+                
+            if isinstance(merges_data, list):
+                for cluster_data in merges_data:
                     hub_name = cluster_data.get("hub_name")
                     indices = cluster_data.get("concept_indices", [])
                     
@@ -511,6 +501,12 @@ Example Output (Spanish):
                             recommended_hub_name=hub_name
                         ))
                         global_cluster_id += 1
+            
+            if isinstance(demotes_data, list):
+                for idx in demotes_data:
+                    if isinstance(idx, int) and 1 <= idx <= len(concepts):
+                        c = concepts[idx - 1]
+                        demote_list.append(ConceptNode(id=c["id"], name=c["name"], domain=c["domain"]))
                         
         except requests.exceptions.Timeout:
             logger.error(f"LLM timeout while computing recommendations")
@@ -519,11 +515,60 @@ Example Output (Spanish):
                 
         # Sort by size just to have the biggest clusters first        
         all_clusters.sort(key=lambda c: len(c.concepts), reverse=True)
-        return {"recommendations": all_clusters, "total_clusters": len(all_clusters)}
+        return {
+            "recommendations": all_clusters,
+            "total_clusters": len(all_clusters),
+            "demote_recommendations": demote_list
+        }
         
     except Exception as e:
         logger.error(f"Error in recommend_concept_merges: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+class DemoteConceptsRequest(BaseModel):
+    source_names: List[str]
+
+@router.post("/concepts/demote")
+def demote_concepts(request: DemoteConceptsRequest):
+    """
+    Demotes structural Concept Hubs to plain tags on connected nodes.
+    Deletes the Concept node and pushes its name to the `tags` array of relationships.
+    """
+    if not request.source_names:
+        raise HTTPException(status_code=400, detail="Must provide at least one source concept to demote.")
+        
+    driver = get_neo4j_driver()
+    
+    demote_query = """
+    UNWIND $source_names AS source_name
+    MATCH (c:Concept {name: source_name})
+    
+    // Find everything connected to it
+    OPTIONAL MATCH (c)-[r]-(m)
+    WITH c, m, source_name
+    
+    // If it has a connected node (like a DigitalAsset), append the concept name to its tags
+    CALL apoc.do.when(
+        m IS NOT NULL,
+        'SET m.tags = apoc.coll.toSet(coalesce(m.tags, []) + [source_name]) RETURN m',
+        'RETURN NULL AS m',
+        {m: m, source_name: source_name}
+    ) YIELD value
+    
+    // Finally detach and delete the concept node itself
+    WITH c
+    DETACH DELETE c
+    RETURN count(c) as deletions
+    """
+    
+    try:
+        with driver.session() as session:
+            result = session.run(demote_query, source_names=request.source_names)
+            totals = sum([record["deletions"] for record in result])
+            return {"status": "success", "message": f"Se eliminaron y transformaron {totals} conceptos en tags.", "demoted_count": totals}
+    except Exception as e:
+        logger.error(f"Error demoting concepts: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to demote concepts: {e}")
 
 @router.post("/concepts/merge")
 def merge_concepts(request: MergeConceptsRequest):

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Network, Search, Merge, AlertTriangle, AlertCircle, Sparkles, CheckSquare, Square, Check, X, ArrowRight, Loader2 } from 'lucide-react';
-import { getConcepts, recommendConceptMerges, mergeConcepts } from '../../lib/api';
-import type { ConceptNode, MergeConceptsRequest } from '../../lib/api';
+import { getConcepts, recommendConceptMerges, mergeConcepts, demoteConcepts } from '../../lib/api';
+import type { ConceptNode, MergeConceptsRequest, DemoteConceptsRequest } from '../../lib/api';
 
 export interface MergeRecommendation {
     cluster_id: number;
@@ -19,6 +19,7 @@ export default function OntologicalCleanup() {
 
     // Recommendation State
     const [recommendations, setRecommendations] = useState<MergeRecommendation[]>([]);
+    const [demoteRecommendations, setDemoteRecommendations] = useState<ConceptNode[]>([]);
     const [isRecommending, setIsRecommending] = useState(false);
 
     // Manual Merge State
@@ -26,6 +27,7 @@ export default function OntologicalCleanup() {
     const [targetName, setTargetName] = useState('');
     const [targetDomain, setTargetDomain] = useState('');
     const [isMerging, setIsMerging] = useState(false);
+    const [isDemoting, setIsDemoting] = useState(false);
 
     // Global Messages
     const [error, setError] = useState<string | null>(null);
@@ -57,7 +59,8 @@ export default function OntologicalCleanup() {
         try {
             const res = await recommendConceptMerges(strategy);
             setRecommendations(res.recommendations);
-            setSuccessMessage(`Se encontraron ${res.total_clusters} grupos de conceptos similares.`);
+            setDemoteRecommendations(res.demote_recommendations || []);
+            setSuccessMessage(`Se encontraron ${res.total_clusters} grupos de conceptos similares y ${res.demote_recommendations?.length || 0} para degradar a tags.`);
             setActiveView('recommendations');
         } catch (err: any) {
             console.error('Error calculating recommendations:', err);
@@ -108,6 +111,32 @@ export default function OntologicalCleanup() {
             setError(err.response?.data?.detail || err.message || 'Error al fusionar conceptos.');
         } finally {
             setIsMerging(false);
+        }
+    };
+
+    const handleExecuteDemote = async () => {
+        if (demoteRecommendations.length === 0) return;
+
+        setIsDemoting(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        try {
+            const sourceNames = demoteRecommendations.map(c => c.name);
+            const req: DemoteConceptsRequest = {
+                source_names: sourceNames
+            };
+            const res = await demoteConcepts(req);
+            setSuccessMessage(res.message);
+            // Clear demotion state
+            setDemoteRecommendations([]);
+            // Refresh main concepts
+            fetchConcepts();
+        } catch (err: any) {
+            console.error('Error demoting concepts:', err);
+            setError(err.response?.data?.detail || err.message || 'Error al degradar conceptos a tags.');
+        } finally {
+            setIsDemoting(false);
         }
     };
 
@@ -172,12 +201,12 @@ export default function OntologicalCleanup() {
                         }}
                     >
                         Recomendaciones Inteligentes
-                        {recommendations.length > 0 && (
+                        {(recommendations.length > 0 || demoteRecommendations.length > 0) && (
                             <span style={{
                                 background: 'var(--brand-primary)', color: '#fff', fontSize: 11,
                                 padding: '2px 6px', borderRadius: 10, fontWeight: 600
                             }}>
-                                {recommendations.length}
+                                {recommendations.length + (demoteRecommendations.length > 0 ? 1 : 0)}
                             </span>
                         )}
                     </button>
@@ -414,6 +443,53 @@ export default function OntologicalCleanup() {
                             ))}
                         </div>
                     )}
+
+                    {demoteRecommendations.length > 0 && (
+                        <div style={{ marginTop: 40, borderTop: '1px solid var(--border-subtle)', paddingTop: 32 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                                <div>
+                                    <h3 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <AlertTriangle size={20} style={{ color: '#eab308' }} />
+                                        Conceptos a Degradar a Tags ({demoteRecommendations.length})
+                                    </h3>
+                                    <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+                                        El modelo identificó estos nodos como objetos físicos, formatos o descriptores simples que no deberían ser Hubs estructurales en el grafo. Serán eliminados y su nombre pasará a ser un Tag en los archivos conectados.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={handleExecuteDemote}
+                                    disabled={isDemoting}
+                                    style={{
+                                        padding: '10px 20px', background: '#eab308', color: '#fff',
+                                        border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 600, cursor: 'pointer',
+                                        opacity: isDemoting ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8
+                                    }}
+                                >
+                                    {isDemoting ? 'Procesando...' : 'Ejecutar Degradación Masiva'}
+                                </button>
+                            </div>
+
+                            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: 20 }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                                    {demoteRecommendations.map(c => (
+                                        <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-primary)', padding: '6px 12px', borderRadius: 20, border: '1px solid var(--border-subtle)' }}>
+                                            <span style={{ fontSize: 13, fontWeight: 500 }}>{c.name}</span>
+                                            {c.domain && <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>({c.domain})</span>}
+                                            <button
+                                                onClick={() => {
+                                                    setDemoteRecommendations(prev => prev.filter(x => x.id !== c.id));
+                                                }}
+                                                style={{ background: 'none', border: 'none', color: 'var(--text-disabled)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 2, marginLeft: 4 }}
+                                                title="Excluir de la degradación (Mantener como Hub)"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -432,6 +508,13 @@ function MergeRecommendationCard({ cluster, onMerge, isMerging }: {
     const [targetName, setTargetName] = useState(targetCandidate);
     const [targetDomain, setTargetDomain] = useState('');
     const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
+
+    // Sync state if a new recommendation arrives with the same cluster_id but different data (or when data re-loads)
+    useEffect(() => {
+        setTargetName(targetCandidate);
+        setRejectedIds(new Set());
+        setTargetDomain('');
+    }, [targetCandidate, cluster.cluster_id]);
 
     const activeConcepts = cluster.concepts.filter(c => !rejectedIds.has(c.id));
 
