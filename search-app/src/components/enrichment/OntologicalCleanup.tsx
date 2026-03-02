@@ -226,6 +226,9 @@ export default function OntologicalCleanup() {
                         <option value="middle">Conexiones: Media (Centro)</option>
                         <option value="lower-mid">Conexiones: Media-Baja</option>
                         <option value="bottom">Conexiones: Baja/Huérfanos</option>
+                        <option value="high-low">Mezcla: Altos y Bajos</option>
+                        <option value="high-mid">Mezcla: Altos y Medios</option>
+                        <option value="mid-low">Mezcla: Medios y Bajos</option>
                         <option value="random">Lote Aleatorio</option>
                     </select>
                     <button

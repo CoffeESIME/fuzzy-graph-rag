@@ -357,35 +357,70 @@ def recommend_concept_merges(strategy: str = "middle"):
             if total_concepts == 0:
                 return {"recommendations": [], "total_clusters": 0}
                 
-            skip_val = 0
-            order_clause = "ORDER BY refs DESC"
-            
-            if strategy == "top":
+            if strategy in ["high-low", "high-mid", "mid-low"]:
+                # Mixed strategies logic
+                mid_skip = max(0, (total_concepts // 2) - 62)
+                
+                parts = strategy.split("-")
+                part_queries = []
+                
+                for p in parts:
+                    if p == "high":
+                        part_queries.append({"order": "ORDER BY refs DESC", "skip": 0})
+                    elif p == "low":
+                        part_queries.append({"order": "ORDER BY refs ASC", "skip": 0})
+                    elif p == "mid":
+                        part_queries.append({"order": "ORDER BY refs DESC", "skip": mid_skip})
+                        
+                concepts = []
+                seen_ids = set()
+                
+                for p_idx, p_args in enumerate(part_queries):
+                    q = f"""
+                    MATCH (c:Concept)
+                    OPTIONAL MATCH (c)-[r]-()
+                    WITH c, count(r) as refs
+                    {p_args['order']}
+                    SKIP $skip
+                    LIMIT 125
+                    RETURN elementId(c) as id, c.name as name, c.domain as domain
+                    """
+                    result = session.run(q, skip=p_args["skip"])
+                    for r in result:
+                        if r["id"] not in seen_ids:
+                            seen_ids.add(r["id"])
+                            concepts.append({"id": r["id"], "name": r["name"], "domain": r["domain"] or ""})
+            else:
+                # Standard strategies logic
                 skip_val = 0
-            elif strategy == "bottom":
-                # Or just order ASC
-                order_clause = "ORDER BY refs ASC"
-            elif strategy == "upper-mid":
-                skip_val = max(0, (total_concepts // 4) - 100)
-            elif strategy == "lower-mid":
-                skip_val = max(0, (total_concepts * 3 // 4) - 100)
-            elif strategy == "random":
-                import random
-                skip_val = random.randint(0, max(0, total_concepts - 200))
-            else: # middle default
-                skip_val = max(0, (total_concepts // 2) - 100)
-            
-            query = f"""
-            MATCH (c:Concept)
-            OPTIONAL MATCH (c)-[r]-()
-            WITH c, count(r) as refs
-            {order_clause}
-            SKIP $skip
-            LIMIT 250
-            RETURN elementId(c) as id, c.name as name, c.domain as domain
-            """
-            result = session.run(query, skip=skip_val)
-            concepts = [{"id": r["id"], "name": r["name"], "domain": r["domain"] or ""} for r in result]
+                order_clause = "ORDER BY refs DESC"
+                
+                if strategy == "top":
+                    skip_val = 0
+                elif strategy == "bottom":
+                    # Or just order ASC
+                    order_clause = "ORDER BY refs ASC"
+                elif strategy == "upper-mid":
+                    skip_val = max(0, (total_concepts // 4) - 100)
+                elif strategy == "lower-mid":
+                    skip_val = max(0, (total_concepts * 3 // 4) - 100)
+                elif strategy == "random":
+                    import random
+                    skip_val = random.randint(0, max(0, total_concepts - 200))
+                else: # middle default
+                    skip_val = max(0, (total_concepts // 2) - 100)
+                
+                query = f"""
+                MATCH (c:Concept)
+                OPTIONAL MATCH (c)-[r]-()
+                WITH c, count(r) as refs
+                {order_clause}
+                SKIP $skip
+                LIMIT 250
+                RETURN elementId(c) as id, c.name as name, c.domain as domain
+                """
+                result = session.run(query, skip=skip_val)
+                concepts = [{"id": r["id"], "name": r["name"], "domain": r["domain"] or ""} for r in result]
             
         if not concepts:
             return {"recommendations": [], "total_clusters": 0}
