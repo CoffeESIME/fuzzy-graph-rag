@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { Loader2, RefreshCw, Dice5, Info, FileText, X, Sparkles, Image, Music, Video, File } from 'lucide-react';
+import { Loader2, RefreshCw, Dice5, Info, FileText, X, Sparkles, Image, Music, Video, File, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MediaPreview from '../search/MediaPreview';
 import { getAssetPreview, explainAnalyticalPath, type AssetPreviewResponse } from '../../lib/api';
@@ -222,7 +222,7 @@ export default function SerendipityCard() {
         setSelectedAsset(null);
         setExplanation(null);
         try {
-            const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/serendipity');
+            const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/serendipity', undefined, { timeout: 120000 });
             if (res.data.status === 'error') throw new Error(res.data.message);
             setPath(res.data.mock_data.path || []);
             setMessage(res.data.message);
@@ -276,6 +276,38 @@ export default function SerendipityCard() {
         } finally {
             setExplaining(false);
         }
+    };
+
+    const handleExportJSON = () => {
+        if (!path.length) return;
+
+        const exportData = {
+            generated_at: new Date().toISOString(),
+            tool: 'serendipity_path',
+            path: path.map(p => ({
+                id: p.id,
+                name: p.name,
+                type: p.type,
+                weight: p.weight,
+                file_hash: p.file_hash,
+                mime_type: p.mime_type
+            })),
+            llm_explanation: explanation || null,
+            message: message,
+            options: {
+                privacy_mode: privacyMode
+            }
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `serendipity_path_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
 
     const firstConcept = path.length > 0 ? path[0] : null;
@@ -449,6 +481,23 @@ export default function SerendipityCard() {
                                 >
                                     {explaining ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                                     Explicar Camino con IA
+                                </button>
+
+                                <button
+                                    onClick={handleExportJSON}
+                                    style={{
+                                        padding: '10px 16px', fontSize: '0.85rem', fontWeight: 600,
+                                        borderRadius: 12, border: '1px solid #334155', cursor: 'pointer',
+                                        background: '#1e293b',
+                                        color: '#cbd5e1',
+                                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                                        transition: 'all 0.2s',
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.background = '#334155'; e.currentTarget.style.color = '#fff'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.color = '#cbd5e1'; }}
+                                    title="Exportar a JSON"
+                                >
+                                    <Download size={16} /> JSON
                                 </button>
                             </div>
 
