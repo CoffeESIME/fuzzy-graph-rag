@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, ArrowLeft, Search, CheckSquare, Square, Check, Eye, X, Network, Activity, Layers } from 'lucide-react';
+import { Sparkles, ArrowLeft, Search, CheckSquare, Square, Check, Eye, X, Network, Activity, Layers, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getEnrichmentCandidates, requestEnrichment, getPreviewWeights, applyPreviewWeights } from '../../lib/api';
 import type { CandidateNode, WeightPreviewResult, WeightUpdateItem } from '../../lib/api';
@@ -28,6 +28,7 @@ export default function EnrichmentDashboard() {
     const [isPreviewLoading, setIsPreviewLoading] = useState(false);
     const [previewError, setPreviewError] = useState<string | null>(null);
     const [isApplyingWeights, setIsApplyingWeights] = useState(false);
+    const [semanticWeight, setSemanticWeight] = useState(0.3);
 
     const allowedTypes = ["Person", "Concept", "Location", "Organization", "Event", "Project", "Device", "Method"];
 
@@ -88,18 +89,35 @@ export default function EnrichmentDashboard() {
         }
     };
 
-    const handlePreview = async (node: CandidateNode) => {
+    const handlePreview = async (node: CandidateNode, weight?: number) => {
         setPreviewNode(node);
         setPreviewWeights([]);
         setIsPreviewLoading(true);
         setPreviewError(null);
 
+        const effectiveWeight = weight ?? semanticWeight;
         try {
-            const res = await getPreviewWeights(node.id);
+            const res = await getPreviewWeights(node.id, effectiveWeight);
             setPreviewWeights(res.results);
         } catch (err: any) {
             console.error(err);
             setPreviewError(err.response?.data?.detail || err.message || 'Error calculando pesos');
+        } finally {
+            setIsPreviewLoading(false);
+        }
+    };
+
+    const handleRecalculate = async () => {
+        if (!previewNode) return;
+        setPreviewWeights([]);
+        setIsPreviewLoading(true);
+        setPreviewError(null);
+        try {
+            const res = await getPreviewWeights(previewNode.id, semanticWeight);
+            setPreviewWeights(res.results);
+        } catch (err: any) {
+            console.error(err);
+            setPreviewError(err.response?.data?.detail || err.message || 'Error recalculando pesos');
         } finally {
             setIsPreviewLoading(false);
         }
@@ -127,6 +145,12 @@ export default function EnrichmentDashboard() {
         try {
             const res = await applyPreviewWeights(previewNode.id, updates);
             setSuccessMsg(res.message);
+
+            // Render update in UI immediately
+            setCandidates(prev => prev.map(c =>
+                c.id === previewNode.id ? { ...c, fuzzy_applied: true } : c
+            ));
+
             setPreviewNode(null); // Close modal on success
             // Note: In a real app we might want to refresh the candidates table here 
             // but since they are already COMPLETED, they will naturally be filtered out if looking for PENDING
@@ -270,7 +294,8 @@ export default function EnrichmentDashboard() {
                                 >
                                     <option value="PENDING">Pendientes</option>
                                     <option value="PROCESSING">Procesando</option>
-                                    <option value="COMPLETED">Completados</option>
+                                    <option value="COMPLETED">Completados (Todos)</option>
+                                    <option value="UNAPPLIED">Completados (Sin Pesos)</option>
                                     <option value="FAILED">Fallidos</option>
                                     <option value="ALL">Todos</option>
                                 </select>
@@ -414,9 +439,26 @@ export default function EnrichmentDashboard() {
                                                         </td>
                                                         <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                                                             {cand.fuzzy_applied ? (
-                                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '4px', fontWeight: 500 }}>
-                                                                    <Check size={14} /> Pesos Difusos Aplicados
-                                                                </span>
+                                                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '4px', fontWeight: 500 }}>
+                                                                        <Check size={14} /> Aplicados
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handlePreview(cand);
+                                                                        }}
+                                                                        style={{
+                                                                            background: 'transparent', border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                                            color: '#f59e0b', cursor: 'pointer', padding: '4px 6px',
+                                                                            borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px',
+                                                                            fontSize: '0.7rem'
+                                                                        }}
+                                                                        title="Re-calcular pesos difusos"
+                                                                    >
+                                                                        <RotateCcw size={12} /> Re-calc
+                                                                    </button>
+                                                                </div>
                                                             ) : (
                                                                 cand.status === 'COMPLETED' && (
                                                                     <button
@@ -486,14 +528,57 @@ export default function EnrichmentDashboard() {
                             borderRadius: 16, width: 1200, maxWidth: '95vw', maxHeight: '90vh',
                             display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4)'
                         }}>
-                            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
                                 <div>
                                     <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Simulación de Pesos Difusos</h3>
                                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 4 }}>
                                         Entidad: <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{previewNode.name}</span>
                                     </p>
                                 </div>
-                                <button onClick={() => setPreviewNode(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+
+                                {/* Semantic Weight Slider */}
+                                <div style={{ flex: 1, maxWidth: 340, paddingTop: 4 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                        <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                            Peso Semántico (similitud vectorial)
+                                        </label>
+                                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ec4899', minWidth: 36, textAlign: 'right' }}>
+                                            {semanticWeight.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Grafo</span>
+                                        <input
+                                            type="range"
+                                            min={0} max={1} step={0.05}
+                                            value={semanticWeight}
+                                            onChange={(e) => setSemanticWeight(parseFloat(e.target.value))}
+                                            style={{ flex: 1, accentColor: '#ec4899' }}
+                                        />
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Vectores</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                        <span>Conservador</span>
+                                        <span>Default (0.30)</span>
+                                        <span>Semántico puro</span>
+                                    </div>
+                                    <button
+                                        onClick={handleRecalculate}
+                                        disabled={isPreviewLoading}
+                                        style={{
+                                            marginTop: 8, width: '100%', padding: '6px 12px',
+                                            background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.3)',
+                                            color: '#ec4899', borderRadius: 6, cursor: 'pointer',
+                                            fontSize: '0.8rem', fontWeight: 600,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                                        }}
+                                    >
+                                        <RotateCcw size={13} />
+                                        Recalcular con este peso
+                                    </button>
+                                </div>
+
+                                <button onClick={() => setPreviewNode(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>
                                     <X size={24} />
                                 </button>
                             </div>

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Network, Search, Merge, AlertTriangle, AlertCircle, Sparkles, CheckSquare, Square, Check, X, ArrowRight, Loader2 } from 'lucide-react';
+import { Network, Search, Merge, AlertTriangle, AlertCircle, Sparkles, CheckSquare, Square, Check, X, ArrowRight, Loader2, Users } from 'lucide-react';
 import { getConcepts, recommendConceptMerges, mergeConcepts, demoteConcepts } from '../../lib/api';
 import type { ConceptNode, MergeConceptsRequest, DemoteConceptsRequest } from '../../lib/api';
+import EntityDedup from './EntityDedup';
+
 
 export interface MergeRecommendation {
     cluster_id: number;
@@ -11,7 +13,8 @@ export interface MergeRecommendation {
 }
 
 export default function OntologicalCleanup() {
-    const [activeView, setActiveView] = useState<'list' | 'recommendations'>('list');
+    const [activeView, setActiveView] = useState<'list' | 'recommendations' | 'manual-demote' | 'entity-dedup'>('list');
+
     const [concepts, setConcepts] = useState<ConceptNode[]>([]);
     const [isLoadingConcepts, setIsLoadingConcepts] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -27,7 +30,11 @@ export default function OntologicalCleanup() {
     const [targetName, setTargetName] = useState('');
     const [targetDomain, setTargetDomain] = useState('');
     const [isMerging, setIsMerging] = useState(false);
+
+    // Demotion State
     const [isDemoting, setIsDemoting] = useState(false);
+    const [manualDemoteStaging, setManualDemoteStaging] = useState<Set<string>>(new Set());
+    const [manualDemoteSearch, setManualDemoteSearch] = useState('');
 
     // Global Messages
     const [error, setError] = useState<string | null>(null);
@@ -140,6 +147,37 @@ export default function OntologicalCleanup() {
         }
     };
 
+    const handleExecuteManualDemote = async () => {
+        if (manualDemoteStaging.size === 0) return;
+
+        setIsDemoting(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        try {
+            // Reconstruct names from ids
+            const sourceNames = Array.from(manualDemoteStaging).map(id => {
+                const c = concepts.find(x => x.id === id);
+                return c ? c.name : '';
+            }).filter(Boolean);
+
+            const req: DemoteConceptsRequest = {
+                source_names: sourceNames
+            };
+            const res = await demoteConcepts(req);
+            setSuccessMessage(res.message);
+            // Clear demotion state
+            setManualDemoteStaging(new Set());
+            // Refresh main concepts
+            fetchConcepts();
+        } catch (err: any) {
+            console.error('Error demoting concepts:', err);
+            setError(err.response?.data?.detail || err.message || 'Error al degradar conceptos a tags.');
+        } finally {
+            setIsDemoting(false);
+        }
+    };
+
     // Derived states
     const filteredConcepts = concepts.filter(c =>
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -210,51 +248,79 @@ export default function OntologicalCleanup() {
                             </span>
                         )}
                     </button>
+                    <button
+                        onClick={() => setActiveView('manual-demote')}
+                        style={{
+                            padding: '8px 16px', background: activeView === 'manual-demote' ? 'var(--bg-primary)' : 'transparent',
+                            color: activeView === 'manual-demote' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                            fontWeight: activeView === 'manual-demote' ? 600 : 400,
+                            border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                            boxShadow: activeView === 'manual-demote' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                            display: 'flex', alignItems: 'center', gap: 6
+                        }}
+                    >
+                        Degradación Manual
+                    </button>
+                    <button
+                        onClick={() => setActiveView('entity-dedup')}
+                        style={{
+                            padding: '8px 16px', background: activeView === 'entity-dedup' ? 'var(--bg-primary)' : 'transparent',
+                            color: activeView === 'entity-dedup' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                            fontWeight: activeView === 'entity-dedup' ? 600 : 400,
+                            border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                            boxShadow: activeView === 'entity-dedup' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                            display: 'flex', alignItems: 'center', gap: 6
+                        }}
+                    >
+                        <Users size={14} /> Dedup Entidades
+                    </button>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12 }}>
-                    <select
-                        value={strategy}
-                        onChange={(e) => setStrategy(e.target.value)}
-                        style={{
-                            padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)',
-                            color: 'var(--text-primary)', borderRadius: 'var(--radius-md)', outline: 'none', cursor: 'pointer'
-                        }}
-                    >
-                        <option value="top">Conexiones: Alta (Top 200)</option>
-                        <option value="upper-mid">Conexiones: Media-Alta</option>
-                        <option value="middle">Conexiones: Media (Centro)</option>
-                        <option value="lower-mid">Conexiones: Media-Baja</option>
-                        <option value="bottom">Conexiones: Baja/Huérfanos</option>
-                        <option value="high-low">Mezcla: Altos y Bajos</option>
-                        <option value="high-mid">Mezcla: Altos y Medios</option>
-                        <option value="mid-low">Mezcla: Medios y Bajos</option>
-                        <option value="random">Lote Aleatorio</option>
-                    </select>
-                    <button
-                        onClick={handleRecommendMerges}
-                        disabled={isRecommending || concepts.length === 0}
-                        style={{
-                            padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8,
-                            background: 'var(--brand-primary)', color: '#ffffff',
-                            border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                            fontWeight: 500, opacity: (isRecommending || concepts.length === 0) ? 0.7 : 1
-                        }}
-                    >
-                        {isRecommending ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                        Encontrar Hubs (Calcular Similitud)
-                    </button>
-                    <button
-                        onClick={fetchConcepts}
-                        disabled={isLoadingConcepts}
-                        style={{
-                            padding: '8px 16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)',
-                            color: 'var(--text-primary)', borderRadius: 'var(--radius-md)', cursor: 'pointer'
-                        }}
-                    >
-                        Refrescar
-                    </button>
-                </div>
+                {activeView !== 'manual-demote' && activeView !== 'entity-dedup' && (
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <select
+                            value={strategy}
+                            onChange={(e) => setStrategy(e.target.value)}
+                            style={{
+                                padding: '8px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)',
+                                color: 'var(--text-primary)', borderRadius: 'var(--radius-md)', outline: 'none', cursor: 'pointer'
+                            }}
+                        >
+                            <option value="top">Conexiones: Alta (Top 200)</option>
+                            <option value="upper-mid">Conexiones: Media-Alta</option>
+                            <option value="middle">Conexiones: Media (Centro)</option>
+                            <option value="lower-mid">Conexiones: Media-Baja</option>
+                            <option value="bottom">Conexiones: Baja/Huérfanos</option>
+                            <option value="high-low">Mezcla: Altos y Bajos</option>
+                            <option value="high-mid">Mezcla: Altos y Medios</option>
+                            <option value="mid-low">Mezcla: Medios y Bajos</option>
+                            <option value="random">Lote Aleatorio</option>
+                        </select>
+                        <button
+                            onClick={handleRecommendMerges}
+                            disabled={isRecommending || concepts.length === 0}
+                            style={{
+                                padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8,
+                                background: 'var(--brand-primary)', color: '#ffffff',
+                                border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                fontWeight: 500, opacity: (isRecommending || concepts.length === 0) ? 0.7 : 1
+                            }}
+                        >
+                            {isRecommending ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                            Encontrar Hubs (Calcular Similitud)
+                        </button>
+                        <button
+                            onClick={fetchConcepts}
+                            disabled={isLoadingConcepts}
+                            style={{
+                                padding: '8px 16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)',
+                                color: 'var(--text-primary)', borderRadius: 'var(--radius-md)', cursor: 'pointer'
+                            }}
+                        >
+                            Refrescar
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Messages */}
@@ -270,6 +336,138 @@ export default function OntologicalCleanup() {
             )}
 
             {/* Main Content Area */}
+            {activeView === 'manual-demote' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 1fr', gap: 24 }}>
+                    {/* Concept Search List */}
+                    <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: 16, borderBottom: '1px solid var(--border-subtle)', display: 'flex', gap: 16, alignItems: 'center' }}>
+                            <div style={{ position: 'relative', flex: 1 }}>
+                                <Search size={16} style={{ position: 'absolute', left: 12, top: 10, color: 'var(--text-secondary)' }} />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar concepto para degradar..."
+                                    value={manualDemoteSearch}
+                                    onChange={(e) => setManualDemoteSearch(e.target.value)}
+                                    style={{
+                                        width: '100%', padding: '8px 12px 8px 36px', background: 'var(--bg-primary)',
+                                        border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)',
+                                        color: 'var(--text-primary)', outline: 'none'
+                                    }}
+                                />
+                            </div>
+                            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                                {concepts.filter(c => c.name.toLowerCase().includes(manualDemoteSearch.toLowerCase())).length} resultados
+                            </div>
+                        </div>
+
+                        <div style={{ overflowY: 'auto', maxHeight: 600 }}>
+                            {isLoadingConcepts ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-secondary)' }}>Cargando conceptos...</div>
+                            ) : concepts.length === 0 ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-secondary)' }}>No hay conceptos.</div>
+                            ) : (
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                    <thead style={{ background: 'var(--bg-primary)', position: 'sticky', top: 0, zIndex: 1 }}>
+                                        <tr>
+                                            <th style={{ padding: '12px 16px', fontWeight: 600, borderBottom: '1px solid var(--border-subtle)', width: 40 }}></th>
+                                            <th style={{ padding: '12px 16px', fontWeight: 600, borderBottom: '1px solid var(--border-subtle)' }}>Nombre</th>
+                                            <th style={{ padding: '12px 16px', fontWeight: 600, borderBottom: '1px solid var(--border-subtle)' }}>Dominio</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {concepts.filter(c => c.name.toLowerCase().includes(manualDemoteSearch.toLowerCase())).map(c => (
+                                            <tr
+                                                key={c.id}
+                                                onClick={() => {
+                                                    setManualDemoteStaging(prev => {
+                                                        const newSet = new Set(prev);
+                                                        if (newSet.has(c.id)) newSet.delete(c.id);
+                                                        else newSet.add(c.id);
+                                                        return newSet;
+                                                    });
+                                                }}
+                                                style={{
+                                                    borderBottom: '1px solid var(--border-subtle)',
+                                                    background: manualDemoteStaging.has(c.id) ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
+                                                    cursor: 'pointer'
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.background = manualDemoteStaging.has(c.id) ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-primary)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = manualDemoteStaging.has(c.id) ? 'rgba(239, 68, 68, 0.05)' : 'transparent'}
+                                            >
+                                                <td style={{ padding: '12px 16px' }}>
+                                                    {manualDemoteStaging.has(c.id) ?
+                                                        <CheckSquare size={18} style={{ color: '#ef4444' }} /> :
+                                                        <Square size={18} style={{ color: 'var(--text-disabled)' }} />
+                                                    }
+                                                </td>
+                                                <td style={{ padding: '12px 16px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                                                    {c.name}
+                                                </td>
+                                                <td style={{ padding: '12px 16px', color: 'var(--text-secondary)' }}>
+                                                    {c.domain || '-'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Staging Area */}
+                    <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: 24, height: 'max-content' }}>
+                        <h3 style={{ fontSize: 18, fontWeight: 600, marginTop: 0, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <AlertCircle size={20} color="#ef4444" />
+                            Conceptos a Degradar
+                        </h3>
+                        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
+                            Los conceptos seleccionados se convertirán en etiquetas (tags) estáticas. Sus nodos originales se eliminarán del grafo de conocimiento permanentemente.
+                        </p>
+
+                        <div style={{ marginBottom: 24, minHeight: 150, padding: 12, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
+                            {manualDemoteStaging.size === 0 ? (
+                                <div style={{ color: 'var(--text-disabled)', fontSize: 13, textAlign: 'center', margin: '40px 0' }}>
+                                    Busca y selecciona conceptos para prepararlos.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                    {Array.from(manualDemoteStaging).map(id => {
+                                        const c = concepts.find(x => x.id === id);
+                                        return c ? (
+                                            <span key={id} style={{ padding: '4px 10px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 20, fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                {c.name}
+                                                <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setManualDemoteStaging(prev => {
+                                                        const newSet = new Set(prev);
+                                                        newSet.delete(c.id);
+                                                        return newSet;
+                                                    });
+                                                }} />
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        <button
+                            disabled={isDemoting || manualDemoteStaging.size === 0}
+                            onClick={handleExecuteManualDemote}
+                            style={{
+                                width: '100%', padding: '10px', background: '#ef4444', color: '#fff',
+                                border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 500, cursor: 'pointer',
+                                opacity: (isDemoting || manualDemoteStaging.size === 0) ? 0.5 : 1,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                            }}
+                        >
+                            {isDemoting ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />}
+                            {isDemoting ? 'Degradando...' : `Degradar ${manualDemoteStaging.size} Conceptos`}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {activeView === 'list' && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 1fr', gap: 24 }}>
                     {/* List Panel */}
@@ -495,6 +693,9 @@ export default function OntologicalCleanup() {
                     )}
                 </div>
             )}
+
+            {/* Entity Dedup View */}
+            {activeView === 'entity-dedup' && <EntityDedup />}
         </div>
     );
 }

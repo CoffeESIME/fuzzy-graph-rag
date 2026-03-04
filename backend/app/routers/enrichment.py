@@ -59,6 +59,8 @@ def get_enrichment_candidates(
         where_clause = "WHERE n.enrichment_status = 'PROCESSING'"
     elif status_filter == "COMPLETED":
         where_clause = "WHERE n.enrichment_status = 'COMPLETED' OR n.enriched = true"
+    elif status_filter == "UNAPPLIED":
+        where_clause = "WHERE (n.enrichment_status = 'COMPLETED' OR n.enriched = true) AND coalesce(n.fuzzy_applied, false) = false"
     elif status_filter == "FAILED":
         where_clause = "WHERE n.enrichment_status = 'FAILED'"
 
@@ -106,7 +108,7 @@ def request_enrichment(req: EnrichRequest):
         
     return {
         "status": "accepted", 
-        "message": f"Se han encolado {len(req.node_ids)} nodos para enriquecimiento semántico.",
+        "message": f"Se han encolado {len(req.node_ids)} nodos para enriquecimiento semÃ¡ntico.",
         "queued_count": len(req.node_ids)
     }
 
@@ -119,7 +121,10 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     return dot / (norm1 * norm2)
 
 @router.get("/{node_id}/preview-weights", response_model=WeightPreviewResponse)
-def get_preview_weights(node_id: str):
+def get_preview_weights(
+    node_id: str,
+    semantic_weight: float = Query(0.3, ge=0.0, le=1.0, description="Weight of the semantic/vector similarity component (0=ignore vectors, 1=use only vectors)")
+):
     driver = get_neo4j_driver()
     
     query = """
@@ -146,7 +151,7 @@ def get_preview_weights(node_id: str):
             
             description = record["description"]
             if not description:
-                raise HTTPException(status_code=400, detail="Este nodo aún no ha sido enriquecido (no tiene 'description').")
+                raise HTTPException(status_code=400, detail="Este nodo aÃºn no ha sido enriquecido (no tiene 'description').")
                 
             assets = record["assets"]
             # filter out empty 
@@ -223,7 +228,11 @@ def get_preview_weights(node_id: str):
                     if relation_type in protected_relations:
                         proposed_weight = round(current_weight, 3)
                     else:
-                        blended = (current_weight * 0.7) + (sim * 0.3)
+                        MIN_SIM = 0.15
+                        MAX_SIM = 0.75
+                        sim_normalizada = (sim - MIN_SIM) / (MAX_SIM - MIN_SIM)
+                        sim_normalizada = max(0.0, min(1.0, sim_normalizada))
+                        blended = (current_weight * (1.0 - semantic_weight)) + (sim_normalizada * semantic_weight)
                         proposed_weight = round(blended, 3)
         except Exception as e:
             logger.warning(f"No se pudo comparar vector para {filename} en {space}: {e}")
@@ -439,7 +448,7 @@ Your task is twofold:
 
 CRITICAL DISTINCTIONS FOR MERGING: 
 - Do NOT group concepts just because they are related. 
-- "Evolución biológica" and "Evolución de ideas" MUST remain separate. Do not merge across different domains (e.g., Biology vs. Sociology).
+- "EvoluciÃ³n biolÃ³gica" and "EvoluciÃ³n de ideas" MUST remain separate. Do not merge across different domains (e.g., Biology vs. Sociology).
 - ONLY group them if a user searching for Concept A would be 100% satisfied with results for Concept B (e.g., "Muerte" and "Finitud humana", or "IA" and "Inteligencia Artificial").
 
 
@@ -450,14 +459,14 @@ Structure:
 {
   "merges": [
     {
-      "hub_name": "Nombre unificado en español",
+      "hub_name": "Nombre unificado en espaÃ±ol",
       "concept_indices": [1, 5] 
     }
   ]
 }
 
 STRICT RULES:
-1. Semantic Equivalence: Only merge exact same entities. "Manipulación psicológica" and "Manipulación genética" are DIFFERENT.
+1. Semantic Equivalence: Only merge exact same entities. "ManipulaciÃ³n psicolÃ³gica" and "ManipulaciÃ³n genÃ©tica" are DIFFERENT.
 2. Root Word Trap: Do not group items simply because they share a word (e.g., "Libertad" and "Libertad financiera").
 3. Demotion is Crucial: Be aggressive in demoting anything that you can touch, see, or that describes a file format. Only pure knowledge, entities, and abstractions deserve to be Graph Hubs.
 4. The "hub_name" MUST be in Spanish and represent the most academic/standard term for the cluster.
@@ -677,6 +686,7 @@ def merge_concepts(request: MergeConceptsRequest):
             record = result.single()
             merged_count = record["merged_count"] if record else 0
             
+
             return {
                 "status": "success", 
                 "message": f"Successfully merged {merged_count} concepts into '{request.target_name}'.",
@@ -684,4 +694,299 @@ def merge_concepts(request: MergeConceptsRequest):
             }
     except Exception as e:
         logger.error(f"Error merging concepts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==========================================
+# ENTITY DEDUP ENDPOINTS
+# ==========================================
+
+class EntityNode(BaseModel):
+    id: str
+    name: str
+    type: str
+    connections: int
+
+class EntityListResponse(BaseModel):
+    entities: List[EntityNode]
+    total: int
+
+class MergeEntitiesRequest(BaseModel):
+    node_type: str
+    target_name: str
+    source_ids: List[str]   # element IDs of nodes to delete after rewiring
+    keep_id: str            # element ID of the surviving hub node
+
+@router.get("/entities", response_model=EntityListResponse)
+def get_entities(
+    node_type: str = Query("Person", description="Entity type: Person|Project|Location|Organization|Event|Device|Method"),
+    search: str = Query("", description="Case-insensitive substring filter on name"),
+    limit: int = Query(200, ge=1, le=1000)
+):
+    """
+    Lists all nodes of a given structural entity type, ordered by connection count.
+    Supports substring search on name.
+    """
+    allowed_types = ["Person", "Project", "Location", "Organization", "Event", "Device", "Method"]
+    if node_type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"Invalid node_type. Allowed: {', '.join(allowed_types)}")
+
+    driver = get_neo4j_driver()
+    search_clause = "AND toLower(coalesce(n.name, n.title, '')) CONTAINS toLower($search)" if search.strip() else ""
+
+    cypher = f"""
+    MATCH (n:{node_type})
+    OPTIONAL MATCH (n)--(nb)
+    WITH n, count(distinct nb) as connections
+    WHERE 1=1 {search_clause}
+    RETURN elementId(n) as id, coalesce(n.name, n.title, 'Unknown') as name, labels(n)[0] as type, connections
+    ORDER BY connections DESC
+    LIMIT $limit
+    """
+
+    try:
+        with driver.session() as session:
+            result = session.run(cypher, search=search.strip(), limit=limit)
+            entities = [
+                EntityNode(
+                    id=record["id"],
+                    name=record["name"],
+                    type=record["type"],
+                    connections=record["connections"]
+                )
+                for record in result
+            ]
+            return EntityListResponse(entities=entities, total=len(entities))
+    except Exception as e:
+        logger.error(f"Error fetching entities of type {node_type}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/entities/merge")
+def merge_entity_nodes(req: MergeEntitiesRequest):
+    """
+    Merges duplicate entity nodes into a single hub.
+    For each source_id (not the keep_id):
+      1. Rewires all incoming and outgoing relationships to the hub (keep_id).
+      2. Renames the hub to target_name.
+      3. DETACH DELETEs the duplicate node.
+    Uses pure Cypher (no APOC dependency).
+    """
+    allowed_types = ["Person", "Project", "Location", "Organization", "Event", "Device", "Method"]
+    if req.node_type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"Invalid node_type. Allowed: {', '.join(allowed_types)}")
+
+    if not req.target_name.strip():
+        raise HTTPException(status_code=400, detail="target_name cannot be empty")
+
+    source_ids = [sid for sid in req.source_ids if sid != req.keep_id]
+    if not source_ids:
+        raise HTTPException(status_code=400, detail="No source_ids to merge (after excluding keep_id)")
+
+    driver = get_neo4j_driver()
+    total_merged = 0
+
+    try:
+        with driver.session() as session:
+            # Step 1: Rename the hub node
+            session.run(
+                "MATCH (hub) WHERE elementId(hub) = $keep_id SET hub.name = $name",
+                keep_id=req.keep_id,
+                name=req.target_name.strip()
+            )
+
+            for source_id in source_ids:
+                # Fetch outgoing relationships
+                out_rels = list(session.run(
+                    """
+                    MATCH (src)-[r]->(tgt)
+                    WHERE elementId(src) = $source_id
+                    RETURN type(r) as rtype, elementId(tgt) as tgt_id, properties(r) as rprops
+                    """,
+                    source_id=source_id
+                ))
+
+                # Fetch incoming relationships
+                in_rels = list(session.run(
+                    """
+                    MATCH (src)<-[r]-(tgt)
+                    WHERE elementId(src) = $source_id
+                    RETURN type(r) as rtype, elementId(tgt) as tgt_id, properties(r) as rprops
+                    """,
+                    source_id=source_id
+                ))
+
+                # Recreate outgoing: hub -[rtype]-> tgt
+                for rel in out_rels:
+                    tgt_id = rel["tgt_id"]
+                    if tgt_id == req.keep_id:
+                        continue  # avoid self-loop
+                    rtype = rel["rtype"]
+                    rprops = dict(rel["rprops"])
+                    try:
+                        session.run(
+                            f"""
+                            MATCH (hub) WHERE elementId(hub) = $keep_id
+                            MATCH (tgt)  WHERE elementId(tgt)  = $tgt_id
+                            MERGE (hub)-[r:`{rtype}`]->(tgt)
+                            SET r += $rprops
+                            """,
+                            keep_id=req.keep_id, tgt_id=tgt_id, rprops=rprops
+                        )
+                    except Exception as re:
+                        logger.warning(f"Could not recreate outgoing {rtype} for {source_id}: {re}")
+
+                # Recreate incoming: tgt -[rtype]-> hub
+                for rel in in_rels:
+                    tgt_id = rel["tgt_id"]
+                    if tgt_id == req.keep_id:
+                        continue  # avoid self-loop
+                    rtype = rel["rtype"]
+                    rprops = dict(rel["rprops"])
+                    try:
+                        session.run(
+                            f"""
+                            MATCH (hub) WHERE elementId(hub) = $keep_id
+                            MATCH (tgt)  WHERE elementId(tgt)  = $tgt_id
+                            MERGE (tgt)-[r:`{rtype}`]->(hub)
+                            SET r += $rprops
+                            """,
+                            keep_id=req.keep_id, tgt_id=tgt_id, rprops=rprops
+                        )
+                    except Exception as re:
+                        logger.warning(f"Could not recreate incoming {rtype} for {source_id}: {re}")
+
+                # DETACH DELETE the duplicate node
+                session.run(
+                    "MATCH (src) WHERE elementId(src) = $source_id DETACH DELETE src",
+                    source_id=source_id
+                )
+                total_merged += 1
+                logger.info(f"Merged entity {source_id} into hub {req.keep_id} ({req.target_name})")
+
+        return {
+            "status": "success",
+            "message": f"Se fusionaron {total_merged} nodo(s) en '{req.target_name}'. Todas sus relaciones fueron transferidas.",
+            "merged_count": total_merged
+        }
+    except Exception as e:
+        logger.error(f"Error merging entity nodes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DemoteEntitiesRequest(BaseModel):
+    node_type: str
+    source_ids: List[str]
+
+@router.post("/entities/demote")
+def demote_entity_nodes(req: DemoteEntitiesRequest):
+    """
+    Demotes entity nodes to tags on their connected DigitalAssets.
+    For each source node:
+      1. Reads its name.
+      2. Appends the name to the `tags` array of every connected DigitalAsset.
+      3. DETACH DELETEs the entity node.
+    """
+    allowed_types = ["Person", "Project", "Location", "Organization", "Event", "Device", "Method"]
+    if req.node_type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"Invalid node_type. Allowed: {', '.join(allowed_types)}")
+    if not req.source_ids:
+        raise HTTPException(status_code=400, detail="source_ids cannot be empty")
+
+    driver = get_neo4j_driver()
+    total_demoted = 0
+
+    try:
+        with driver.session() as session:
+            for source_id in req.source_ids:
+                # Get and store the name as tag on connected DigitalAssets 
+                session.run(
+                    """
+                    MATCH (e) WHERE elementId(e) = $source_id
+                    OPTIONAL MATCH (e)--(a:DigitalAsset)
+                    WITH e, collect(a) as assets
+                    FOREACH (a IN assets |
+                        SET a.tags = CASE
+                            WHEN a.tags IS NULL THEN [coalesce(e.name, e.title, '')]
+                            ELSE a.tags + [coalesce(e.name, e.title, '')]
+                        END
+                    )
+                    WITH e
+                    DETACH DELETE e
+                    """,
+                    source_id=source_id
+                )
+                total_demoted += 1
+                logger.info(f"Demoted entity {source_id} to tags")
+
+        return {
+            "status": "success",
+            "message": f"Se degradaron {total_demoted} entidad(es) a tags en los activos conectados.",
+            "demoted_count": total_demoted
+        }
+    except Exception as e:
+        logger.error(f"Error demoting entity nodes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class RetypeEntityRequest(BaseModel):
+    node_id: str
+    from_type: str
+    to_type: str
+
+@router.post("/entities/retype")
+def retype_entity_node(req: RetypeEntityRequest):
+    """
+    Changes the Neo4j label of an entity node (e.g., Person → Organization).
+    Keeps all existing relationships intact.
+    Uses string-interpolated Cypher with a whitelist guard for safety.
+    """
+    allowed_types = ["Person", "Project", "Location", "Organization", "Event", "Device", "Method"]
+    if req.from_type not in allowed_types or req.to_type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"Invalid type. Allowed: {', '.join(allowed_types)}")
+    if req.from_type == req.to_type:
+        raise HTTPException(status_code=400, detail="from_type and to_type must be different")
+
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            result = session.run(
+                f"""
+                MATCH (n:{req.from_type}) WHERE elementId(n) = $node_id
+                REMOVE n:{req.from_type}
+                SET n:{req.to_type}
+                RETURN coalesce(n.name, n.title) as name
+                """,
+                node_id=req.node_id
+            )
+            record = result.single()
+            if not record:
+                raise HTTPException(status_code=404, detail=f"Node not found or not of type {req.from_type}")
+            name = record["name"]
+            logger.info(f"Retyped entity '{name}' from {req.from_type} to {req.to_type}")
+            return {
+                "status": "success",
+                "message": f"'{name}' ahora es de tipo {req.to_type} (era {req.from_type}).",
+                "name": name
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retyping entity node: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/entities/relation-types")
+def get_graph_relation_types():
+    """
+    Returns all distinct relationship types currently present in the graph.
+    Used by the cross-type merge UI to let users inspect/remap relationship types.
+    """
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            result = session.run("CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType")
+            types = [r["relationshipType"] for r in result]
+            return {"relation_types": types, "count": len(types)}
+    except Exception as e:
+        logger.error(f"Error fetching relation types: {e}")
         raise HTTPException(status_code=500, detail=str(e))
