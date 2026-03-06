@@ -14,13 +14,16 @@ import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import {
     Search, Route, Zap, Loader2, X, ChevronRight,
-    FileText, File, Lightbulb, User, Building2, MapPin, Move
+    FileText, File, Lightbulb, User, Building2, MapPin, Move, Download
 } from 'lucide-react';
+
 import {
     searchGraphFuzzy,
     callPathfinder,
     getAssetPreview,
     explainAnalyticalPath,
+    getEntities,
+    getConcepts,
     type PathfinderNodeData,
     type PathfinderResponse,
     type AssetPreviewResponse,
@@ -64,7 +67,7 @@ const NODE_ICONS: Record<string, React.ReactNode> = {
     Organization: <Building2 size={12} />,
 };
 
-// CRITICAL FIX: Neo4j elementIds have the format "4:uuid:number" — the colons
+// CRITICAL FIX: Neo4j elementIds have the format "4:uuid:number" â€” the colons
 // are separator tokens in dagre.graphlib and cause node/edge lookups to fail silently.
 // We sanitize IDs for React Flow and dagre, preserving originals in data.raw for API calls.
 const sanitizeId = (id: string): string => id.replace(/:/g, '_');
@@ -94,7 +97,7 @@ function layoutPathHorizontal(rfNodes: Node[], rfEdges: Edge[]): { nodes: Node[]
 }
 
 function buildReactFlowData(response: PathfinderResponse): { nodes: Node[]; edges: Edge[] } {
-    // Build a sanitized-ID → original-ID lookup so edges can reference sanitized node IDs
+    // Build a sanitized-ID â†’ original-ID lookup so edges can reference sanitized node IDs
     const rfNodes: Node[] = response.nodes.map(n => ({
         id: sanitizeId(n.id),              // sanitized for React Flow / dagre
         position: { x: 0, y: 0 },
@@ -157,7 +160,7 @@ function PathNode({ data }: { data: { label: string; nodeType: string; raw: Path
                 </span>
             </div>
             <div style={{ fontSize: '0.75rem', color: '#1e293b', textAlign: 'center', fontWeight: 600, lineHeight: 1.3 }}>
-                {data.label.length > 28 ? data.label.slice(0, 28) + '…' : data.label}
+                {data.label.length > 28 ? data.label.slice(0, 28) + 'â€¦' : data.label}
             </div>
         </div>
     );
@@ -166,6 +169,19 @@ function PathNode({ data }: { data: { label: string; nodeType: string; raw: Path
 const NODE_TYPES = { pathNode: PathNode };
 
 // =================== Search Panel ===================
+
+const ENTITY_TYPES_PF = [
+    { label: 'Concepto', value: 'Concept' },
+    { label: 'Archivo', value: 'DigitalAsset' },
+    { label: 'Persona', value: 'Person' },
+    { label: 'Proyecto', value: 'Project' },
+    { label: 'Lugar', value: 'Location' },
+    { label: 'Organización', value: 'Organization' },
+    { label: 'Evento', value: 'Event' },
+    { label: 'Dispositivo', value: 'Device' },
+    { label: 'Método', value: 'Method' },
+];
+
 function NodeSearchPanel({
     label,
     color,
@@ -177,74 +193,84 @@ function NodeSearchPanel({
     pinned: PinnedNode | null;
     onPin: (node: PinnedNode | null) => void;
 }) {
+    const [mode, setMode] = useState<'fuzzy' | 'entity'>('fuzzy');
+
+    // Fuzzy mode
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<Array<{ id: string; label: string; type: string }>>([]);
     const [loading, setLoading] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const handleSearch = useCallback((q: string) => {
+    // Entity browse mode
+    const [entityType, setEntityType] = useState('Concept');
+    const [entitySearch, setEntitySearch] = useState('');
+    const [entityList, setEntityList] = useState<Array<{ id: string; name: string; connections: number }>>([]);
+    const [entityLoading, setEntityLoading] = useState(false);
+
+    const handleFuzzySearch = useCallback((q: string) => {
         setQuery(q);
         if (debounceRef.current) clearTimeout(debounceRef.current);
         if (!q.trim()) { setResults([]); return; }
         debounceRef.current = setTimeout(async () => {
             setLoading(true);
             try {
-                const req: GraphFuzzyRequest = {
-                    query: q,
-                    alpha_cut: 0.3,
-                    limit: 8,
-                    seed_alpha: 0.7,
-                    seed_limit: 8,
-                };
+                const req: GraphFuzzyRequest = { query: q, alpha_cut: 0.3, limit: 8, seed_alpha: 0.7, seed_limit: 8 };
                 const res = await searchGraphFuzzy(req);
-                // Collect unique nodes from topology
                 const seen = new Set<string>();
                 const candidates: Array<{ id: string; label: string; type: string }> = [];
                 for (const n of res.graph_topology?.nodes || []) {
-                    if (!seen.has(n.id)) {
-                        seen.add(n.id);
-                        candidates.push({ id: n.id, label: n.label, type: n.type });
-                    }
+                    if (!seen.has(n.id)) { seen.add(n.id); candidates.push({ id: n.id, label: n.label, type: n.type }); }
                 }
                 setResults(candidates.slice(0, 10));
-            } catch {
-                setResults([]);
-            } finally {
-                setLoading(false);
-            }
+            } catch { setResults([]); }
+            finally { setLoading(false); }
         }, 400);
     }, []);
 
+    const loadEntities = useCallback(async (type: string) => {
+        setEntityLoading(true);
+        setEntityList([]);
+        try {
+            if (type === 'Concept') {
+                const res = await getConcepts();
+                setEntityList(res.concepts.map(c => ({ id: c.id, name: c.name, connections: 0 })));
+            } else {
+                const res = await getEntities(type, '', 300);
+                setEntityList(res.entities.map(e => ({ id: e.id, name: e.name, connections: e.connections })));
+            }
+        } catch { setEntityList([]); }
+        finally { setEntityLoading(false); }
+    }, []);
+
+    const handleEntityTypeChange = (type: string) => {
+        setEntityType(type);
+        setEntitySearch('');
+        loadEntities(type);
+    };
+
+    const switchToEntity = () => {
+        setMode('entity');
+        setResults([]);
+        setQuery('');
+        if (entityList.length === 0) loadEntities(entityType);
+    };
+
+    const filteredEntities = entityList.filter(e =>
+        e.name.toLowerCase().includes(entitySearch.toLowerCase())
+    );
+
+    // ── Pinned display ──
     if (pinned) {
         return (
-            <div style={{
-                background: `${color}15`,
-                border: `2px solid ${color}`,
-                borderRadius: 12,
-                padding: '12px 16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 12,
-                flex: 1,
-            }}>
+            <div style={{ background: `${color}15`, border: `2px solid ${color}`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flex: 1 }}>
                 <div>
-                    <div style={{ fontSize: '0.65rem', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                        {label}
-                    </div>
+                    <div style={{ fontSize: '0.65rem', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{label}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f8fafc' }}>
-                            {pinned.label}
-                        </span>
-                        <span style={{ fontSize: '0.65rem', background: `${color}30`, color, padding: '1px 6px', borderRadius: 4 }}>
-                            {pinned.type}
-                        </span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f8fafc' }}>{pinned.label}</span>
+                        <span style={{ fontSize: '0.65rem', background: `${color}30`, color, padding: '1px 6px', borderRadius: 4 }}>{pinned.type}</span>
                     </div>
                 </div>
-                <button
-                    onClick={() => onPin(null)}
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}
-                >
+                <button onClick={() => onPin(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}>
                     <X size={16} />
                 </button>
             </div>
@@ -252,75 +278,82 @@ function NodeSearchPanel({
     }
 
     return (
-        <div style={{ flex: 1, position: 'relative' }}>
-            <div style={{ fontSize: '0.65rem', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-                {label}
-            </div>
-            <div style={{ position: 'relative' }}>
-                <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                <input
-                    value={query}
-                    onChange={e => handleSearch(e.target.value)}
-                    placeholder={`Busca un concepto o archivo…`}
-                    style={{
-                        width: '100%',
-                        boxSizing: 'border-box',
-                        background: '#1e293b',
-                        border: '1px solid #334155',
-                        borderRadius: 8,
-                        padding: '10px 12px 10px 34px',
-                        fontSize: '0.85rem',
-                        color: '#f8fafc',
-                        outline: 'none',
-                    }}
-                />
-                {loading && (
-                    <Loader2 size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} className="animate-spin" />
-                )}
+        <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.65rem', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{label}</div>
+
+            {/* Mode toggle */}
+            <div style={{ display: 'flex', background: '#0f172a', borderRadius: 8, padding: 3, marginBottom: 10, width: 'max-content' }}>
+                {(['fuzzy', 'entity'] as const).map(m => (
+                    <button key={m} onClick={() => m === 'entity' ? switchToEntity() : setMode('fuzzy')}
+                        style={{ padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, background: mode === m ? color : 'transparent', color: mode === m ? '#fff' : '#64748b', transition: 'all 0.15s' }}>
+                        {m === 'fuzzy' ? ' Búsqueda' : ' Por Tipo'}
+                    </button>
+                ))}
             </div>
 
-            {results.length > 0 && (
-                <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    background: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: 8,
-                    zIndex: 100,
-                    maxHeight: 260,
-                    overflowY: 'auto',
-                    marginTop: 4,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                }}>
-                    {results.map(r => (
-                        <div
-                            key={r.id}
-                            onClick={() => { onPin({ id: r.id, label: r.label, type: r.type }); setResults([]); setQuery(''); }}
-                            style={{
-                                padding: '10px 14px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                borderBottom: '1px solid #0f172a',
-                                transition: 'background 0.15s',
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.background = '#0f172a')}
-                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                        >
-                            <span style={{ fontSize: '0.85rem', color: '#f1f5f9' }}>
-                                {r.label}
-                            </span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ fontSize: '0.65rem', color: NODE_COLORS[r.type] || '#64748b', background: `${NODE_COLORS[r.type] || '#475569'}20`, padding: '1px 6px', borderRadius: 4 }}>
-                                    {r.type}
-                                </span>
-                                <ChevronRight size={14} color="#475569" />
-                            </div>
+            {/* ── FUZZY MODE ── */}
+            {mode === 'fuzzy' && (
+                <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative' }}>
+                        <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                        <input value={query} onChange={e => handleFuzzySearch(e.target.value)} placeholder="Busca cualquier nodo"
+                            style={{ width: '100%', boxSizing: 'border-box', background: '#1e293b', border: '1px solid #334155', borderRadius: 8, padding: '10px 12px 10px 34px', fontSize: '0.85rem', color: '#f8fafc', outline: 'none' }} />
+                        {loading && <Loader2 size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} className="animate-spin" />}
+                    </div>
+                    {results.length > 0 && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid #334155', borderRadius: 8, zIndex: 100, maxHeight: 260, overflowY: 'auto', marginTop: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+                            {results.map(r => (
+                                <div key={r.id} onClick={() => { onPin({ id: r.id, label: r.label, type: r.type }); setResults([]); setQuery(''); }}
+                                    style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #0f172a', transition: 'background 0.15s' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = '#0f172a')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                    <span style={{ fontSize: '0.85rem', color: '#f1f5f9' }}>{r.label}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <span style={{ fontSize: '0.65rem', color: NODE_COLORS[r.type] || '#64748b', background: `${NODE_COLORS[r.type] || '#475569'}20`, padding: '1px 6px', borderRadius: 4 }}>{r.type}</span>
+                                        <ChevronRight size={14} color="#475569" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    )}
+                </div>
+            )}
+
+            {/*  ENTITY MODE  */}
+            {mode === 'entity' && (
+                <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', gap: 4, padding: '8px 10px', flexWrap: 'wrap', borderBottom: '1px solid #1e293b' }}>
+                        {ENTITY_TYPES_PF.map(({ label: lbl, value }) => (
+                            <button key={value} onClick={() => handleEntityTypeChange(value)}
+                                style={{ padding: '3px 10px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600, background: entityType === value ? color : '#1e293b', color: entityType === value ? '#fff' : '#64748b', transition: 'all 0.15s' }}>
+                                {lbl}
+                            </button>
+                        ))}
+                    </div>
+                    <div style={{ padding: '8px 10px', borderBottom: '1px solid #1e293b', position: 'relative' }}>
+                        <Search size={13} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
+                        <input value={entitySearch} onChange={e => setEntitySearch(e.target.value)} placeholder={`Filtrar ${entityType}...`}
+                            style={{ width: '100%', boxSizing: 'border-box', background: '#1e293b', border: '1px solid #334155', borderRadius: 6, padding: '6px 10px 6px 28px', fontSize: '0.8rem', color: '#f8fafc', outline: 'none' }} />
+                    </div>
+                    <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                        {entityLoading ? (
+                            <div style={{ padding: 24, textAlign: 'center', color: '#475569', display: 'flex', justifyContent: 'center', gap: 8 }}>
+                                <Loader2 size={16} className="animate-spin" /> Cargando...
+                            </div>
+                        ) : filteredEntities.length === 0 ? (
+                            <div style={{ padding: 16, textAlign: 'center', color: '#475569', fontSize: '0.8rem' }}>Sin resultados.</div>
+                        ) : (
+                            filteredEntities.map(e => (
+                                <div key={e.id} onClick={() => onPin({ id: e.id, label: e.name, type: entityType })}
+                                    style={{ padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #0f172a20', transition: 'background 0.12s' }}
+                                    onMouseEnter={ev => (ev.currentTarget.style.background = '#1e293b')}
+                                    onMouseLeave={ev => (ev.currentTarget.style.background = 'transparent')}>
+                                    <span style={{ fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 500 }}>{e.name}</span>
+                                    {e.connections > 0 && <span style={{ fontSize: '0.65rem', color: '#475569' }}>{e.connections} conex.</span>}
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
             )}
         </div>
@@ -400,7 +433,7 @@ function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose
                             )}
                             {preview.content && preview.content !== 'No textual content available' && (
                                 <div>
-                                    <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>CONTENIDO EXTRAÍDO</div>
+                                    <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>CONTENIDO EXTRAÃDO</div>
                                     <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid #334155', borderRadius: 8, padding: 14, fontSize: '0.78rem', color: '#cbd5e1', whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: 1.6, maxHeight: 280, overflowY: 'auto' }} className="custom-scrollbar">
                                         {preview.content}
                                     </div>
@@ -484,13 +517,48 @@ export default function PathfinderCard() {
             if (res.status === 'success') {
                 setExplanation(res.explanation);
             } else {
-                setExplanation(`⚠️ ${res.explanation}`);
+                setExplanation(`âš ï¸ ${res.explanation}`);
             }
         } catch (err: unknown) {
-            setExplanation('⚠️ Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
+            setExplanation('âš ï¸ Error al generar la explicaciÃ³n: ' + (err instanceof Error ? err.message : String(err)));
         } finally {
             setExplaining(false);
         }
+    };
+
+    const handleExportJson = () => {
+        if (!result) return;
+        const exportData = {
+            exported_at: new Date().toISOString(),
+            mode: result.mode,
+            source: sourceNode ? { id: sourceNode.id, label: sourceNode.label, type: sourceNode.type } : null,
+            target: targetNode ? { id: targetNode.id, label: targetNode.label, type: targetNode.type } : null,
+            path_length: result.path_length,
+            message: result.message,
+            nodes: result.nodes.map(n => ({
+                id: n.id,
+                label: n.label,
+                node_type: n.node_type,
+                weight_to_next: n.weight_to_next ?? null,
+                file_hash: n.file_hash ?? null,
+                mime_type: n.mime_type ?? null,
+            })),
+            edges: result.edges.map(e => ({
+                source: e.source,
+                target: e.target,
+                rel_type: e.rel_type,
+                weight: e.weight ?? null,
+            })),
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const srcLabel = (sourceNode?.label ?? 'origin').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const tgtLabel = (targetNode?.label ?? 'target').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        a.href = url;
+        a.download = `pathfinder_${srcLabel}_to_${tgtLabel}_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     const canTrace = !!sourceNode && !!targetNode && !loading;
@@ -507,7 +575,7 @@ export default function PathfinderCard() {
                         Navegador Latente
                     </h1>
                     <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
-                        Traza el camino semántico entre dos ideas de tu grafo.
+                        Traza el camino semÃ¡ntico entre dos ideas de tu grafo.
                     </p>
                 </div>
             </div>
@@ -542,12 +610,12 @@ export default function PathfinderCard() {
                                     transition: 'all 0.2s',
                                 }}
                             >
-                                {m === 'direct' ? '⚡ Directo' : '🌀 Lateral'}
+                                {m === 'direct' ? 'âš¡ Directo' : 'ðŸŒ€ Lateral'}
                             </button>
                         ))}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#475569', flex: 1 }}>
-                        {mode === 'direct' ? 'Camino más corto sin restricciones.' : 'Evita conexiones muy fuertes (>0.85), forzando rutas creativas.'}
+                        {mode === 'direct' ? 'Camino mÃ¡s corto sin restricciones.' : 'Evita conexiones muy fuertes (>0.85), forzando rutas creativas.'}
                     </div>
                     <button
                         onClick={handleTrace}
@@ -576,7 +644,7 @@ export default function PathfinderCard() {
             {/* Error */}
             {error && (
                 <div style={{ background: '#7f1d1d30', border: '1px solid #7f1d1d', borderRadius: 12, padding: '12px 16px', color: '#fca5a5', fontSize: '0.85rem' }}>
-                    ⚠️ {error}
+                    âš ï¸ {error}
                 </div>
             )}
 
@@ -588,7 +656,7 @@ export default function PathfinderCard() {
                         <div style={{ padding: '10px 20px', background: '#1e293b', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 12 }}>
                             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
                             <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{result.message}</span>
-                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#475569' }}>{result.path_length} salto(s) • Modo {result.mode}</span>
+                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#475569' }}>{result.path_length} salto(s) â€¢ Modo {result.mode}</span>
                         </div>
                     )}
                     <div style={{ height: 380 }}>
@@ -610,12 +678,12 @@ export default function PathfinderCard() {
                     </div>
                     <div style={{ padding: '10px 20px', background: '#1e293b', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: '0.72rem', color: '#475569' }}>
-                            💡 Haz clic en cualquier nodo para ver sus detalles abajo.
+                            ðŸ’¡ Haz clic en cualquier nodo para ver sus detalles abajo.
                         </span>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                             {/* Privacy Selector */}
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title="Proteger datos: El modelo LLM no entrenará con esta consulta ni su contexto">
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title="Proteger datos: El modelo LLM no entrenarÃ¡ con esta consulta ni su contexto">
                                 <div style={{
                                     width: 32, height: 18, borderRadius: 16,
                                     background: privacyMode ? '#f59e0b' : '#334155',
@@ -640,6 +708,27 @@ export default function PathfinderCard() {
                             </label>
 
                             <button
+                                onClick={handleExportJson}
+                                title="Exportar camino a JSON"
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                    padding: '6px 14px',
+                                    background: '#1e293b',
+                                    color: '#94a3b8',
+                                    border: '1px solid #334155',
+                                    borderRadius: 8,
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.color = '#f8fafc'; e.currentTarget.style.borderColor = '#475569'; }}
+                                onMouseLeave={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = '#334155'; }}
+                            >
+                                <Download size={14} /> Exportar JSON
+                            </button>
+
+                            <button
                                 onClick={handleExplain}
                                 disabled={explaining}
                                 style={{
@@ -658,7 +747,7 @@ export default function PathfinderCard() {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {explaining ? <Loader2 size={14} className="animate-spin" /> : <span>🪄</span>}
+                                {explaining ? <Loader2 size={14} className="animate-spin" /> : <span>ðŸª„</span>}
                                 Explicar Camino con IA
                             </button>
                         </div>
@@ -678,7 +767,7 @@ export default function PathfinderCard() {
                 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(to right, #a855f7, #3b82f6)' }} />
                     <h3 style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc', fontSize: '1.1rem' }}>
-                        <span>🪄</span> Explicación del Camino
+                        <span>ðŸª„</span> ExplicaciÃ³n del Camino
                     </h3>
                     <div style={{
                         color: '#cbd5e1',

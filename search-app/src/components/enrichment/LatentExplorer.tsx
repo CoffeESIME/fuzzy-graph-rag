@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Network, Check, X, Layers, RefreshCw, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Network, Check, X, Layers, RefreshCw, FileText, ChevronDown, ChevronUp, Download } from 'lucide-react';
+
 import {
     getExplorableSeeds,
     getLatentConnections,
@@ -465,6 +466,40 @@ export default function LatentExplorer() {
         }));
     };
 
+    const handleExportJson = () => {
+        const exportData = {
+            exported_at: new Date().toISOString(),
+            seed: selectedSeed
+                ? { id: selectedSeed.id, name: selectedSeed.name, type: selectedSeed.type, connections: selectedSeed.connections }
+                : null,
+            config: { alpha, sort_by: sortBy },
+            total_suggestions: suggestions.length,
+            suggestions: suggestions.map(s => {
+                const key = `${s.asset_id}-${s.target_concept_id}-${s.relation_type}-${s.direction}`;
+                return {
+                    asset_id: s.asset_id,
+                    asset_name: s.asset_name,
+                    target_concept_id: s.target_concept_id,
+                    target_concept_name: s.target_concept_name,
+                    relation_type: s.relation_type,
+                    direction: s.direction,
+                    graph_weight: s.current_weight,
+                    vector_similarity: s.cosine_similarity,
+                    proposed_weight: editedWeights[key] !== undefined ? editedWeights[key] : s.proposed_weight,
+                    reasoning: s.reasoning,
+                };
+            }),
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const seedLabel = selectedSeed?.name?.replace(/[^a-z0-9]/gi, '_').toLowerCase() ?? 'latent';
+        a.href = url;
+        a.download = `latent_explorer_${seedLabel}_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     const handlePreviewAsset = async (assetId: string) => {
         setIsLoadingPreview(true);
         try {
@@ -649,6 +684,25 @@ export default function LatentExplorer() {
 
                         return (
                             <div className="flex flex-col gap-6">
+                                {/* Export button */}
+                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <button
+                                        onClick={handleExportJson}
+                                        title="Exportar sugerencias a JSON"
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 7,
+                                            padding: '7px 14px', fontSize: 13, fontWeight: 500,
+                                            background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
+                                            border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)',
+                                            cursor: 'pointer', transition: 'all 0.15s'
+                                        }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-primary)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-secondary)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'; }}
+                                    >
+                                        <Download size={14} />
+                                        Exportar JSON ({suggestions.length})
+                                    </button>
+                                </div>
                                 {Object.values(grouped).map(group => (
                                     <AssetGroupCard
                                         key={group.assetId}
