@@ -1,3 +1,12 @@
+# Copyright (C) 2026 Fabian Romero Hernandez
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License v3.0.
+#
+# This project is part of an independent academic research on Fuzzy Logic-based
+# Multimodal Graph RAG systems (hechoconcafeina).
+# Full license: https://www.gnu.org/licenses/agpl-3.0
+
 import logging
 
 # Silence verbose third-party loggers (botocore/MinIO HTTP traces)

@@ -1,3 +1,12 @@
+# Copyright (C) 2026 Fabian Romero Hernandez
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License v3.0.
+#
+# This project is part of an independent academic research on Fuzzy Logic-based
+# Multimodal Graph RAG systems (hechoconcafeina).
+# Full license: https://www.gnu.org/licenses/agpl-3.0
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
@@ -118,10 +127,10 @@ def validate_connections_with_llm(req: ValidateConnectionsRequest):
         asset_context = f"Asset: \"{req.asset_name}\"\nContent snippet:\n---\n{content_snippet}\n---"
 
     # Build numbered connection list using SHORT INDICES (not full keys!)
-    # This keeps the LLM response tiny — it only needs to return numbers, not 100-char Neo4j IDs
+    # This keeps the LLM response tiny â€” it only needs to return numbers, not 100-char Neo4j IDs
     connection_lines = []
     for i, s in enumerate(req.suggestions):
-        direction_label = "asset → concept" if s.direction == "seed_to_neighbor" else "concept → asset"
+        direction_label = "asset â†’ concept" if s.direction == "seed_to_neighbor" else "concept â†’ asset"
         connection_lines.append(
             f'{i+1}. [{direction_label}] {s.relation_type}: "{s.target_concept_name}"'
         )
@@ -136,8 +145,8 @@ APPROVE a connection only if the concept:
 
 REJECT a connection if it requires:
 - Metaphorical or allegorical interpretation ("spy animals evoke Sisyphus")
-- Symbolic or mythological stretch ("craftiness → Odysseus")
-- Indirect thematic association ("endless tasks → frustration → Greek myth")
+- Symbolic or mythological stretch ("craftiness â†’ Odysseus")
+- Indirect thematic association ("endless tasks â†’ frustration â†’ Greek myth")
 - Concepts from a different domain that are not actually present in the asset.
 
 Be very strict. When in doubt, reject.
@@ -178,7 +187,7 @@ Return JSON only: {{"valid_indices": [1, 2, ...], "explanation": "..."}}"""
         logger.info(f"LLM gateway response keys: {list(result.keys())}")
         logger.info(f"LLM gateway response preview: {str(result)[:300]}")
 
-        # Try every possible response field — OpenAI format, SynthesizeResponse, plain content
+        # Try every possible response field â€” OpenAI format, SynthesizeResponse, plain content
         raw_content = (
             result.get("choices", [{}])[0].get("message", {}).get("content", "")
             or result.get("answer", "")
@@ -189,7 +198,7 @@ Return JSON only: {{"valid_indices": [1, 2, ...], "explanation": "..."}}"""
 
         logger.info(f"Extracted raw_content ({len(raw_content)} chars): {raw_content[:200]}")
 
-        # Parse JSON from LLM response — robust multi-attempt strategy
+        # Parse JSON from LLM response â€” robust multi-attempt strategy
         parsed = None
         try:
             parsed = json.loads(raw_content)
@@ -205,7 +214,7 @@ Return JSON only: {{"valid_indices": [1, 2, ...], "explanation": "..."}}"""
                     logger.warning(f"Extraction also failed ({decode_err2}): {candidate[:200]}")
 
         if parsed is None:
-            logger.warning(f"Could not parse LLM JSON — returning all keys. Raw: {raw_content[:200]}")
+            logger.warning(f"Could not parse LLM JSON â€” returning all keys. Raw: {raw_content[:200]}")
             return ValidateConnectionsResponse(
                 valid_keys=all_keys,
                 removed_count=0,
@@ -220,7 +229,7 @@ Return JSON only: {{"valid_indices": [1, 2, ...], "explanation": "..."}}"""
             if raw_keys is not None:
                 valid_keys = [k for k in raw_keys if k in set(all_keys)]
             else:
-                valid_keys = all_keys  # could not determine — keep all
+                valid_keys = all_keys  # could not determine â€” keep all
         else:
             valid_keys = []
             for idx in raw_indices:
@@ -231,7 +240,7 @@ Return JSON only: {{"valid_indices": [1, 2, ...], "explanation": "..."}}"""
                 except (ValueError, TypeError):
                     pass
 
-        explanation = parsed.get("explanation", "Validación completada.")
+        explanation = parsed.get("explanation", "ValidaciÃ³n completada.")
         removed = len(all_keys) - len(valid_keys)
         logger.info(f"LLM validation: {len(valid_keys)} valid / {removed} removed from {len(all_keys)} suggestions")
 
@@ -260,9 +269,9 @@ def get_explorable_seeds(
     """
     Returns eligible DigitalAsset nodes for latent exploration.
     sort_by options:
-      - top_connected   → most connections first (default, same as before)
-      - random          → random sample each time using rand()
-      - least_connected → assets with fewest graph connections (underexplored)
+      - top_connected   â†’ most connections first (default, same as before)
+      - random          â†’ random sample each time using rand()
+      - least_connected â†’ assets with fewest graph connections (underexplored)
     search filters by substring on name/filename/title (case-insensitive).
     """
     driver = get_neo4j_driver()
@@ -408,7 +417,7 @@ def get_latent_connections(
     if len(target_vector) != 1024:
         raise HTTPException(
             status_code=400, 
-            detail=f"El archivo está incompleto (faltan los vectores textuales/semánticos). Por favor usa el botón Re-Analizar en la vista previa del archivo padre para regenerar su metadata semántica. (Encontré un vector de {len(target_vector)} dimensiones, pero se necesitan 1024 para la búsqueda transversal)."
+            detail=f"El archivo estÃ¡ incompleto (faltan los vectores textuales/semÃ¡nticos). Por favor usa el botÃ³n Re-Analizar en la vista previa del archivo padre para regenerar su metadata semÃ¡ntica. (EncontrÃ© un vector de {len(target_vector)} dimensiones, pero se necesitan 1024 para la bÃºsqueda transversal)."
         )
 
     # 3. Find top K vector neighbors globally across all spaces
@@ -710,7 +719,7 @@ def get_asset_preview(asset_id: str):
                                 text_obj = minio_client.get_object(Bucket=bucket, Key=found_path)
                                 raw_text = text_obj['Body'].read().decode('utf-8', errors='replace')
                                 res_dict["content"] = raw_text[:5000] + ("..." if len(raw_text) > 5000 else "")
-                                logger.info(f"   📄 Loaded raw text from MinIO: {len(raw_text)} chars")
+                                logger.info(f"   ðŸ“„ Loaded raw text from MinIO: {len(raw_text)} chars")
                             except Exception as text_err:
                                 logger.warning(f"Failed to read raw text for {found_path}: {text_err}")
                         

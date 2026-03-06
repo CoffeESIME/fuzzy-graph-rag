@@ -1,3 +1,12 @@
+# Copyright (C) 2026 Fabian Romero Hernandez
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License v3.0.
+#
+# This project is part of an independent academic research on Fuzzy Logic-based
+# Multimodal Graph RAG systems (hechoconcafeina).
+# Full license: https://www.gnu.org/licenses/agpl-3.0
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Optional
@@ -108,7 +117,7 @@ def request_enrichment(req: EnrichRequest):
         
     return {
         "status": "accepted", 
-        "message": f"Se han encolado {len(req.node_ids)} nodos para enriquecimiento semÃ¡ntico.",
+        "message": f"Se han encolado {len(req.node_ids)} nodos para enriquecimiento semÃƒÂ¡ntico.",
         "queued_count": len(req.node_ids)
     }
 
@@ -151,7 +160,7 @@ def get_preview_weights(
             
             description = record["description"]
             if not description:
-                raise HTTPException(status_code=400, detail="Este nodo aÃºn no ha sido enriquecido (no tiene 'description').")
+                raise HTTPException(status_code=400, detail="Este nodo aÃƒÂºn no ha sido enriquecido (no tiene 'description').")
                 
             assets = record["assets"]
             # filter out empty 
@@ -448,7 +457,7 @@ Your task is twofold:
 
 CRITICAL DISTINCTIONS FOR MERGING: 
 - Do NOT group concepts just because they are related. 
-- "EvoluciÃ³n biolÃ³gica" and "EvoluciÃ³n de ideas" MUST remain separate. Do not merge across different domains (e.g., Biology vs. Sociology).
+- "EvoluciÃƒÂ³n biolÃƒÂ³gica" and "EvoluciÃƒÂ³n de ideas" MUST remain separate. Do not merge across different domains (e.g., Biology vs. Sociology).
 - ONLY group them if a user searching for Concept A would be 100% satisfied with results for Concept B (e.g., "Muerte" and "Finitud humana", or "IA" and "Inteligencia Artificial").
 
 
@@ -459,14 +468,14 @@ Structure:
 {
   "merges": [
     {
-      "hub_name": "Nombre unificado en espaÃ±ol",
+      "hub_name": "Nombre unificado en espaÃƒÂ±ol",
       "concept_indices": [1, 5] 
     }
   ]
 }
 
 STRICT RULES:
-1. Semantic Equivalence: Only merge exact same entities. "ManipulaciÃ³n psicolÃ³gica" and "ManipulaciÃ³n genÃ©tica" are DIFFERENT.
+1. Semantic Equivalence: Only merge exact same entities. "ManipulaciÃƒÂ³n psicolÃƒÂ³gica" and "ManipulaciÃƒÂ³n genÃƒÂ©tica" are DIFFERENT.
 2. Root Word Trap: Do not group items simply because they share a word (e.g., "Libertad" and "Libertad financiera").
 3. Demotion is Crucial: Be aggressive in demoting anything that you can touch, see, or that describes a file format. Only pure knowledge, entities, and abstractions deserve to be Graph Hubs.
 4. The "hub_name" MUST be in Spanish and represent the most academic/standard term for the cluster.
@@ -936,7 +945,7 @@ class RetypeEntityRequest(BaseModel):
 @router.post("/entities/retype")
 def retype_entity_node(req: RetypeEntityRequest):
     """
-    Changes the Neo4j label of an entity node (e.g., Person → Organization).
+    Changes the Neo4j label of an entity node (e.g., Person â†’ Organization).
     Keeps all existing relationships intact.
     Uses string-interpolated Cypher with a whitelist guard for safety.
     """

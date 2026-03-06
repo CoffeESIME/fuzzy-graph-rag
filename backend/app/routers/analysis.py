@@ -1,3 +1,12 @@
+# Copyright (C) 2026 Fabian Romero Hernandez
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License v3.0.
+#
+# This project is part of an independent academic research on Fuzzy Logic-based
+# Multimodal Graph RAG systems (hechoconcafeina).
+# Full license: https://www.gnu.org/licenses/agpl-3.0
+
 from fastapi import APIRouter
 from shared.clients import get_neo4j_driver, get_minio_client
 from config.settings import get_settings
@@ -31,7 +40,7 @@ def _safe_gds_project(session, graph_name: str, project_query: str, **kwargs):
         session.run(f"CALL gds.graph.drop('{graph_name}')").consume()
     except Exception:
         pass
-    # Now project — if STILL fails (race condition), drop hard and retry
+    # Now project â€” if STILL fails (race condition), drop hard and retry
     try:
         session.run(project_query, **kwargs).consume()
     except Exception as e:
@@ -52,7 +61,7 @@ def _safe_gds_drop(session, graph_name: str):
     except Exception:
         pass
 
-# 🧬 Community Detection (Louvain via Cypher Projection)
+# ðŸ§¬ Community Detection (Louvain via Cypher Projection)
 @router.post("/communities", response_model=AnalysisToolResponse)
 def analyze_communities(method: str = "standard", min_weight: float = 0.9):
     """
@@ -63,7 +72,7 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
     """
     driver = get_neo4j_driver()
 
-    # --- Proyección según método ---
+    # --- ProyecciÃ³n segÃºn mÃ©todo ---
     if method == "fuzzy":
         query_project = """
         MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
@@ -97,7 +106,7 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
         """
         node_size_clause = "MATCH (n)<-[r]-(a:DigitalAsset) WHERE coalesce(r.weight, 1.0) >= $min_weight WITH n, communityId, count(distinct a) AS degree"
 
-    # --- Louvain + enriquecer con tamaño real ---
+    # --- Louvain + enriquecer con tamaÃ±o real ---
     query_louvain = f"""
     CALL gds.louvain.stream('conceptCommunities', {{ relationshipWeightProperty: 'weight' }})
     YIELD nodeId, communityId
@@ -123,7 +132,7 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
             # --- Formateo para Nivo Circle Packing ---
             communities_data = []
             for idx, r in enumerate(records):
-                comm_name = f"Tema: {r['top_members'][0]['name']}" if r['top_members'] else f"Clúster {idx + 1}"
+                comm_name = f"Tema: {r['top_members'][0]['name']}" if r['top_members'] else f"ClÃºster {idx + 1}"
 
                 children_nodes = [
                     {
@@ -150,7 +159,7 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
             return {
                 "tool": "communities",
                 "status": "success",
-                "message": f"{mode_name} detectó {len(communities_data)} comunidades.",
+                "message": f"{mode_name} detectÃ³ {len(communities_data)} comunidades.",
                 "mock_data": {
                     "packing_data": nivo_data,
                     "method": method,
@@ -158,7 +167,7 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
             }
 
     except Exception as e:
-        print(f"🔥 Error Communities: {e}")
+        print(f"ðŸ”¥ Error Communities: {e}")
         return {
             "tool": "communities",
             "status": "error",
@@ -166,12 +175,12 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
             "mock_data": {"packing_data": {}}
         }
 
-# 🌉 Semantic Bridges (Bowtie Heuristic — no GDS needed)
+# ðŸŒ‰ Semantic Bridges (Bowtie Heuristic â€” no GDS needed)
 @router.post("/bridges", response_model=AnalysisToolResponse)
 def analyze_bridges(method: str = "standard", min_weight: float = 0.9):
     """
-    Puentes Semánticos Dual: Standard (conteo) vs Fuzzy (pesos difusos).
-    bridge_score = diversity × degree (standard) o diversity × fuzzy_weight (fuzzy).
+    Puentes SemÃ¡nticos Dual: Standard (conteo) vs Fuzzy (pesos difusos).
+    bridge_score = diversity Ã— degree (standard) o diversity Ã— fuzzy_weight (fuzzy).
     Aplica el filtro MIN_WEIGHT.
     """
     driver = get_neo4j_driver()
@@ -236,7 +245,7 @@ def analyze_bridges(method: str = "standard", min_weight: float = 0.9):
                 },
             }
     except Exception as e:
-        print(f"🔥 Error Bridges ({method}): {e}")
+        print(f"ðŸ”¥ Error Bridges ({method}): {e}")
         return {
             "tool": "bridges",
             "status": "error",
@@ -244,7 +253,7 @@ def analyze_bridges(method: str = "standard", min_weight: float = 0.9):
             "mock_data": {"bridges": [], "method": method},
         }
 
-# ── MinIO helpers ──
+# â”€â”€ MinIO helpers â”€â”€
 CANDIDATE_PREFIXES = [
     "raw/images/", "raw/audio/", "raw/videos/",
     "raw/documents/", "master_records/texts/"
@@ -301,7 +310,7 @@ def _resolve_minio_url(file_hash: Optional[str], mime_type: Optional[str] = None
     return {}
 
 
-# 🧭 Pathfinder (Navegador Latente)
+# ðŸ§­ Pathfinder (Navegador Latente)
 class PathfinderRequest(BaseModel):
     source_element_id: str
     target_element_id: str
@@ -335,9 +344,9 @@ class PathfinderResponse(BaseModel):
 def pathfind(request: PathfinderRequest):
     """
     K-Shortest Paths entre dos nodos (hasta 3 rutas distintas).
-    mode='direct'  → minimiza 1 - weight (prefiere aristas fuertes).
-    mode='lateral' → aplica penalización extra a aristas con weight > 0.85,
-                     forzando rutas creativas/serendípicas.
+    mode='direct'  â†’ minimiza 1 - weight (prefiere aristas fuertes).
+    mode='lateral' â†’ aplica penalizaciÃ³n extra a aristas con weight > 0.85,
+                     forzando rutas creativas/serendÃ­picas.
     """
     driver = get_neo4j_driver()
 
@@ -354,7 +363,7 @@ def pathfind(request: PathfinderRequest):
              ) AS edgeCost,
              // Costo de nodos: penaliza Conceptos hub (muchas conexiones)
              // size([(n)<--(:DigitalAsset)|1]) cuenta el grado sin CALL{}
-             // Formula: 1 - exp(-0.015 * degree) → 0.0 para nichos, ~0.99 para mega-hubs
+             // Formula: 1 - exp(-0.015 * degree) â†’ 0.0 para nichos, ~0.99 para mega-hubs
              REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |
                hubCost + (1.0 - exp(-0.015 * toFloat(size([(n)<--(:DigitalAsset) | 1]))))
              ) AS hubCost
@@ -393,8 +402,8 @@ def pathfind(request: PathfinderRequest):
                     nodes=[], edges=[], path_length=0, mode=request.mode
                 )
 
-            # ── Deduplicate across all K paths ──
-            seen_nodes: dict = {}     # elementId str → PathfinderNodeData
+            # â”€â”€ Deduplicate across all K paths â”€â”€
+            seen_nodes: dict = {}     # elementId str â†’ PathfinderNodeData
             seen_edge_keys: set = set()
             out_edges: List[PathfinderEdgeData] = []
             total_hops = 0
@@ -405,7 +414,7 @@ def pathfind(request: PathfinderRequest):
                 total_hops = max(total_hops, len(path_rels))
 
                 # Build a local id map for this path so edges match exactly
-                local_id_map: dict = {}  # neo4j internal id → our string elementId key
+                local_id_map: dict = {}  # neo4j internal id â†’ our string elementId key
 
                 for n in path_nodes:
                     nid = str(n.element_id)
@@ -453,7 +462,7 @@ def pathfind(request: PathfinderRequest):
 
             return PathfinderResponse(
                 status="success",
-                message=f"{num_paths} camino(s) encontrado(s): {len(out_nodes)} nodos únicos, {len(out_edges)} aristas únicas.",
+                message=f"{num_paths} camino(s) encontrado(s): {len(out_nodes)} nodos Ãºnicos, {len(out_edges)} aristas Ãºnicas.",
                 nodes=out_nodes,
                 edges=out_edges,
                 path_length=total_hops,
@@ -461,7 +470,7 @@ def pathfind(request: PathfinderRequest):
             )
 
     except Exception as e:
-        logger.error(f"🔥 Pathfinder error: {e}")
+        logger.error(f"ðŸ”¥ Pathfinder error: {e}")
         return PathfinderResponse(
             status="error",
             message=str(e),
@@ -469,17 +478,17 @@ def pathfind(request: PathfinderRequest):
         )
 
 
-# 🎲 Serendipity Path (Fuzzy Random Walk)
+# ðŸŽ² Serendipity Path (Fuzzy Random Walk)
 @router.post("/serendipity", response_model=AnalysisToolResponse)
 def analyze_serendipity():
     """
     Genera un camino asociativo (Serendipia) saltando entre Conceptos y Assets.
-    Favorece caminos que incluyen al menos una conexión 'difusa' (weight < 0.9).
+    Favorece caminos que incluyen al menos una conexiÃ³n 'difusa' (weight < 0.9).
     """
     driver = get_neo4j_driver()
 
     cypher_query = """
-    // 1. Elegir un nodo de inicio aleatorio con al menos una conexión no obvia
+    // 1. Elegir un nodo de inicio aleatorio con al menos una conexiÃ³n no obvia
     MATCH (start:Concept)<-[r]-(:DigitalAsset)
     WHERE coalesce(r.weight, 1.0) < 0.9
     WITH start ORDER BY rand() LIMIT 1
@@ -492,25 +501,25 @@ def analyze_serendipity():
       AND elementId(start) <> elementId(end)
       AND elementId(mid)   <> elementId(end)
       AND elementId(a1)    <> elementId(a2)
-      // Factor Serendipia: al menos una arista débil/latente
+      // Factor Serendipia: al menos una arista dÃ©bil/latente
       AND (coalesce(r1.weight, 1.0) <= 0.7 OR coalesce(r2.weight, 1.0) <= 0.7
         OR coalesce(r3.weight, 1.0) <= 0.7 OR coalesce(r4.weight, 1.0) <= 0.7)
 
-    // 4. Calcular el grado del nodo puente (hub) — penaliza mega-hubs
+    // 4. Calcular el grado del nodo puente (hub) â€” penaliza mega-hubs
     CALL {
         WITH mid
         RETURN count { (mid)<--(:DigitalAsset) } AS mid_degree
     }
 
-    // 5. Random Walk Penalizado: rand() × exp(-0.015 × mid_degree)
-    //    Hub de 200 conexiones → penalty≈0.05, incluso rand=0.99 da 0.049
-    //    Concepto nicho de 3 conexiones → penalty≈0.96, fácilmente gana
+    // 5. Random Walk Penalizado: rand() Ã— exp(-0.015 Ã— mid_degree)
+    //    Hub de 200 conexiones â†’ penaltyâ‰ˆ0.05, incluso rand=0.99 da 0.049
+    //    Concepto nicho de 3 conexiones â†’ penaltyâ‰ˆ0.96, fÃ¡cilmente gana
     WITH path, start, a1, mid, a2, end, r1, r2, r3, r4, mid_degree,
          rand() * exp(-0.015 * toFloat(mid_degree)) AS serendipity_score
     ORDER BY serendipity_score DESC
     LIMIT 1
 
-    // 6. Retornar cada nodo/arista con nombre explícito (compatible con parser Python)
+    // 6. Retornar cada nodo/arista con nombre explÃ­cito (compatible con parser Python)
     RETURN
         elementId(start)            AS step1_id,
         start.name                  AS step1_node,
@@ -587,7 +596,7 @@ def analyze_serendipity():
                 "mock_data": {"path": path_sequence}
             }
     except Exception as e:
-        print(f"🔥 Error Serendipity: {e}")
+        print(f"ðŸ”¥ Error Serendipity: {e}")
         return {
             "tool": "serendipity",
             "status": "error",
@@ -596,7 +605,7 @@ def analyze_serendipity():
         }
 
 
-# 🧠 Explainer (LLM Path Narrative)
+# ðŸ§  Explainer (LLM Path Narrative)
 class PathExplanationRequest(BaseModel):
     tool_name: str  # 'serendipity' or 'pathfinder'
     nodes: List[Dict[str, Any]]
@@ -614,7 +623,7 @@ def explain_analytical_path(req: PathExplanationRequest):
     explanation of how and why the start node connects to the end node.
     """
     if not req.nodes or not req.edges:
-        return PathExplanationResponse(status="error", explanation="El camino está vacío.")
+        return PathExplanationResponse(status="error", explanation="El camino estÃ¡ vacÃ­o.")
 
     try:
         # 1. Reconstruct path as a readable string
@@ -729,10 +738,10 @@ def explain_analytical_path(req: PathExplanationRequest):
                             content_parts = []
                             if summary: content_parts.append(f"Resumen: {summary}")
                             if text_content: content_parts.append(f"Contenido texto: {text_content}")
-                            if transcript: content_parts.append(f"Transcripción de audio: {transcript}")
+                            if transcript: content_parts.append(f"TranscripciÃ³n de audio: {transcript}")
                             if ocr: content_parts.append(f"Texto ocr: {ocr}")
-                            if img_desc: content_parts.append(f"Descripción de imagen: {img_desc}")
-                            if lyrics: content_parts.append(f"Letra de canción: {lyrics}")
+                            if img_desc: content_parts.append(f"DescripciÃ³n de imagen: {img_desc}")
+                            if lyrics: content_parts.append(f"Letra de canciÃ³n: {lyrics}")
                             
                             content = "\n".join(content_parts)
                             
@@ -749,24 +758,24 @@ def explain_analytical_path(req: PathExplanationRequest):
         context_block = ""
         if minio_contexts:
             joined_contexts = "\n\n---\n\n".join(minio_contexts)
-            context_block = f"\n\n<CONTEXTO_ARCHIVOS>\n{joined_contexts}\n</CONTEXTO_ARCHIVOS>\n\nUsa este contexto de los archivos para explicar más a fondo DE QUÉ tratan y dar sentido narrativo a las asociaciones conceptuales."
+            context_block = f"\n\n<CONTEXTO_ARCHIVOS>\n{joined_contexts}\n</CONTEXTO_ARCHIVOS>\n\nUsa este contexto de los archivos para explicar mÃ¡s a fondo DE QUÃ‰ tratan y dar sentido narrativo a las asociaciones conceptuales."
 
         # 2. Build Prompt
         system_prompt = f"""Eres un analista de datos y experto en grafos de conocimiento.
 Tu tarea es explicar un camino asociativo descubierto por la herramienta '{req.tool_name}'.
-El usuario quiere entender POR QUÉ y CÓMO el primer nodo de este camino se conecta con el último nodo, a través de los pasos intermedios.
+El usuario quiere entender POR QUÃ‰ y CÃ“MO el primer nodo de este camino se conecta con el Ãºltimo nodo, a travÃ©s de los pasos intermedios.
 
 Instrucciones:
-1. Usa la información de <CONTEXTO_ARCHIVOS> para fundamentar la conexión (ej. letras de canciones, resúmenes, textos). Es vital utilizar este contenido extraído.
-2. Escribe una narrativa fluida explicando paso a paso la conexión.
-3. Menciona los pesos (weights) si son bajos (< 0.8), indicando que es una conexión "latente", "débil" o "sorprendente".
-4. Si el camino pasa por un Concepto central (hub), menciónalo como el "puente conceptual".
-5. OBLIGATORIO: Finaliza con un párrafo llamado "Conclusión del Subsistema" resumiendo el hallazgo general o la idea central que une todo el camino.
-6. Mantén un tono analítico, profundo y fluido.
-7. Responde en Español.
+1. Usa la informaciÃ³n de <CONTEXTO_ARCHIVOS> para fundamentar la conexiÃ³n (ej. letras de canciones, resÃºmenes, textos). Es vital utilizar este contenido extraÃ­do.
+2. Escribe una narrativa fluida explicando paso a paso la conexiÃ³n.
+3. Menciona los pesos (weights) si son bajos (< 0.8), indicando que es una conexiÃ³n "latente", "dÃ©bil" o "sorprendente".
+4. Si el camino pasa por un Concepto central (hub), menciÃ³nalo como el "puente conceptual".
+5. OBLIGATORIO: Finaliza con un pÃ¡rrafo llamado "ConclusiÃ³n del Subsistema" resumiendo el hallazgo general o la idea central que une todo el camino.
+6. MantÃ©n un tono analÃ­tico, profundo y fluido.
+7. Responde en EspaÃ±ol.
 """
 
-        user_prompt = f"Aquí está el camino exacto extraído de Neo4j:\n\n{path_context}{context_block}\n\nPor favor, explica detalladamente esta cadena de asociaciones."
+        user_prompt = f"AquÃ­ estÃ¡ el camino exacto extraÃ­do de Neo4j:\n\n{path_context}{context_block}\n\nPor favor, explica detalladamente esta cadena de asociaciones."
 
         # 3. Request to LLM Gateway
         url = f"{LLM_GATEWAY_URL}/v1/chat/completions"
@@ -790,20 +799,20 @@ Instrucciones:
             result = response.json()
             answer = result.get('choices', [{}])[0].get('message', {}).get('content', '')
             if not answer:
-                answer = "Error: El LLM devolvió una respuesta vacía."
+                answer = "Error: El LLM devolviÃ³ una respuesta vacÃ­a."
             return PathExplanationResponse(status="success", explanation=answer)
         else:
             logger.error(f"LLM Gateway error: HTTP {response.status_code} - {response.text}")
             return PathExplanationResponse(status="error", explanation=f"Error del LLM: HTTP {response.status_code}.")
 
     except requests.exceptions.Timeout:
-        return PathExplanationResponse(status="error", explanation="El LLM tardó demasiado en responder (Timeout).")
+        return PathExplanationResponse(status="error", explanation="El LLM tardÃ³ demasiado en responder (Timeout).")
     except Exception as e:
         logger.error(f"Error generating path explanation: {e}", exc_info=True)
         return PathExplanationResponse(status="error", explanation=f"Error interno: {str(e)}")
 
 
-# 🌫️ Fog of War (Distribution)
+# ðŸŒ«ï¸ Fog of War (Distribution)
 @router.post("/fog-distribution", response_model=AnalysisToolResponse)
 def analyze_fog_of_war():
     driver = get_neo4j_driver()
@@ -830,7 +839,7 @@ def analyze_fog_of_war():
                     decile_map[d] = c
                     total_edges += c
             
-            labels = ["Ruido/Latente", "Muy Débil", "Débil", "Baja", "Media-Baja", "Media", "Media-Alta", "Alta", "Muy Alta", "Datos Duros"]
+            labels = ["Ruido/Latente", "Muy DÃ©bil", "DÃ©bil", "Baja", "Media-Baja", "Media", "Media-Alta", "Alta", "Muy Alta", "Datos Duros"]
             
             for i in range(10):
                 lower = i / 10.0
@@ -857,13 +866,13 @@ def analyze_fog_of_war():
             "mock_data": {"distribution": [], "total_edges": 0}
         }
 
-# 🧮 Old Heatmap removed — replaced by Jaccard Co-Occurrence version at bottom of file
+# ðŸ§® Old Heatmap removed â€” replaced by Jaccard Co-Occurrence version at bottom of file
 
-# 🍩 Chord Diagram (Category Co-Occurrence via DigitalAssets)
+# ðŸ© Chord Diagram (Category Co-Occurrence via DigitalAssets)
 @router.post("/chord", response_model=AnalysisToolResponse)
 def analyze_chord(method: str = "standard", min_weight: float = 0.0):
     """
-    Chord Dual: Standard (conteo de archivos) vs Fuzzy (intersección difusa).
+    Chord Dual: Standard (conteo de archivos) vs Fuzzy (intersecciÃ³n difusa).
     Zeroes Concept-Concept self-reference to avoid visual domination.
     """
     driver = get_neo4j_driver()
@@ -916,7 +925,7 @@ def analyze_chord(method: str = "standard", min_weight: float = 0.0):
             return {
                 "tool": "chord",
                 "status": "success",
-                "message": f"{mode_name} chord: {len(categories)} categorías.",
+                "message": f"{mode_name} chord: {len(categories)} categorÃ­as.",
                 "mock_data": {
                     "keys": categories,
                     "matrix": matrix_list,
@@ -925,7 +934,7 @@ def analyze_chord(method: str = "standard", min_weight: float = 0.0):
             }
 
     except Exception as e:
-        print(f"🔥 Error Chord ({method}): {e}")
+        print(f"ðŸ”¥ Error Chord ({method}): {e}")
         return {
             "tool": "chord",
             "status": "error",
@@ -933,7 +942,7 @@ def analyze_chord(method: str = "standard", min_weight: float = 0.0):
             "mock_data": {"keys": [], "matrix": [], "method": method},
         }
 
-# 🌳 Radial Tree (Co-Occurrence Expansion)
+# ðŸŒ³ Radial Tree (Co-Occurrence Expansion)
 class RadialTreeRequest(BaseModel):
     root_node_name: str = None
 
@@ -1064,7 +1073,7 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard", 
             }
 
     except Exception as e:
-        print(f"🔥 Error Radial ({method}): {e}")
+        print(f"ðŸ”¥ Error Radial ({method}): {e}")
         return {
             "tool": "radial_tree",
             "status": "error",
@@ -1072,12 +1081,12 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard", 
             "mock_data": {"root": "", "nodes": [], "edges": [], "method": method},
         }
 
-# �️ Abstract Concepts (Scatter Plot)
+# ï¿½ï¸ Abstract Concepts (Scatter Plot)
 @router.post("/abstract-concepts", response_model=AnalysisToolResponse)
 def analyze_abstract_concepts():
     """
     Scatter Plot: X=Grado (Cantidad), Y=Peso Promedio (Calidad/Certeza).
-    Filtro relajado (degree >= 2) para visualizar datos incluso en datasets pequeños.
+    Filtro relajado (degree >= 2) para visualizar datos incluso en datasets pequeÃ±os.
     """
     driver = get_neo4j_driver()
 
@@ -1119,16 +1128,16 @@ def analyze_abstract_concepts():
             "mock_data": {"series": []}
         }
 
-# �👑 PageRank
+# ï¿½ðŸ‘‘ PageRank
 @router.post("/pagerank", response_model=AnalysisToolResponse)
 def analyze_pagerank(method: str = "standard", min_weight: float = 0.0):
     """
-    PageRank Dual: Standard (conteo de archivos) vs Fuzzy (pesos semánticos).
-    Usa proyección dirigida para que PageRank distribuya influencia correctamente.
+    PageRank Dual: Standard (conteo de archivos) vs Fuzzy (pesos semÃ¡nticos).
+    Usa proyecciÃ³n dirigida para que PageRank distribuya influencia correctamente.
     """
     driver = get_neo4j_driver()
 
-    # --- Proyección según método (dirigida, sin undirected para PageRank) ---
+    # --- ProyecciÃ³n segÃºn mÃ©todo (dirigida, sin undirected para PageRank) ---
     if method == "fuzzy":
         query_project = """
         MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
@@ -1180,7 +1189,7 @@ def analyze_pagerank(method: str = "standard", min_weight: float = 0.0):
             }
 
     except Exception as e:
-        print(f"🔥 Error PageRank ({method}): {e}")
+        print(f"ðŸ”¥ Error PageRank ({method}): {e}")
         return {
             "tool": "pagerank",
             "status": "error",
@@ -1188,7 +1197,7 @@ def analyze_pagerank(method: str = "standard", min_weight: float = 0.0):
             "mock_data": {"ranking": [], "method": method},
         }
 
-# 🏚️ Orphan Nodes
+# ðŸšï¸ Orphan Nodes
 @router.post("/orphans", response_model=AnalysisToolResponse)
 def analyze_orphans():
     driver = get_neo4j_driver()
@@ -1223,7 +1232,7 @@ def analyze_orphans():
             "mock_data": {"count": 0, "nodes": []}
         }
 
-# 📊 Weight Distribution
+# ðŸ“Š Weight Distribution
 @router.post("/weight-distribution", response_model=AnalysisToolResponse)
 def analyze_weight_distribution():
     driver = get_neo4j_driver()
@@ -1272,7 +1281,7 @@ def analyze_heatmap(method: str = "standard", min_weight: float = 0.0):
     """
     driver = get_neo4j_driver()
 
-    # Query para Jaccard Estándar (Basado en conteo de archivos)
+    # Query para Jaccard EstÃ¡ndar (Basado en conteo de archivos)
     query_standard = """
     MATCH (c:Concept)<--(d:DigitalAsset)
     // In standard, we might not have explicit weights on all relations, but if we do, filter them
@@ -1382,7 +1391,7 @@ def analyze_heatmap(method: str = "standard", min_weight: float = 0.0):
             }
 
     except Exception as e:
-        print(f"🔥 Error en Heatmap ({method}): {e}")
+        print(f"ðŸ”¥ Error en Heatmap ({method}): {e}")
         return {
             "tool": "heatmap",
             "status": "error",

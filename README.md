@@ -262,16 +262,22 @@ Ver carpeta [`docs/`](docs/README.md) para el índice completo.
 
 API interactiva (con servidor activo): [`http://localhost:8000/docs`](http://localhost:8000/docs)
 
-## 📄 Licencia
+## Licencia
 
-Este proyecto está licenciado bajo la **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+Este proyecto es de código abierto y está licenciado bajo la **GNU AGPL v3**. Ver el archivo [`LICENSE`](LICENSE) para más detalles. Al ser un proyecto de investigación académica, se requiere que cualquier uso en un servicio de red (SaaS) publique sus modificaciones bajo la misma licencia.
 
-Esto significa que:
-- ✅ Puedes usar, estudiar, modificar y distribuir el código libremente.
-- ✅ Puedes usar el código en proyectos de investigación y educación.
-- ⚠️ Si ofreces el sistema como servicio en red (SaaS), **debes publicar el código fuente** de tu versión modificada bajo la misma licencia.
-- ⚠️ Las obras derivadas deben mantener la misma licencia AGPL-3.0.
+## Cómo citar este proyecto (Citation)
 
-Para uso comercial sin restricciones de copyleft, contacta al autor para un acuerdo de licencia dual.
+Si utilizas **hechoconcafeina** o la arquitectura de Graph RAG con lógica difusa en tu investigación, por favor cita nuestro trabajo:
 
-Ver [`LICENSE`](LICENSE) para el texto completo.
+```bibtex
+@misc{hechoconcafeina2026,
+  author    = {Romero Hernandez, Fabian and Lozano, Yair},
+  title     = {hechoconcafeina: A Fuzzy Logic-based Multimodal Graph RAG System},
+  year      = {2026},
+  publisher = {GitHub / Zenodo},
+  journal   = {GitHub repository},
+  howpublished = {\url{https://github.com/CoffeESIME/fuzzy-graph-rag}},
+  doi       = {[DOI-generado-por-Zenodo-proximamente]}
+}
+```

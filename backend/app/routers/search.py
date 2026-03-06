@@ -1,12 +1,21 @@
+# Copyright (C) 2026 Fabian Romero Hernandez
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License v3.0.
+#
+# This project is part of an independent academic research on Fuzzy Logic-based
+# Multimodal Graph RAG systems (hechoconcafeina).
+# Full license: https://www.gnu.org/licenses/agpl-3.0
+
 """
 API router for multimodal search across Weaviate collections.
 
 Endpoints:
-  1. POST /search/vectors     – Hybrid (BM25 + Vector) with optional tag filters
-  2. POST /search/visual-siglip – Pure visual search via SigLIP image embeddings
-  3. POST /search/hybrid-visual – Multimodal fusion (image + text, RRF merge)
-  4. POST /search/graph-crisp  – Crisp graph traversal (Neo4j, alpha-cut)
-  5. POST /search/graph-fuzzy  – Coming Soon stub
+  1. POST /search/vectors     â€“ Hybrid (BM25 + Vector) with optional tag filters
+  2. POST /search/visual-siglip â€“ Pure visual search via SigLIP image embeddings
+  3. POST /search/hybrid-visual â€“ Multimodal fusion (image + text, RRF merge)
+  4. POST /search/graph-crisp  â€“ Crisp graph traversal (Neo4j, alpha-cut)
+  5. POST /search/graph-fuzzy  â€“ Coming Soon stub
 """
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
@@ -41,10 +50,10 @@ SEARCHABLE_SPACES: Dict[str, str] = {
 }
 
 SPACE_ICONS = {
-    "TextSpace": "📄",
-    "VisualSpace": "📸",
-    "AudioSpace": "🎵",
-    "MemorySpace": "🧠",
+    "TextSpace": "ðŸ“„",
+    "VisualSpace": "ðŸ“¸",
+    "AudioSpace": "ðŸŽµ",
+    "MemorySpace": "ðŸ§ ",
 }
 
 
@@ -203,7 +212,7 @@ def _enrich_with_minio(results: List["SearchResultItem"]) -> None:
                         Params={'Bucket': bucket_name, 'Key': found_path},
                         ExpiresIn=3600
                     )
-                    # Fix URL for browser access (Docker internal → localhost)
+                    # Fix URL for browser access (Docker internal â†’ localhost)
                     new_url = re.sub(r'https?://[^/]+', 'http://localhost:9005', url)
                     r.properties["download_url"] = new_url
                 except Exception as e:
@@ -393,7 +402,7 @@ def search_vectors(request: VectorSearchRequest):
 
                 all_results.append(SearchResultItem(
                     space=space_name,
-                    space_icon=SPACE_ICONS.get(space_name, "🔷"),
+                    space_icon=SPACE_ICONS.get(space_name, "ðŸ”·"),
                     uuid=str(obj.uuid),
                     distance=round(distance, 6),
                     score=round(score, 4),
@@ -471,7 +480,7 @@ def search_visual_siglip(request: VisualSearchRequest):
 
             all_results.append(SearchResultItem(
                 space="VisualSpace",
-                space_icon="📸",
+                space_icon="ðŸ“¸",
                 uuid=str(obj.uuid),
                 distance=round(distance, 6),
                 score=round(score, 4),
@@ -543,7 +552,7 @@ def search_hybrid_visual(request: HybridVisualRequest):
                 cosine_score = max(0.0, 1.0 - distance)
                 visual_results.append(SearchResultItem(
                     space="VisualSpace",
-                    space_icon="📸",
+                    space_icon="ðŸ“¸",
                     uuid=str(obj.uuid),
                     distance=round(distance, 6),
                     score=round(cosine_score, 4),
@@ -578,7 +587,7 @@ def search_hybrid_visual(request: HybridVisualRequest):
                     cosine_score = max(0.0, 1.0 - distance)
                     text_results.append(SearchResultItem(
                         space=space_name,
-                        space_icon=SPACE_ICONS.get(space_name, "🔷"),
+                        space_icon=SPACE_ICONS.get(space_name, "ðŸ”·"),
                         uuid=str(obj.uuid),
                         distance=round(distance, 6),
                         score=round(cosine_score, 4),
@@ -706,23 +715,23 @@ def search_graph_crisp(req: GraphCrispRequest):
     """
     Graph crisp search v2 (Multi-Entity).
     
-    Ahora busca coincidencias no solo en Conceptos, sino también en Personas, 
-    Lugares y Eventos, aprovechando la ontología rica del sistema.
+    Ahora busca coincidencias no solo en Conceptos, sino tambiÃ©n en Personas, 
+    Lugares y Eventos, aprovechando la ontologÃ­a rica del sistema.
     """
     from shared.clients import get_neo4j_driver
     driver = get_neo4j_driver()
 
     cypher_query = """
-    // 1. Búsqueda Omnisciente (Conceptos, Personas, Lugares, Eventos, Proyectos)
+    // 1. BÃºsqueda Omnisciente (Conceptos, Personas, Lugares, Eventos, Proyectos)
     MATCH (n)
     WHERE (n:Concept OR n:Person OR n:Location OR n:Organization OR n:Event OR n:Project)
       AND toLower(n.name) CONTAINS toLower($user_query)
 
-    // 2. Expansión Polimórfica
+    // 2. ExpansiÃ³n PolimÃ³rfica
     // Buscamos cualquier activo conectado a este nodo encontrado
     MATCH (d:DigitalAsset)-[r]->(n)
     
-    // 3. Filtro de Relaciones Válidas (Ontología Completa)
+    // 3. Filtro de Relaciones VÃ¡lidas (OntologÃ­a Completa)
     WHERE type(r) IN [
         'EVOKES', 'EXPLORES', 'DEFINES', 'EVOKES_CONCEPT', 'EMBODIES', // Conceptos
         'MENTIONS_PERSON', 'CREATED_BY',                               // Personas
@@ -759,7 +768,7 @@ def search_graph_crisp(req: GraphCrispRequest):
         logger.error(f"Neo4j graph-crisp query failed: {e}")
         raise HTTPException(status_code=500, detail=f"Graph query failed: {e}")
 
-    # ── Map results ──
+    # â”€â”€ Map results â”€â”€
     seen_results: Dict[str, GraphCrispResultItem] = {}
     concepts_matched: set = set()
     topo_nodes: Dict[str, GraphNode] = {}
@@ -780,24 +789,24 @@ def search_graph_crisp(req: GraphCrispRequest):
         concepts_matched.add(node_name)
 
         # Determinar el tipo de nodo encontrado para el Frontend
-        # Neo4j devuelve una lista de labels, tomamos el más relevante que no sea 'Base'
+        # Neo4j devuelve una lista de labels, tomamos el mÃ¡s relevante que no sea 'Base'
         primary_type = "Concept" # Default
         for label in found_labels:
             if label in ["Person", "Location", "Organization", "Event", "Project"]:
                 primary_type = label
                 break
         
-        # ── Topology: Found Node (Antes Concept Node) ──
+        # â”€â”€ Topology: Found Node (Antes Concept Node) â”€â”€
         if c_id not in topo_nodes:
             node_props = _sanitize_neo4j_props(dict(found_node.items()))
             topo_nodes[c_id] = GraphNode(
                 id=c_id,
                 label=node_name,
-                type=primary_type, # ¡Ahora el frontend sabrá si pintar una Persona o un Concepto!
+                type=primary_type, # Â¡Ahora el frontend sabrÃ¡ si pintar una Persona o un Concepto!
                 properties=node_props,
             )
 
-        # ── Topology: DigitalAsset node ──
+        # â”€â”€ Topology: DigitalAsset node â”€â”€
         file_hash = asset_node.get("hash") or asset_node.get("file_hash") or d_id
         filename = asset_node.get("filename", "unknown")
         asset_props = _sanitize_neo4j_props(dict(asset_node.items()))
@@ -810,7 +819,7 @@ def search_graph_crisp(req: GraphCrispRequest):
                 properties=asset_props,
             )
 
-        # ── Topology: Edge ──
+        # â”€â”€ Topology: Edge â”€â”€
         edge_key = (d_id, c_id, rel_type)
         if edge_key not in seen_edges:
             seen_edges.add(edge_key)
@@ -822,15 +831,15 @@ def search_graph_crisp(req: GraphCrispRequest):
                 reasoning=record["reasoning"],
             ))
 
-        # ── Flat result ──
+        # â”€â”€ Flat result â”€â”€
         if file_hash not in seen_results or score > seen_results[file_hash].score:
             seen_results[file_hash] = GraphCrispResultItem(
                 space="GraphSpace",
-                space_icon="🔗",
+                space_icon="ðŸ”—",
                 uuid=file_hash,
                 filename=filename,
                 score=round(score, 4),
-                matched_concept=f"{node_name} ({primary_type})", # Feedback visual útil: "Elon Musk (Person)"
+                matched_concept=f"{node_name} ({primary_type})", # Feedback visual Ãºtil: "Elon Musk (Person)"
                 relation_type=rel_type,
                 distance=0.0,
                 properties=asset_props,
@@ -839,7 +848,7 @@ def search_graph_crisp(req: GraphCrispRequest):
     formatted = list(seen_results.values())
     formatted.sort(key=lambda r: r.score, reverse=True)
 
-    # ── Enrich with MinIO presigned URLs ──
+    # â”€â”€ Enrich with MinIO presigned URLs â”€â”€
     _enrich_with_minio(formatted)
 
     # Copy enriched URLs back to topology nodes
@@ -892,7 +901,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
     """
     from shared.clients import get_neo4j_driver
     
-    # ── 1. Vector Search (Simulated via Weaviate) ──
+    # â”€â”€ 1. Vector Search (Simulated via Weaviate) â”€â”€
     # We manually run a vector search to get seeds. 
     # Not using search_vectors internal func to avoid overhead/pydantic wrapping, 
     # but reusing checks.
@@ -952,7 +961,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
             graph_topology=GraphTopology(nodes=[], edges=[])
         )
 
-    # ── 2. Neo4j Expansion ──
+    # â”€â”€ 2. Neo4j Expansion â”€â”€
     # Notes: 
     # - Neo4j 'DigitalAsset' nodes use 'file_hash' as primary key usually.
     # - 'uuid' property might be missing in Neo4j, causing warnings.
@@ -976,7 +985,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
     WHERE discovery.file_hash <> seed.file_hash 
       AND (coalesce(r.weight, 1.0) * coalesce(r2.weight, 1.0)) >= $alpha_cut
 
-    // A. Penalización por tipo de relación (estructural vs semántica)
+    // A. PenalizaciÃ³n por tipo de relaciÃ³n (estructural vs semÃ¡ntica)
     WITH seed, r, target, r2, discovery, seed_node.score AS semantic_score,
          elementId(seed) as seed_id,
          elementId(target) as target_id,
@@ -992,22 +1001,22 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
          coalesce(r.weight, 1.0) as w1,
          coalesce(r2.weight, 1.0) as w2
 
-    // B. Graph IDF: contar cuántos DigitalAssets apuntan a este concepto-hub
+    // B. Graph IDF: contar cuÃ¡ntos DigitalAssets apuntan a este concepto-hub
     CALL {
         WITH target
         RETURN count { (target)<--(:DigitalAsset) } AS concept_degree
     }
 
     // C. Decaimiento Exponencial Agresivo: exp(-0.015 * degree)
-    //    degree=10  → 0.86x   (leve penalización)
-    //    degree=50  → 0.47x   (penalización media)
-    //    degree=100 → 0.22x   (hub fuerte, muy penalizado)
-    //    degree=200 → 0.05x   (mega-hub prácticamente eliminado)
+    //    degree=10  â†’ 0.86x   (leve penalizaciÃ³n)
+    //    degree=50  â†’ 0.47x   (penalizaciÃ³n media)
+    //    degree=100 â†’ 0.22x   (hub fuerte, muy penalizado)
+    //    degree=200 â†’ 0.05x   (mega-hub prÃ¡cticamente eliminado)
     WITH seed, r, target, r2, discovery, seed_id, target_id, disc_id, w1, w2,
          adjusted_w1, adjusted_w2, semantic_score, concept_degree,
          exp(-0.015 * toFloat(concept_degree)) AS exponential_penalty
 
-    // D. Score final: path_strength × semantic_relevance × hub_exponential_penalty
+    // D. Score final: path_strength Ã— semantic_relevance Ã— hub_exponential_penalty
     WITH seed, r, target, r2, discovery, seed_id, target_id, disc_id, w1, w2, exponential_penalty, concept_degree,
          (CASE WHEN adjusted_w2 IS NOT NULL THEN (adjusted_w1 * adjusted_w2) ELSE adjusted_w1 END) * semantic_score * exponential_penalty AS score_final
 
@@ -1038,7 +1047,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
         logger.error(f"Neo4j graph-fuzzy query failed: {e}")
         raise HTTPException(status_code=500, detail=f"Graph fuzzy query failed: {e}")
 
-    # ── 3. Build Topology ──
+    # â”€â”€ 3. Build Topology â”€â”€
     seen_results: Dict[str, GraphCrispResultItem] = {} # Keyed by hash/uuid
     topo_nodes: Dict[str, GraphNode] = {}
     topo_edges: List[GraphEdge] = []
@@ -1091,7 +1100,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
                 path_str = f"Seed({seed_filename}) --[w:{w1:.2f}]--> Hub({target_name})[deg:{concept_degree} exp:{exponential_penalty:.2f}] = {score_final:.3f}"
             paths_taken.append(path_str)
                 
-        # ── Nodes ──
+        # â”€â”€ Nodes â”€â”€
         
         # Target (Center)
         if target_id not in topo_nodes:
@@ -1114,7 +1123,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
                 properties=props
             )
             
-        # ── Edges ──
+        # â”€â”€ Edges â”€â”€
         
         # Edge 1: Seed -> Target
         edge1_key = (seed_id, target_id, type(rel1).__name__)
@@ -1132,7 +1141,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
             if seed_hash not in seen_results or score_final > seen_results[seed_hash].score:
                  seen_results[seed_hash] = GraphCrispResultItem(
                     space="GraphSpace",
-                    space_icon="🌱", # Seed icon
+                    space_icon="ðŸŒ±", # Seed icon
                     uuid=seed_hash,
                     filename=seed.get("filename", "Seed"),
                     score=round(score_final, 4),
@@ -1177,7 +1186,7 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
                 if disc_hash not in seen_results or score_final > seen_results[disc_hash].score:
                      seen_results[disc_hash] = GraphCrispResultItem(
                         space="GraphSpace",
-                        space_icon="🔭", # Telescope
+                        space_icon="ðŸ”­", # Telescope
                         uuid=disc_hash,
                         filename=discovery.get("filename", "Discovery"),
                         score=round(score_final, 4),
@@ -1191,12 +1200,12 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
                         properties=_sanitize_neo4j_props(dict(discovery.items()))
                     )
 
-    # ── Finalize: Soft-MMR Hub Diversity Re-ranking ──
+    # â”€â”€ Finalize: Soft-MMR Hub Diversity Re-ranking â”€â”€
     # Results are first ranked by Cypher score (which already has exponential hub penalty).
     # Then we apply an additional per-hub repetition penalty in Python:
-    #   - 1st & 2nd appearance of the same hub concept → full score
-    #   - 3rd & 4th appearance → 0.50× (moderate penalty)
-    #   - 5th+ appearance → 0.25× (strong penalty, push to tail)
+    #   - 1st & 2nd appearance of the same hub concept â†’ full score
+    #   - 3rd & 4th appearance â†’ 0.50Ã— (moderate penalty)
+    #   - 5th+ appearance â†’ 0.25Ã— (strong penalty, push to tail)
     formatted_raw = list(seen_results.values())
     formatted_raw.sort(key=lambda r: r.score, reverse=True)
 
