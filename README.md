@@ -272,7 +272,7 @@ Si utilizas **hechoconcafeina** o la arquitectura de Graph RAG con lógica difus
 
 ```bibtex
 @misc{hechoconcafeina2026,
-  author    = {Romero Hernandez, Fabian and Lozano, Yair},
+  author    = {Romero Hernandez, Fabian},
   title     = {hechoconcafeina: A Fuzzy Logic-based Multimodal Graph RAG System},
   year      = {2026},
   publisher = {GitHub / Zenodo},
