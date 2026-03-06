@@ -1,0 +1,106 @@
+version: '3.8'
+
+# ============================================================
+#   GraphRAG — Infraestructura de base de datos
+#   Uso: docker compose up -d
+#   Datos persistentes en ./data_dev/
+# ============================================================
+
+services:
+
+  # ── WEAVIATE (base de datos vectorial) ─────────────────────
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.29.2
+    container_name: rag_weaviate_dev
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8080'
+      - --scheme
+      - http
+    ports:
+      - "8081:8080"    # UI/API → localhost:8081
+      - "50051:50051"  # gRPC
+    volumes:
+      - ./data_dev/weaviate:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'   # los embeddings los genera el backend
+      ENABLE_MODULES: ''
+      CLUSTER_HOSTNAME: 'node1'
+    networks:
+      - rag_net
+    restart: on-failure:3
+
+  # ── NEO4J (grafo principal + GDS + APOC) ───────────────────
+  neo4j:
+    image: neo4j:5.19.0
+    container_name: rag_neo4j_dev
+    ports:
+      - "7474:7474"   # Browser → localhost:7474
+      - "7687:7687"   # Bolt (driver Python/JS)
+    volumes:
+      - ./data_dev/neo4j/data:/data
+      - ./data_dev/neo4j/logs:/logs
+      - ./data_dev/neo4j/plugins:/plugins
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:-s3cr3t2012}
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_PLUGINS=["apoc", "graph-data-science"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,gds.*
+    networks:
+      - rag_net
+    restart: unless-stopped
+
+  # ── POSTGRESQL (metadata y orquestación de tareas) ─────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: rag_postgres_dev
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rag_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag_password}
+      POSTGRES_DB: ${POSTGRES_DB:-rag_orchestrator}
+    volumes:
+      - ./data_dev/postgres:/var/lib/postgresql/data
+    networks:
+      - rag_net
+    restart: always
+
+  # ── REDIS (cola de tareas Celery) ──────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: rag_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data_dev/redis:/data
+    networks:
+      - rag_net
+    restart: always
+
+  # ── MINIO (almacenamiento de archivos multimedia) ──────────
+  minio:
+    image: minio/minio:latest
+    container_name: rag_minio_dev
+    command: server /data --console-address ":9001"
+    ports:
+      - "9005:9000"   # API S3 → localhost:9005
+      - "8001:9001"   # Consola web → localhost:8001
+    environment:
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mi_password_seguro}
+    volumes:
+      - ./data_dev/minio:/data
+    networks:
+      - rag_net
+    restart: always
+
+networks:
+  rag_net:
+    driver: bridge

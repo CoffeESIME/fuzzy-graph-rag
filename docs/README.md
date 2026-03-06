@@ -19,11 +19,14 @@ docs/
 
 | Documento | Descripción |
 |-----------|-------------|
+| [QUICKSTART.md](general/QUICKSTART.md) | ⚡ Arranque rápido de toda la infraestructura con Docker |
+| [docker-compose.yml](general/docker-compose.yml) | Compose con Neo4j + Weaviate + MinIO + Redis + PostgreSQL |
 | [ARCHITECTURE.md](general/ARCHITECTURE.md) | Vista de alto nivel del sistema completo |
 | [USAGE_GUIDE.md](general/USAGE_GUIDE.md) | Guía de uso del sistema |
 | [QUICK_REFERENCE.md](general/QUICK_REFERENCE.md) | Comandos y referencias rápidas |
 | [WALKTHROUGH.md](general/WALKTHROUGH.md) | Flujo completo de una sesión de trabajo |
 | [diagrams.md](general/diagrams.md) | Diagramas Mermaid del sistema (arquitectura, modelo de datos, flujos) |
+| [INTEGRATION.md](general/INTEGRATION.md) | Conexión Backend ↔ Frontend: URLs, módulos, CORS, env vars |
 
 ---
 
