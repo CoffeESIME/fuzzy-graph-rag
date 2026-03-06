@@ -241,14 +241,37 @@ NEO4J_PASSWORD=yourpassword
 LLM_GATEWAY_URL=http://localhost:11434
 ```
 
+## 🧠 Enriquecimiento & Limpieza Ontológica
+
+| Módulo | Descripción |
+|--------|-------------|
+| **Pesos Difusos** | Ajusta `weight` en relaciones usando similitud vectorial (BGE-M3 ↔ Weaviate). Slider de alpha, protección de pesos crisp (≥ 1.0). |
+| **Navegador Latente** | Descubre conexiones inexistentes propagando relaciones entre assets vectorialmente similares. Validación opcional con LLM local. |
+| **Limpieza Ontológica** | Dedup de Conceptos via LLM (merge, demote a tag). 9 estrategias de sampleo para iterar todo el corpus. |
+| **Dedup de Entidades** | Fusionar, degradar, re-tipar nodos de tipo Person/Project/Location/Organization. 4 operaciones, Cypher puro (sin APOC). |
+
 ## 📚 Documentación
 
-| Documento | Descripción |
-|-----------|-------------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Diseño del sistema, flujos de datos, API contracts |
-| [USAGE_GUIDE.md](USAGE_GUIDE.md) | Casos de uso, workflows completos |
-| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | Cheat sheet de endpoints, vectores, configuraciones |
+Ver carpeta [`docs/`](docs/README.md) para el índice completo.
+
+| Sección | Documentos clave |
+|---------|-----------------|
+| **General** | [Arquitectura](docs/general/ARCHITECTURE.md) · [Diagramas Mermaid](docs/general/diagrams.md) · [Integración Backend↔Frontend](docs/general/INTEGRATION.md) · [Guía de uso](docs/general/USAGE_GUIDE.md) |
+| **Backend** | [Enriquecimiento API](docs/backend/enrichment_summary.md) · [Guía Celery](docs/backend/CELERY_GUIDE.md) · [Troubleshooting](docs/backend/TROUBLESHOOTING.md) |
+| **Frontend** | [File Preview](docs/frontend/FILE_PREVIEW_GUIDE.md) |
+
+API interactiva (con servidor activo): [`http://localhost:8000/docs`](http://localhost:8000/docs)
 
 ## 📄 Licencia
 
-Este proyecto es privado. Todos los derechos reservados.
+Este proyecto está licenciado bajo la **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+
+Esto significa que:
+- ✅ Puedes usar, estudiar, modificar y distribuir el código libremente.
+- ✅ Puedes usar el código en proyectos de investigación y educación.
+- ⚠️ Si ofreces el sistema como servicio en red (SaaS), **debes publicar el código fuente** de tu versión modificada bajo la misma licencia.
+- ⚠️ Las obras derivadas deben mantener la misma licencia AGPL-3.0.
+
+Para uso comercial sin restricciones de copyleft, contacta al autor para un acuerdo de licencia dual.
+
+Ver [`LICENSE`](LICENSE) para el texto completo.
