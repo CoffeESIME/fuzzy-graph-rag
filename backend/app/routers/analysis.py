@@ -386,14 +386,19 @@ def pathfind(request: PathfinderRequest):
         RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
         """
 
+    # 5-minute transaction timeout so Neo4j does not kill long variable-path queries.
+    # Neo4j Python driver v5: timeout is set via begin_transaction(timeout=N) in seconds.
+    _PATHFINDER_TIMEOUT_S = 300  # 5 minutes
+
     try:
         with driver.session() as session:
-            result = session.run(
-                cypher,
-                source=request.source_element_id,
-                target=request.target_element_id
-            )
-            records = list(result)
+            with session.begin_transaction(timeout=_PATHFINDER_TIMEOUT_S) as tx:
+                result = tx.run(
+                    cypher,
+                    source=request.source_element_id,
+                    target=request.target_element_id,
+                )
+                records = list(result)
 
             if not records:
                 return PathfinderResponse(

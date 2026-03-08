@@ -67,7 +67,7 @@ const NODE_ICONS: Record<string, React.ReactNode> = {
     Organization: <Building2 size={12} />,
 };
 
-// CRITICAL FIX: Neo4j elementIds have the format "4:uuid:number" â€” the colons
+// CRITICAL FIX: Neo4j elementIds have the format "4:uuid:number" – the colons
 // are separator tokens in dagre.graphlib and cause node/edge lookups to fail silently.
 // We sanitize IDs for React Flow and dagre, preserving originals in data.raw for API calls.
 const sanitizeId = (id: string): string => id.replace(/:/g, '_');
@@ -97,7 +97,7 @@ function layoutPathHorizontal(rfNodes: Node[], rfEdges: Edge[]): { nodes: Node[]
 }
 
 function buildReactFlowData(response: PathfinderResponse): { nodes: Node[]; edges: Edge[] } {
-    // Build a sanitized-ID â†’ original-ID lookup so edges can reference sanitized node IDs
+    // Build a sanitized-ID → original-ID lookup so edges can reference sanitized node IDs
     const rfNodes: Node[] = response.nodes.map(n => ({
         id: sanitizeId(n.id),              // sanitized for React Flow / dagre
         position: { x: 0, y: 0 },
@@ -160,7 +160,7 @@ function PathNode({ data }: { data: { label: string; nodeType: string; raw: Path
                 </span>
             </div>
             <div style={{ fontSize: '0.75rem', color: '#1e293b', textAlign: 'center', fontWeight: 600, lineHeight: 1.3 }}>
-                {data.label.length > 28 ? data.label.slice(0, 28) + 'â€¦' : data.label}
+                {data.label.length > 28 ? data.label.slice(0, 28) + '…' : data.label}
             </div>
         </div>
     );
@@ -286,7 +286,7 @@ function NodeSearchPanel({
                 {(['fuzzy', 'entity'] as const).map(m => (
                     <button key={m} onClick={() => m === 'entity' ? switchToEntity() : setMode('fuzzy')}
                         style={{ padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, background: mode === m ? color : 'transparent', color: mode === m ? '#fff' : '#64748b', transition: 'all 0.15s' }}>
-                        {m === 'fuzzy' ? ' Búsqueda' : ' Por Tipo'}
+                        {m === 'fuzzy' ? '🔍 Búsqueda' : '📋 Por Tipo'}
                     </button>
                 ))}
             </div>
@@ -433,7 +433,7 @@ function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose
                             )}
                             {preview.content && preview.content !== 'No textual content available' && (
                                 <div>
-                                    <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>CONTENIDO EXTRAÃDO</div>
+                                    <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>CONTENIDO EXTRAÍDO</div>
                                     <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid #334155', borderRadius: 8, padding: 14, fontSize: '0.78rem', color: '#cbd5e1', whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: 1.6, maxHeight: 280, overflowY: 'auto' }} className="custom-scrollbar">
                                         {preview.content}
                                     </div>
@@ -517,10 +517,10 @@ export default function PathfinderCard() {
             if (res.status === 'success') {
                 setExplanation(res.explanation);
             } else {
-                setExplanation(`âš ï¸ ${res.explanation}`);
+                setExplanation(`⚠️ ${res.explanation}`);
             }
         } catch (err: unknown) {
-            setExplanation('âš ï¸ Error al generar la explicaciÃ³n: ' + (err instanceof Error ? err.message : String(err)));
+            setExplanation('⚠️ Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
         } finally {
             setExplaining(false);
         }
@@ -575,7 +575,7 @@ export default function PathfinderCard() {
                         Navegador Latente
                     </h1>
                     <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
-                        Traza el camino semÃ¡ntico entre dos ideas de tu grafo.
+                        Traza el camino semántico entre dos ideas de tu grafo.
                     </p>
                 </div>
             </div>
@@ -610,12 +610,12 @@ export default function PathfinderCard() {
                                     transition: 'all 0.2s',
                                 }}
                             >
-                                {m === 'direct' ? 'âš¡ Directo' : 'ðŸŒ€ Lateral'}
+                                {m === 'direct' ? '⚡ Directo' : '🌀 Lateral'}
                             </button>
                         ))}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#475569', flex: 1 }}>
-                        {mode === 'direct' ? 'Camino mÃ¡s corto sin restricciones.' : 'Evita conexiones muy fuertes (>0.85), forzando rutas creativas.'}
+                        {mode === 'direct' ? 'Camino más corto sin restricciones.' : 'Evita conexiones muy fuertes (>0.85), forzando rutas creativas.'}
                     </div>
                     <button
                         onClick={handleTrace}
@@ -644,7 +644,7 @@ export default function PathfinderCard() {
             {/* Error */}
             {error && (
                 <div style={{ background: '#7f1d1d30', border: '1px solid #7f1d1d', borderRadius: 12, padding: '12px 16px', color: '#fca5a5', fontSize: '0.85rem' }}>
-                    âš ï¸ {error}
+                    ⚠️ {error}
                 </div>
             )}
 
@@ -656,7 +656,7 @@ export default function PathfinderCard() {
                         <div style={{ padding: '10px 20px', background: '#1e293b', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 12 }}>
                             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
                             <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{result.message}</span>
-                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#475569' }}>{result.path_length} salto(s) â€¢ Modo {result.mode}</span>
+                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#475569' }}>{result.path_length} salto(s) • Modo {result.mode}</span>
                         </div>
                     )}
                     <div style={{ height: 380 }}>
@@ -678,12 +678,12 @@ export default function PathfinderCard() {
                     </div>
                     <div style={{ padding: '10px 20px', background: '#1e293b', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: '0.72rem', color: '#475569' }}>
-                            ðŸ’¡ Haz clic en cualquier nodo para ver sus detalles abajo.
+                            💡 Haz clic en cualquier nodo para ver sus detalles abajo.
                         </span>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                             {/* Privacy Selector */}
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title="Proteger datos: El modelo LLM no entrenarÃ¡ con esta consulta ni su contexto">
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title="Proteger datos: El modelo LLM no entrenará con esta consulta ni su contexto">
                                 <div style={{
                                     width: 32, height: 18, borderRadius: 16,
                                     background: privacyMode ? '#f59e0b' : '#334155',
@@ -747,7 +747,7 @@ export default function PathfinderCard() {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {explaining ? <Loader2 size={14} className="animate-spin" /> : <span>ðŸª„</span>}
+                                {explaining ? <Loader2 size={14} className="animate-spin" /> : <span>🪄</span>}
                                 Explicar Camino con IA
                             </button>
                         </div>
@@ -767,7 +767,7 @@ export default function PathfinderCard() {
                 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(to right, #a855f7, #3b82f6)' }} />
                     <h3 style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc', fontSize: '1.1rem' }}>
-                        <span>ðŸª„</span> ExplicaciÃ³n del Camino
+                        <span>🪄</span> Explicación del Camino
                     </h3>
                     <div style={{
                         color: '#cbd5e1',
