@@ -1,0 +1,222 @@
+{
+  "exported_at": "2026-03-08T06:25:18.545Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+    "label": "Ciclos Temporales y Naturales",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+    "label": "Lógica Difusa",
+    "type": "Concept"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 14 nodos Ãºnicos, 15 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "label": "Ciclos Temporales y Naturales",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+      "label": "text_Transcripción_YouTube_vpRd52dXHlQ_27058fbf.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "27058fbf06482ec83066154a65229db58a8da445704f8dfac18cfdb44c36c747",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:928",
+      "label": "Virtud",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:908",
+      "label": "text_d6544adc.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "d6544adc80d4525e223095c14e815dd2ad6bb51ff66a44402f869799e4aa6e81",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "label": "Lógica",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+      "label": "Screenshot 2026-02-24 142603.png",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "55614f37d3fc59098f71d4b08c0e407ef8522557f70d4173b7072176c609289a",
+      "mime_type": "image/png"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "label": "Lógica Difusa",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:172",
+      "label": "Autonomía",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "label": "text_239b9bac.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "239b9bacb6c05caacc281f68012c6d20bb28cb438f005a7bcafb2c44da826c77",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+      "label": "text_dab32400.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "dab324006b71236acaeac052c9417a20287374e6ada1350092f9043795522f17",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+      "label": "Símbolo",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+      "label": "text_83b6af8d.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "83b6af8de62409ca66a298570127fd185159ec5a114d3d5cb23c2ef6beffa2f1",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+      "label": "Física",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "label": "Haggard - The Observer.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "88b6006e3cea953cfa7b24cbeea206111792d73104d7eeceb22c38943a71b084",
+      "mime_type": "audio/mpeg"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:928",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:908",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:928",
+      "rel_type": "EVOKES",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:908",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.718
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.803
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "rel_type": "EVOKES",
+      "weight": 0.802
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:908",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:172",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.761
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:172",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.749
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.847
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.842
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.828
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.808
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.845
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.811
+    }
+  ]
+}

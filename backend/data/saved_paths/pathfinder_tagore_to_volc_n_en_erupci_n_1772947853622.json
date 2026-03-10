@@ -1,0 +1,166 @@
+{
+  "exported_at": "2026-03-08T05:30:53.621Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+    "label": "Tagore",
+    "type": "Person"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2788",
+    "label": "Volcán en erupción",
+    "type": "Location"
+  },
+  "path_length": 6,
+  "message": "3 camino(s) encontrado(s): 10 nodos Ãºnicos, 11 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "label": "Tagore",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1222",
+      "label": "text_09d5a9d1.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "09d5a9d13923ad2db8bf13209744e7a501ba04bcc25ad998ec452a29cb43bc95",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "label": "Naturaleza y Entorno Natural",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2475",
+      "label": "V5650037-Surveying_the_height_of_a_mountain,_1751.jpg",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "3adc65e0ab35e4d43100a5a09a72dbe3beeb8c18c8df13dd1245cca6a7173c2c",
+      "mime_type": "image/jpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2788",
+      "label": "Volcán en erupción",
+      "node_type": "Location",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:939",
+      "label": "text_8c9182b4.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "8c9182b4a62289f522f5e1f7a588ee25c002906521321059c2800b2745ed3a99",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:760",
+      "label": "Verdad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "label": "text_7e7470ec.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "7e7470ec5eee67a9479d846573a6b423a4f926af19f507e9a2fdfb84c1154033",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:970",
+      "label": "Ciencia",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2093",
+      "label": "Haggard - Eppur si muove.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "139b633298357e9e9133c2810f4953329dbb4898a61c8abc64151ffb5968e5cf",
+      "mime_type": "audio/mpeg"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1222",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1222",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.685
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2475",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.834
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2475",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2788",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:939",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:939",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:760",
+      "rel_type": "EVOKES",
+      "weight": 0.807
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:760",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.808
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:970",
+      "rel_type": "EVOKES",
+      "weight": 0.827
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2475",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:970",
+      "rel_type": "EVOKES",
+      "weight": 0.75
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2093",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:760",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.848
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2093",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:970",
+      "rel_type": "EVOKES",
+      "weight": 0.766
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "exported_at": "2026-03-08T16:45:27.887Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+    "label": "Espécimen",
+    "type": "Organization"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1267",
+    "label": "Ich verlasse heut' dein Herz",
+    "type": "Project"
+  },
+  "path_length": 6,
+  "message": "3 camino(s) encontrado(s): 7 nodos Ãºnicos, 8 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+      "label": "Espécimen",
+      "node_type": "Organization",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2584",
+      "label": "Espécimen - Naturaleza Muerta.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "92663886dad60e4b62c9e79dd0d07b29664f15e13d9394231c0c6278b78547d7",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:29",
+      "label": "Libertad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:657",
+      "label": "Lacrimosa - Ich verlasse heut' Dein Herz.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "6b7c12a263b18d0f4aa9e107a25a0519bd8c790f2ac09f49f3ee0f65f882e0b9",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1267",
+      "label": "Ich verlasse heut' dein Herz",
+      "node_type": "Project",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2514",
+      "label": "text_f6c601f1.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "f6c601f1ca165df36a1f33a4a142359af9e4680528818f2f926c1eb57689c99d",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2626",
+      "label": "Consecuencias catastróficas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2584",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2584",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:29",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.79
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:657",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:29",
+      "rel_type": "EVOKES",
+      "weight": 0.811
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:657",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1267",
+      "rel_type": "MENTIONS_PROJECT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2584",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2514",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2514",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2626",
+      "rel_type": "EVOKES",
+      "weight": 0.774
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2584",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2626",
+      "rel_type": "EVOKES",
+      "weight": 0.85
+    }
+  ]
+}

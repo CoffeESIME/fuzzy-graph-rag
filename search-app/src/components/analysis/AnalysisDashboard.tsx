@@ -15,7 +15,8 @@ import {
     Route, // Pathfinder
     ArrowRight,
     Search,
-    BrainCircuit
+    BrainCircuit,
+    FolderOpen
 } from 'lucide-react';
 
 const ANALYSIS_TOOLS = [
@@ -31,6 +32,7 @@ const ANALYSIS_TOOLS = [
     { id: 'abstract-concepts', title: 'Conceptos Abstractos', description: 'Alta conectividad, bajo peso', icon: Shapes, color: '#a855f7' },
     { id: 'orphans', title: 'Nodos Huérfanos', description: 'Auditoría de salud del grafo', icon: Unplug, color: '#71717a' },
     { id: 'weight-distribution', title: 'Distribución de Pesos', description: 'Histograma de fuerzas', icon: BarChart3, color: '#06b6d4' },
+    { id: 'saved-paths', title: 'Caminos Guardados', description: 'Galería de descubrimientos', icon: FolderOpen, color: '#4f46e5' },
 ];
 
 export default function AnalysisDashboard() {

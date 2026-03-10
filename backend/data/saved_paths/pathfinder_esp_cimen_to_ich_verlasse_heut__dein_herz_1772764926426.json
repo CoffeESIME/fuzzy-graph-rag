@@ -1,0 +1,166 @@
+{
+  "exported_at": "2026-03-06T02:42:06.425Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+    "label": "Espécimen",
+    "type": "Organization"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1267",
+    "label": "Ich verlasse heut' dein Herz",
+    "type": "Project"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 10 nodos únicos, 11 aristas únicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+      "label": "Espécimen",
+      "node_type": "Organization",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "label": "Espécimen - Tecnología.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "8cc817ed0cc253f9b1cf249997721056d805cfd77cd7241ff11fbd27933a84bc",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "label": "Armas y Terror Nuclear",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2877",
+      "label": "text_Transcripción_YouTube_nmgFG7PUHfo_4092d7d8.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "4092d7d839064ac9d0747603e841ef07f1830167978ca2b86af94ba5c3cabb50",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:729",
+      "label": "Japón",
+      "node_type": "Location",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:659",
+      "label": "Los Panchos - Se Llama Fujiyama.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "e83c937bc21fac5b3ee83fd4e40cc84356c3d4eb98034432d382be06035ee577",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "label": "Amor",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:657",
+      "label": "Lacrimosa - Ich verlasse heut' Dein Herz.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "6b7c12a263b18d0f4aa9e107a25a0519bd8c790f2ac09f49f3ee0f65f882e0b9",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1267",
+      "label": "Ich verlasse heut' dein Herz",
+      "node_type": "Project",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "label": "Espécimen - Este Es Mi Mundo.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "645d95bc576fdd2d45fbd4d3bb8cd004d9e43cc3136a3bed90686a97d8fbc5bc",
+      "mime_type": "audio/mpeg"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2877",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2877",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:729",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:659",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:729",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:659",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES",
+      "weight": 0.888
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:657",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES",
+      "weight": 0.898
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:657",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1267",
+      "rel_type": "MENTIONS_PROJECT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2706",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    }
+  ]
+}

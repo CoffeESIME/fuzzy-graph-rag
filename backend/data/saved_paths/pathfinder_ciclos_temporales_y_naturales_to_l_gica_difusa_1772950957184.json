@@ -1,0 +1,180 @@
+{
+  "exported_at": "2026-03-08T06:22:37.183Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+    "label": "Ciclos Temporales y Naturales",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+    "label": "Lógica Difusa",
+    "type": "Concept"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 11 nodos Ãºnicos, 12 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "label": "Ciclos Temporales y Naturales",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+      "label": "text_Transcripción_YouTube_vpRd52dXHlQ_27058fbf.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "27058fbf06482ec83066154a65229db58a8da445704f8dfac18cfdb44c36c747",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+      "label": "Cosmología y Astronomía",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "label": "text_7e7470ec.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "7e7470ec5eee67a9479d846573a6b423a4f926af19f507e9a2fdfb84c1154033",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+      "label": "Isaac Newton",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+      "label": "text_b28471b0.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "b28471b03d8a13a044c6768fbf7a0e880ccbc3082a0431f2d4fdf5f6f2444c9f",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2206",
+      "label": "Screenshot 2026-02-24 104006.png",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "57b3b39264d1f2b9441a25b0edf231c1075b7d7643a66337066095d70c31dcd2",
+      "mime_type": "image/png"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "label": "Lógica Difusa",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+      "label": "Screenshot 2026-02-24 142603.png",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "55614f37d3fc59098f71d4b08c0e407ef8522557f70d4173b7072176c609289a",
+      "mime_type": "image/png"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3161",
+      "label": "text_09ff8d6c.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "09ff8d6c43db7f93e0bcfce098015dae2c48f17fd31d56c0c6ad5971085d6609",
+      "mime_type": "text/plain"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2206",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2206",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3161",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3161",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    }
+  ]
+}

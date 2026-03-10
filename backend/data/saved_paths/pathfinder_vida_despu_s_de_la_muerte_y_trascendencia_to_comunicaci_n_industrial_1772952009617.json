@@ -1,0 +1,166 @@
+{
+  "exported_at": "2026-03-08T06:40:09.617Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2836",
+    "label": "Vida después de la Muerte y Trascendencia",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1720",
+    "label": "Comunicación Industrial",
+    "type": "Concept"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 10 nodos Ãºnicos, 11 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2836",
+      "label": "Vida después de la Muerte y Trascendencia",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1201",
+      "label": "text_779b2e31.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "779b2e315aa57b3f072d638bf54cbca8497c70bd1ce34f02dfe076971acd60a0",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "label": "Muerte y Mortalidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "label": "Espécimen - Este Es Mi Mundo.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "645d95bc576fdd2d45fbd4d3bb8cd004d9e43cc3136a3bed90686a97d8fbc5bc",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "label": "Armas y Terror Nuclear",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+      "label": "text_20df6016.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "20df601634e7614a61319f8f9ae8734e5b1788b5ab33ecd422f850efc29ef0c0",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1707",
+      "label": "Screenshot 2026-02-24 220331.png",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "c37a37453f60651863203c32fa8afdbc05612bcc0632208a7185ae976e4b4bba",
+      "mime_type": "image/png"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1720",
+      "label": "Comunicación Industrial",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3165",
+      "label": "text_0711c73b.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "0711c73b1b0b05cdb51fe7e3dd1c352f7cebcf7462f8ac946e79b4ffdf8de2dc",
+      "mime_type": "text/plain"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1201",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2836",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1201",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.943
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.899
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1707",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1707",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1720",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1707",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1720",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3165",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3165",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.893
+    }
+  ]
+}

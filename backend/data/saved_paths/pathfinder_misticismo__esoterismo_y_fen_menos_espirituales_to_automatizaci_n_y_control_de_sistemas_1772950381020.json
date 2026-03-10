@@ -1,0 +1,124 @@
+{
+  "exported_at": "2026-03-08T06:13:01.019Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1092",
+    "label": "Misticismo, Esoterismo y Fenómenos Espirituales",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+    "label": "Automatización y Control de Sistemas",
+    "type": "Concept"
+  },
+  "path_length": 4,
+  "message": "3 camino(s) encontrado(s): 7 nodos Ãºnicos, 8 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1092",
+      "label": "Misticismo, Esoterismo y Fenómenos Espirituales",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "label": "Haggard - The Observer.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "88b6006e3cea953cfa7b24cbeea206111792d73104d7eeceb22c38943a71b084",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "label": "Lógica",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+      "label": "text_379436a3.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "379436a3adae46837ea9b1e7a996f80e5aced621f197dee0112f3bab08ac55c0",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2093",
+      "label": "Haggard - Eppur si muove.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "139b633298357e9e9133c2810f4953329dbb4898a61c8abc64151ffb5968e5cf",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "label": "text_7e7470ec.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "7e7470ec5eee67a9479d846573a6b423a4f926af19f507e9a2fdfb84c1154033",
+      "mime_type": "text/plain"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1092",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.765
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.811
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES",
+      "weight": 0.81
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.841
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2093",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1092",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.791
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2093",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.718
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1092",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.696
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.694
+    }
+  ]
+}

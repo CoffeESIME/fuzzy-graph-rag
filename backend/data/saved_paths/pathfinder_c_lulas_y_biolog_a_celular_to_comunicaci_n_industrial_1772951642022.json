@@ -1,0 +1,110 @@
+{
+  "exported_at": "2026-03-08T06:34:02.021Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1143",
+    "label": "Células y Biología Celular",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1720",
+    "label": "Comunicación Industrial",
+    "type": "Concept"
+  },
+  "path_length": 4,
+  "message": "3 camino(s) encontrado(s): 6 nodos Ãºnicos, 7 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1143",
+      "label": "Células y Biología Celular",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2245",
+      "label": "FB_IMG_1741491362173.jpg",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "6a3a483abdd135593501a84db795f13e9e5c665dd3d12f7a1e50cd28faff0314",
+      "mime_type": "image/jpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "label": "Matemáticas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1707",
+      "label": "Screenshot 2026-02-24 220331.png",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "c37a37453f60651863203c32fa8afdbc05612bcc0632208a7185ae976e4b4bba",
+      "mime_type": "image/png"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1720",
+      "label": "Comunicación Industrial",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1681",
+      "label": "Screenshot 2026-02-24 142949.png",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "200a806290e126be988e5fc5779b21e45c3a795a644bb4959dd6a0749b3726a2",
+      "mime_type": "image/png"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2245",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1143",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2245",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES",
+      "weight": 0.834
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1707",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.812
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1707",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1720",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1707",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1720",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1681",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1143",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1681",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.782
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+{
+  "exported_at": "2026-03-08T06:20:01.271Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1092",
+    "label": "Misticismo, Esoterismo y Fenómenos Espirituales",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+    "label": "Automatización y Control de Sistemas",
+    "type": "Concept"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 11 nodos Ãºnicos, 12 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1092",
+      "label": "Misticismo, Esoterismo y Fenómenos Espirituales",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "label": "Haggard - Prophecy Fulfilled _ And The Dark Night Entered.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "e3510d75bc73f634d283a0536e04a1de3cc6824116991ada09db6d4acfff0cd0",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2019",
+      "label": "Europa",
+      "node_type": "Location",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2175",
+      "label": "Haggard - Per Aspera Ad Astra.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "144dc2bebd33c9a6b527024c4826112bff8a096651daee3541df3fde2c7f9885",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2052",
+      "label": "Eppur Si Muove",
+      "node_type": "Project",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "label": "text_7e7470ec.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "7e7470ec5eee67a9479d846573a6b423a4f926af19f507e9a2fdfb84c1154033",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+      "label": "Isaac Newton",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+      "label": "text_b28471b0.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "b28471b03d8a13a044c6768fbf7a0e880ccbc3082a0431f2d4fdf5f6f2444c9f",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1815",
+      "label": "Haggard",
+      "node_type": "Organization",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:554",
+      "label": "Teoría Heliocéntrica y Geocéntrica",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1092",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.883
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2019",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2175",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2019",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2175",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2052",
+      "rel_type": "MENTIONS_PROJECT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2052",
+      "rel_type": "MENTIONS_PROJECT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2175",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1815",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1815",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2175",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:554",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:554",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    }
+  ]
+}

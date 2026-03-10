@@ -1422,3 +1422,70 @@ def analyze_heatmap(method: str = "standard", min_weight: float = 0.0):
             "mock_data": {"matrix": [], "keys": [], "method": method},
         }
 
+# ==========================================
+# 📂 SAVED PATHS (Serendipity & Pathfinder)
+# ==========================================
+
+import os
+import json
+from fastapi import HTTPException
+from pathlib import Path
+
+SAVED_PATHS_DIR = Path("data/saved_paths")
+
+@router.get("/saved-paths")
+def list_saved_paths():
+    """Lists all JSON files in the saved_paths directory."""
+    if not SAVED_PATHS_DIR.exists():
+        try:
+            SAVED_PATHS_DIR.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        return {"files": []}
+        
+    files = []
+    for filepath in SAVED_PATHS_DIR.glob("*.json"):
+        try:
+            # We peek into the JSON to get the tool type or mode so the frontend can display a nice icon
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = json.load(f)
+                
+            tool_type = content.get("tool", "")
+            if not tool_type and "mode" in content:
+                tool_type = "pathfinder" if content.get("path_length") is not None else "unknown"
+                
+            files.append({
+                "filename": filepath.name,
+                "tool_type": tool_type,
+                "created_at": content.get("generated_at") or content.get("exported_at") or "",
+                "size_bytes": filepath.stat().st_size
+            })
+        except Exception as e:
+            # If a file is malformed, we just return its name
+            files.append({
+                "filename": filepath.name,
+                "tool_type": "unknown",
+                "created_at": "",
+                "size_bytes": filepath.stat().st_size
+            })
+            
+    # Sort by newest first based on file modified time
+    files.sort(key=lambda x: SAVED_PATHS_DIR.joinpath(x["filename"]).stat().st_mtime, reverse=True)
+    return {"files": files}
+
+@router.get("/saved-paths/{filename}")
+def get_saved_path(filename: str):
+    """Retrieves the exact JSON content of a highly specific saved path."""
+    if not filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="Filename must end with .json")
+        
+    filepath = SAVED_PATHS_DIR / filename
+    
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")

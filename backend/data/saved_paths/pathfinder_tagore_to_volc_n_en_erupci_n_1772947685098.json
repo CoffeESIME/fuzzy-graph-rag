@@ -1,0 +1,236 @@
+{
+  "exported_at": "2026-03-08T05:28:05.097Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+    "label": "Tagore",
+    "type": "Person"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2788",
+    "label": "Volcán en erupción",
+    "type": "Location"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 15 nodos Ãºnicos, 16 aristas Ãºnicas.",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "label": "Tagore",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:933",
+      "label": "text_bb9043ca.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "bb9043cadc82e2053fa7515ee3023a12f12e2310e1940a8e64af5113fd10464a",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2489",
+      "label": "Alegría y Felicidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "label": "text_239b9bac.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "239b9bacb6c05caacc281f68012c6d20bb28cb438f005a7bcafb2c44da826c77",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1569",
+      "label": "Amistad Perfecta",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3251",
+      "label": "text_Tumblr_Post_-_187220195507html_6612a749.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "6612a749c86e806c64a8d6b9b51fb9156784cdfb5984b7c0c9395be0e94724ec",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "label": "Naturaleza y Entorno Natural",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2475",
+      "label": "V5650037-Surveying_the_height_of_a_mountain,_1751.jpg",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "3adc65e0ab35e4d43100a5a09a72dbe3beeb8c18c8df13dd1245cca6a7173c2c",
+      "mime_type": "image/jpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2788",
+      "label": "Volcán en erupción",
+      "node_type": "Location",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1217",
+      "label": "text_d62fd0ca.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "d62fd0ca95734cbfe6d71db4f28aaa91e002626e800626c56503aca53bde8b16",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "label": "Muerte y Mortalidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:801",
+      "label": "text_82cc5af1.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "82cc5af18e5b858b2ab32e2b5a829e7d967a7d97aa5a85a8a91adb7c9da3c188",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:182",
+      "label": "Sueño",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:64",
+      "label": "148913633234.jpg",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "cfab977d739329987aa8b19a45f60004b88d50846e7685bf78cf04e80d66bde8",
+      "mime_type": "image/jpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1696",
+      "label": "Descubrimiento y Exploración Científica",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:933",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:933",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2489",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.97
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2489",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.959
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1569",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3251",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1569",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3251",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.928
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2475",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.834
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2475",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2788",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1217",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1217",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.925
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:801",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.97
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:801",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:182",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:64",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:182",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:64",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1696",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2475",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1696",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    }
+  ]
+}

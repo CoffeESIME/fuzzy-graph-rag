@@ -17,6 +17,7 @@ import RadialTreeCard from './components/analysis/RadialTreeCard';
 import AbstractConceptsCard from './components/analysis/AbstractConceptsCard';
 import OrphansCard from './components/analysis/OrphansCard';
 import WeightDistributionCard from './components/analysis/WeightDistributionCard';
+import SavedPathsViewer from './components/analysis/SavedPathsViewer';
 import EnrichmentDashboard from './components/enrichment/EnrichmentDashboard';
 
 export default function App() {
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/analysis/abstract-concepts" element={<AbstractConceptsCard />} />
             <Route path="/analysis/orphans" element={<OrphansCard />} />
             <Route path="/analysis/weight-distribution" element={<WeightDistributionCard />} />
+            <Route path="/analysis/saved-paths" element={<SavedPathsViewer />} />
             <Route path="/enrichment" element={<EnrichmentDashboard />} />
             <Route path="/analysis/:toolId" element={<AnalysisPlaceholder />} />
             <Route path="*" element={<Navigate to="/" replace />} />
