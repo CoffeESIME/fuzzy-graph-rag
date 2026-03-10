@@ -535,6 +535,10 @@ export default function PathfinderCard() {
             target: targetNode ? { id: targetNode.id, label: targetNode.label, type: targetNode.type } : null,
             path_length: result.path_length,
             message: result.message,
+            llm_explanation: explanation || null,
+            options: {
+                privacy_mode: privacyMode
+            },
             nodes: result.nodes.map(n => ({
                 id: n.id,
                 label: n.label,
