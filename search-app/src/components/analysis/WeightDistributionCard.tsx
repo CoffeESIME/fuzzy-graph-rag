@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ResponsiveBar } from '@nivo/bar';
 import { RefreshCw, BarChart3, Loader2 } from 'lucide-react';
@@ -24,13 +24,14 @@ export default function WeightDistributionCard() {
     const [data, setData] = useState<HistogramBin[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [step, setStep] = useState<number>(0.1);
     const navigate = useNavigate();
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async (currentStep: number) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await axios.post<AnalysisResponse>('http://localhost:8000/analysis/weight-distribution');
+            const res = await axios.post<AnalysisResponse>(`http://localhost:8000/analysis/weight-distribution?step=${currentStep}`);
             if (res.data.status === 'error') throw new Error(res.data.message);
             setData(res.data.mock_data.histogram);
         } catch (err: any) {
@@ -39,11 +40,11 @@ export default function WeightDistributionCard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        fetchData(step);
+    }, [step, fetchData]);
 
     const theme = {
         background: 'transparent',
@@ -86,9 +87,27 @@ export default function WeightDistributionCard() {
                         <p className="text-gray-500">Histograma de la fuerza de las relaciones en el grafo.</p>
                     </div>
                 </div>
-                <button onClick={fetchData} className="btn-icon">
-                    <RefreshCw size={18} />
-                </button>
+                <div className="flex items-center gap-3">
+                    <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid #334155' }}>
+                        {[0.1, 0.05].map(s => (
+                            <button
+                                key={s}
+                                onClick={() => setStep(s)}
+                                style={{
+                                    padding: '6px 12px', fontSize: '0.75rem', fontWeight: 600,
+                                    border: 'none', cursor: 'pointer', transition: 'all 0.25s ease',
+                                    background: step === s ? '#06b6d4' : '#0f172a',
+                                    color: step === s ? '#ffffff' : '#94a3b8',
+                                }}
+                            >
+                                Paso {s}
+                            </button>
+                        ))}
+                    </div>
+                    <button onClick={() => fetchData(step)} className="btn-icon">
+                        <RefreshCw size={18} className={loading && !data.length ? 'animate-spin' : ''} />
+                    </button>
+                </div>
             </div>
 
             {error ? (

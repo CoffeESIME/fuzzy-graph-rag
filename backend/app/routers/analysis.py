@@ -1239,27 +1239,45 @@ def analyze_orphans():
 
 # ðŸ“Š Weight Distribution
 @router.post("/weight-distribution", response_model=AnalysisToolResponse)
-def analyze_weight_distribution():
+def analyze_weight_distribution(step: float = 0.1):
     driver = get_neo4j_driver()
     try:
+        # Determine multiplier based on step (0.1 -> 10, 0.05 -> 20)
+        multiplier = int(1.0 / step)
+        
         with driver.session() as session:
             # Histogram of edge weights
-            query = """
+            query = f"""
                 MATCH ()-[r]->()
                 WHERE r.weight IS NOT NULL
-                WITH toInteger(r.weight * 10) as bucket, count(*) as count
+                WITH toInteger(r.weight * {multiplier}) as bucket, count(*) as count
                 RETURN bucket, count
                 ORDER BY bucket ASC
             """
             result = session.run(query)
             
-            # Initialize 10 bins
-            bins = [{"range": f"{i/10:.1f}-{(i+1)/10:.1f}", "count": 0, "bucket": i} for i in range(10)]
+            # Initialize bins based on multiplier
+            bins = []
+            for i in range(multiplier):
+                start_val = i * step
+                end_val = (i + 1) * step
+                # Special formatting for exact 0.05 vs 0.10 boundaries
+                if step == 0.1:
+                    range_label = f"{start_val:.1f}-{end_val:.1f}"
+                else:
+                    range_label = f"{start_val:.2f}-{end_val:.2f}"
+                
+                bins.append({"range": range_label, "count": 0, "bucket": i})
             
             for record in result:
                 b = record["bucket"]
-                if 0 <= b < 10:
-                    bins[b]["count"] = record["count"]
+                # The bucket could theoretically be exactly the multiplier if weight is 1.0
+                # Handle edge case where weight is 1.000 
+                if b == multiplier:
+                    b = multiplier - 1
+                    
+                if 0 <= b < multiplier:
+                    bins[b]["count"] += record["count"]
             
             # Format for Nivo Bar
             # data = [{ range: "0.0-0.1", count: 123 }, ...]

@@ -564,7 +564,7 @@ export default function PathfinderCard() {
     const canTrace = !!sourceNode && !!targetNode && !loading;
 
     return (
-        <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 10, background: '#0e7490' + '20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

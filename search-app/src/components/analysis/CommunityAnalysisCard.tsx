@@ -97,7 +97,7 @@ export default function CommunityAnalysisCard() {
     };
 
     return (
-        <div style={{ padding: 24, paddingBottom: 60, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
+        <div style={{ padding: 24, paddingBottom: 60, width: '100%' }}>
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -125,10 +125,10 @@ export default function CommunityAnalysisCard() {
                 {/* Main Circle Packing Panel */}
                 <div
                     className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
-                    style={{ flex: 1, padding: 0, minHeight: 560, overflow: 'hidden', position: 'relative' }}
+                    style={{ flex: 1, padding: 0, minHeight: 800, overflow: 'hidden', position: 'relative' }}
                 >
                     {loading && (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 560 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 800 }}>
                             <Loader2 className="animate-spin mb-4 text-purple-400" size={40} />
                             <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
                                 Ejecutando {method === 'fuzzy' ? 'Fuzzy' : 'Standard'} Louvain...
@@ -138,7 +138,7 @@ export default function CommunityAnalysisCard() {
                     )}
 
                     {!loading && data && data.children && data.children.length > 0 && (
-                        <div style={{ height: 560, width: '100%', cursor: 'pointer' }}>
+                        <div style={{ height: 800, width: '100%', cursor: 'pointer' }}>
                             <ResponsiveCirclePacking
                                 data={data}
                                 id="name"
@@ -209,7 +209,7 @@ export default function CommunityAnalysisCard() {
                     )}
 
                     {!loading && (!data || !data.children || data.children.length === 0) && (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 560 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 800 }}>
                             <Dna size={48} color="#475569" />
                             <span style={{ color: '#475569', marginTop: 12 }}>
                                 No se detectaron comunidades. Agrega más datos al grafo.

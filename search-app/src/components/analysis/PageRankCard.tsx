@@ -222,12 +222,12 @@ export default function PageRankCard() {
                                     UMBRAL DE CONFIANZA
                                 </div>
                                 <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 700 }}>
-                                    {minWeight.toFixed(1)}
+                                    {minWeight.toFixed(2)}
                                 </div>
                             </div>
                             <input
                                 type="range"
-                                min="0" max="0.9" step="0.1"
+                                min="0" max="0.9" step="0.05"
                                 value={minWeight}
                                 onChange={(e) => setMinWeight(parseFloat(e.target.value))}
                                 style={{ width: '100%', cursor: 'pointer', accentColor: barColor }}
