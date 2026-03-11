@@ -35,7 +35,8 @@ docs/
 | Documento | Descripción |
 |-----------|-------------|
 | [enrichment_summary.md](backend/enrichment_summary.md) | Referencia técnica de todos los endpoints de enriquecimiento (`/api/enrichment`, `/api/explore`) |
-| [fuzzy_concept_summary.md](backend/fuzzy_concept_summary.md) | Lógica de pesos difusos en relaciones del grafo |
+| [FUZZY_LOGIC.md](backend/FUZZY_LOGIC.md) | 🧮 **Guía técnica completa** — Mínimo de Zadeh, fórmulas, ejemplos, uso por herramienta |
+| [fuzzy_concept_summary.md](backend/fuzzy_concept_summary.md) | Resumen ejecutivo del ciclo de vida de entidades difusas |
 | [CELERY_GUIDE.md](backend/CELERY_GUIDE.md) | Configuración y uso del worker Celery |
 | [TROUBLESHOOTING.md](backend/TROUBLESHOOTING.md) | Errores comunes y soluciones |
 
