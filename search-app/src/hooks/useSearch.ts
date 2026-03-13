@@ -11,7 +11,6 @@ import {
 import type {
     SemanticTextRequest,
     VisualSigLIPRequest,
-    HybridVisualRequest,
     GraphCrispRequest,
     GraphFuzzyRequest,
     SearchTab,

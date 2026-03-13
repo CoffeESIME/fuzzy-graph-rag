@@ -1,0 +1,7 @@
+.git
+.gitignore
+docs/
+tumblr/
+graph-rag/
+__pycache__
+*.pyc

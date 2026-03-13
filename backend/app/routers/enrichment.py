@@ -12,7 +12,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from shared.clients import get_neo4j_driver, get_weaviate_client
 from worker.utils import generate_collection_uuid
-from worker.tasks import call_text_embeddings_api
+# NOTE: call_text_embeddings_api is imported locally inside the endpoint
+# to avoid the circular import: worker.tasks → app → enrichment → worker.tasks
 import logging
 import math
 
@@ -177,6 +178,7 @@ def get_preview_weights(
 
     # Vectorize the node description (in memory only)
     try:
+        from worker.tasks import call_text_embeddings_api  # local import to avoid circular dependency
         emb_res = call_text_embeddings_api(description)
         desc_vector = emb_res.get("embedding")
         if not desc_vector and "data" in emb_res:

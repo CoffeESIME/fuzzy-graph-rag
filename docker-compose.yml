@@ -1,0 +1,284 @@
+# ============================================================
+#  GraphRAG – Docker Compose Unificado
+#  Uso:
+#    1. cp .env.docker .env
+#    2. Editar .env (ajustar LLM_GATEWAY_URL y credenciales)
+#    3. docker compose up --build
+#
+#  Para usar Whisper con GPU Nvidia:
+#    docker compose --profile gpu up --build
+#
+#  Para usar Whisper solo con CPU (más lento):
+#    docker compose --profile cpu up --build
+# ============================================================
+
+name: graphrag
+
+services:
+
+  # ──────────────────────────
+  # BASES DE DATOS
+  # ──────────────────────────
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.29.2
+    container_name: rag_weaviate
+    restart: unless-stopped
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --scheme
+      - http
+    ports:
+      - "8081:8080"
+      - "50051:50051"
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      ENABLE_MODULES: ""
+      # CLUSTER_HOSTNAME is intentionally omitted:
+      # setting it enables gossip/memberlist mode which requires a routable private IP
+      # (fails in Docker with "No private IP address found").
+      # Single-node Weaviate works without any cluster config.
+    networks:
+      - rag_net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  neo4j:
+    image: neo4j:5.19.0
+    container_name: rag_neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_plugins:/plugins
+    environment:
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD}"
+      # Solo APOC — graph-data-science no es compatible con Neo4j 5.19.0
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+    networks:
+      - rag_net
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "${NEO4J_PASSWORD}", "RETURN 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: rag_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rag_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rag_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - rag_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: rag_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9005:9000"   # S3 API
+      - "8001:9001"   # MinIO Console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
+    volumes:
+      - minio_data:/data
+    networks:
+      - rag_net
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────
+  # WHISPER (speaches)
+  # Elige un profile al levantar:
+  #   Nvidia GPU → docker compose --profile gpu up
+  #   Solo CPU   → docker compose --profile cpu up
+  # ──────────────────────────
+
+  # Whisper con GPU Nvidia
+  whisper-gpu:
+    image: ghcr.io/speaches-ai/speaches:latest-cuda
+    container_name: rag_whisper_gpu
+    profiles: [gpu]
+    restart: unless-stopped
+    ports:
+      - "8778:8000"
+    environment:
+      - DEFAULT_LANGUAGE=es
+    volumes:
+      - whisper_models:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      rag_net:
+        aliases: [whisper]   # El backend usa http://whisper:8000
+
+  # Whisper solo CPU (más lento pero sin requisitos de GPU)
+  whisper-cpu:
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
+    container_name: rag_whisper_cpu
+    profiles: [cpu]
+    restart: unless-stopped
+    ports:
+      - "8778:8000"
+    environment:
+      - DEFAULT_LANGUAGE=es
+    volumes:
+      - whisper_models:/root/.cache/huggingface
+    networks:
+      rag_net:
+        aliases: [whisper]   # El backend usa http://whisper:8000
+
+  # ──────────────────────────
+  # APLICACIÓN
+  # ──────────────────────────
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rag_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      # Sobreescribir hosts localhost → nombres de servicio Docker
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NEO4J_URI: bolt://neo4j:7687
+      WEAVIATE_URL: weaviate
+      WEAVIATE_PORT: 8080
+      MINIO_ENDPOINT: minio:9000
+      MINIO_SECURE: "False"
+      WHISPER_API_URL: http://whisper:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      weaviate:
+        condition: service_healthy
+    networks:
+      - rag_net
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rag_worker
+    restart: unless-stopped
+    # Sobreescribir el CMD del Dockerfile para arrancar Celery
+    command:
+      - celery
+      - -A
+      - worker.celery_app
+      - worker
+      - --loglevel=info
+      - --concurrency=2
+    env_file: .env
+    environment:
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NEO4J_URI: bolt://neo4j:7687
+      WEAVIATE_URL: weaviate
+      WEAVIATE_PORT: 8080
+      MINIO_ENDPOINT: minio:9000
+      MINIO_SECURE: "False"
+      WHISPER_API_URL: http://whisper:8000
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - rag_net
+
+  frontend:
+    build:
+      context: ./search-app
+      dockerfile: Dockerfile
+    container_name: rag_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - rag_net
+
+# ──────────────────────────
+# VOLÚMENES NOMBRADOS
+# (los datos persisten entre reinicios)
+# ──────────────────────────
+volumes:
+  weaviate_data:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_plugins:
+  postgres_data:
+  redis_data:
+  minio_data:
+  whisper_models:
+
+networks:
+  rag_net:
+    driver: bridge

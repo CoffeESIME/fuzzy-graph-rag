@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FileText, BarChart3 } from 'lucide-react';
-import type { SearchResponse, SearchResult } from '../../types/search';
+import type { SearchResponse, MultimodalFusionResponse, GraphCrispResponse, SearchResult } from '../../types/search';
 import { useSearchStore } from '../../store/searchStore';
 import {
     detectStrategy,
@@ -11,8 +11,15 @@ import {
 } from '../../utils/scoreNormalizer';
 import MediaPreview from './MediaPreview';
 
+type AnySearchResponse = SearchResponse | MultimodalFusionResponse | GraphCrispResponse;
+
+/** Returns true only for responses that carry a flat `results` array */
+function isSearchResponse(data: AnySearchResponse): data is SearchResponse | GraphCrispResponse {
+    return 'results' in data;
+}
+
 interface Props {
-    data: SearchResponse | null;
+    data: AnySearchResponse | null;
     loading: boolean;
     error: string | null;
 }
@@ -58,7 +65,10 @@ export default function SearchResults({ data, loading, error }: Props) {
 
     if (!data) return null;
 
-    if (data.results.length === 0) {
+    // MultimodalFusionResponse has fused_results, not results[]
+    const resultsArray: SearchResult[] = isSearchResponse(data) ? data.results : [];
+
+    if (resultsArray.length === 0) {
         return (
             <div style={{
                 marginTop: 24, padding: 20, textAlign: 'center',
@@ -71,7 +81,7 @@ export default function SearchResults({ data, loading, error }: Props) {
 
     // Normalize scores for the entire batch
     const strategy = detectStrategy(activeTab);
-    const rawScores = data.results.map(r => r.score);
+    const rawScores = resultsArray.map(r => r.score);
     const normalized: NormalizedScore[] = normalizeScores(rawScores, strategy);
     const matchBadge = getMatchTypeBadge(activeTab);
 
@@ -91,9 +101,9 @@ export default function SearchResults({ data, loading, error }: Props) {
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <BarChart3 size={14} />
                     <strong>{data.total_results}</strong> resultados
-                    {data.spaces_searched && data.spaces_searched.length > 0 && (
+                    {(data as any).spaces_searched?.length > 0 && (
                         <span style={{ color: 'var(--text-muted)' }}>
-                            · {data.spaces_searched.join(', ')}
+                            · {((data as any).spaces_searched as string[]).join(', ')}
                         </span>
                     )}
                 </span>
@@ -123,7 +133,7 @@ export default function SearchResults({ data, loading, error }: Props) {
 
             {/* Result Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {data.results.map((item, idx) => {
+                {resultsArray.map((item, idx) => {
                     const norm = normalized[idx];
 
                     const title = String(

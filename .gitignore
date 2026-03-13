@@ -38,6 +38,7 @@ dist/
 .env.*
 !.env.example
 !.env.template
+!.env.docker
 
 # IDEs
 .idea/
