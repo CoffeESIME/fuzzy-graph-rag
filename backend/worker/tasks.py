@@ -1547,6 +1547,7 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     logger.info(f"   🎯 Target: {collection_name}/{target_vector_name}")
     
     # === WEAVIATE UPSERT ===
+    weaviate_error = None
     try:
         weaviate_client = get_weaviate_client()
         
@@ -1563,10 +1564,12 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
             logger.info(f"   💾 Weaviate UPSERT successful: {collection_name}/{weaviate_uuid[:8]}...")
         else:
             logger.warning(f"   ⚠️ Weaviate UPSERT returned False")
+            weaviate_error = "Weaviate UPSERT returned False"
             
     except Exception as e:
         logger.error(f"   ❌ Weaviate upsert failed: {e}")
-        # Continue to update sidecar even if Weaviate fails
+        weaviate_error = str(e)
+        # Continue to stage suggestions and log to sidecar even if Weaviate fails, but we will raise the error at the end
     
     # ========================================
     # STEP G: NEO4J - STAGE SUGGESTIONS FOR HUMAN REVIEW (HITL SAFETY)
@@ -1618,6 +1621,9 @@ def process_text_chunk_task(asset: Asset, vector_status: VectorStatus, session) 
     )
     
     logger.info(f"   ✅ TEXT_CHUNK completed successfully")
+    
+    if weaviate_error:
+        raise Exception(f"Weaviate upsert failed (UUID not saved): {weaviate_error}")
     
     return {
         'status': 'COMPLETED',

@@ -10,7 +10,7 @@ import {
 // TYPES & CONSTANTS
 // ==========================================
 
-const API = 'http://localhost:8000';
+const API = '/api';
 
 const VECTOR_OPTS = [
     { id: 'visual_siglip', label: 'Visual SigLIP', icon: '🖼️' },

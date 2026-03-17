@@ -1,0 +1,3 @@
+# Entry point for uvicorn: re-exports the FastAPI app from the package.
+# Run from the `backend/` directory: poetry run uvicorn app.main:app --reload ...
+from app import app  # noqa: F401

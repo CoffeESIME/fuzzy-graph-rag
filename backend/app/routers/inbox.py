@@ -381,44 +381,84 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             raw_rel = concept.get("relation_type", "EVOKES")
             rel_type = sanitize_rel_type(raw_rel, "EVOKES")
 
-            # 1. Look for exact name match OR match inside the aliases array
-            # 2. If it exists, use it. If not, create a new node with $name
-            query = f"""
-            MATCH (a:DigitalAsset {{file_hash: $file_hash}})
-            
-            // Try to find an existing concept by name or alias
-            OPTIONAL MATCH (existing:Concept)
-            WHERE existing.name = $name OR $name IN coalesce(existing.aliases, [])
-            
-            // If we found one, use it. If not, create a new one.
-            CALL apoc.merge.node(['Concept'], {{name: coalesce(existing.name, $name)}}) YIELD node AS c
-            
-            // Set properties if just created
-            ON CREATE SET 
-                c.created_at = datetime(),
-                c.domain = $domain,
-                c.definition = $definition,
-                c.source = 'ai_extraction',
-                c.aliases = []
-            
-            // Link asset to concept
-            MERGE (a)-[r:{rel_type}]->(c)
-            ON CREATE SET 
-                r.created_at = datetime(),
-                r.weight = $weight,
-                r.reasoning = $reasoning
-            ON MATCH SET
-                r.weight = CASE WHEN coalesce(r.weight, 1.0) + coalesce($weight, 0.5) > 1.0 THEN 1.0 ELSE coalesce(r.weight, 1.0) + coalesce($weight, 0.5) END,
-                r.reasoning = CASE WHEN $weight > r.weight THEN $reasoning ELSE r.reasoning END
+            # FEATURE: Hub Matching - First check if a Concept exists that has this name in its tags
+            hub_check_query = """
+            MATCH (hub:Concept)
+            WHERE $name IN coalesce(hub.tags, [])
+            RETURN hub.name AS hub_name
+            LIMIT 1
             """
-            session.run(query, 
-                file_hash=file_hash, name=c_name,
-                domain=concept.get("domain", "General"),
-                definition=concept.get("definition", ""),
-                weight=concept.get("confidence", 0.5), # Fuzzy default
-                reasoning=concept.get("reasoning", "")
-            )
-            nodes_created += 1; relationships_created += 1
+            hub_record = session.run(hub_check_query, name=c_name).single()
+            
+            if hub_record:
+                # We found a hub concept! Link the asset to the hub, and add the tag directly to the asset.
+                hub_name = hub_record["hub_name"]
+                logger.info(f"   🔄 Hub match found: Linking concept '{c_name}' to hub '{hub_name}'")
+                
+                hub_link_query = f"""
+                MATCH (a:DigitalAsset {{file_hash: $file_hash}})
+                MATCH (hub:Concept {{name: $hub_name}})
+                
+                // Add the tag to the asset if it's not already there
+                SET a.tags = CASE WHEN NOT $name IN coalesce(a.tags, []) 
+                                  THEN coalesce(a.tags, []) + $name 
+                                  ELSE a.tags END
+                
+                MERGE (a)-[r:{rel_type}]->(hub)
+                ON CREATE SET 
+                    r.created_at = datetime(),
+                    r.weight = $weight,
+                    r.reasoning = 'Mapped via hub tag: ' + $name
+                ON MATCH SET
+                    r.weight = CASE WHEN coalesce(r.weight, 1.0) + coalesce($weight, 0.5) > 1.0 THEN 1.0 ELSE coalesce(r.weight, 1.0) + coalesce($weight, 0.5) END
+                """
+                session.run(hub_link_query, 
+                    file_hash=file_hash, 
+                    name=c_name, 
+                    hub_name=hub_name,
+                    weight=concept.get("confidence", 0.5)
+                )
+                relationships_created += 1
+                # Note: We didn't create a new concept node, we just reused the hub
+                
+            else:
+                # FIX: Normal Concept creation flow without the apoc CALL ON CREATE SET error
+                query = f"""
+                MATCH (a:DigitalAsset {{file_hash: $file_hash}})
+                
+                // 1. Resolve target name (either existing name or new name)
+                OPTIONAL MATCH (existing:Concept)
+                WHERE existing.name = $name OR $name IN coalesce(existing.aliases, [])
+                WITH a, coalesce(existing.name, $name) AS target_name
+                
+                // 2. Safely MERGE on the resolved name
+                MERGE (c:Concept {{name: target_name}})
+                ON CREATE SET 
+                    c.created_at = datetime(),
+                    c.domain = $domain,
+                    c.definition = $definition,
+                    c.source = 'ai_extraction',
+                    c.aliases = [],
+                    c.tags = []
+                
+                // 3. Link asset to concept
+                MERGE (a)-[r:{rel_type}]->(c)
+                ON CREATE SET 
+                    r.created_at = datetime(),
+                    r.weight = $weight,
+                    r.reasoning = $reasoning
+                ON MATCH SET
+                    r.weight = CASE WHEN coalesce(r.weight, 1.0) + coalesce($weight, 0.5) > 1.0 THEN 1.0 ELSE coalesce(r.weight, 1.0) + coalesce($weight, 0.5) END,
+                    r.reasoning = CASE WHEN $weight > coalesce(r.weight, 0.0) THEN $reasoning ELSE r.reasoning END
+                """
+                session.run(query, 
+                    file_hash=file_hash, name=c_name,
+                    domain=concept.get("domain", "General"),
+                    definition=concept.get("definition", ""),
+                    weight=concept.get("confidence", 0.5), # Fuzzy default
+                    reasoning=concept.get("reasoning", "")
+                )
+                nodes_created += 1; relationships_created += 1
 
         # 5. TAGS (Igual que antes)
         filtered_tags = filter_redundant_tags(tags, all_entity_names)
