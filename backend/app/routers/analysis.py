@@ -315,6 +315,7 @@ class PathfinderRequest(BaseModel):
     source_element_id: str
     target_element_id: str
     mode: str = "direct"  # "direct" | "lateral"
+    threshold: float = 0.85
 
 class PathfinderNodeData(BaseModel):
     id: str
@@ -356,10 +357,10 @@ def pathfind(request: PathfinderRequest):
         WHERE elementId(src) = $source AND elementId(tgt) = $target
         MATCH p = (src)-[*1..8]-(tgt)
         WITH p,
-             // Costo de aristas: penaliza aristas fuertes (> 0.85) para forzar rutas creativas
+             // Costo de aristas: penaliza aristas fuertes (> umbral) para forzar rutas creativas
              REDUCE(cost = 0.0, r IN relationships(p) |
                cost + (1.0 - coalesce(r.weight, 0.5))
-                    + CASE WHEN coalesce(r.weight, 0.5) > 0.85 THEN 2.0 ELSE 0.0 END
+                    + CASE WHEN coalesce(r.weight, 0.5) > $threshold THEN 2.0 ELSE 0.0 END
              ) AS edgeCost,
              // Costo de nodos: penaliza Conceptos hub (muchas conexiones)
              // size([(n)<--(:DigitalAsset)|1]) cuenta el grado sin CALL{}
@@ -397,6 +398,7 @@ def pathfind(request: PathfinderRequest):
                     cypher,
                     source=request.source_element_id,
                     target=request.target_element_id,
+                    threshold=request.threshold,
                 )
                 records = list(result)
 
