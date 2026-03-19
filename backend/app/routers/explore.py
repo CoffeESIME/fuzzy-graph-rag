@@ -354,7 +354,7 @@ def get_latent_connections(
             MATCH (seed)-[r]->(target)
             WHERE elementId(seed) = $node_id AND (target:Concept OR target:Event OR target:Organization OR target:Person OR target:Location OR target:Project)
             RETURN elementId(target) as target_id, coalesce(target.name, target.title) as target_name, 
-                   type(r) as relation_type, coalesce(r.weight, 1.0) as current_weight
+                   type(r) as relation_type, coalesce(toFloat(r.weight), 1.0) as current_weight
             """
             seed_relations = [dict(record) for record in session.run(query_rels, node_id=node_id)]
             
@@ -508,7 +508,7 @@ def get_latent_connections(
                 }
                 
                 RETURN elementId(concept) as concept_id, coalesce(concept.name, concept.title) as concept_name,
-                       type(r) as relation_type, coalesce(r.weight, 1.0) as current_weight,
+                       type(r) as relation_type, coalesce(toFloat(r.weight), 1.0) as current_weight,
                        concept_degree
                 """
                 
@@ -561,7 +561,7 @@ def get_latent_connections(
                 }
                 
                 RETURN elementId(concept) as concept_id, coalesce(concept.name, concept.title) as concept_name,
-                       type(r) as relation_type, coalesce(r.weight, 1.0) as current_weight,
+                       type(r) as relation_type, coalesce(toFloat(r.weight), 1.0) as current_weight,
                        concept_degree
                 """
 

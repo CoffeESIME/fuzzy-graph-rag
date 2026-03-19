@@ -638,7 +638,7 @@ def explain_analytical_path(req: PathExplanationRequest):
         node_map = {n.get("id"): n for n in req.nodes}
         
         # Sort edges assuming they are mostly sequential, but handle flexibly
-        for i, edge in enumerate(req.edges):
+        for edge in req.edges:
             src = node_map.get(edge.get("source"), {})
             tgt = node_map.get(edge.get("target"), {})
             
@@ -651,7 +651,7 @@ def explain_analytical_path(req: PathExplanationRequest):
             weight = edge.get("weight")
             w_str = f" (peso: {weight})" if weight is not None else ""
             
-            step = f"Paso {i+1}: [{src_type}] '{src_name}' --({rel}){w_str}--> [{tgt_type}] '{tgt_name}'"
+            step = f"♦ Conexión: [{src_type}] '{src_name}' <---({rel}){w_str}---> [{tgt_type}] '{tgt_name}'"
             path_str_parts.append(step)
 
         path_context = "\n".join(path_str_parts)
@@ -769,20 +769,23 @@ def explain_analytical_path(req: PathExplanationRequest):
 
         # 2. Build Prompt
         system_prompt = f"""Eres un analista de datos y experto en grafos de conocimiento.
-Tu tarea es explicar un camino asociativo descubierto por la herramienta '{req.tool_name}'.
-El usuario quiere entender POR QUÃ‰ y CÃ“MO el primer nodo de este camino se conecta con el Ãºltimo nodo, a travÃ©s de los pasos intermedios.
+                            Tu tarea es explicar un camino asociativo (serendipia) descubierto por la herramienta '{req.tool_name}'.
 
-Instrucciones:
-1. Usa la informaciÃ³n de <CONTEXTO_ARCHIVOS> para fundamentar la conexiÃ³n (ej. letras de canciones, resÃºmenes, textos). Es vital utilizar este contenido extraÃ­do.
-2. Escribe una narrativa fluida explicando paso a paso la conexiÃ³n.
-3. Menciona los pesos (weights) si son bajos (< 0.8), indicando que es una conexiÃ³n "latente", "dÃ©bil" o "sorprendente".
-4. Si el camino pasa por un Concepto central (hub), menciÃ³nalo como el "puente conceptual".
-5. OBLIGATORIO: Finaliza con un pÃ¡rrafo llamado "ConclusiÃ³n del Subsistema" resumiendo el hallazgo general o la idea central que une todo el camino.
-6. MantÃ©n un tono analÃ­tico, profundo y fluido.
-7. Responde en EspaÃ±ol.
-"""
+                            CRÍTICO: Los caminos en un grafo de conocimiento no siempre son narrativamente lineales. Aunque recibas los nodos en un orden específico (del Nodo A al Nodo Z), la relación causal, psicológica o lógica puede explicarse mejor en sentido inverso (del Nodo Z al Nodo A) o partiendo del centro hacia los extremos.
 
-        user_prompt = f"AquÃ­ estÃ¡ el camino exacto extraÃ­do de Neo4j:\n\n{path_context}{context_block}\n\nPor favor, explica detalladamente esta cadena de asociaciones."
+                            Instrucciones:
+                            1. Analiza el camino completo y EVALÚA cuál es la dirección narrativa más coherente (causa -> efecto, problema -> síntoma, o de lo mundano a lo profundo). 
+                            2. Construye tu explicación siguiendo la dirección que elegiste como la más lógica, indicando claramente desde qué punto estás partiendo y hacia dónde te diriges.
+                            3. Usa la información de <CONTEXTO_ARCHIVOS> para fundamentar la conexión (ej. letras de canciones, descripciones de imágenes, resúmenes). Es vital utilizar este contenido.
+                            4. Escribe una narrativa fluida explicando paso a paso la conexión en la dirección seleccionada.
+                            5. Menciona los pesos (weights) si son bajos (< 0.8), indicando que es una conexión "latente", "débil" o "sorprendente".
+                            6. Si el camino pasa por un Concepto central (hub), menciónalo como el "puente conceptual".
+                            7. OBLIGATORIO: Finaliza con un párrafo llamado "Conclusión del Subsistema" resumiendo el hallazgo general, la idea central que une todo el camino y justificando brevemente por qué la dirección narrativa elegida tiene sentido.
+                            8. Mantén un tono analítico, profundo y fluido.
+                            9. Responde en Español.
+                            """
+
+        user_prompt = f"Aquí tienes el conjunto de conexiones no direccionales extraídas del grafo de conocimiento:\n\n{path_context}{context_block}\n\nAnaliza este conjunto en su totalidad. Determina libremente cuál es la dirección narrativa o causal más lógica y explica detalladamente la cadena de asociaciones siguiendo esa dirección elegida, integrando la información de los archivos."
 
         # 3. Request to LLM Gateway
         url = f"{LLM_GATEWAY_URL}/v1/chat/completions"
@@ -873,9 +876,9 @@ def analyze_fog_of_war():
             "mock_data": {"distribution": [], "total_edges": 0}
         }
 
-# ðŸ§® Old Heatmap removed â€” replaced by Jaccard Co-Occurrence version at bottom of file
+# Old Heatmap removed â€” replaced by Jaccard Co-Occurrence version at bottom of file
 
-# ðŸ© Chord Diagram (Category Co-Occurrence via DigitalAssets)
+# Chord Diagram (Category Co-Occurrence via DigitalAssets)
 @router.post("/chord", response_model=AnalysisToolResponse)
 def analyze_chord(method: str = "standard", min_weight: float = 0.0):
     """
@@ -1252,7 +1255,7 @@ def analyze_weight_distribution(step: float = 0.1):
             query = f"""
                 MATCH ()-[r]->()
                 WHERE r.weight IS NOT NULL
-                WITH toInteger(r.weight * {multiplier}) as bucket, count(*) as count
+                WITH toInteger(toFloat(r.weight) * {multiplier}) as bucket, count(*) as count
                 RETURN bucket, count
                 ORDER BY bucket ASC
             """
@@ -1273,13 +1276,15 @@ def analyze_weight_distribution(step: float = 0.1):
             
             for record in result:
                 b = record["bucket"]
-                # The bucket could theoretically be exactly the multiplier if weight is 1.0
-                # Handle edge case where weight is 1.000 
-                if b == multiplier:
-                    b = multiplier - 1
-                    
-                if 0 <= b < multiplier:
-                    bins[b]["count"] += record["count"]
+                
+                if b is not None:
+                    # The bucket could theoretically be exactly the multiplier if weight is 1.0
+                    # Handle edge case where weight is 1.000 
+                    if b >= multiplier:
+                        b = multiplier - 1
+                        
+                    if 0 <= b < multiplier:
+                        bins[b]["count"] += record["count"]
             
             # Format for Nivo Bar
             # data = [{ range: "0.0-0.1", count: 123 }, ...]

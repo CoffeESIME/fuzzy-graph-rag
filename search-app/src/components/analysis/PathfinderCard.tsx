@@ -14,7 +14,7 @@ import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import {
     Search, Route, Zap, Loader2, X, ChevronRight,
-    FileText, File, Lightbulb, User, Building2, MapPin, Move, Download
+    FileText, File, Lightbulb, User, Building2, MapPin, Move, Download, ChevronUp, ChevronDown, ArrowUp, ArrowDown, Eye, EyeOff
 } from 'lucide-react';
 
 import {
@@ -464,6 +464,7 @@ export default function PathfinderCard() {
     const [explanation, setExplanation] = useState<string | null>(null);
     const [explaining, setExplaining] = useState(false);
     const [privacyMode, setPrivacyMode] = useState(false);
+    const [showExplanation, setShowExplanation] = useState(true);
 
     // React Flow
     const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
@@ -791,26 +792,44 @@ export default function PathfinderCard() {
                     background: '#0f172a',
                     borderRadius: 16,
                     border: '1px solid #1e293b',
-                    padding: '24px',
+                    padding: '20px 24px',
                     position: 'relative',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    transition: 'all 0.3s'
                 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(to right, #a855f7, #3b82f6)' }} />
-                    <h3 style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc', fontSize: '1.1rem' }}>
-                        <span>🪄</span> Explicación del Camino
-                    </h3>
-                    <div style={{
-                        color: '#cbd5e1',
-                        lineHeight: 1.6,
-                        fontSize: '0.95rem',
-                        whiteSpace: 'pre-wrap',
-                        background: '#02061750',
-                        padding: 16,
-                        borderRadius: 12,
-                        border: '1px solid #1e293b'
-                    }}>
-                        {explanation}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showExplanation ? 16 : 0 }}>
+                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc', fontSize: '1.1rem' }}>
+                            <span>🪄</span> Explicación del Camino
+                        </h3>
+                        <button 
+                            onClick={() => setShowExplanation(!showExplanation)}
+                            style={{ 
+                                background: 'transparent', border: '1px solid #334155', borderRadius: 8, 
+                                display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px',
+                                color: '#94a3b8', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.75rem', fontWeight: 600
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.color = '#f8fafc'; e.currentTarget.style.background = '#1e293b'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'transparent'; }}
+                        >
+                            {showExplanation ? <EyeOff size={14} /> : <Eye size={14} />}
+                            {showExplanation ? 'Ocultar' : 'Mostrar'}
+                        </button>
                     </div>
+                    {showExplanation && (
+                        <div style={{
+                            color: '#cbd5e1',
+                            lineHeight: 1.6,
+                            fontSize: '0.95rem',
+                            whiteSpace: 'pre-wrap',
+                            background: '#02061750',
+                            padding: 16,
+                            borderRadius: 12,
+                            border: '1px solid #1e293b'
+                        }}>
+                            {explanation}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -818,6 +837,50 @@ export default function PathfinderCard() {
             {selectedNode && (
                 <AssetDetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
             )}
+
+            {/* Floating Navigation Controls */}
+            <div style={{
+                position: 'fixed',
+                bottom: 32,
+                right: 32,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                zIndex: 1000
+            }}>
+                <button
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    title="Ir arriba"
+                    style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        background: '#1e293b', border: '1px solid #334155',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#f8fafc', cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#334155'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                    <ArrowUp size={20} />
+                </button>
+                <button
+                    onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+                    title="Ir abajo"
+                    style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        background: '#1e293b', border: '1px solid #334155',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#f8fafc', cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#334155'; e.currentTarget.style.transform = 'translateY(2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                    <ArrowDown size={20} />
+                </button>
+            </div>
         </div>
     );
 }
