@@ -121,7 +121,7 @@ function AssetGroupCard({ group, editedWeights, editedRelTypes, approvingIds, al
         setSelectedManualEntity(null);
         if (val.trim().length >= 2) {
             try {
-                const res = await searchGraphEntities(val.trim(), 15, group.assetId);
+                const res = await searchGraphEntities(val.trim(), 15, group.assetId || undefined);
                 setManualEntityResults(res.entities);
             } catch {
                 setManualEntityResults([]);

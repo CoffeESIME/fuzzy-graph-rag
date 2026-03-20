@@ -509,8 +509,8 @@ def analyze_serendipity():
       AND elementId(mid)   <> elementId(end)
       AND elementId(a1)    <> elementId(a2)
       // Factor Serendipia: al menos una arista dÃ©bil/latente
-      AND (coalesce(r1.weight, 1.0) <= 0.7 OR coalesce(r2.weight, 1.0) <= 0.7
-        OR coalesce(r3.weight, 1.0) <= 0.7 OR coalesce(r4.weight, 1.0) <= 0.7)
+      AND (coalesce(r1.weight, 1.0) <= 0.79 OR coalesce(r2.weight, 1.0) <= 0.79
+        OR coalesce(r3.weight, 1.0) <= 0.79 OR coalesce(r4.weight, 1.0) <= 0.79)
 
     // 4. Calcular el grado del nodo puente (hub) â€” penaliza mega-hubs
     CALL {
@@ -907,9 +907,6 @@ def search_graph_entities(q: str = "", limit: int = 20, asset_id: str = ""):
     have a direct relationship with that asset, returning already_connected=True
     for those nodes so the UI can flag or hide them.
     """
-    import logging as _logging
-    _log = _logging.getLogger(__name__)
-
     driver = get_neo4j_driver()
     entity_labels = ["Concept", "Person", "Event", "Organization", "Location", "Project"]
     try:
@@ -943,14 +940,8 @@ def search_graph_entities(q: str = "", limit: int = 20, asset_id: str = ""):
                 )
             entities = [{"id": r["id"], "name": r["name"], "entity_type": r["entity_type"], "already_connected": False} for r in result]
 
-            # If an asset_id was given, check which entities already have a link
-            _log.info(f"[graph-entities] q='{q}' asset_id='{asset_id}' entities_found={len(entities)}")
-
             if asset_id.strip() and entities:
                 entity_ids = [e["id"] for e in entities]
-                _log.info(f"[graph-entities] Checking connected for asset='{asset_id}' against entity_ids={entity_ids}")
-
-                # Use UNWIND for robust list comparison (avoids potential driver IN type issues)
                 connected_result = session.run(
                     """
                     MATCH (asset:DigitalAsset)
@@ -964,8 +955,6 @@ def search_graph_entities(q: str = "", limit: int = 20, asset_id: str = ""):
                     asset_id=asset_id.strip(), entity_ids=entity_ids
                 )
                 connected_set = {record["connected_id"] for record in connected_result}
-                _log.info(f"[graph-entities] Connected set: {connected_set}")
-
                 for e in entities:
                     if e["id"] in connected_set:
                         e["already_connected"] = True
