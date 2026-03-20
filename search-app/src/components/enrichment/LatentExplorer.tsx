@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Network, Check, X, Layers, RefreshCw, FileText, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { Search, Network, Check, X, Layers, RefreshCw, FileText, ChevronDown, ChevronUp, Edit2 } from 'lucide-react';
 
 import {
     getExplorableSeeds,
@@ -7,8 +7,10 @@ import {
     approveLatentConnection,
     getAssetPreview,
     getConcepts,
+    getRelationTypes,
+    searchGraphEntities,
 } from '../../lib/api';
-import type { SeedNode, LatentConnectionSuggestion, AssetPreviewResponse, ValidateConnectionItem, ConceptNode } from '../../lib/api';
+import type { SeedNode, LatentConnectionSuggestion, AssetPreviewResponse, ValidateConnectionItem, ConceptNode, GraphEntity } from '../../lib/api';
 import { validateLatentConnections } from '../../lib/api';
 import MediaPreview from '../search/MediaPreview';
 
@@ -16,8 +18,10 @@ import MediaPreview from '../search/MediaPreview';
 interface AssetGroupProps {
     group: { assetId: string; assetName: string; items: LatentConnectionSuggestion[] };
     editedWeights: Record<string, number>;
+    editedRelTypes: Record<string, string>;
     approvingIds: Set<string>;
     allConcepts: ConceptNode[];
+    allRelationTypes: string[];
     onPreview: (id: string) => void;
     onApprove: (s: LatentConnectionSuggestion | {
         asset_id: string;
@@ -28,10 +32,11 @@ interface AssetGroupProps {
     }, key: string) => void;
     onDiscard: (key: string) => void;
     onWeightChange: (key: string, val: string) => void;
+    onRelTypeChange: (key: string, val: string) => void;
     onFilterByKeys: (assetId: string, validKeys: string[]) => void;
 }
 
-function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApprove, onDiscard, onWeightChange, onFilterByKeys }: AssetGroupProps) {
+function AssetGroupCard({ group, editedWeights, editedRelTypes, approvingIds, allConcepts, allRelationTypes, onApprove, onDiscard, onWeightChange, onRelTypeChange, onFilterByKeys }: AssetGroupProps) {
     const [preview, setPreview] = useState<AssetPreviewResponse | null>(null);
     const [loadingPreview, setLoadingPreview] = useState(false);
     const [expanded, setExpanded] = useState(true);
@@ -39,10 +44,17 @@ function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApp
     const [validating, setValidating] = useState(false);
     const [llmNote, setLlmNote] = useState<{ text: string; removed: number } | null>(null);
 
+    // Per-row relation type search open state
+    const [relTypeDropdownOpen, setRelTypeDropdownOpen] = useState<string | null>(null);
+
     // Manual Connection State
     const [manualSearch, setManualSearch] = useState('');
     const [manualWeight, setManualWeight] = useState(0.8);
-    const [selectedManualConceptId, setSelectedManualConceptId] = useState('');
+    const [selectedManualEntity, setSelectedManualEntity] = useState<GraphEntity | null>(null);
+    const [manualRelType, setManualRelType] = useState('EVOKES_CONCEPT');
+    const [manualRelSearch, setManualRelSearch] = useState('');
+    const [manualRelDropdownOpen, setManualRelDropdownOpen] = useState(false);
+    const [manualEntityResults, setManualEntityResults] = useState<GraphEntity[]>([]);
 
     useEffect(() => {
         setLoadingPreview(true);
@@ -83,29 +95,45 @@ function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApp
     };
 
     const handleManualApprove = () => {
-        if (!selectedManualConceptId || Number.isNaN(manualWeight)) return;
+        if (!selectedManualEntity || Number.isNaN(manualWeight)) return;
 
-        const concept = allConcepts.find(c => c.id === selectedManualConceptId);
-        if (!concept) return;
-
-        const uniqueKey = `manual-${group.assetId}-${selectedManualConceptId}`;
+        const uniqueKey = `manual-${group.assetId}-${selectedManualEntity.id}`;
         const manualSuggestion = {
             asset_id: group.assetId,
-            target_concept_id: concept.id,
-            relation_type: "EVOKES_CONCEPT",
+            target_concept_id: selectedManualEntity.id,
+            relation_type: manualRelType,
             proposed_weight: Math.min(Math.max(manualWeight, 0), 1),
-            reasoning: "Manual connection via Latent Explorer"
+            reasoning: `Manual connection via Latent Explorer (${selectedManualEntity.entity_type})`
         };
 
         onApprove(manualSuggestion, uniqueKey);
 
         // Reset manual form
         setManualSearch('');
-        setSelectedManualConceptId('');
+        setSelectedManualEntity(null);
         setManualWeight(0.8);
+        setManualRelType('EVOKES_CONCEPT');
+        setManualEntityResults([]);
     };
 
-    const filteredManualConcepts = manualSearch.trim() ? allConcepts.filter(c => c.name.toLowerCase().includes(manualSearch.toLowerCase())).slice(0, 15) : [];
+    const handleManualSearchChange = async (val: string) => {
+        setManualSearch(val);
+        setSelectedManualEntity(null);
+        if (val.trim().length >= 2) {
+            try {
+                const res = await searchGraphEntities(val.trim(), 15, group.assetId);
+                setManualEntityResults(res.entities);
+            } catch {
+                setManualEntityResults([]);
+            }
+        } else {
+            setManualEntityResults([]);
+        }
+    };
+
+    const filteredManualRelTypes = allRelationTypes.filter(t =>
+        t.toLowerCase().includes(manualRelSearch.toLowerCase())
+    );
 
     return (
         <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden' }}>
@@ -200,40 +228,102 @@ function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApp
                     <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16, marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Agregar Conexión Manual</div>
                         <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                                <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                    <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Buscar Concepto en Neo4j</label>
+
+                            {/* Row 1: Entity search + rel type */}
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                {/* Entity search */}
+                                <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                    <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Entidad (Concepto / Persona / Evento…)</label>
                                     <div style={{ position: 'relative' }}>
                                         <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                         <input
                                             value={manualSearch}
-                                            onChange={e => {
-                                                setManualSearch(e.target.value);
-                                                setSelectedManualConceptId('');
-                                            }}
-                                            placeholder="Escribe para buscar..."
-                                            style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: '6px 12px 6px 30px', fontSize: '0.8rem', color: 'var(--text-primary)', outline: 'none' }}
+                                            onChange={e => handleManualSearchChange(e.target.value)}
+                                            placeholder="Escribe 2+ caracteres para buscar..."
+                                            style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-primary)', border: selectedManualEntity ? '1px solid #10b981' : '1px solid var(--border-subtle)', borderRadius: 6, padding: '6px 12px 6px 30px', fontSize: '0.8rem', color: 'var(--text-primary)', outline: 'none' }}
                                         />
-                                        {filteredManualConcepts.length > 0 && !selectedManualConceptId && (
-                                            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, marginTop: 4, zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }} className="custom-scrollbar">
-                                                {filteredManualConcepts.map(c => (
+                                        {manualEntityResults.length > 0 && !selectedManualEntity && (
+                                            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, marginTop: 4, zIndex: 20, maxHeight: 180, overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }} className="custom-scrollbar">
+                                                {manualEntityResults.map(ent => (
                                                     <div
-                                                        key={c.id}
+                                                        key={ent.id}
                                                         onClick={() => {
-                                                            setSelectedManualConceptId(c.id);
-                                                            setManualSearch(c.name);
+                                                            if (ent.already_connected) return;
+                                                            setSelectedManualEntity(ent);
+                                                            setManualSearch(ent.name);
+                                                            setManualEntityResults([]);
                                                         }}
-                                                        style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', borderBottom: '1px solid var(--border-subtle)' }}
+                                                        style={{
+                                                            padding: '6px 12px',
+                                                            fontSize: '0.8rem',
+                                                            cursor: ent.already_connected ? 'default' : 'pointer',
+                                                            borderBottom: '1px solid var(--border-subtle)',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: 8,
+                                                            opacity: ent.already_connected ? 0.55 : 1,
+                                                        }}
+                                                        onMouseEnter={el => { if (!ent.already_connected) (el.currentTarget as HTMLElement).style.background = 'var(--bg-tertiary)'; }}
+                                                        onMouseLeave={el => (el.currentTarget as HTMLElement).style.background = 'transparent'}
                                                     >
-                                                        {c.name} {c.domain && <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>({c.domain})</span>}
+                                                        <span style={{ fontSize: '0.65rem', background: ent.already_connected ? 'rgba(245,158,11,0.15)' : 'rgba(99,102,241,0.2)', color: ent.already_connected ? '#f59e0b' : '#818cf8', padding: '1px 6px', borderRadius: 4, flexShrink: 0, fontWeight: 600 }}>
+                                                            {ent.entity_type}
+                                                        </span>
+                                                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ent.name}</span>
+                                                        {ent.already_connected && (
+                                                            <span style={{ fontSize: '0.6rem', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)', padding: '1px 6px', borderRadius: 4, flexShrink: 0 }}>Ya conectado</span>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
                                         )}
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 80 }}>
-                                    <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Peso (0-1)</label>
+
+                                {/* Relation type selector */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 160 }}>
+                                    <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Tipo de Relación</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <button
+                                            onClick={() => setManualRelDropdownOpen(v => !v)}
+                                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, fontSize: '0.78rem', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', padding: '7px 10px', borderRadius: 6, fontFamily: 'monospace', cursor: 'pointer' }}
+                                        >
+                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{manualRelType}</span>
+                                            <Edit2 size={11} style={{ flexShrink: 0 }} />
+                                        </button>
+                                        {manualRelDropdownOpen && (
+                                            <div style={{ position: 'absolute', top: '100%', left: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 8, marginTop: 4, zIndex: 30, boxShadow: '0 8px 24px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', minWidth: 200 }}>
+                                                <div style={{ padding: '6px 8px', borderBottom: '1px solid var(--border-subtle)' }}>
+                                                    <input
+                                                        autoFocus
+                                                        value={manualRelSearch}
+                                                        onChange={e => setManualRelSearch(e.target.value)}
+                                                        placeholder="Filtrar..."
+                                                        style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderRadius: 5, padding: '4px 8px', fontSize: '0.75rem', color: 'var(--text-primary)', outline: 'none' }}
+                                                    />
+                                                </div>
+                                                <div style={{ maxHeight: 160, overflowY: 'auto' }}>
+                                                    {filteredManualRelTypes.map(rt => (
+                                                        <div key={rt} onClick={() => { setManualRelType(rt); setManualRelDropdownOpen(false); setManualRelSearch(''); }}
+                                                            style={{ padding: '6px 10px', fontSize: '0.77rem', cursor: 'pointer', fontFamily: 'monospace', borderBottom: '1px solid var(--border-subtle)', color: rt === manualRelType ? '#f59e0b' : 'var(--text-primary)', background: rt === manualRelType ? 'rgba(245,158,11,0.1)' : 'transparent' }}
+                                                            onMouseEnter={el => { if (rt !== manualRelType) (el.currentTarget as HTMLElement).style.background = 'var(--bg-tertiary)'; }}
+                                                            onMouseLeave={el => { if (rt !== manualRelType) (el.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                                                        >
+                                                            {rt}
+                                                        </div>
+                                                    ))}
+                                                    {filteredManualRelTypes.length === 0 && <div style={{ padding: '8px 10px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sin resultados</div>}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Row 2: Weight + Vincular button */}
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 90 }}>
+                                    <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Peso (0–1)</label>
                                     <input
                                         type="number" step="0.05" min="0" max="1"
                                         value={manualWeight}
@@ -241,15 +331,13 @@ function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApp
                                         style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: '6px 8px', fontSize: '0.8rem', textAlign: 'center', color: 'var(--text-primary)' }}
                                     />
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end', height: 47 }}>
-                                    <button
-                                        onClick={handleManualApprove}
-                                        disabled={!selectedManualConceptId || Number.isNaN(manualWeight)}
-                                        style={{ background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 16px', fontSize: '0.8rem', fontWeight: 600, cursor: (!selectedManualConceptId || Number.isNaN(manualWeight)) ? 'not-allowed' : 'pointer', opacity: (!selectedManualConceptId || Number.isNaN(manualWeight)) ? 0.5 : 1, height: 29 }}
-                                    >
-                                        Vincular
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={handleManualApprove}
+                                    disabled={!selectedManualEntity || Number.isNaN(manualWeight)}
+                                    style={{ background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 20px', fontSize: '0.82rem', fontWeight: 600, cursor: (!selectedManualEntity || Number.isNaN(manualWeight)) ? 'not-allowed' : 'pointer', opacity: (!selectedManualEntity || Number.isNaN(manualWeight)) ? 0.5 : 1 }}
+                                >
+                                    Vincular
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -261,6 +349,9 @@ function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApp
                             const uniqueKey = `${s.asset_id}-${s.target_concept_id}-${s.relation_type}-${s.direction}`;
                             const isApproving = approvingIds.has(uniqueKey);
                             const currentW = editedWeights[uniqueKey] !== undefined ? editedWeights[uniqueKey] : s.proposed_weight;
+                            const currentRelType = editedRelTypes[uniqueKey] ?? s.relation_type;
+                            const relTypeSearch = typeof relTypeDropdownOpen === 'string' && relTypeDropdownOpen.startsWith(uniqueKey + '::') ? relTypeDropdownOpen.split('::')[1] : '';
+                            const filteredRelTypes = allRelationTypes.filter(t => t.toLowerCase().includes(relTypeSearch.toLowerCase()));
                             return (
                                 <div key={uniqueKey} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -269,10 +360,7 @@ function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApp
                                                 {s.direction === 'seed_to_neighbor' ? 'Semilla ➞ Vecino' : 'Vecino ➞ Semilla'}
                                             </div>
                                             <div style={{ fontWeight: 700, color: '#f472b6', fontSize: '1rem' }}>{s.target_concept_name}</div>
-                                        </div>
-                                        <span style={{ fontSize: '0.65rem', background: 'var(--bg-secondary)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', padding: '2px 8px', borderRadius: 6, flexShrink: 0, fontFamily: 'monospace' }}>
-                                            {s.relation_type}
-                                        </span>
+                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                         <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', borderRadius: 6, padding: '4px 8px', textAlign: 'center' }}>
@@ -293,7 +381,43 @@ function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApp
                                     <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.15)', borderRadius: 6, padding: '6px 10px', lineHeight: 1.5 }}>
                                         <strong style={{ color: 'var(--text-primary)' }}>Motivación: </strong>{s.reasoning}
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                        {/* Relation type selector */}
+                                        <div style={{ position: 'relative', marginRight: 'auto' }}>
+                                            <button
+                                                onClick={() => setRelTypeDropdownOpen(prev => prev?.startsWith(uniqueKey) ? null : uniqueKey + '::')}
+                                                title="Cambiar tipo de relación"
+                                                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', background: 'var(--bg-primary)', color: currentRelType !== s.relation_type ? '#f59e0b' : 'var(--text-muted)', border: currentRelType !== s.relation_type ? '1px solid #f59e0b' : '1px solid var(--border-subtle)', padding: '4px 10px', borderRadius: 6, fontFamily: 'monospace', cursor: 'pointer' }}
+                                            >
+                                                {currentRelType}
+                                                <Edit2 size={11} />
+                                            </button>
+                                            {relTypeDropdownOpen?.startsWith(uniqueKey) && (
+                                                <div style={{ position: 'absolute', bottom: '110%', left: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 8, marginBottom: 4, zIndex: 50, boxShadow: '0 8px 24px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', minWidth: 220 }}>
+                                                    <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-subtle)' }}>
+                                                        <input
+                                                            autoFocus
+                                                            value={relTypeSearch}
+                                                            onChange={e => setRelTypeDropdownOpen(uniqueKey + '::' + e.target.value)}
+                                                            placeholder="Buscar tipo de relación..."
+                                                            style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: '5px 8px', fontSize: '0.78rem', color: 'var(--text-primary)', outline: 'none' }}
+                                                        />
+                                                    </div>
+                                                    <div style={{ maxHeight: 180, overflowY: 'auto' }}>
+                                                        {filteredRelTypes.map(rt => (
+                                                            <div key={rt} onClick={() => { onRelTypeChange(uniqueKey, rt); setRelTypeDropdownOpen(null); }}
+                                                                style={{ padding: '7px 12px', fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'monospace', borderBottom: '1px solid var(--border-subtle)', color: rt === currentRelType ? '#f59e0b' : 'var(--text-primary)', background: rt === currentRelType ? 'rgba(245,158,11,0.1)' : 'transparent', transition: 'background 0.1s' }}
+                                                                onMouseEnter={e => { if (rt !== currentRelType) (e.currentTarget as HTMLElement).style.background = 'var(--bg-tertiary)'; }}
+                                                                onMouseLeave={e => { if (rt !== currentRelType) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                                                            >
+                                                                {rt}
+                                                            </div>
+                                                        ))}
+                                                        {filteredRelTypes.length === 0 && <div style={{ padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sin resultados</div>}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                         <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Peso:</label>
                                         <input
                                             type="number" step="0.05" min="0" max="1"
@@ -305,7 +429,7 @@ function AssetGroupCard({ group, editedWeights, approvingIds, allConcepts, onApp
                                             <X size={16} />
                                         </button>
                                         <button
-                                            onClick={() => onApprove(s, uniqueKey)}
+                                            onClick={() => onApprove({ ...s, relation_type: currentRelType }, uniqueKey)}
                                             disabled={isApproving}
                                             style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#059669', color: '#fff', border: 'none', borderRadius: 7, padding: '5px 14px', fontSize: '0.82rem', fontWeight: 700, cursor: isApproving ? 'not-allowed' : 'pointer' }}
                                         >
@@ -353,6 +477,10 @@ export default function LatentExplorer() {
 
     // Weights local edits
     const [editedWeights, setEditedWeights] = useState<Record<string, number>>({});
+    // Relation type overrides per suggestion
+    const [editedRelTypes, setEditedRelTypes] = useState<Record<string, string>>({});
+    // All available relation types from the graph
+    const [allRelationTypes, setAllRelationTypes] = useState<string[]>([]);
 
     // Graph Concepts for manual linking
     const [allConcepts, setAllConcepts] = useState<ConceptNode[]>([]);
@@ -362,6 +490,9 @@ export default function LatentExplorer() {
         getConcepts()
             .then(res => setAllConcepts(res.concepts))
             .catch(err => console.error("Failed to load concepts for manual linking", err));
+        getRelationTypes()
+            .then(res => setAllRelationTypes(res.relation_types))
+            .catch(err => console.error("Failed to load relation types", err));
     }, []);
 
     const fetchSeeds = async (overrideSortBy?: string) => {
@@ -398,6 +529,8 @@ export default function LatentExplorer() {
             const unique = Array.from(seen.values());
 
             setSuggestions(unique);
+            setEditedWeights({});
+            setEditedRelTypes({});
             if (unique.length === 0) {
                 setError('No se encontraron conexiones latentes nuevas para este nodo.');
             }
@@ -464,6 +597,10 @@ export default function LatentExplorer() {
             ...prev,
             [uniqueKey]: isNaN(num) ? 0 : num
         }));
+    };
+
+    const handleRelTypeChange = (uniqueKey: string, val: string) => {
+        setEditedRelTypes(prev => ({ ...prev, [uniqueKey]: val }));
     };
 
     const handleExportJson = () => {
@@ -684,37 +821,21 @@ export default function LatentExplorer() {
 
                         return (
                             <div className="flex flex-col gap-6">
-                                {/* Export button */}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                    <button
-                                        onClick={handleExportJson}
-                                        title="Exportar sugerencias a JSON"
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: 7,
-                                            padding: '7px 14px', fontSize: 13, fontWeight: 500,
-                                            background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
-                                            border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)',
-                                            cursor: 'pointer', transition: 'all 0.15s'
-                                        }}
-                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-primary)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'; }}
-                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-secondary)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)'; }}
-                                    >
-                                        <Download size={14} />
-                                        Exportar JSON ({suggestions.length})
-                                    </button>
-                                </div>
                                 {Object.values(grouped).map(group => (
                                     <AssetGroupCard
                                         key={group.assetId}
                                         group={group}
                                         editedWeights={editedWeights}
+                                        editedRelTypes={editedRelTypes}
                                         approvingIds={approvingIds}
                                         onPreview={handlePreviewAsset}
                                         onApprove={handleApprove}
                                         onDiscard={handleDiscard}
                                         onWeightChange={handleWeightChange}
+                                        onRelTypeChange={handleRelTypeChange}
                                         onFilterByKeys={handleFilterByKeys}
                                         allConcepts={allConcepts}
+                                        allRelationTypes={allRelationTypes}
                                     />
                                 ))}
                             </div>

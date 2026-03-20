@@ -878,6 +878,102 @@ def analyze_fog_of_war():
 
 # Old Heatmap removed â€” replaced by Jaccard Co-Occurrence version at bottom of file
 
+
+# Relation Types (for latent connection editor)
+@router.get("/relation-types")
+def get_relation_types():
+    """
+    Returns all distinct relationship types present in the Neo4j graph.
+    Used by the Latent Explorer UI to allow users to override the suggested relation type.
+    """
+    driver = get_neo4j_driver()
+    try:
+        with driver.session() as session:
+            result = session.run("CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC")
+            types = [record["relationshipType"] for record in result]
+            return {"relation_types": types}
+    except Exception as e:
+        return {"relation_types": [], "error": str(e)}
+
+# Graph Entities Search (for manual latent connection form — supports all entity types)
+@router.get("/graph-entities")
+def search_graph_entities(q: str = "", limit: int = 20, asset_id: str = ""):
+    """
+    Searches across all ontology entity types: Concept, Person, Event,
+    Organization, Location, Project. Used by the Latent Explorer manual
+    connection form to let users link to any node type.
+
+    When asset_id is supplied the endpoint also checks which entities already
+    have a direct relationship with that asset, returning already_connected=True
+    for those nodes so the UI can flag or hide them.
+    """
+    import logging as _logging
+    _log = _logging.getLogger(__name__)
+
+    driver = get_neo4j_driver()
+    entity_labels = ["Concept", "Person", "Event", "Organization", "Location", "Project"]
+    try:
+        with driver.session() as session:
+            if q.strip():
+                result = session.run(
+                    """
+                    MATCH (n)
+                    WHERE any(lbl IN labels(n) WHERE lbl IN $labels)
+                      AND toLower(coalesce(n.name, n.title, '')) CONTAINS toLower($q)
+                    RETURN elementId(n) as id,
+                           coalesce(n.name, n.title) as name,
+                           labels(n)[0] as entity_type
+                    ORDER BY n.name ASC
+                    LIMIT $limit
+                    """,
+                    labels=entity_labels, q=q.strip(), limit=limit
+                )
+            else:
+                result = session.run(
+                    """
+                    MATCH (n)
+                    WHERE any(lbl IN labels(n) WHERE lbl IN $labels)
+                    RETURN elementId(n) as id,
+                           coalesce(n.name, n.title) as name,
+                           labels(n)[0] as entity_type
+                    ORDER BY n.name ASC
+                    LIMIT $limit
+                    """,
+                    labels=entity_labels, limit=limit
+                )
+            entities = [{"id": r["id"], "name": r["name"], "entity_type": r["entity_type"], "already_connected": False} for r in result]
+
+            # If an asset_id was given, check which entities already have a link
+            _log.info(f"[graph-entities] q='{q}' asset_id='{asset_id}' entities_found={len(entities)}")
+
+            if asset_id.strip() and entities:
+                entity_ids = [e["id"] for e in entities]
+                _log.info(f"[graph-entities] Checking connected for asset='{asset_id}' against entity_ids={entity_ids}")
+
+                # Use UNWIND for robust list comparison (avoids potential driver IN type issues)
+                connected_result = session.run(
+                    """
+                    MATCH (asset:DigitalAsset)
+                    WHERE elementId(asset) = $asset_id
+                    WITH asset
+                    UNWIND $entity_ids AS eid
+                    MATCH (asset)-[r]-(n)
+                    WHERE elementId(n) = eid
+                    RETURN DISTINCT eid AS connected_id
+                    """,
+                    asset_id=asset_id.strip(), entity_ids=entity_ids
+                )
+                connected_set = {record["connected_id"] for record in connected_result}
+                _log.info(f"[graph-entities] Connected set: {connected_set}")
+
+                for e in entities:
+                    if e["id"] in connected_set:
+                        e["already_connected"] = True
+
+            return {"entities": entities}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Chord Diagram (Category Co-Occurrence via DigitalAssets)
 @router.post("/chord", response_model=AnalysisToolResponse)
 def analyze_chord(method: str = "standard", min_weight: float = 0.0):
