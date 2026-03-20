@@ -453,8 +453,9 @@ function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose
 export default function PathfinderCard() {
     const [sourceNode, setSourceNode] = useState<PinnedNode | null>(null);
     const [targetNode, setTargetNode] = useState<PinnedNode | null>(null);
-    const [mode, setMode] = useState<'direct' | 'lateral'>('direct');
+    const [mode, setMode] = useState<'direct' | 'lateral' | 'topological'>('direct');
     const [threshold, setThreshold] = useState<number>(0.85);
+    const [kPaths, setKPaths] = useState<number>(3);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<PathfinderResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -485,6 +486,7 @@ export default function PathfinderCard() {
                 target_element_id: targetNode.id,
                 mode,
                 threshold: mode === 'lateral' ? threshold : undefined,
+                k_paths: kPaths,
             });
             setResult(res);
             if (res.status === 'success' && res.nodes.length > 0) {
@@ -602,7 +604,7 @@ export default function PathfinderCard() {
                 {/* Mode + Action row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ display: 'flex', background: '#1e293b', borderRadius: 8, padding: 3 }}>
-                        {(['direct', 'lateral'] as const).map(m => (
+                        {(['direct', 'lateral', 'topological'] as const).map(m => (
                             <button
                                 key={m}
                                 onClick={() => setMode(m)}
@@ -613,17 +615,39 @@ export default function PathfinderCard() {
                                     cursor: 'pointer',
                                     fontSize: '0.8rem',
                                     fontWeight: 600,
-                                    background: mode === m ? (m === 'direct' ? '#0e7490' : '#92400e') : 'transparent',
+                                    background: mode === m ? (m === 'direct' ? '#0e7490' : m === 'lateral' ? '#92400e' : '#4d7c0f') : 'transparent',
                                     color: mode === m ? '#fff' : '#64748b',
                                     transition: 'all 0.2s',
                                 }}
                             >
-                                {m === 'direct' ? '⚡ Directo' : '🌀 Lateral'}
+                                {m === 'direct' ? '⚡ Directo' : m === 'lateral' ? '🌀 Lateral' : '🕸️ Topológico'}
                             </button>
                         ))}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#475569', flex: 1 }}>
-                        {mode === 'direct' ? 'Camino más corto sin restricciones.' : `Evita conexiones muy fuertes (>${threshold}), forzando rutas creativas.`}
+                        {mode === 'direct' ? 'Camino más corto sin restricciones.' : mode === 'lateral' ? `Evita conexiones muy fuertes (>${threshold}), forzando rutas creativas.` : 'Menor cantidad de saltos, ignorando la fuerza de la conexión.'}
+                    </div>
+                    {/* Paths Count Select */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '6px 12px', borderRadius: 8, border: '1px solid #334155' }}>
+                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Caminos:</span>
+                        <select
+                            value={kPaths}
+                            onChange={e => setKPaths(Number(e.target.value))}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#f8fafc',
+                                fontWeight: 700,
+                                fontSize: '0.8rem',
+                                outline: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value={1}>1</option>
+                            <option value={3}>3</option>
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                        </select>
                     </div>
                     {mode === 'lateral' && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '6px 12px', borderRadius: 8, border: '1px solid #334155' }}>

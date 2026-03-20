@@ -978,28 +978,28 @@ def search_graph_fuzzy(req: GraphCrispRequest, debug: bool = False):
     // B. Expandir a Entidades Conectadas (Puente)
     MATCH (seed)-[r]->(target)
     WHERE (target:Concept OR target:Person OR target:Location OR target:Organization OR target:Event OR target:Project)
-      AND coalesce(r.weight, 1.0) >= $alpha_cut
+      AND toFloat(coalesce(r.weight, 1.0)) >= $alpha_cut
     
     // C. Expandir 'Hermanos' (Discovery) con Decaimiento
     OPTIONAL MATCH (target)<-[r2]-(discovery:DigitalAsset)
     WHERE discovery.file_hash <> seed.file_hash 
-      AND (coalesce(r.weight, 1.0) * coalesce(r2.weight, 1.0)) >= $alpha_cut
+      AND (toFloat(coalesce(r.weight, 1.0)) * toFloat(coalesce(r2.weight, 1.0))) >= $alpha_cut
 
-    // A. PenalizaciÃ³n por tipo de relaciÃ³n (estructural vs semÃ¡ntica)
+    // A. Penalización por tipo de relación (estructural vs semántica)
     WITH seed, r, target, r2, discovery, seed_node.score AS semantic_score,
          elementId(seed) as seed_id,
          elementId(target) as target_id,
          elementId(discovery) as disc_id,
          CASE WHEN type(r) IN ['DEFINES', 'CREATED_BY', 'DEPICTS', 'LOCATED_AT'] 
-              THEN coalesce(r.weight, 1.0) * 0.3 
-              ELSE coalesce(r.weight, 1.0) END AS adjusted_w1,
+              THEN toFloat(coalesce(r.weight, 1.0)) * 0.3 
+              ELSE toFloat(coalesce(r.weight, 1.0)) END AS adjusted_w1,
          CASE WHEN r2 IS NOT NULL AND type(r2) IN ['DEFINES', 'CREATED_BY', 'DEPICTS', 'LOCATED_AT'] 
-              THEN coalesce(r2.weight, 1.0) * 0.3 
+              THEN toFloat(coalesce(r2.weight, 1.0)) * 0.3 
               WHEN r2 IS NOT NULL 
-              THEN coalesce(r2.weight, 1.0) 
+              THEN toFloat(coalesce(r2.weight, 1.0)) 
               ELSE NULL END AS adjusted_w2,
-         coalesce(r.weight, 1.0) as w1,
-         coalesce(r2.weight, 1.0) as w2
+         toFloat(coalesce(r.weight, 1.0)) as w1,
+         toFloat(coalesce(r2.weight, 1.0)) as w2
 
     // B. Graph IDF: contar cuÃ¡ntos DigitalAssets apuntan a este concepto-hub
     CALL {

@@ -314,8 +314,9 @@ def _resolve_minio_url(file_hash: Optional[str], mime_type: Optional[str] = None
 class PathfinderRequest(BaseModel):
     source_element_id: str
     target_element_id: str
-    mode: str = "direct"  # "direct" | "lateral"
+    mode: str = "direct"  # "direct" | "lateral" | "topological"
     threshold: float = 0.85
+    k_paths: int = 3  # How many paths to return (1–10)
 
 class PathfinderNodeData(BaseModel):
     id: str
@@ -351,39 +352,52 @@ def pathfind(request: PathfinderRequest):
     """
     driver = get_neo4j_driver()
 
+    # Cypher LIMIT cannot be a named parameter - clamp to a safe integer.
+    k = max(1, min(10, int(request.k_paths)))
+
     if request.mode == "lateral":
-        cypher = """
+        cypher = f"""
         MATCH (src), (tgt)
         WHERE elementId(src) = $source AND elementId(tgt) = $target
         MATCH p = (src)-[*1..8]-(tgt)
         WITH p,
              // Costo de aristas: penaliza aristas fuertes (> umbral) para forzar rutas creativas
              REDUCE(cost = 0.0, r IN relationships(p) |
-               cost + (1.0 - coalesce(r.weight, 0.5))
-                    + CASE WHEN coalesce(r.weight, 0.5) > $threshold THEN 2.0 ELSE 0.0 END
+               cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))
+                    + CASE WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0 ELSE 0.0 END
              ) AS edgeCost,
              // Costo de nodos: penaliza Conceptos hub (muchas conexiones)
-             // size([(n)<--(:DigitalAsset)|1]) cuenta el grado sin CALL{}
+             // size([(n)<--(:DigitalAsset)|1]) cuenta el grado sin CALL{{}}
              // Formula: 1 - exp(-0.015 * degree) â†’ 0.0 para nichos, ~0.99 para mega-hubs
              REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |
                hubCost + (1.0 - exp(-0.015 * toFloat(size([(n)<--(:DigitalAsset) | 1]))))
              ) AS hubCost
         WITH p, edgeCost + hubCost AS totalCost
         ORDER BY totalCost ASC
-        LIMIT 3
+        LIMIT {k}
+        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
+        """
+    elif request.mode == "topological":
+        cypher = f"""
+        MATCH (src) WHERE elementId(src) = $source
+        MATCH (tgt) WHERE elementId(tgt) = $target
+        MATCH p = allShortestPaths((src)-[*1..8]-(tgt))
+        WITH p, length(p) AS totalCost
+        ORDER BY totalCost ASC
+        LIMIT {k}
         RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
         """
     else:
-        cypher = """
-        MATCH (src), (tgt)
-        WHERE elementId(src) = $source AND elementId(tgt) = $target
+        cypher = f"""
+        MATCH (src) WHERE elementId(src) = $source
+        MATCH (tgt) WHERE elementId(tgt) = $target
         MATCH p = (src)-[*1..8]-(tgt)
         WITH p,
              REDUCE(cost = 0.0, r IN relationships(p) |
-               cost + (1.0 - coalesce(r.weight, 0.5))
+               cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))
              ) AS totalCost
         ORDER BY totalCost ASC
-        LIMIT 3
+        LIMIT {k}
         RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
         """
 
