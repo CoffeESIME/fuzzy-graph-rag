@@ -353,30 +353,86 @@ def pathfind(request: PathfinderRequest):
     driver = get_neo4j_driver()
 
     # Cypher LIMIT cannot be a named parameter - clamp to a safe integer.
-    k = max(1, min(10, int(request.k_paths)))
 
+    k = max(1, min(10, int(request.k_paths)))
     if request.mode == "lateral":
         cypher = f"""
         MATCH (src), (tgt)
         WHERE elementId(src) = $source AND elementId(tgt) = $target
         MATCH p = (src)-[*1..8]-(tgt)
         WITH p,
-             // Costo de aristas: penaliza aristas fuertes (> umbral) para forzar rutas creativas
+             // 1. COSTO DE ARISTAS: Soft Bounding (Rango de Oro)
              REDUCE(cost = 0.0, r IN relationships(p) |
-               cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))
-                    + CASE WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0 ELSE 0.0 END
+               cost + CASE 
+                 WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0
+                 WHEN toFloat(coalesce(r.weight, 0.5)) < ($threshold - 0.3) THEN 1.5
+                 ELSE (1.0 - toFloat(coalesce(r.weight, 0.5))) 
+               END
              ) AS edgeCost,
-             // Costo de nodos: penaliza Conceptos hub (muchas conexiones)
-             // size([(n)<--(:DigitalAsset)|1]) cuenta el grado sin CALL{{}}
-             // Formula: 1 - exp(-0.015 * degree) â†’ 0.0 para nichos, ~0.99 para mega-hubs
+             
+             // 2. COSTO DE NODOS: Penalización Logarítmica Ajustada
+             // Neo4j 5+ usa COUNT {{}} en lugar de size() para contar patrones dentro de f-strings
              REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |
-               hubCost + (1.0 - exp(-0.015 * toFloat(size([(n)<--(:DigitalAsset) | 1]))))
+               hubCost + (0.5 * log10(toFloat(COUNT {{ (n)--() }}) + 1.0))
              ) AS hubCost
+             
         WITH p, edgeCost + hubCost AS totalCost
         ORDER BY totalCost ASC
         LIMIT {k}
         RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
         """
+    # if request.mode == "lateral":
+    #     cypher = f"""
+    #     MATCH (src), (tgt)
+    #     WHERE elementId(src) = $source AND elementId(tgt) = $target
+    #     MATCH p = (src)-[*1..8]-(tgt)
+    #     WITH p,
+    #          // 1. COSTO DE ARISTAS: Soft Bounding (Rango de Oro)
+    #          // Penaliza lo muy obvio (> umbral), penaliza el ruido (< umbral - 0.3), 
+    #          // y premia viajar por el rango difuso intermedio.
+    #          REDUCE(cost = 0.0, r IN relationships(p) |
+    #            cost + CASE 
+    #              WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0
+    #              WHEN toFloat(coalesce(r.weight, 0.5)) < ($threshold - 0.3) THEN 1.5
+    #              ELSE (1.0 - toFloat(coalesce(r.weight, 0.5))) 
+    #            END
+    #          ) AS edgeCost,
+             
+    #          // 2. COSTO DE NODOS: Penalización Logarítmica Suave
+    #          // Se suma +1.0 para evitar log10(0) si un nodo no tiene conexiones.
+    #          // El multiplicador 0.2 asegura que un hub de 100 conexiones sume ~0.4 al costo,
+    #          // en lugar del ~0.78 casi prohibitivo de la fórmula exponencial anterior.
+    #          REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |
+    #            hubCost + (0.2 * log10(toFloat(size([(n)<--(:DigitalAsset) | 1])) + 1.0))
+    #          ) AS hubCost
+             
+    #     WITH p, edgeCost + hubCost AS totalCost
+    #     ORDER BY totalCost ASC
+    #     LIMIT {k}
+    #     RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
+    #     """
+    # if request.mode == "lateral":
+    #     cypher = f"""
+    #     MATCH (src), (tgt)
+    #     WHERE elementId(src) = $source AND elementId(tgt) = $target
+    #     MATCH p = (src)-[*1..8]-(tgt)
+    #     WITH p,
+    #          // Costo de aristas: penaliza aristas fuertes (> umbral) para forzar rutas creativas
+    #          REDUCE(cost = 0.0, r IN relationships(p) |
+    #            cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))
+    #                 + CASE WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0 ELSE 0.0 END
+    #          ) AS edgeCost,
+    #          // Costo de nodos: penaliza Conceptos hub (muchas conexiones)
+    #          // size([(n)<--(:DigitalAsset)|1]) cuenta el grado sin CALL{{}}
+    #          // Formula: 1 - exp(-0.015 * degree) â†’ 0.0 para nichos, ~0.99 para mega-hubs
+    #          REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |
+    #            hubCost + (1.0 - exp(-0.015 * toFloat(size([(n)<--(:DigitalAsset) | 1]))))
+    #          ) AS hubCost
+    #     WITH p, edgeCost + hubCost AS totalCost
+    #     ORDER BY totalCost ASC
+    #     LIMIT {k}
+    #     RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
+    #     """
     elif request.mode == "topological":
         cypher = f"""
         MATCH (src) WHERE elementId(src) = $source
@@ -471,6 +527,10 @@ def pathfind(request: PathfinderRequest):
                     if edge_key not in seen_edge_keys:
                         seen_edge_keys.add(edge_key)
                         w = rel.get("weight")
+                        try:
+                            w = float(w) if w is not None else None
+                        except (ValueError, TypeError):
+                            w = None
                         out_edges.append(PathfinderEdgeData(
                             source=src_id,
                             target=tgt_id,
