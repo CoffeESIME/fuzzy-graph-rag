@@ -455,6 +455,7 @@ export default function PathfinderCard() {
     const [targetNode, setTargetNode] = useState<PinnedNode | null>(null);
     const [mode, setMode] = useState<'direct' | 'lateral' | 'topological'>('direct');
     const [threshold, setThreshold] = useState<number>(0.85);
+    const [topoThreshold, setTopoThreshold] = useState<number>(0.0);
     const [kPaths, setKPaths] = useState<number>(3);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<PathfinderResponse | null>(null);
@@ -486,6 +487,7 @@ export default function PathfinderCard() {
                 target_element_id: targetNode.id,
                 mode,
                 threshold: mode === 'lateral' ? threshold : undefined,
+                topo_threshold: mode === 'topological' ? topoThreshold : undefined,
                 k_paths: kPaths,
             });
             setResult(res);
@@ -501,7 +503,7 @@ export default function PathfinderCard() {
         } finally {
             setLoading(false);
         }
-    }, [sourceNode, targetNode, mode, setRfNodes, setRfEdges]);
+    }, [sourceNode, targetNode, mode, threshold, topoThreshold, kPaths, setRfNodes, setRfEdges]);
 
     const onNodeClick = useCallback((_: React.MouseEvent, rfNode: Node) => {
         const raw: PathfinderNodeData | undefined = rfNode.data?.raw;
@@ -625,7 +627,7 @@ export default function PathfinderCard() {
                         ))}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#475569', flex: 1 }}>
-                        {mode === 'direct' ? 'Camino más corto sin restricciones.' : mode === 'lateral' ? `Evita conexiones muy fuertes (>${threshold}), forzando rutas creativas.` : 'Menor cantidad de saltos, ignorando la fuerza de la conexión.'}
+                        {mode === 'direct' ? 'Camino más corto sin restricciones.' : mode === 'lateral' ? `Evita conexiones muy fuertes (>${threshold}), forzando rutas creativas.` : topoThreshold > 0 ? `Solo saltos con peso ≥ ${topoThreshold.toFixed(2)} — conexiones débiles eliminadas del grafo.` : 'Menor cantidad de saltos, ignorando la fuerza de la conexión.'}
                     </div>
                     {/* Paths Count Select */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '6px 12px', borderRadius: 8, border: '1px solid #334155' }}>
@@ -670,6 +672,40 @@ export default function PathfinderCard() {
                                 <option value={0.9}>0.9 (Suave)</option>
                                 <option value={0.95}>0.95 (Casi Directo)</option>
                             </select>
+                        </div>
+                    )}
+                    {mode === 'topological' && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            background: '#1e293b', padding: '8px 14px',
+                            borderRadius: 8, border: `1px solid ${topoThreshold > 0 ? '#4d7c0f' : '#334155'}`,
+                            transition: 'border-color 0.2s', minWidth: 260,
+                        }}>
+                            <span style={{ fontSize: '0.7rem', color: '#84cc16', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                🔗 Umbral de Conexión:
+                            </span>
+                            <input
+                                id="topo-threshold-slider"
+                                type="range"
+                                min={0}
+                                max={1}
+                                step={0.05}
+                                value={topoThreshold}
+                                onChange={e => setTopoThreshold(Number(e.target.value))}
+                                style={{
+                                    flex: 1,
+                                    accentColor: '#84cc16',
+                                    cursor: 'pointer',
+                                }}
+                            />
+                            <span style={{
+                                fontSize: '0.85rem', fontWeight: 700,
+                                color: topoThreshold > 0 ? '#84cc16' : '#475569',
+                                minWidth: 34, textAlign: 'right',
+                                fontVariantNumeric: 'tabular-nums',
+                            }}>
+                                {topoThreshold > 0 ? topoThreshold.toFixed(2) : 'Off'}
+                            </span>
                         </div>
                     )}
                     <button

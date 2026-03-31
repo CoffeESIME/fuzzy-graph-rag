@@ -316,6 +316,7 @@ class PathfinderRequest(BaseModel):
     target_element_id: str
     mode: str = "direct"  # "direct" | "lateral" | "topological"
     threshold: float = 0.85
+    topo_threshold: float = 0.0  # For topological mode: min edge weight to consider (0 = no filter)
     k_paths: int = 3  # How many paths to return (1–10)
 
 class PathfinderNodeData(BaseModel):
@@ -434,15 +435,30 @@ def pathfind(request: PathfinderRequest):
     #     RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
     #     """
     elif request.mode == "topological":
-        cypher = f"""
-        MATCH (src) WHERE elementId(src) = $source
-        MATCH (tgt) WHERE elementId(tgt) = $target
-        MATCH p = allShortestPaths((src)-[*1..8]-(tgt))
-        WITH p, length(p) AS totalCost
-        ORDER BY totalCost ASC
-        LIMIT {k}
-        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
-        """
+        if request.topo_threshold > 0.0:
+            # Filtered topological: only traverse edges >= topo_threshold.
+            # Edges below the threshold are treated as non-existent (direct connections
+            # become invisible), so the path is forced through strongly-connected subgraph.
+            cypher = f"""
+            MATCH (src) WHERE elementId(src) = $source
+            MATCH (tgt) WHERE elementId(tgt) = $target
+            MATCH p = (src)-[*1..8]-(tgt)
+            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)
+            WITH p, length(p) AS totalCost
+            ORDER BY totalCost ASC
+            LIMIT {k}
+            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
+            """
+        else:
+            cypher = f"""
+            MATCH (src) WHERE elementId(src) = $source
+            MATCH (tgt) WHERE elementId(tgt) = $target
+            MATCH p = allShortestPaths((src)-[*1..8]-(tgt))
+            WITH p, length(p) AS totalCost
+            ORDER BY totalCost ASC
+            LIMIT {k}
+            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost
+            """
     else:
         cypher = f"""
         MATCH (src) WHERE elementId(src) = $source
@@ -469,6 +485,7 @@ def pathfind(request: PathfinderRequest):
                     source=request.source_element_id,
                     target=request.target_element_id,
                     threshold=request.threshold,
+                    topo_threshold=request.topo_threshold,
                 )
                 records = list(result)
 
