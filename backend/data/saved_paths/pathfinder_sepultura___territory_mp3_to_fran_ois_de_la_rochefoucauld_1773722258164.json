@@ -1,0 +1,282 @@
+{
+  "exported_at": "2026-03-17T04:37:38.163Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1203",
+    "label": "Sepultura - Territory.mp3",
+    "type": "DigitalAsset"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+    "label": "François de La Rochefoucauld",
+    "type": "Person"
+  },
+  "path_length": 7,
+  "message": "3 camino(s) encontrado(s): 18 nodos Ãºnicos, 19 aristas Ãºnicas.",
+  "llm_explanation": "[\n  {\n    \"analisis_de_camino\": \"El recorrido asociativo comienza con la crudeza de 'Sepultura - Territory', una obra que denuncia la manipulación política y la 'Guerra' territorial (peso 0.95). Este concepto bélico actúa como el primer gran puente conceptual, conectando con la crónica histórica de 'Billy Joel - We Didn't Start the Fire', que enumera los conflictos globales del siglo XX. A través de la figura de Billy Joel, el camino transita hacia una faceta radicalmente distinta: el 'Amor' romántico y las barreras sociales en su éxito 'Uptown Girl'.\",\n    \"transicion_filosofica\": \"La narrativa da un giro profundo al introducir el pensamiento de François de La Rochefoucauld. El 'Amor' evocado por Joel se conecta con una máxima del filósofo que compara la rareza del amor verdadero con la de la 'Amistad'. Paralelamente, el análisis regresa al origen en Sepultura para explorar la 'Propaganda' (peso 0.95), concepto que nos lleva a 'Sabaton - Rise of Evil' y su relato sobre el ascenso del nazismo en 'Europa'. Esta ubicación geográfica sirve de nexo con 'Haggard - Prophecy Fulfilled', donde las profecías de Nostradamus introducen la 'Demencia y Locura' (peso 0.9), un estado mental que La Rochefoucauld también asocia al proceso de envejecer.\",\n    \"convergencia_final\": \"En el tramo final, el camino recupera la violencia extrema con 'Slayer - Unit 731', que vincula la 'Guerra' con la 'Muerte y Mortalidad' (peso 0.959). Esta finitud humana es analizada en el 'Discurso sobre la felicidad' de Mme. du Châtelet, quien sugiere que para alcanzar la madurez es necesario a veces romper con la 'Amistad'. El ciclo se cierra regresando a la cita de La Rochefoucauld sobre la amistad verdadera, uniendo la brutalidad de la historia humana con la fragilidad de los vínculos personales.\",\n    \"conclusion_del_subsistema\": \"El camino revela una estructura dialéctica donde los horrores colectivos (guerra, propaganda, experimentos biológicos) se entrelazan con la experiencia existencial individual (amor, locura, amistad). La conexión demuestra que tanto en el conflicto bélico como en la filosofía moral, el ser humano se enfrenta a la misma paradoja: la búsqueda de sentido y felicidad en un entorno definido por la mortalidad y la manipulación de la verdad.\"\n  }\n]",
+  "options": {
+    "privacy_mode": false
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1203",
+      "label": "Sepultura - Territory.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "bcbb08afc7d6ceca399d89bc182c42a880aadd7efc675faa033affa29d321cf7",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "label": "Guerra",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1230",
+      "label": "Billy Joel - We Didn't Start the Fire.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "e72b3a34c6791b31e9efd4d9c14ae6a3c6669ac0ccbb24004572f196a1892238",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:126",
+      "label": "Billy Joel",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1225",
+      "label": "Billy Joel - Uptown Girl.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "e83c8c23928cf98ccc686a4e6ff873d5bfa826de7f1adc18a83fc417366ccfc3",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "label": "Amor",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:108",
+      "label": "text_Tumblr_Post_-_142073943004html_1a17d536.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "1a17d536a093aac007856dc650743217cb54d22cd9c0940edae5f93b945e0a5b",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "label": "François de La Rochefoucauld",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2803",
+      "label": "Propaganda",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1256",
+      "label": "Sabaton - Rise of Evil.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a80eb5cc006ca705561fd0a9ef87d28c7bd5e2b692815f78c2b30dd93851410a",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2019",
+      "label": "Europa",
+      "node_type": "Location",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "label": "Haggard - Prophecy Fulfilled _ And The Dark Night Entered.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "e3510d75bc73f634d283a0536e04a1de3cc6824116991ada09db6d4acfff0cd0",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:640",
+      "label": "Demencia y Locura",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:316",
+      "label": "text_Tumblr_Post_-_141734916914html_d183f9a7.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "d183f9a7e333dc1346f17093a7308e5e53c425da78cf3e466470dd94b749288a",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+      "label": "Slayer - Unit 731.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "label": "Muerte y Mortalidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "label": "text_239b9bac.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "239b9bacb6c05caacc281f68012c6d20bb28cb438f005a7bcafb2c44da826c77",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2625",
+      "label": "Amistad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1203",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.95
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1230",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1230",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:126",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1225",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:126",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1225",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:108",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:108",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1203",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2803",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.95
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1256",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2803",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1256",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2019",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2019",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:640",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:316",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:640",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:316",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.871
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.959
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2011",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.925
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2625",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:108",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2625",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    }
+  ]
+}

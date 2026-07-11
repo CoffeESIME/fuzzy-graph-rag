@@ -1,0 +1,144 @@
+{
+  "exported_at": "2026-03-26T05:38:42.365Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:34",
+    "label": "John Denver",
+    "type": "Person"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2169",
+    "label": "Dependencia Tecnológica",
+    "type": "Concept"
+  },
+  "path_length": 8,
+  "message": "1 camino(s) encontrado(s): 9 nodos Ãºnicos, 8 aristas Ãºnicas.",
+  "llm_explanation": "[\n  {\n    \"analisis_de_camino\": {\n      \"direccion_narrativa\": \"De lo espiritual/natural a lo tecnológico/artificial\",\n      \"punto_de_partida\": \"La trascendencia en la naturaleza (John Denver)\",\n      \"punto_de_llegada\": \"La alienación digital (Bad Religion)\",\n      \"narrativa\": \"El camino comienza con la figura de John Denver en 'Rocky Mountain High', donde la música evoca una 'Naturaleza y Entorno Natural' (peso 0.9) como espacio de renacimiento espiritual y paz interior. Esta visión de la naturaleza sirve de puente hacia el pensamiento de Henry David Thoreau, específicamente en su ensayo 'Walking', donde postula que el espíritu humano solo se preserva mediante el contacto directo con el bosque y la libertad de compromisos mundanos. Sin embargo, Thoreau introduce una transición crítica en su obra 'Walden', donde la soledad deja de ser solo contemplativa para convertirse en un concepto de 'Aislamiento y Soledad' frente a la inmensidad del cosmos. Este aislamiento es el 'puente conceptual' que nos traslada al extremo opuesto de la experiencia humana: la canción 'I Love My Computer' de Bad Religion. Aquí, el aislamiento ya no se busca en las montañas o bosques, sino que se manifiesta como una 'Dependencia Tecnológica' (peso 0.95, conexión latente pero poderosa). El individuo ya no busca tocar el sol como en la lírica de Denver, sino que se refugia en una relación 'sin alma' con una máquina para evitar el riesgo emocional de la interacción humana real, cerrando un ciclo donde el refugio natural ha sido sustituido por la interfaz digital.\",\n      \"conclusion_del_subsistema\": \"El hallazgo general revela una involución del concepto de soledad: de ser una herramienta de liberación espiritual en la naturaleza (Denver/Thoreau) a convertirse en una patología de aislamiento mediada por la tecnología (Bad Religion). Se eligió esta dirección narrativa porque permite observar cómo el deseo humano de 'escapar del mundo' ha mutado de la expansión física en el paisaje natural a la contracción digital frente a una pantalla.\"\n    }\n  }\n]",
+  "options": {
+    "privacy_mode": false
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:34",
+      "label": "John Denver",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "label": "John Denver - Rocky Mountain High.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "06bc8d9bcf779bc44586759d65572aaabd65128a5ce00a1552d16c876561261d",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "label": "Naturaleza y Entorno Natural",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2658",
+      "label": "text_Tumblr_Post_-_189046261372html_ebe9d3ec.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "ebe9d3ec94038e4079cf005a9f9f5a7b45bed5b550a82e5079d765b6c6a82b7f",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1454",
+      "label": "Henry David Thoreau",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2806",
+      "label": "text_Tumblr_Post_-_188201466750html_a399bbd2.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a399bbd2e5b91537e1b691ced60d797b31c54c82789d55271676eb3842b72b3c",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "label": "Aislamiento y Soledad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1080",
+      "label": "Bad Religion - I Love My Computer.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "63a132978577c117633ecb573ccf787b0cb1bde9b649e889513b097334fcf35e",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2169",
+      "label": "Dependencia Tecnológica",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:34",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2658",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2564",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2658",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1454",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2806",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1454",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2806",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1080",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1080",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2169",
+      "rel_type": "EVOKES",
+      "weight": 0.95
+    }
+  ]
+}

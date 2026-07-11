@@ -1,13 +1,15 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Upload, Activity, Share2 } from 'lucide-react';
+import { Home, Search, Upload, Activity, Share2, Sun, Moon } from 'lucide-react';
+import type { Theme } from '../hooks/useTheme';
 
-export default function NavigationBar() {
+interface NavigationBarProps {
+    theme: Theme;
+    onToggleTheme: () => void;
+}
+
+export default function NavigationBar({ theme, onToggleTheme }: NavigationBarProps) {
     const navigate = useNavigate();
     const location = useLocation();
-
-    // Do not show navigation bar on the home page itself to keep it clean, 
-    // or maybe show it but highlight Home. Let's show it everywhere for consistency.
-    const isHome = location.pathname === '/';
 
     const navItems = [
         { path: '/', label: 'Inicio', icon: <Home size={18} /> },
@@ -21,7 +23,6 @@ export default function NavigationBar() {
         <nav style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
             gap: '8px',
             padding: '12px 24px',
             background: 'var(--bg-secondary)',
@@ -29,8 +30,9 @@ export default function NavigationBar() {
             position: 'sticky',
             top: 0,
             zIndex: 1000,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            boxShadow: 'var(--shadow-panel)',
         }}>
+            {/* Nav items */}
             {navItems.map((item) => {
                 const isActive = location.pathname === item.path ||
                     (item.path !== '/' && location.pathname.startsWith(item.path));
@@ -46,7 +48,7 @@ export default function NavigationBar() {
                             padding: '8px 16px',
                             borderRadius: '8px',
                             border: 'none',
-                            background: isActive ? 'var(--bg-tertiary)' : 'transparent',
+                            background: isActive ? 'var(--bg-surface)' : 'transparent',
                             color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                             fontSize: '0.9rem',
                             fontWeight: isActive ? 600 : 500,
@@ -55,7 +57,7 @@ export default function NavigationBar() {
                         }}
                         onMouseEnter={(e) => {
                             if (!isActive) {
-                                e.currentTarget.style.background = 'var(--bg-tertiary)';
+                                e.currentTarget.style.background = 'var(--bg-surface)';
                                 e.currentTarget.style.color = 'var(--text-primary)';
                             }
                         }}
@@ -71,6 +73,22 @@ export default function NavigationBar() {
                     </button>
                 );
             })}
+
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* Theme toggle */}
+            <button
+                onClick={onToggleTheme}
+                className="theme-toggle"
+                title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+            >
+                {theme === 'dark'
+                    ? <Sun size={17} />
+                    : <Moon size={17} />
+                }
+            </button>
         </nav>
     );
 }

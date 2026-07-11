@@ -1,0 +1,227 @@
+{
+  "exported_at": "2026-03-26T05:29:31.187Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+    "label": "Inmortalidad",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+    "label": "Automatización y Control de Sistemas",
+    "type": "Concept"
+  },
+  "path_length": 6,
+  "message": "3 camino(s) encontrado(s): 14 nodos Ãºnicos, 15 aristas Ãºnicas.",
+  "llm_explanation": "[\n  {\n    \"path_analysis\": {\n      \"direction\": \"From the Mundane to the Abstract (The Evolution of Control)\",\n      \"narrative_flow\": \"The journey begins with the raw instinct of 'Supervivencia' (Survival) and the physical world, then moves through the formalization of 'Ciencia' (Science) and 'Lógica' (Logic), and culminates in the total 'Automatización' (Automation) of human existence.\",\n      \"steps\": [\n        {\n          \"node\": \"Nach - Mil Vidas.mp3\",\n          \"connection\": \"Initial Spark\",\n          \"description\": \"The path starts with the human desire to transcend time. Nach explores the 'Homo Sapiens' whose primary science was 'Supervivencia'. This song serves as the emotional anchor for the entire path, linking the biological need to survive with the 'Conocimiento' (Knowledge) of past civilizations like Egypt and Greece.\"\n        },\n        {\n          \"node\": \"text_Transcripción_YouTube_Zce-V0YVzeI_e7d47f8e.txt\",\n          \"connection\": \"Supervivencia (Weight: 0.8)\",\n          \"description\": \"The narrative shifts from historical survival to physical survival against nature. This transcript about avalanches details how 'Ciencia' is used to predict and prevent natural disasters, transforming a raw threat into a field of study.\"\n        },\n        {\n          \"node\": \"Screenshot 2026-02-24 103644.png\",\n          \"connection\": \"Ciencia (Weight: 0.765)\",\n          \"description\": \"Science begins to abstract the body. This image shows technical diagrams where human biological systems (blood vessels, walking) are modeled as electronic circuits and mechanical systems, marking the transition from 'living' to 'modeling'.\"\n        },\n        {\n          \"node\": \"Haggard - The Observer.mp3\",\n          \"connection\": \"Conocimiento (Weight: 0.825)\",\n          \"description\": \"The abstraction requires a framework: 'Lógica'. This song about Galileo Galilei illustrates the historical struggle to establish 'Conocimiento' through observation and reason, defying dogma to understand the laws that govern the universe.\"\n        },\n        {\n          \"node\": \"text_379436a3.txt\",\n          \"connection\": \"Lógica (Weight: 0.81)\",\n          \"description\": \"Logic is then mechanized. The text describes how Ada Lovelace and Charles Babbage took the binary logic of the Jacquard loom and applied it to the 'Automatización y Control de Sistemas', effectively 'weaving' pure logic into a machine.\"\n        },\n        {\n          \"node\": \"text_90385abb.txt & text_1612642e.txt\",\n          \"connection\": \"Distancias (Weight: 0.731 - 0.799)\",\n          \"description\": \"These connections are 'latent' or 'surprising' due to their lower weights. They represent the final step of abstraction: Gauss and Euler removing all physical reality (distances, shapes) to reduce the world to pure mathematical nodes and curvature, which is the ultimate form of system control.\"\n        }\n      ],\n      \"conclusion_del_subsistema\": \"The path reveals a fascinating transition from the 'biological survival' of early humans (Nach) to the 'mathematical automation' of the modern world (Lovelace/Gauss). The chosen narrative direction—from the physical to the abstract—is the most logical because it mirrors human history: we started by observing nature to survive, then created logic to understand it, and finally built automated systems to control it. The 'Knowledge' hub acts as the bridge that converts raw experience into the structured data that fuels our current technological reality.\"\n    }\n  }\n]",
+  "options": {
+    "privacy_mode": false,
+    "threshold": 0.85
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "label": "Inmortalidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+      "label": "Nach - Mil Vidas.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "ced38230ae9c7b60ebfe4172fe61d89b2d4cf61416205bcfbe93a6043080e4d1",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:642",
+      "label": "Conocimiento",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1863",
+      "label": "text_90385abb.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "90385abb2c555a0d78b7ef3a5db1f78330397594f514da4936265e4c5e6fb0e6",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1985",
+      "label": "Distancias",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1861",
+      "label": "text_1612642e.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "1612642edf73b6c0ffe102713c8d0576036b6c109ce879463a774be243685896",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "label": "Haggard - The Observer.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "88b6006e3cea953cfa7b24cbeea206111792d73104d7eeceb22c38943a71b084",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "label": "Lógica",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+      "label": "text_379436a3.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "379436a3adae46837ea9b1e7a996f80e5aced621f197dee0112f3bab08ac55c0",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:641",
+      "label": "Supervivencia",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2926",
+      "label": "text_Transcripción_YouTube_Zce-V0YVzeI_e7d47f8e.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "e7d47f8ea0174c3f8ea9006abbbdeed4886da0a7db60b8b3fadacd56a805df92",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:970",
+      "label": "Ciencia",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2204",
+      "label": "Screenshot 2026-02-24 103644.png",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "b4c575ff5b0bd57b48b55fdc5905a2c6d7819bd78ab5c55481d0af7e52cdb30b",
+      "mime_type": "image/png"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "rel_type": "EVOKES",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:642",
+      "rel_type": "EVOKES",
+      "weight": 0.751
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1863",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:642",
+      "rel_type": "EVOKES",
+      "weight": 0.799
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1863",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1985",
+      "rel_type": "EVOKES",
+      "weight": 0.731
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1861",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1985",
+      "rel_type": "EVOKES",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1861",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.846
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:642",
+      "rel_type": "EVOKES",
+      "weight": 0.825
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.811
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+      "rel_type": "EVOKES",
+      "weight": 0.81
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.841
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:641",
+      "rel_type": "EVOKES",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2926",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:641",
+      "rel_type": "EVOKES",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2926",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:970",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.794
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2204",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:970",
+      "rel_type": "EVOKES",
+      "weight": 0.765
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2204",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.659
+    }
+  ]
+}

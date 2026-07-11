@@ -1,0 +1,129 @@
+{
+  "exported_at": "2026-03-17T04:32:48.236Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1203",
+    "label": "Sepultura - Territory.mp3",
+    "type": "DigitalAsset"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+    "label": "François de La Rochefoucauld",
+    "type": "Person"
+  },
+  "path_length": 5,
+  "message": "3 camino(s) encontrado(s): 7 nodos Ãºnicos, 8 aristas Ãºnicas.",
+  "llm_explanation": "{\n  \"analisis_de_camino\": \"El recorrido asociativo comienza con una expresión de brutalidad política en 'Sepultura - Territory.mp3', un activo digital que evoca con un peso sólido (0.9) el concepto de 'Crítica Social'. La letra de la canción denuncia la manipulación mediática y el odio sistémico utilizado por dictadores para controlar territorios. Esta crítica se conecta de manera latente (peso 0.632) con una epístola de Voltaire ('text_a07c4b7d.txt'), donde la hostilidad social ya no se manifiesta en guerras abiertas, sino en la envidia y la calumnia dirigidas hacia la virtud y el genio de Madame du Châtelet. Es aquí donde el camino transita hacia un plano más introspectivo: el texto de Voltaire también evoca (peso 0.6) el concepto de 'Naturaleza Humana', actuando como el puente conceptual hacia la filosofía moralista.\",\n  \"transicion_filosofica\": \"Desde la 'Naturaleza Humana', el camino se adentra en la obra de François de La Rochefoucauld a través de dos publicaciones de Tumblr. El archivo 'text_Tumblr_Post_-_141846442254html_ae52e1ec.txt' conecta este concepto con la figura del filósofo francés (peso 1) al reflexionar sobre la irreversibilidad del desamor. Esta misma estructura se repite en el archivo 'text_Tumblr_Post_-_140984533534html_c6eca842.txt', que explora la ceguera emocional de los amantes. Aunque estas conexiones con la 'Naturaleza Humana' presentan pesos moderados (0.7 a 0.715), revelan una estructura latente que vincula la decepción amorosa con la fragilidad del juicio humano, un eco refinado de la misma corrupción del carácter que Sepultura critica en el ámbito sociopolítico.\",\n  \"conclusion_del_subsistema\": \"El camino revela una transición fascinante desde la violencia macro-social (la guerra y la propaganda en Sepultura) hacia la fragilidad micro-social y emocional (la envidia en Voltaire y el desencanto en La Rochefoucauld). La 'Naturaleza Humana' actúa como el nexo que une la brutalidad del control territorial con la sutileza de las pasiones humanas, sugiriendo que tanto el conflicto bélico como el fracaso amoroso comparten una raíz común: la incapacidad del ser humano para ver la realidad más allá de sus propios sesgos y construcciones ideológicas o emocionales.\"\n}",
+  "options": {
+    "privacy_mode": false,
+    "threshold": 0.6
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1203",
+      "label": "Sepultura - Territory.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "bcbb08afc7d6ceca399d89bc182c42a880aadd7efc675faa033affa29d321cf7",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:24",
+      "label": "Crítica Social",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:921",
+      "label": "text_a07c4b7d.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a07c4b7d76a86c6c65abfc01730723df2946cfd251fe0c5dcb407130a1e77005",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1045",
+      "label": "Naturaleza Humana",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1499",
+      "label": "text_Tumblr_Post_-_141846442254html_ae52e1ec.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "ae52e1ec11ec4e64157057e3b49317e91466403ab84a714504ed908315502edf",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "label": "François de La Rochefoucauld",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1403",
+      "label": "text_Tumblr_Post_-_140984533534html_c6eca842.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "c6eca842b873fcf7a5f3fc9915a3d6400371ca473bd07db96802dd26b87c2b28",
+      "mime_type": "text/plain"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1203",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:24",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:921",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:24",
+      "rel_type": "EVOKES",
+      "weight": 0.632
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:921",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1045",
+      "rel_type": "EVOKES",
+      "weight": 0.6
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1499",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1045",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.715
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1499",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1403",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1045",
+      "rel_type": "EVOKES",
+      "weight": 0.715
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1403",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1499",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1045",
+      "rel_type": "EVOKES",
+      "weight": 0.7
+    }
+  ]
+}

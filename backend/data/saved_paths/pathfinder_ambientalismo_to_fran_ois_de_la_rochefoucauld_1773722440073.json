@@ -1,0 +1,283 @@
+{
+  "exported_at": "2026-03-17T04:40:40.072Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:184",
+    "label": "Ambientalismo",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+    "label": "François de La Rochefoucauld",
+    "type": "Person"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 18 nodos Ãºnicos, 19 aristas Ãºnicas.",
+  "llm_explanation": "[\n  {\n    \"analisis_del_camino\": \"El recorrido asociativo comienza con 'Rocky Mountain High' de John Denver, una obra que no solo evoca un profundo 'Ambientalismo' por su defensa de las Montañas Rocosas, sino que se conecta con la 'Trascendencia Espiritual' (peso 0.9) al narrar el renacimiento de un hombre que 'toca el sol' y encuentra una llave para cada puerta en la naturaleza. Esta búsqueda de lo divino más allá de lo terrenal sirve de puente hacia 'The Dreams of Swedenborg' de Therion, donde la trascendencia se manifiesta a través de los sueños lúcidos y los viajes astrales del místico sueco. La pieza de Therion, al pertenecer al 'Metal Sinfónico', nos traslada a 'Prophecy Fulfilled' de Haggard, una composición que utiliza la grandilocuencia del género para explorar la 'Demencia y Locura' (peso 0.9) vinculada a las visiones aterradoras de Nostradamus. Esta noción de la locura es el punto de anclaje con el filósofo François de La Rochefoucauld, quien en sus máximas postula que al envejecer uno se vuelve 'más loco y más sabio'.\",\n    \"ramificaciones_y_latencias\": \"El camino presenta una bifurcación fascinante a través del 'Asombro y Sorpresa' (peso 0.85, una conexión latente pero significativa), que une la fascinación de Denver por la naturaleza con la estética macabra de 'This Is Halloween' de Marilyn Manson. Esta última introduce el concepto de 'Oscuridad', que reaparece en la obra de Haggard como una 'noche oscura' de miseria humana. Por otro lado, la 'Soledad' contemplativa de Denver se espeja en la 'Soledad' (peso 0.9) de Quasimodo en 'Bells of Notre Dame' de Dark Moor. La angustia de este personaje, atrapado en su 'tumba gótica', conecta con la 'Angustia Existencial' documentada en los paseos de Einstein y Gödel en Princeton, donde el colapso del tiempo lineal desafía nuestra 'Percepción' de la realidad. Finalmente, esta crisis de la percepción nos devuelve a La Rochefoucauld, quien analiza cómo la percepción del enamorado está nublada por un 'encantamiento' que oculta los defectos del otro.\",\n    \"conclusion_del_subsistema\": \"El hallazgo general de este camino revela que la experiencia humana, ya sea a través de la naturaleza, el misticismo, la música extrema o la ciencia teórica, converge invariablemente en la fragilidad de la percepción y el juicio. Desde el éxtasis espiritual de John Denver hasta las paradojas matemáticas de Gödel, el subsistema demuestra que la sabiduría y la locura son dos caras de la misma moneda interpretativa, mediadas por figuras como La Rochefoucauld que actúan como cronistas de nuestras ilusiones y realidades.\"\n  }\n]",
+  "options": {
+    "privacy_mode": false,
+    "threshold": 0.95
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:184",
+      "label": "Ambientalismo",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "label": "John Denver - Rocky Mountain High.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "06bc8d9bcf779bc44586759d65572aaabd65128a5ce00a1552d16c876561261d",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:260",
+      "label": "Trascendencia Espiritual",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:101",
+      "label": "Therion - The Dreams of Swedenborg.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "4144b26d744a8412353589b347820627f20a11d301dbfc45d59fd58055fc5eac",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1830",
+      "label": "Metal Sinfónico",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "label": "Haggard - Prophecy Fulfilled _ And The Dark Night Entered.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "e3510d75bc73f634d283a0536e04a1de3cc6824116991ada09db6d4acfff0cd0",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:640",
+      "label": "Demencia y Locura",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:316",
+      "label": "text_Tumblr_Post_-_141734916914html_d183f9a7.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "d183f9a7e333dc1346f17093a7308e5e53c425da78cf3e466470dd94b749288a",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "label": "François de La Rochefoucauld",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1094",
+      "label": "Asombro y Sorpresa",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1609",
+      "label": "Marilyn Manson - This Is Halloween.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "491444c1e4393faa86fc14fdb50a808b2dd776309e8c869facf4c5797c545992",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1614",
+      "label": "Oscuridad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2607",
+      "label": "Soledad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:99",
+      "label": "Dark Moor - Bells of Notre Dame.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "c1e762c79073ea6adc03f71963761549aceddacbb8d61c49324481af513d4e21",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:986",
+      "label": "Angustia Existencial",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1835",
+      "label": "text_17b3d96f.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "17b3d96f6e3e25aa9f8964fb8ff306eebd07716e6ee1942ba1cadcdf64a8d4be",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:131",
+      "label": "Percepción",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1403",
+      "label": "text_Tumblr_Post_-_140984533534html_c6eca842.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "c6eca842b873fcf7a5f3fc9915a3d6400371ca473bd07db96802dd26b87c2b28",
+      "mime_type": "text/plain"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:184",
+      "rel_type": "EVOKES",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:260",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:101",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:260",
+      "rel_type": "EVOKES",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:101",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1830",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1830",
+      "rel_type": "EVOKES",
+      "weight": 0.918
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:640",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:316",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:640",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:316",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1094",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1609",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1094",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1609",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1614",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2095",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1614",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2607",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:99",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2607",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:99",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:986",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1835",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:986",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1835",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:131",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1403",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:131",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1403",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    }
+  ]
+}

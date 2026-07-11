@@ -1,0 +1,171 @@
+{
+  "exported_at": "2026-03-28T05:41:19.273Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+    "label": "Libre albedrío y responsabilidad",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+    "label": "Laberinto sin Salida",
+    "type": "Concept"
+  },
+  "path_length": 6,
+  "message": "3 camino(s) encontrado(s): 10 nodos Ãºnicos, 11 aristas Ãºnicas.",
+  "llm_explanation": "[\n  {\n    \"analisis_serendipia\": \"Para esta narrativa, he decidido partir de lo cotidiano y humorístico (el meme) para ascender hacia las profundidades de la filosofía existencial. La dirección lógica es: El síntoma (Desesperación/Matemáticas) -> La pérdida de control (Adicción/Guerra) -> La resolución ética (Libre albedrío/Muerte).\",\n    \"camino_asociativo\": [\n      {\n        \"paso\": 1,\n        \"punto_partida\": \"FB_IMG_1743639238757.jpg\",\n        \"descripcion\": \"Iniciamos con una imagen mundana: un meme de los Rugrats donde Stu Pickles realiza cálculos de 'Matemáticas' avanzadas (vectores y valores propios) a las 4 a.m. porque ha 'perdido el control de su vida'. Esta conexión entre el rigor matemático y la 'Desesperación' (peso 0.621) establece el tono inicial del camino: el uso de estructuras lógicas como refugio ante el caos personal.\",\n        \"conceptos_clave\": [\"Matemáticas\", \"Desesperación\"]\n      },\n      {\n        \"paso\": 2,\n        \"puente_conceptual\": \"text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt\",\n        \"descripcion\": \"La desesperación matemática se eleva a una escala sociopolítica. El video describe cómo las 'Matemáticas' (peso 0.783) se convirtieron en un campo de batalla ideológico en la Rusia de 1905. Aquí, el determinismo matemático se conecta con el 'Libre albedrío y responsabilidad' (peso 0.865), cuestionando si nuestras acciones son predecibles como una baraja de cartas o si tenemos agencia en medio de la revolución.\",\n        \"conceptos_clave\": [\"Matemáticas\", \"Libre albedrío y responsabilidad\"]\n      },\n      {\n        \"paso\": 3,\n        \"transicion_artistica\": \"Metallica - Master of Puppets.mp3\",\n        \"descripcion\": \"La narrativa gira hacia la pérdida total de esa agencia. En 'Master of Puppets', la 'Desesperación' (peso 0.85) ya no es académica, sino vital. La canción describe un 'Laberinto sin Salida' (peso 0.7, conexión latente) donde el individuo es una marioneta de la adicción. El 'libre albedrío' se desvanece ante una fuerza externa que 'tira de los hilos'.\",\n        \"conceptos_clave\": [\"Desesperación\", \"Laberinto sin Salida\"]\n      },\n      {\n        \"paso\": 4,\n        \"escalada_epica\": \"Haggard - Awaking the Centuries.mp3\",\n        \"descripcion\": \"De la esclavitud individual pasamos a la colectiva. Haggard evoca la 'Condición Humana' (peso 0.8) a través de profecías apocalípticas y la 'Desesperación' (peso 0.695, conexión débil pero latente) de un mundo en guerra. La humanidad se presenta como víctima de un destino oscuro escrito por 'señores demoníacos', un eco del maestro de marionetas de Metallica.\",\n        \"conceptos_clave\": [\"Condición Humana\", \"Desesperación\"]\n      },\n      {\n        \"paso\": 5,\n        \"resolucion_filosofica\": \"text_Tumblr_Post_-_747139372831391744html_9b95204d.txt\",\n        \"descripcion\": \"Finalmente, regresamos a la esencia del 'Libre albedrío y responsabilidad' (peso 0.85) mediante Séneca. El texto cierra el círculo: aunque la 'Condición Humana' (peso 1) esté rodeada de tormentos, el filósofo argumenta que nadie es infeliz sino por su propia culpa. La muerte no es un laberinto sin salida, sino la salida definitiva que garantiza nuestra libertad.\",\n        \"conceptos_clave\": [\"Condición Humana\", \"Libre albedrío y responsabilidad\"]\n      }\n    ],\n    \"conclusion_del_subsistema\": \"El hallazgo general de este camino es la paradoja del control: desde el hombre que calcula vectores para ignorar su crisis, hasta el filósofo que encuentra libertad en la posibilidad de morir. La dirección narrativa elegida (de lo mundano a lo profundo) permite transformar una queja humorística sobre el estrés en una tesis sobre la autonomía existencial. La idea central es que, ya sea frente a las matemáticas, las adicciones o el destino histórico, la responsabilidad sobre nuestra propia infelicidad es el último vestigio de humanidad que nos queda.\"\n  }\n]",
+  "options": {
+    "privacy_mode": false,
+    "threshold": 0.85
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "label": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "label": "Condición Humana",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "label": "Haggard - Awaking the Centuries.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "b6faf6e0a2793ef909619e7e4b719940e71f518b8679ccfd00df43018fb7bc67",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "label": "Desesperación",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "label": "Metallica - Master of Puppets.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+      "label": "text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "label": "Matemáticas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "label": "FB_IMG_1743639238757.jpg",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a054c02d897c0646f84df54b02a8ce16d60087c539c7916dfdcda9b589123103",
+      "mime_type": "image/jpeg"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES",
+      "weight": 0.695
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "rel_type": "EVOKES",
+      "weight": 0.7
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.865
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.783
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES",
+      "weight": 0.763
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES",
+      "weight": 0.621
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.763
+    }
+  ]
+}

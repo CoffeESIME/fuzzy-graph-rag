@@ -7,9 +7,12 @@
 # Multimodal Graph RAG systems (hechoconcafeina).
 # Full license: https://www.gnu.org/licenses/agpl-3.0
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
 from typing import List, Optional
+from sqlmodel import Session
+from shared.database import get_session
+from app.models.ontology_audit import OntologyAudit
 from shared.clients import get_neo4j_driver, get_weaviate_client
 from worker.utils import generate_collection_uuid
 # NOTE: call_text_embeddings_api is imported locally inside the endpoint
@@ -321,6 +324,7 @@ class MergeRecommendation(BaseModel):
     concepts: List[ConceptNode]
     similarity_score: float
     recommended_hub_name: Optional[str] = None
+    recommended_hub_domain: Optional[str] = None
 
 class RecommendMergesResponse(BaseModel):
     recommendations: List[MergeRecommendation]
@@ -471,6 +475,7 @@ Structure:
   "merges": [
     {
       "hub_name": "Nombre unificado en espaÃƒÂ±ol",
+      "hub_domain": "Broad category like 'Computer Science', 'Arts', 'Philosophy', etc. (English)",
       "concept_indices": [1, 5] 
     }
   ]
@@ -481,6 +486,7 @@ STRICT RULES:
 2. Root Word Trap: Do not group items simply because they share a word (e.g., "Libertad" and "Libertad financiera").
 3. Demotion is Crucial: Be aggressive in demoting anything that you can touch, see, or that describes a file format. Only pure knowledge, entities, and abstractions deserve to be Graph Hubs.
 4. The "hub_name" MUST be in Spanish and represent the most academic/standard term for the cluster.
+5. The "hub_domain" MUST be in English and accurately classify the new hub concept.
 """
 
         all_clusters = []
@@ -536,6 +542,7 @@ STRICT RULES:
             if isinstance(merges_data, list):
                 for cluster_data in merges_data:
                     hub_name = cluster_data.get("hub_name")
+                    hub_domain = cluster_data.get("hub_domain")
                     indices = cluster_data.get("concept_indices", [])
                     
                     if not hub_name or not isinstance(indices, list) or len(indices) < 2:
@@ -553,7 +560,8 @@ STRICT RULES:
                             cluster_id=global_cluster_id,
                             concepts=cluster_concepts,
                             similarity_score=1.0,
-                            recommended_hub_name=hub_name
+                            recommended_hub_name=hub_name,
+                            recommended_hub_domain=hub_domain
                         ))
                         global_cluster_id += 1
             
@@ -584,7 +592,7 @@ class DemoteConceptsRequest(BaseModel):
     source_names: List[str]
 
 @router.post("/concepts/demote")
-def demote_concepts(request: DemoteConceptsRequest):
+def demote_concepts(request: DemoteConceptsRequest, session: Session = Depends(get_session)):
     """
     Demotes structural Concept Hubs to plain tags on connected nodes.
     Deletes the Concept node and pushes its name to the `tags` array of relationships.
@@ -617,16 +625,26 @@ def demote_concepts(request: DemoteConceptsRequest):
     """
     
     try:
-        with driver.session() as session:
-            result = session.run(demote_query, source_names=request.source_names)
+        with driver.session() as session_neo4j:
+            result = session_neo4j.run(demote_query, source_names=request.source_names)
             totals = sum([record["deletions"] for record in result])
+            
+            # Save Audit Log
+            audit_log = OntologyAudit(
+                operation_type="demote_concepts",
+                source_names=request.source_names,
+                details={"demoted_count": totals}
+            )
+            session.add(audit_log)
+            session.commit()
+            
             return {"status": "success", "message": f"Se eliminaron y transformaron {totals} conceptos en tags.", "demoted_count": totals}
     except Exception as e:
         logger.error(f"Error demoting concepts: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to demote concepts: {e}")
 
 @router.post("/concepts/merge")
-def merge_concepts(request: MergeConceptsRequest):
+def merge_concepts(request: MergeConceptsRequest, session: Session = Depends(get_session)):
     """
     Merge multiple source concepts into a single target concept.
     Rewires all EVOKES_CONCEPT relationships and drops the old nodes.
@@ -640,8 +658,8 @@ def merge_concepts(request: MergeConceptsRequest):
     merge_query = """
     // 1. Ensure target node exists
     MERGE (target:Concept {name: $target_name})
-    ON CREATE SET target.domain = $target_domain, target.created_at = datetime(), target.aliases = []
-    ON MATCH SET target.domain = $target_domain
+    ON CREATE SET target.domain = CASE WHEN coalesce($target_domain, '') <> '' THEN $target_domain ELSE 'General' END, target.created_at = datetime(), target.aliases = []
+    ON MATCH SET target.domain = CASE WHEN coalesce($target_domain, '') <> '' THEN $target_domain ELSE target.domain END
     
     WITH target
     
@@ -697,6 +715,15 @@ def merge_concepts(request: MergeConceptsRequest):
             record = result.single()
             merged_count = record["merged_count"] if record else 0
             
+            # Save Audit Log
+            audit_log = OntologyAudit(
+                operation_type="merge_concepts",
+                source_names=request.source_names,
+                target_name=request.target_name,
+                details={"target_domain_provided": request.target_domain}
+            )
+            session.add(audit_log)
+            session.commit()
 
             return {
                 "status": "success", 
@@ -773,7 +800,7 @@ def get_entities(
 
 
 @router.post("/entities/merge")
-def merge_entity_nodes(req: MergeEntitiesRequest):
+def merge_entity_nodes(req: MergeEntitiesRequest, session: Session = Depends(get_session)):
     """
     Merges duplicate entity nodes into a single hub.
     For each source_id (not the keep_id):
@@ -873,6 +900,16 @@ def merge_entity_nodes(req: MergeEntitiesRequest):
                 )
                 total_merged += 1
                 logger.info(f"Merged entity {source_id} into hub {req.keep_id} ({req.target_name})")
+                
+            # Save Audit Log
+            audit_log = OntologyAudit(
+                operation_type="merge_entities",
+                source_names=source_ids,
+                target_name=req.target_name,
+                details={"node_type": req.node_type, "keep_id": req.keep_id}
+            )
+            session.add(audit_log)
+            session.commit()
 
         return {
             "status": "success",
@@ -889,7 +926,7 @@ class DemoteEntitiesRequest(BaseModel):
     source_ids: List[str]
 
 @router.post("/entities/demote")
-def demote_entity_nodes(req: DemoteEntitiesRequest):
+def demote_entity_nodes(req: DemoteEntitiesRequest, session: Session = Depends(get_session)):
     """
     Demotes entity nodes to tags on their connected DigitalAssets.
     For each source node:
@@ -907,10 +944,10 @@ def demote_entity_nodes(req: DemoteEntitiesRequest):
     total_demoted = 0
 
     try:
-        with driver.session() as session:
+        with driver.session() as session_neo4j:
             for source_id in req.source_ids:
                 # Get and store the name as tag on connected DigitalAssets 
-                session.run(
+                session_neo4j.run(
                     """
                     MATCH (e) WHERE elementId(e) = $source_id
                     OPTIONAL MATCH (e)--(a:DigitalAsset)
@@ -929,6 +966,15 @@ def demote_entity_nodes(req: DemoteEntitiesRequest):
                 total_demoted += 1
                 logger.info(f"Demoted entity {source_id} to tags")
 
+            # Save Audit Log
+            audit_log = OntologyAudit(
+                operation_type="demote_entities",
+                source_names=req.source_ids,
+                details={"node_type": req.node_type}
+            )
+            session.add(audit_log)
+            session.commit()
+
         return {
             "status": "success",
             "message": f"Se degradaron {total_demoted} entidad(es) a tags en los activos conectados.",
@@ -945,7 +991,7 @@ class RetypeEntityRequest(BaseModel):
     to_type: str
 
 @router.post("/entities/retype")
-def retype_entity_node(req: RetypeEntityRequest):
+def retype_entity_node(req: RetypeEntityRequest, session: Session = Depends(get_session)):
     """
     Changes the Neo4j label of an entity node (e.g., Person â†’ Organization).
     Keeps all existing relationships intact.
@@ -959,8 +1005,8 @@ def retype_entity_node(req: RetypeEntityRequest):
 
     driver = get_neo4j_driver()
     try:
-        with driver.session() as session:
-            result = session.run(
+        with driver.session() as session_neo4j:
+            result = session_neo4j.run(
                 f"""
                 MATCH (n:{req.from_type}) WHERE elementId(n) = $node_id
                 REMOVE n:{req.from_type}
@@ -974,6 +1020,16 @@ def retype_entity_node(req: RetypeEntityRequest):
                 raise HTTPException(status_code=404, detail=f"Node not found or not of type {req.from_type}")
             name = record["name"]
             logger.info(f"Retyped entity '{name}' from {req.from_type} to {req.to_type}")
+            
+            # Save Audit Log
+            audit_log = OntologyAudit(
+                operation_type="retype_entity",
+                source_names=[name],
+                details={"node_id": req.node_id, "from_type": req.from_type, "to_type": req.to_type}
+            )
+            session.add(audit_log)
+            session.commit()
+
             return {
                 "status": "success",
                 "message": f"'{name}' ahora es de tipo {req.to_type} (era {req.from_type}).",

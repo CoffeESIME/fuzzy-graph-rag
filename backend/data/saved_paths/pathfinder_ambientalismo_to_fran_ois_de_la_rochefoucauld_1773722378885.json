@@ -1,0 +1,170 @@
+{
+  "exported_at": "2026-03-17T04:39:38.885Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:184",
+    "label": "Ambientalismo",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+    "label": "François de La Rochefoucauld",
+    "type": "Person"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 10 nodos Ãºnicos, 11 aristas Ãºnicas.",
+  "llm_explanation": "[\n  {\n    \"analisis_de_camino\": \"El recorrido asociativo comienza con una crítica a la modernidad utilitarista en el archivo 'text_Tumblr_Post_-_169116179989html_987ae9b6.txt', donde Henry David Thoreau defiende el 'Ambientalismo' no como una agenda política, sino como el acto contemplativo de caminar por el bosque frente a la especulación destructiva. Esta conexión con el 'Ambientalismo' tiene un peso de 0.9, sugiriendo que, aunque el texto es literario, su núcleo evoca una conciencia ecológica latente. Desde este punto, la figura de Thoreau actúa como el primer puente biográfico hacia el archivo 'text_Tumblr_Post_-_187220195507html_6612a749.txt', donde el autor expande su visión de la naturaleza hacia la 'Amistad', argumentando que una persona amiga acrecienta la belleza del paisaje tanto como la fauna misma.\",\n    \"puente_conceptual\": \"El concepto de 'Amistad' se convierte en el nodo central o hub de la narrativa. A través de él, la conexión se desplaza desde la visión trascendentalista de Thoreau hacia la perspectiva moralista francesa en el archivo 'text_Tumblr_Post_-_142073943004html_1a17d536.txt'. Aquí, François de La Rochefoucauld establece una jerarquía de rareza, afirmando que la amistad verdadera es incluso más infrecuente que el 'Amor'. Este giro temático nos introduce en una dimensión más analítica de los afectos humanos.\",\n    \"transicion_final\": \"La cadena se adentra en la madurez emocional con el archivo 'text_239b9bac.txt' de Mme. du Châtelet, donde se vincula la 'Amistad' con el 'Amor' bajo un peso de 0.907 (una conexión fuerte pero matizada por la razón). Ella propone que la felicidad requiere, en ocasiones, la ruptura drástica de estos vínculos. Finalmente, el camino regresa a Henry David Thoreau en el archivo 'text_Tumblr_Post_-_189068502537html_b6b38aed.txt', cerrando el ciclo con una reflexión sobre el 'Amor' (peso 0.9) entendida como una dialéctica entre la sabiduría masculina y la capacidad afectiva femenina, completando así el tránsito de la naturaleza exterior a la naturaleza del alma humana.\",\n    \"conclusion_del_subsistema\": \"El camino revela que la obra de Henry David Thoreau no solo opera en el ámbito de la ecología, sino que sirve como ancla para una exploración profunda de los afectos. El subsistema demuestra que la relación con el entorno natural (Ambientalismo) es indisociable de la calidad de nuestras relaciones humanas (Amistad y Amor), sugiriendo que la verdadera 'vida sin principios' es aquella que no logra integrar la razón con la sensibilidad hacia el otro.\"\n  }\n]",
+  "options": {
+    "privacy_mode": false
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:184",
+      "label": "Ambientalismo",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:112",
+      "label": "text_Tumblr_Post_-_169116179989html_987ae9b6.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "987ae9b6c824f60f112bee40408217219be6dd9a3119931b7eebd4e490952c2b",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1454",
+      "label": "Henry David Thoreau",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3251",
+      "label": "text_Tumblr_Post_-_187220195507html_6612a749.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "6612a749c86e806c64a8d6b9b51fb9156784cdfb5984b7c0c9395be0e94724ec",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2625",
+      "label": "Amistad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:108",
+      "label": "text_Tumblr_Post_-_142073943004html_1a17d536.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "1a17d536a093aac007856dc650743217cb54d22cd9c0940edae5f93b945e0a5b",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "label": "François de La Rochefoucauld",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "label": "text_239b9bac.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "239b9bacb6c05caacc281f68012c6d20bb28cb438f005a7bcafb2c44da826c77",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "label": "Amor",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:122",
+      "label": "text_Tumblr_Post_-_189068502537html_b6b38aed.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "b6b38aed1319f2290cb2f68526ea6fe42d99a0f58b774f4c22e2c9282e63fafb",
+      "mime_type": "text/plain"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:112",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:184",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:112",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1454",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3251",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1454",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3251",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2625",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:108",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2625",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:108",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1421",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2625",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:902",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES",
+      "weight": 0.907
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:108",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:122",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1454",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:122",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    }
+  ]
+}

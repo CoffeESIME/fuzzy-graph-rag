@@ -1,0 +1,136 @@
+{
+  "exported_at": "2026-03-28T05:14:36.249Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+    "label": "Libre albedrío y responsabilidad",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+    "label": "Laberinto sin Salida",
+    "type": "Concept"
+  },
+  "path_length": 8,
+  "message": "1 camino(s) encontrado(s): 8 nodos Ãºnicos, 8 aristas Ãºnicas.",
+  "llm_explanation": "[\n  {\n    \"analisis_de_camino\": {\n      \"direccion_narrativa\": \"De lo filosófico/abstracto a lo visceral/concreto\",\n      \"punto_de_partida\": \"Reflexión estoica sobre la autonomía de la muerte\",\n      \"punto_de_llegada\": \"La pérdida total del control y el encierro existencial\",\n      \"narrativa\": \"El camino comienza con una base filosófica profunda en el 'text_Tumblr_Post_-_747139372831391744html_9b95204d.txt', donde se recogen las ideas de Séneca sobre la 'Mortalidad' y el 'Libre albedrío y responsabilidad'. Aquí, la muerte se presenta como la 'única salida' y una forma de libertad suprema; el individuo tiene la responsabilidad de decidir si vivir o 'regresar de donde vino'. Esta idea de la muerte como un acto de voluntad nos conecta directamente con el concepto de 'Mortalidad' (peso 1), pero el tono cambia drásticamente al transitar hacia 'Slayer - Unit 731.mp3'. En esta pieza de 'Thrash Metal', la mortalidad ya no es una elección digna, sino una 'crueldad abstracta' impuesta por otros a través de la tortura y la experimentación humana. El puente conceptual aquí es el género musical, que nos lleva a 'Metallica - Master of Puppets.mp3'. En este punto, la narrativa de la responsabilidad de Séneca se invierte por completo: ya no hay libre albedrío, sino un 'Maestro' (la adicción) que tira de los hilos. La conexión final con el concepto 'Laberinto sin Salida' tiene un peso bajo (0.7), lo que indica una relación latente y sorprendente: mientras Séneca veía en la muerte una salida siempre abierta, la experiencia de la adicción en Metallica crea un laberinto donde la voluntad se ha perdido, transformando la 'puerta de salida' en una esclavitud eterna.\",\n      \"conclusion_del_subsistema\": \"El hallazgo general de este camino es la degradación del concepto de autonomía humana. Se eligió esta dirección narrativa porque permite contrastar la visión idealista y soberana de la muerte en el estoicismo con la realidad brutal y alienante de la violencia y la adicción representadas en el Thrash Metal. El camino demuestra cómo la 'Mortalidad' pasa de ser una herramienta de liberación (Séneca) a un subproducto del sadismo (Slayer) y, finalmente, a una construcción de autodestrucción donde el sujeto pierde su calidad de individuo para convertirse en una marioneta.\"\n    }\n  }\n]",
+  "options": {
+    "privacy_mode": false
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "label": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+      "label": "Mortalidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+      "label": "Slayer - Unit 731.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+      "label": "Slayer",
+      "node_type": "Organization",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+      "label": "Thrash Metal",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "label": "Metallica - Master of Puppets.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.959
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "rel_type": "EVOKES",
+      "weight": 0.7
+    }
+  ]
+}

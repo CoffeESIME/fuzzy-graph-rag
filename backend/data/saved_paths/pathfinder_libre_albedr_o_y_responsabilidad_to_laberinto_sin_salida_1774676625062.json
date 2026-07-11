@@ -1,0 +1,117 @@
+{
+  "exported_at": "2026-03-28T05:43:45.061Z",
+  "mode": "lateral",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+    "label": "Libre albedrío y responsabilidad",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+    "label": "Laberinto sin Salida",
+    "type": "Concept"
+  },
+  "path_length": 6,
+  "message": "1 camino(s) encontrado(s): 7 nodos Ãºnicos, 6 aristas Ãºnicas.",
+  "llm_explanation": "{\n  \"analisis_serendipia\": {\n    \"direccion_narrativa\": \"De lo existencial/filosófico a lo visceral/autodestructivo\",\n    \"punto_de_partida\": \"Séneca (Libre albedrío y responsabilidad)\",\n    \"punto_de_llegada\": \"Metallica (Laberinto sin salida)\",\n    \"nodos_paso\": [\n      \"Condición Humana\",\n      \"Haggard - Awaking the Centuries\",\n      \"Desesperación\",\n      \"Metallica - Master of Puppets\"\n    ],\n    \"narrativa\": \"El camino se inicia con una premisa filosófica de alto nivel en el texto de Séneca, donde se establece que el 'Libre albedrío y responsabilidad' son los pilares de la 'Condición Humana'. Séneca argumenta que somos dueños de nuestra salida de la vida y que nadie es infeliz salvo por su propia culpa. Este concepto de 'Condición Humana' actúa como el puente conceptual (hub) hacia la obra de Haggard, 'Awaking the Centuries'. Aquí, la libertad de Séneca se torna sombría; la condición humana ya no es solo una elección individual, sino una lucha colectiva contra profecías apocalípticas y un 'destino' escrito por fuerzas oscuras. Con un peso de 0.695 (conexión latente), la obra de Haggard evoca una 'Desesperación' que surge al ver el fin del mundo y la pérdida de esperanza. Esta desesperación conecta directamente con 'Master of Puppets' de Metallica, donde el control se pierde por completo. Si Séneca proponía que el hombre es dueño de sus hilos, Metallica presenta al 'Maestro de Marionetas' (la adicción) que destruye esa voluntad, convirtiendo la existencia en un 'Laberinto sin Salida' (peso 0.7), un estado de esclavitud absoluta que es la antítesis radical de la libertad estoica inicial.\",\n    \"conclusion_del_subsistema\": \"El hallazgo general revela la degradación de la autonomía humana: desde la soberanía racional de Séneca hasta la esclavitud química y mental de Metallica. La dirección narrativa elegida (de lo profundo a lo visceral) es la más lógica porque permite observar cómo el concepto de 'responsabilidad' se desintegra a medida que la 'desesperación' toma el control, transformando la 'puerta de salida' de Séneca en un 'laberinto' donde el sujeto ya no puede escapar por su cuenta.\"\n  }\n}",
+  "options": {
+    "privacy_mode": false,
+    "threshold": 0.85
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "label": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "label": "Condición Humana",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "label": "Haggard - Awaking the Centuries.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "b6faf6e0a2793ef909619e7e4b719940e71f518b8679ccfd00df43018fb7bc67",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "label": "Desesperación",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "label": "Metallica - Master of Puppets.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "rel_type": "EVOKES",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.8
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES",
+      "weight": 0.695
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "rel_type": "EVOKES",
+      "weight": 0.7
+    }
+  ]
+}

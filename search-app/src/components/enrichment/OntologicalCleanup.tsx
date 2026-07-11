@@ -10,6 +10,7 @@ export interface MergeRecommendation {
     concepts: ConceptNode[];
     similarity_score: number;
     recommended_hub_name?: string;
+    recommended_hub_domain?: string;
 }
 
 export default function OntologicalCleanup() {
@@ -708,17 +709,18 @@ function MergeRecommendationCard({ cluster, onMerge, isMerging }: {
 }) {
     // Pick the recommended name if available, else shortest generic
     const targetCandidate = cluster.recommended_hub_name || cluster.concepts.reduce((prev, current) => (prev.name.length < current.name.length) ? prev : current).name;
+    const targetDomainCandidate = cluster.recommended_hub_domain || '';
 
     const [targetName, setTargetName] = useState(targetCandidate);
-    const [targetDomain, setTargetDomain] = useState('');
+    const [targetDomain, setTargetDomain] = useState(targetDomainCandidate);
     const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
 
     // Sync state if a new recommendation arrives with the same cluster_id but different data (or when data re-loads)
     useEffect(() => {
         setTargetName(targetCandidate);
         setRejectedIds(new Set());
-        setTargetDomain('');
-    }, [targetCandidate, cluster.cluster_id]);
+        setTargetDomain(targetDomainCandidate);
+    }, [targetCandidate, targetDomainCandidate, cluster.cluster_id]);
 
     const activeConcepts = cluster.concepts.filter(c => !rejectedIds.has(c.id));
 

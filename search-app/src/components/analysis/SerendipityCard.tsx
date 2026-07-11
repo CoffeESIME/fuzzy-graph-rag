@@ -102,18 +102,18 @@ function StepNode({
                     fontSize: isConcept ? 22 : 18,
                     background: isConcept
                         ? 'linear-gradient(135deg, #7c3aed, #a78bfa)'
-                        : '#1e293b',
+                        : 'var(--bg-surface)',
                     color: '#fff',
                     border: isSelected
                         ? '3px solid #fbbf24'
                         : isConcept
-                            ? '3px solid #c4b5fd'
-                            : '2px solid #475569',
+                            ? '3px solid var(--node-concept-border)'
+                            : '2px solid var(--node-asset-border)',
                     boxShadow: isSelected
                         ? '0 0 20px #fbbf2466'
                         : isConcept
-                            ? '0 0 16px #7c3aed55'
-                            : '0 2px 8px #00000033',
+                            ? '0 0 16px var(--node-concept-shadow)'
+                            : '0 2px 8px rgba(0,0,0,0.2)',
                     transition: 'all 0.2s',
                 }}
             >
@@ -122,7 +122,7 @@ function StepNode({
             <span
                 style={{
                     fontSize: '0.75rem',
-                    color: isSelected ? '#fbbf24' : isConcept ? '#c4b5fd' : '#94a3b8',
+                    color: isSelected ? '#fbbf24' : isConcept ? 'var(--node-concept-text)' : 'var(--text-tertiary)',
                     fontWeight: isConcept || isSelected ? 600 : 400,
                     textAlign: 'center',
                     maxWidth: 120,
@@ -134,13 +134,13 @@ function StepNode({
             <span
                 style={{
                     fontSize: '0.6rem',
-                    color: '#475569',
+                    color: 'var(--text-dim)',
                     textTransform: 'uppercase',
                     letterSpacing: 1,
                 }}
             >
                 {step.type}
-                {isAsset && <span style={{ color: '#64748b', marginLeft: 4 }}>👆</span>}
+                {isAsset && <span style={{ color: 'var(--text-muted-alt)', marginLeft: 4 }}>👆</span>}
             </span>
         </div>
     );
@@ -170,7 +170,7 @@ function Connector({ weight }: { weight: number | null }) {
                     opacity: 0.7,
                 }}
             />
-            <span style={{ fontSize: '0.55rem', color: '#475569' }}>
+            <span style={{ fontSize: '0.55rem', color: 'var(--text-dim)' }}>
                 {isFuzzy ? 'difusa' : 'segura'}
             </span>
         </div>
@@ -240,8 +240,6 @@ export default function SerendipityCard() {
         setExplaining(true);
         setExplanation(null);
 
-        // Convert Serendipity PathStep array to generic nodes/edges for the explain-path endpoint
-        // This is a rough approximation since serendipity path is just an array of alternating objects
         const nodes = path.map(p => ({
             id: p.id,
             name: p.name,
@@ -254,8 +252,8 @@ export default function SerendipityCard() {
             edges.push({
                 source: path[i].id,
                 target: path[i + 1].id,
-                weight: path[i + 1].weight, // The weight represents the incoming edge
-                rel_type: 'CONECTADO_A' // Generic for serendipity
+                weight: path[i + 1].weight,
+                rel_type: 'CONECTADO_A'
             });
         }
 
@@ -280,7 +278,6 @@ export default function SerendipityCard() {
 
     const handleExportJSON = () => {
         if (!path.length) return;
-
         const exportData = {
             generated_at: new Date().toISOString(),
             tool: 'serendipity_path',
@@ -294,11 +291,8 @@ export default function SerendipityCard() {
             })),
             llm_explanation: explanation || null,
             message: message,
-            options: {
-                privacy_mode: privacyMode
-            }
+            options: { privacy_mode: privacyMode }
         };
-
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -341,8 +335,14 @@ export default function SerendipityCard() {
             <div style={{ display: 'flex', gap: 20 }}>
                 {/* Main panel */}
                 <div
-                    className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
-                    style={{ flex: 1, padding: 24, minHeight: 400 }}
+                    style={{
+                        flex: 1,
+                        padding: 24,
+                        minHeight: 400,
+                        background: 'var(--bg-panel)',
+                        border: '1px solid var(--border-panel)',
+                        borderRadius: 16,
+                    }}
                 >
                     {!generated && !loading && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 360 }}>
@@ -368,7 +368,7 @@ export default function SerendipityCard() {
                             >
                                 <Dice5 size={24} /> 🎲 Generar Camino de Serendipia
                             </button>
-                            <p style={{ marginTop: 16, color: '#475569', fontSize: '0.82rem', textAlign: 'center', maxWidth: 400 }}>
+                            <p style={{ marginTop: 16, color: 'var(--text-dim)', fontSize: '0.82rem', textAlign: 'center', maxWidth: 400 }}>
                                 Descubre asociaciones ocultas saltando entre conceptos y archivos
                                 a través de conexiones que normalmente pasarían desapercibidas.
                             </p>
@@ -378,13 +378,13 @@ export default function SerendipityCard() {
                     {loading && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 360 }}>
                             <Loader2 className="animate-spin mb-4 text-amber-400" size={40} />
-                            <span style={{ color: '#94a3b8' }}>Buscando camino difuso...</span>
+                            <span style={{ color: 'var(--text-tertiary)' }}>Buscando camino difuso...</span>
                         </div>
                     )}
 
                     {generated && !loading && path.length === 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 360 }}>
-                            <p style={{ color: '#475569', fontSize: '0.9rem', textAlign: 'center' }}>
+                            <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', textAlign: 'center' }}>
                                 No se encontró un camino difuso esta vez. Intenta de nuevo 🎲
                             </p>
                             <button
@@ -427,7 +427,7 @@ export default function SerendipityCard() {
                                 ))}
                             </div>
 
-                            {/* Regenerate and Explain */}
+                            {/* Actions row */}
                             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16, alignItems: 'center' }}>
                                 <button
                                     onClick={generate}
@@ -443,10 +443,11 @@ export default function SerendipityCard() {
                                     <Dice5 size={16} /> Otro Camino
                                 </button>
 
+                                {/* Privacy toggle */}
                                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title="Proteger datos: El modelo LLM no entrenará con esta consulta ni su contexto">
                                     <div style={{
                                         width: 32, height: 18, borderRadius: 16,
-                                        background: privacyMode ? '#f59e0b' : '#334155',
+                                        background: privacyMode ? '#f59e0b' : 'var(--bg-surface-hover)',
                                         position: 'relative',
                                         transition: 'background 0.2s',
                                     }}>
@@ -456,7 +457,7 @@ export default function SerendipityCard() {
                                             background: '#fff', transition: 'left 0.2s'
                                         }} />
                                     </div>
-                                    <span style={{ fontSize: '0.75rem', color: privacyMode ? '#f59e0b' : '#64748b', fontWeight: 600 }}>
+                                    <span style={{ fontSize: '0.75rem', color: privacyMode ? '#f59e0b' : 'var(--text-muted-alt)', fontWeight: 600 }}>
                                         Privacidad
                                     </span>
                                     <input
@@ -487,14 +488,14 @@ export default function SerendipityCard() {
                                     onClick={handleExportJSON}
                                     style={{
                                         padding: '10px 16px', fontSize: '0.85rem', fontWeight: 600,
-                                        borderRadius: 12, border: '1px solid #334155', cursor: 'pointer',
-                                        background: '#1e293b',
-                                        color: '#cbd5e1',
+                                        borderRadius: 12, border: '1px solid var(--border-surface)', cursor: 'pointer',
+                                        background: 'var(--bg-surface)',
+                                        color: 'var(--text-code)',
                                         display: 'inline-flex', alignItems: 'center', gap: 8,
                                         transition: 'all 0.2s',
                                     }}
-                                    onMouseOver={(e) => { e.currentTarget.style.background = '#334155'; e.currentTarget.style.color = '#fff'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.color = '#cbd5e1'; }}
+                                    onMouseOver={(e) => { e.currentTarget.style.background = 'var(--bg-surface-hover)'; e.currentTarget.style.color = 'var(--text-body)'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-code)'; }}
                                     title="Exportar a JSON"
                                 >
                                     <Download size={16} /> JSON
@@ -504,40 +505,40 @@ export default function SerendipityCard() {
                             {/* Explanation Panel */}
                             {explanation && (
                                 <div style={{
-                                    background: '#0f172a',
+                                    background: 'var(--bg-panel)',
                                     borderRadius: 16,
-                                    border: '1px solid #1e293b',
+                                    border: '1px solid var(--border-panel)',
                                     padding: '24px',
                                     marginTop: '24px',
                                     position: 'relative',
                                     overflow: 'hidden'
                                 }}>
                                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(to right, #ec4899, #8b5cf6)' }} />
-                                    <h3 style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc', fontSize: '1.1rem' }}>
+                                    <h3 style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-body)', fontSize: '1.1rem' }}>
                                         <Sparkles size={20} className="text-pink-400" /> Explicación del Camino
                                     </h3>
                                     <div style={{
-                                        color: '#cbd5e1',
+                                        color: 'var(--text-code)',
                                         lineHeight: 1.6,
                                         fontSize: '0.95rem',
                                         whiteSpace: 'pre-wrap',
-                                        background: '#02061750',
+                                        background: 'var(--bg-deep)',
                                         padding: 16,
                                         borderRadius: 12,
-                                        border: '1px solid #1e293b'
+                                        border: '1px solid var(--border-panel)',
                                     }}>
                                         {explanation}
                                     </div>
                                 </div>
                             )}
 
-                            {/* ── Asset Detail Panel (bottom) ── */}
+                            {/* Asset Detail Panel */}
                             {selectedAsset && (
                                 <div
                                     style={{
                                         marginTop: 24,
-                                        background: '#0f172a',
-                                        border: '1px solid #334155',
+                                        background: 'var(--bg-panel)',
+                                        border: '1px solid var(--border-surface)',
                                         borderRadius: 16,
                                         overflow: 'hidden',
                                     }}
@@ -549,19 +550,19 @@ export default function SerendipityCard() {
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             padding: '12px 20px',
-                                            background: '#1e293b',
-                                            borderBottom: '1px solid #334155',
+                                            background: 'var(--bg-surface)',
+                                            borderBottom: '1px solid var(--border-surface)',
                                         }}
                                     >
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                             <FileText size={16} className="text-amber-400" />
-                                            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f8fafc' }}>
+                                            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-body)' }}>
                                                 {selectedAsset.name || selectedAsset.id}
                                             </span>
                                             <span
                                                 style={{
                                                     fontSize: '0.68rem', padding: '2px 8px', borderRadius: 10,
-                                                    background: '#475569', color: '#e2e8f0',
+                                                    background: 'var(--bg-surface-hover)', color: 'var(--text-subtle)',
                                                 }}
                                             >
                                                 DigitalAsset
@@ -574,7 +575,7 @@ export default function SerendipityCard() {
                                             onClick={() => setSelectedAsset(null)}
                                             style={{
                                                 background: 'transparent', border: 'none', cursor: 'pointer',
-                                                color: '#64748b', padding: 4,
+                                                color: 'var(--text-muted-alt)', padding: 4,
                                             }}
                                         >
                                             <X size={18} />
@@ -592,30 +593,30 @@ export default function SerendipityCard() {
                                                 {/* Properties column */}
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 200, flex: '0 0 240px' }}>
                                                     <div>
-                                                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
                                                             FILENAME
                                                         </div>
-                                                        <div style={{ fontSize: '0.85rem', color: '#e2e8f0', wordBreak: 'break-word' }}>
+                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-subtle)', wordBreak: 'break-word' }}>
                                                             {previewAsset.name || selectedAsset.id}
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
                                                             TIPO
                                                         </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#e2e8f0', fontSize: '0.85rem' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-subtle)', fontSize: '0.85rem' }}>
                                                             {getMimeIcon(previewAsset.mime_type || selectedAsset.mime_type)}
                                                             <span>{getMimeLabel(previewAsset.mime_type || selectedAsset.mime_type)}</span>
                                                         </div>
                                                         {(previewAsset.mime_type || selectedAsset.mime_type) && (
-                                                            <div style={{ fontSize: '0.7rem', color: '#475569', marginTop: 2, fontFamily: 'monospace' }}>
+                                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: 2, fontFamily: 'monospace' }}>
                                                                 {previewAsset.mime_type || selectedAsset.mime_type}
                                                             </div>
                                                         )}
                                                     </div>
                                                     {previewAsset.tags && previewAsset.tags.length > 0 && (
                                                         <div>
-                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
                                                                 ETIQUETAS
                                                             </div>
                                                             <div className="flex flex-wrap gap-2">
@@ -627,18 +628,18 @@ export default function SerendipityCard() {
                                                     )}
                                                     {(selectedAsset.file_hash) && (
                                                         <div>
-                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
                                                                 HASH
                                                             </div>
-                                                            <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-alt)', fontFamily: 'monospace', wordBreak: 'break-all' }}>
                                                                 {selectedAsset.file_hash}
                                                             </div>
                                                         </div>
                                                     )}
                                                     {/* Connection context */}
                                                     <div style={{
-                                                        background: '#1e293b', borderRadius: 8, padding: 10,
-                                                        border: '1px solid #334155', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6
+                                                        background: 'var(--bg-surface)', borderRadius: 8, padding: 10,
+                                                        border: '1px solid var(--border-surface)', fontSize: '0.78rem', color: 'var(--text-tertiary)', lineHeight: 1.6
                                                     }}>
                                                         Peso: <WeightBadge weight={selectedAsset.weight} />{' '}
                                                         {selectedAsset.weight !== null && selectedAsset.weight < 0.8
@@ -647,11 +648,11 @@ export default function SerendipityCard() {
                                                     </div>
                                                 </div>
 
-                                                {/* Media and Content Prep column */}
+                                                {/* Media column */}
                                                 <div style={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 16 }}>
                                                     {(previewAsset.download_url || previewAsset.minio_path) ? (
                                                         <div>
-                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
                                                                 VISTA PREVIA
                                                             </div>
                                                             <MediaPreview
@@ -663,12 +664,12 @@ export default function SerendipityCard() {
 
                                                     {previewAsset.content && (
                                                         <div>
-                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
                                                                 CONTENIDO EXTRAÍDO
                                                             </div>
                                                             <div style={{
-                                                                background: 'rgba(0,0,0,0.3)', border: '1px solid #334155', borderRadius: 8, padding: 16,
-                                                                fontSize: '0.8rem', color: '#cbd5e1', whiteSpace: 'pre-wrap', fontFamily: 'monospace',
+                                                                background: 'var(--bg-deep)', border: '1px solid var(--border-surface)', borderRadius: 8, padding: 16,
+                                                                fontSize: '0.8rem', color: 'var(--text-code)', whiteSpace: 'pre-wrap', fontFamily: 'monospace',
                                                                 lineHeight: 1.6, maxHeight: 300, overflowY: 'auto'
                                                             }} className="custom-scrollbar">
                                                                 {previewAsset.content}
@@ -678,7 +679,7 @@ export default function SerendipityCard() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 120, color: '#475569' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 120, color: 'var(--text-dim)' }}>
                                                 <File size={32} className="mb-2 opacity-50" />
                                                 <span style={{ fontSize: '0.85rem' }}>No se pudo cargar la vista previa</span>
                                             </div>
@@ -690,41 +691,47 @@ export default function SerendipityCard() {
                     )}
                 </div>
 
-                {/* Explanation Panel */}
+                {/* Info Sidebar */}
                 <div
-                    className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
-                    style={{ width: 260, padding: 20, flexShrink: 0 }}
+                    style={{
+                        width: 260,
+                        padding: 20,
+                        flexShrink: 0,
+                        background: 'var(--bg-panel)',
+                        border: '1px solid var(--border-panel)',
+                        borderRadius: 16,
+                    }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                         <Info size={18} className="text-amber-400" />
-                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-body)', margin: 0 }}>
                             ¿Qué es esto?
                         </h3>
                     </div>
 
-                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', lineHeight: 1.7, marginBottom: 16 }}>
                         La <strong style={{ color: '#fbbf24' }}>Serendipia</strong> simula un "pensamiento lateral".
                         Encuentra rutas entre conceptos priorizando conexiones <em>difusas</em> — asociaciones
                         que normalmente pasarían desapercibidas.
                     </p>
 
-                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
-                        <strong style={{ color: '#e2e8f0' }}>Haz clic</strong> en cualquier <strong style={{ color: '#e2e8f0' }}>📄 Asset</strong> del recorrido
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', lineHeight: 1.7, marginBottom: 16 }}>
+                        <strong style={{ color: 'var(--text-subtle)' }}>Haz clic</strong> en cualquier <strong style={{ color: 'var(--text-subtle)' }}>📄 Asset</strong> del recorrido
                         para ver sus datos y vista previa en el panel inferior.
                     </p>
 
                     {generated && path.length > 0 && firstConcept && lastConcept && (
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155'
+                            background: 'var(--bg-surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border-surface)'
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted-alt)', fontWeight: 600, marginBottom: 6 }}>
                                 VIAJE ACTUAL
                             </div>
-                            <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                            <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', lineHeight: 1.6, margin: 0 }}>
                                 Hemos conectado{' '}
-                                <strong style={{ color: '#c4b5fd' }}>{firstConcept.name || firstConcept.id}</strong> con{' '}
-                                <strong style={{ color: '#c4b5fd' }}>{lastConcept.name || lastConcept.id}</strong>.
+                                <strong style={{ color: 'var(--node-concept-text)' }}>{firstConcept.name || firstConcept.id}</strong> con{' '}
+                                <strong style={{ color: 'var(--node-concept-text)' }}>{lastConcept.name || lastConcept.id}</strong>.
                                 Este camino fue posible gracias a asociaciones sutiles en tus archivos
                                 que normalmente pasarían desapercibidas.
                             </p>
@@ -732,19 +739,19 @@ export default function SerendipityCard() {
                     )}
 
                     <div style={{
-                        background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                        border: '1px solid #334155'
+                        background: 'var(--bg-surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                        border: '1px solid var(--border-surface)'
                     }}>
-                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted-alt)', fontWeight: 600, marginBottom: 8 }}>
                             LEYENDA
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.8 }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', lineHeight: 1.8 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7c3aed' }} />
                                 <span>💡 Concepto</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: 3, background: '#475569' }} />
+                                <div style={{ width: 8, height: 8, borderRadius: 3, background: 'var(--node-asset-border)' }} />
                                 <span>📄 DigitalAsset (clic para ver)</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>

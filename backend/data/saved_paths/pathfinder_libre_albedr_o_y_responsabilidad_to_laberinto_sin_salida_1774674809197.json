@@ -1,0 +1,88 @@
+{
+  "exported_at": "2026-03-28T05:13:29.196Z",
+  "mode": "topological",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+    "label": "Libre albedrío y responsabilidad",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+    "label": "Laberinto sin Salida",
+    "type": "Concept"
+  },
+  "path_length": 4,
+  "message": "1 camino(s) encontrado(s): 5 nodos Ãºnicos, 4 aristas Ãºnicas.",
+  "llm_explanation": "[\n  {\n    \"analisis_ruta\": {\n      \"direccion_narrativa\": \"De lo existencial-filosófico a lo visceral-patológico\",\n      \"punto_de_partida\": \"Cita de J.W. Goethe (Concepto de Libre Albedrío)\",\n      \"punto_de_llegada\": \"Metallica - Master of Puppets (Laberinto sin Salida)\",\n      \"narrativa\": \"El camino asociativo comienza con una reflexión literaria profunda en el archivo 'text_Tumblr_Post_-_117815483099html_001fdf7f.txt', donde se cita a Goethe: 'Somos nuestros propios demonios, nos expulsamos de nuestro paraíso'. Esta premisa establece una conexión latente (peso 0.7) con el concepto de 'Libre albedrío y responsabilidad', sugiriendo que la caída del ser humano no es externa, sino una decisión interna. Esta noción de agencia personal se transforma rápidamente en el concepto de 'Autodestrucción' (peso 0.9), actuando como el puente conceptual o 'hub' de este grafo. Aquí, la narrativa se vuelve más oscura al conectar con 'Master of Puppets' de Metallica. Mientras Goethe habla de la expulsión del paraíso desde una óptica existencial, Metallica personifica esa autodestrucción a través de la adicción. La canción actúa como la manifestación física de los 'demonios' mencionados por Goethe, donde el sujeto permite que un 'Maestro' externo (la droga) tome los hilos de su voluntad. Finalmente, el camino desemboca en una conexión latente (peso 0.7) hacia el 'Laberinto sin Salida', simbolizando la fase terminal de la pérdida de control: una estructura circular de desesperación donde la autonomía se ha disuelto por completo.\",\n      \"conclusion_del_subsistema\": \"El hallazgo general de este camino revela la transición del 'auto-sabotaje' como una idea filosófica hacia la 'esclavitud' como una realidad biológica y psicológica. Se ha elegido esta dirección narrativa porque permite observar cómo la responsabilidad individual (Goethe) precede a la pérdida total de control (Metallica). La idea central que une todo el camino es la paradoja de la voluntad humana: el mismo libre albedrío que nos permite crear, es el que nos permite elegir a los 'maestros' que terminarán por destruirnos, convirtiendo el paraíso en un laberinto de dependencia.\"\n    }\n  }\n]",
+  "options": {
+    "privacy_mode": false
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+      "label": "text_Tumblr_Post_-_117815483099html_001fdf7f.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "001fdf7faf76cb93b20c8c797bd071fec1cdc4461e9b4cde75089619e15a7e3f",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+      "label": "Autodestrucción",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "label": "Metallica - Master of Puppets.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "rel_type": "EVOKES",
+      "weight": 0.7
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+      "rel_type": "EVOKES",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "rel_type": "EVOKES",
+      "weight": 0.7
+    }
+  ]
+}

@@ -39,6 +39,7 @@ interface PinnedNode {
 }
 
 // =================== Helpers ===================
+// Node accent colors — fixed brand palette, do not change with theme
 const NODE_COLORS: Record<string, string> = {
     Concept: '#6d28d9',
     DigitalAsset: '#1e40af',
@@ -49,6 +50,8 @@ const NODE_COLORS: Record<string, string> = {
     Project: '#065f46',
 };
 
+// Node backgrounds adapt to theme via CSS variables where possible;
+// for React Flow nodes we keep light backgrounds (they render on a light canvas).
 const NODE_BG: Record<string, string> = {
     Concept: '#ede9fe',
     DigitalAsset: '#dbeafe',
@@ -97,11 +100,10 @@ function layoutPathHorizontal(rfNodes: Node[], rfEdges: Edge[]): { nodes: Node[]
 }
 
 function buildReactFlowData(response: PathfinderResponse): { nodes: Node[]; edges: Edge[] } {
-    // Build a sanitized-ID → original-ID lookup so edges can reference sanitized node IDs
     const rfNodes: Node[] = response.nodes.map(n => ({
-        id: sanitizeId(n.id),              // sanitized for React Flow / dagre
+        id: sanitizeId(n.id),
         position: { x: 0, y: 0 },
-        data: { label: n.label, nodeType: n.node_type, raw: n },  // raw keeps original id for API
+        data: { label: n.label, nodeType: n.node_type, raw: n },
         type: 'pathNode',
     }));
 
@@ -132,6 +134,7 @@ function buildReactFlowData(response: PathfinderResponse): { nodes: Node[]; edge
 
 
 // =================== Custom React Flow Node ===================
+// React Flow renders on a light canvas, so node BG stays readable against white.
 function PathNode({ data }: { data: { label: string; nodeType: string; raw: PathfinderNodeData } }) {
     const color = NODE_COLORS[data.nodeType] || '#475569';
     const bg = NODE_BG[data.nodeType] || '#f8fafc';
@@ -195,13 +198,11 @@ function NodeSearchPanel({
 }) {
     const [mode, setMode] = useState<'fuzzy' | 'entity'>('fuzzy');
 
-    // Fuzzy mode
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<Array<{ id: string; label: string; type: string }>>([]);
     const [loading, setLoading] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Entity browse mode
     const [entityType, setEntityType] = useState('Concept');
     const [entitySearch, setEntitySearch] = useState('');
     const [entityList, setEntityList] = useState<Array<{ id: string; name: string; connections: number }>>([]);
@@ -266,11 +267,11 @@ function NodeSearchPanel({
                 <div>
                     <div style={{ fontSize: '0.65rem', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{label}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f8fafc' }}>{pinned.label}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-body)' }}>{pinned.label}</span>
                         <span style={{ fontSize: '0.65rem', background: `${color}30`, color, padding: '1px 6px', borderRadius: 4 }}>{pinned.type}</span>
                     </div>
                 </div>
-                <button onClick={() => onPin(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}>
+                <button onClick={() => onPin(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted-alt)', padding: 4 }}>
                     <X size={16} />
                 </button>
             </div>
@@ -282,10 +283,10 @@ function NodeSearchPanel({
             <div style={{ fontSize: '0.65rem', color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{label}</div>
 
             {/* Mode toggle */}
-            <div style={{ display: 'flex', background: '#0f172a', borderRadius: 8, padding: 3, marginBottom: 10, width: 'max-content' }}>
+            <div style={{ display: 'flex', background: 'var(--bg-deep)', borderRadius: 8, padding: 3, marginBottom: 10, width: 'max-content' }}>
                 {(['fuzzy', 'entity'] as const).map(m => (
                     <button key={m} onClick={() => m === 'entity' ? switchToEntity() : setMode('fuzzy')}
-                        style={{ padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, background: mode === m ? color : 'transparent', color: mode === m ? '#fff' : '#64748b', transition: 'all 0.15s' }}>
+                        style={{ padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, background: mode === m ? color : 'transparent', color: mode === m ? '#fff' : 'var(--text-muted-alt)', transition: 'all 0.15s' }}>
                         {m === 'fuzzy' ? '🔍 Búsqueda' : '📋 Por Tipo'}
                     </button>
                 ))}
@@ -295,22 +296,22 @@ function NodeSearchPanel({
             {mode === 'fuzzy' && (
                 <div style={{ position: 'relative' }}>
                     <div style={{ position: 'relative' }}>
-                        <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                        <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted-alt)' }} />
                         <input value={query} onChange={e => handleFuzzySearch(e.target.value)} placeholder="Busca cualquier nodo"
-                            style={{ width: '100%', boxSizing: 'border-box', background: '#1e293b', border: '1px solid #334155', borderRadius: 8, padding: '10px 12px 10px 34px', fontSize: '0.85rem', color: '#f8fafc', outline: 'none' }} />
-                        {loading && <Loader2 size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} className="animate-spin" />}
+                            style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-surface)', border: '1px solid var(--border-surface)', borderRadius: 8, padding: '10px 12px 10px 34px', fontSize: '0.85rem', color: 'var(--text-body)', outline: 'none' }} />
+                        {loading && <Loader2 size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted-alt)' }} className="animate-spin" />}
                     </div>
                     {results.length > 0 && (
-                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid #334155', borderRadius: 8, zIndex: 100, maxHeight: 260, overflowY: 'auto', marginTop: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface)', border: '1px solid var(--border-surface)', borderRadius: 8, zIndex: 100, maxHeight: 260, overflowY: 'auto', marginTop: 4, boxShadow: 'var(--shadow-panel)' }}>
                             {results.map(r => (
                                 <div key={r.id} onClick={() => { onPin({ id: r.id, label: r.label, type: r.type }); setResults([]); setQuery(''); }}
-                                    style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #0f172a', transition: 'background 0.15s' }}
-                                    onMouseEnter={e => (e.currentTarget.style.background = '#0f172a')}
+                                    style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-panel)', transition: 'background 0.15s' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-panel)')}
                                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                    <span style={{ fontSize: '0.85rem', color: '#f1f5f9' }}>{r.label}</span>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{r.label}</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span style={{ fontSize: '0.65rem', color: NODE_COLORS[r.type] || '#64748b', background: `${NODE_COLORS[r.type] || '#475569'}20`, padding: '1px 6px', borderRadius: 4 }}>{r.type}</span>
-                                        <ChevronRight size={14} color="#475569" />
+                                        <span style={{ fontSize: '0.65rem', color: NODE_COLORS[r.type] || 'var(--text-muted-alt)', background: `${NODE_COLORS[r.type] || '#475569'}20`, padding: '1px 6px', borderRadius: 4 }}>{r.type}</span>
+                                        <ChevronRight size={14} color="var(--text-dim)" />
                                     </div>
                                 </div>
                             ))}
@@ -319,37 +320,37 @@ function NodeSearchPanel({
                 </div>
             )}
 
-            {/*  ENTITY MODE  */}
+            {/* ENTITY MODE */}
             {mode === 'entity' && (
-                <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', gap: 4, padding: '8px 10px', flexWrap: 'wrap', borderBottom: '1px solid #1e293b' }}>
+                <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-panel)', borderRadius: 12, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', gap: 4, padding: '8px 10px', flexWrap: 'wrap', borderBottom: '1px solid var(--border-panel)' }}>
                         {ENTITY_TYPES_PF.map(({ label: lbl, value }) => (
                             <button key={value} onClick={() => handleEntityTypeChange(value)}
-                                style={{ padding: '3px 10px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600, background: entityType === value ? color : '#1e293b', color: entityType === value ? '#fff' : '#64748b', transition: 'all 0.15s' }}>
+                                style={{ padding: '3px 10px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600, background: entityType === value ? color : 'var(--bg-surface)', color: entityType === value ? '#fff' : 'var(--text-muted-alt)', transition: 'all 0.15s' }}>
                                 {lbl}
                             </button>
                         ))}
                     </div>
-                    <div style={{ padding: '8px 10px', borderBottom: '1px solid #1e293b', position: 'relative' }}>
-                        <Search size={13} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', color: '#475569' }} />
+                    <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-panel)', position: 'relative' }}>
+                        <Search size={13} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
                         <input value={entitySearch} onChange={e => setEntitySearch(e.target.value)} placeholder={`Filtrar ${entityType}...`}
-                            style={{ width: '100%', boxSizing: 'border-box', background: '#1e293b', border: '1px solid #334155', borderRadius: 6, padding: '6px 10px 6px 28px', fontSize: '0.8rem', color: '#f8fafc', outline: 'none' }} />
+                            style={{ width: '100%', boxSizing: 'border-box', background: 'var(--bg-surface)', border: '1px solid var(--border-surface)', borderRadius: 6, padding: '6px 10px 6px 28px', fontSize: '0.8rem', color: 'var(--text-body)', outline: 'none' }} />
                     </div>
                     <div style={{ maxHeight: 220, overflowY: 'auto' }}>
                         {entityLoading ? (
-                            <div style={{ padding: 24, textAlign: 'center', color: '#475569', display: 'flex', justifyContent: 'center', gap: 8 }}>
+                            <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-dim)', display: 'flex', justifyContent: 'center', gap: 8 }}>
                                 <Loader2 size={16} className="animate-spin" /> Cargando...
                             </div>
                         ) : filteredEntities.length === 0 ? (
-                            <div style={{ padding: 16, textAlign: 'center', color: '#475569', fontSize: '0.8rem' }}>Sin resultados.</div>
+                            <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.8rem' }}>Sin resultados.</div>
                         ) : (
                             filteredEntities.map(e => (
                                 <div key={e.id} onClick={() => onPin({ id: e.id, label: e.name, type: entityType })}
-                                    style={{ padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #0f172a20', transition: 'background 0.12s' }}
-                                    onMouseEnter={ev => (ev.currentTarget.style.background = '#1e293b')}
+                                    style={{ padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-panel)', transition: 'background 0.12s' }}
+                                    onMouseEnter={ev => (ev.currentTarget.style.background = 'var(--bg-surface)')}
                                     onMouseLeave={ev => (ev.currentTarget.style.background = 'transparent')}>
-                                    <span style={{ fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 500 }}>{e.name}</span>
-                                    {e.connections > 0 && <span style={{ fontSize: '0.65rem', color: '#475569' }}>{e.connections} conex.</span>}
+                                    <span style={{ fontSize: '0.82rem', color: 'var(--text-subtle)', fontWeight: 500 }}>{e.name}</span>
+                                    {e.connections > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>{e.connections} conex.</span>}
                                 </div>
                             ))
                         )}
@@ -375,20 +376,20 @@ function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose
 
     return (
         <div style={{
-            background: '#0f172a',
-            border: '1px solid #334155',
+            background: 'var(--bg-panel)',
+            border: '1px solid var(--border-surface)',
             borderRadius: 16,
             overflow: 'hidden',
             marginTop: 16,
         }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: '#1e293b', borderBottom: '1px solid #334155' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-surface)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {NODE_ICONS[node.node_type] || <File size={16} />}
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f8fafc' }}>{node.label}</span>
-                    <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 10, background: '#475569', color: '#e2e8f0' }}>{node.node_type}</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-body)' }}>{node.label}</span>
+                    <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 10, background: 'var(--bg-surface-hover)', color: 'var(--text-subtle)' }}>{node.node_type}</span>
                 </div>
-                <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted-alt)' }}>
                     <X size={18} />
                 </button>
             </div>
@@ -405,7 +406,7 @@ function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 200, flex: '0 0 220px' }}>
                             {preview.tags?.length > 0 && (
                                 <div>
-                                    <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>ETIQUETAS</div>
+                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted-alt)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>ETIQUETAS</div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                         {preview.tags.map((t, i) => (
                                             <span key={i} style={{ fontSize: '0.65rem', background: '#92400e30', color: '#fbbf24', border: '1px solid #92400e50', padding: '1px 8px', borderRadius: 12 }}>
@@ -417,8 +418,8 @@ function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose
                             )}
                             {preview.mime_type && (
                                 <div>
-                                    <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>TIPO</div>
-                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'monospace' }}>{preview.mime_type}</div>
+                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted-alt)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>TIPO</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>{preview.mime_type}</div>
                                 </div>
                             )}
                         </div>
@@ -427,14 +428,14 @@ function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose
                         <div style={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {(preview.download_url || preview.minio_path) && (
                                 <div>
-                                    <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>VISTA PREVIA</div>
+                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted-alt)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>VISTA PREVIA</div>
                                     <MediaPreview url={preview.download_url || undefined} path={preview.minio_path || undefined} />
                                 </div>
                             )}
                             {preview.content && preview.content !== 'No textual content available' && (
                                 <div>
-                                    <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>CONTENIDO EXTRAÍDO</div>
-                                    <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid #334155', borderRadius: 8, padding: 14, fontSize: '0.78rem', color: '#cbd5e1', whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: 1.6, maxHeight: 280, overflowY: 'auto' }} className="custom-scrollbar">
+                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted-alt)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>CONTENIDO EXTRAÍDO</div>
+                                    <div style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-surface)', borderRadius: 8, padding: 14, fontSize: '0.78rem', color: 'var(--text-code)', whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: 1.6, maxHeight: 280, overflowY: 'auto' }} className="custom-scrollbar">
                                         {preview.content}
                                     </div>
                                 </div>
@@ -442,7 +443,7 @@ function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose
                         </div>
                     </div>
                 ) : (
-                    <div style={{ color: '#475569', textAlign: 'center', padding: 24 }}>No se pudo cargar la vista previa.</div>
+                    <div style={{ color: 'var(--text-dim)', textAlign: 'center', padding: 24 }}>No se pudo cargar la vista previa.</div>
                 )}
             </div>
         </div>
@@ -579,33 +580,33 @@ export default function PathfinderCard() {
         <div style={{ padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: '#0e7490' + '20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: '#0e749020', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Route size={22} color="#06b6d4" />
                 </div>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, background: 'linear-gradient(to right, #06b6d4, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                         Navegador Latente
                     </h1>
-                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
+                    <p style={{ margin: 0, color: 'var(--text-muted-alt)', fontSize: '0.9rem' }}>
                         Traza el camino semántico entre dos ideas de tu grafo.
                     </p>
                 </div>
             </div>
 
             {/* Control Panel */}
-            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-panel)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* Node selectors */}
                 <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                     <NodeSearchPanel label="Nodo Origen" color="#06b6d4" pinned={sourceNode} onPin={setSourceNode} />
-                    <div style={{ display: 'flex', alignItems: 'center', paddingTop: 28, color: '#475569', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', paddingTop: 28, color: 'var(--text-dim)', flexShrink: 0 }}>
                         <ChevronRight size={20} />
                     </div>
                     <NodeSearchPanel label="Nodo Destino" color="#a855f7" pinned={targetNode} onPin={setTargetNode} />
                 </div>
 
                 {/* Mode + Action row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ display: 'flex', background: '#1e293b', borderRadius: 8, padding: 3 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', background: 'var(--bg-surface)', borderRadius: 8, padding: 3 }}>
                         {(['direct', 'lateral', 'topological'] as const).map(m => (
                             <button
                                 key={m}
@@ -618,7 +619,7 @@ export default function PathfinderCard() {
                                     fontSize: '0.8rem',
                                     fontWeight: 600,
                                     background: mode === m ? (m === 'direct' ? '#0e7490' : m === 'lateral' ? '#92400e' : '#4d7c0f') : 'transparent',
-                                    color: mode === m ? '#fff' : '#64748b',
+                                    color: mode === m ? '#fff' : 'var(--text-muted-alt)',
                                     transition: 'all 0.2s',
                                 }}
                             >
@@ -626,19 +627,19 @@ export default function PathfinderCard() {
                             </button>
                         ))}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#475569', flex: 1 }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', flex: 1 }}>
                         {mode === 'direct' ? 'Camino más corto sin restricciones.' : mode === 'lateral' ? `Evita conexiones muy fuertes (>${threshold}), forzando rutas creativas.` : topoThreshold > 0 ? `Solo saltos con peso ≥ ${topoThreshold.toFixed(2)} — conexiones débiles eliminadas del grafo.` : 'Menor cantidad de saltos, ignorando la fuerza de la conexión.'}
                     </div>
                     {/* Paths Count Select */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '6px 12px', borderRadius: 8, border: '1px solid #334155' }}>
-                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Caminos:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-surface)', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-surface)' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Caminos:</span>
                         <select
                             value={kPaths}
                             onChange={e => setKPaths(Number(e.target.value))}
                             style={{
                                 background: 'transparent',
                                 border: 'none',
-                                color: '#f8fafc',
+                                color: 'var(--text-primary)',
                                 fontWeight: 700,
                                 fontSize: '0.8rem',
                                 outline: 'none',
@@ -652,15 +653,15 @@ export default function PathfinderCard() {
                         </select>
                     </div>
                     {mode === 'lateral' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e293b', padding: '6px 12px', borderRadius: 8, border: '1px solid #334155' }}>
-                            <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Umbral:</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-surface)', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-surface)' }}>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Umbral:</span>
                             <select
                                 value={threshold}
                                 onChange={e => setThreshold(Number(e.target.value))}
                                 style={{
                                     background: 'transparent',
                                     border: 'none',
-                                    color: '#f8fafc',
+                                    color: 'var(--text-primary)',
                                     fontWeight: 700,
                                     fontSize: '0.8rem',
                                     outline: 'none',
@@ -677,8 +678,8 @@ export default function PathfinderCard() {
                     {mode === 'topological' && (
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: 10,
-                            background: '#1e293b', padding: '8px 14px',
-                            borderRadius: 8, border: `1px solid ${topoThreshold > 0 ? '#4d7c0f' : '#334155'}`,
+                            background: 'var(--bg-surface)', padding: '8px 14px',
+                            borderRadius: 8, border: `1px solid ${topoThreshold > 0 ? '#4d7c0f' : 'var(--border-surface)'}`,
                             transition: 'border-color 0.2s', minWidth: 260,
                         }}>
                             <span style={{ fontSize: '0.7rem', color: '#84cc16', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap', flexShrink: 0 }}>
@@ -692,15 +693,11 @@ export default function PathfinderCard() {
                                 step={0.05}
                                 value={topoThreshold}
                                 onChange={e => setTopoThreshold(Number(e.target.value))}
-                                style={{
-                                    flex: 1,
-                                    accentColor: '#84cc16',
-                                    cursor: 'pointer',
-                                }}
+                                style={{ flex: 1, accentColor: '#84cc16', cursor: 'pointer' }}
                             />
                             <span style={{
                                 fontSize: '0.85rem', fontWeight: 700,
-                                color: topoThreshold > 0 ? '#84cc16' : '#475569',
+                                color: topoThreshold > 0 ? '#84cc16' : 'var(--text-dim)',
                                 minWidth: 34, textAlign: 'right',
                                 fontVariantNumeric: 'tabular-nums',
                             }}>
@@ -716,8 +713,8 @@ export default function PathfinderCard() {
                             borderRadius: 10,
                             border: 'none',
                             cursor: canTrace ? 'pointer' : 'not-allowed',
-                            background: canTrace ? 'linear-gradient(135deg, #06b6d4, #6366f1)' : '#1e293b',
-                            color: canTrace ? '#fff' : '#475569',
+                            background: canTrace ? 'linear-gradient(135deg, #06b6d4, #6366f1)' : 'var(--bg-surface)',
+                            color: canTrace ? '#fff' : 'var(--text-dim)',
                             fontWeight: 700,
                             fontSize: '0.9rem',
                             display: 'flex',
@@ -741,15 +738,16 @@ export default function PathfinderCard() {
 
             {/* React Flow Canvas */}
             {rfNodes.length > 0 && (
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
+                <div style={{ background: '#f8fafc', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden' }}>
                     {/* Status bar */}
                     {result && (
-                        <div style={{ padding: '10px 20px', background: '#1e293b', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ padding: '10px 20px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-surface)', display: 'flex', alignItems: 'center', gap: 12 }}>
                             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{result.message}</span>
-                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#475569' }}>{result.path_length} salto(s) • Modo {result.mode}</span>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{result.message}</span>
+                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-dim)' }}>{result.path_length} salto(s) • Modo {result.mode}</span>
                         </div>
                     )}
+                    {/* React Flow always renders on a light canvas */}
                     <div style={{ height: 380 }}>
                         <ReactFlow
                             nodes={rfNodes}
@@ -767,17 +765,17 @@ export default function PathfinderCard() {
                             <Background color="#e2e8f0" gap={20} />
                         </ReactFlow>
                     </div>
-                    <div style={{ padding: '10px 20px', background: '#1e293b', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '0.72rem', color: '#475569' }}>
+                    <div style={{ padding: '10px 20px', background: 'var(--bg-surface)', borderTop: '1px solid var(--border-surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
                             💡 Haz clic en cualquier nodo para ver sus detalles abajo.
                         </span>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                            {/* Privacy Selector */}
+                            {/* Privacy Toggle */}
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title="Proteger datos: El modelo LLM no entrenará con esta consulta ni su contexto">
                                 <div style={{
                                     width: 32, height: 18, borderRadius: 16,
-                                    background: privacyMode ? '#f59e0b' : '#334155',
+                                    background: privacyMode ? '#f59e0b' : 'var(--bg-surface-hover)',
                                     position: 'relative',
                                     transition: 'background 0.2s',
                                 }}>
@@ -787,7 +785,7 @@ export default function PathfinderCard() {
                                         background: '#fff', transition: 'left 0.2s'
                                     }} />
                                 </div>
-                                <span style={{ fontSize: '0.75rem', color: privacyMode ? '#f59e0b' : '#64748b', fontWeight: 600 }}>
+                                <span style={{ fontSize: '0.75rem', color: privacyMode ? '#f59e0b' : 'var(--text-muted-alt)', fontWeight: 600 }}>
                                     Privacidad
                                 </span>
                                 <input
@@ -804,17 +802,17 @@ export default function PathfinderCard() {
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: 6,
                                     padding: '6px 14px',
-                                    background: '#1e293b',
-                                    color: '#94a3b8',
-                                    border: '1px solid #334155',
+                                    background: 'var(--bg-surface)',
+                                    color: 'var(--text-tertiary)',
+                                    border: '1px solid var(--border-surface)',
                                     borderRadius: 8,
                                     fontSize: '0.8rem',
                                     fontWeight: 600,
                                     cursor: 'pointer',
                                     transition: 'all 0.2s'
                                 }}
-                                onMouseEnter={e => { e.currentTarget.style.color = '#f8fafc'; e.currentTarget.style.borderColor = '#475569'; }}
-                                onMouseLeave={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = '#334155'; }}
+                                onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-body)'; e.currentTarget.style.borderColor = 'var(--text-dim)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.borderColor = 'var(--border-surface)'; }}
                             >
                                 <Download size={14} /> Exportar JSON
                             </button>
@@ -849,9 +847,9 @@ export default function PathfinderCard() {
             {/* Explanation Panel */}
             {explanation && (
                 <div style={{
-                    background: '#0f172a',
+                    background: 'var(--bg-panel)',
                     borderRadius: 16,
-                    border: '1px solid #1e293b',
+                    border: '1px solid var(--border-panel)',
                     padding: '20px 24px',
                     position: 'relative',
                     overflow: 'hidden',
@@ -859,18 +857,18 @@ export default function PathfinderCard() {
                 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(to right, #a855f7, #3b82f6)' }} />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showExplanation ? 16 : 0 }}>
-                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc', fontSize: '1.1rem' }}>
+                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-body)', fontSize: '1.1rem' }}>
                             <span>🪄</span> Explicación del Camino
                         </h3>
-                        <button 
+                        <button
                             onClick={() => setShowExplanation(!showExplanation)}
-                            style={{ 
-                                background: 'transparent', border: '1px solid #334155', borderRadius: 8, 
+                            style={{
+                                background: 'transparent', border: '1px solid var(--border-surface)', borderRadius: 8,
                                 display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px',
-                                color: '#94a3b8', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.75rem', fontWeight: 600
+                                color: 'var(--text-tertiary)', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.75rem', fontWeight: 600
                             }}
-                            onMouseEnter={e => { e.currentTarget.style.color = '#f8fafc'; e.currentTarget.style.background = '#1e293b'; }}
-                            onMouseLeave={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'transparent'; }}
+                            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-body)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'transparent'; }}
                         >
                             {showExplanation ? <EyeOff size={14} /> : <Eye size={14} />}
                             {showExplanation ? 'Ocultar' : 'Mostrar'}
@@ -878,14 +876,14 @@ export default function PathfinderCard() {
                     </div>
                     {showExplanation && (
                         <div style={{
-                            color: '#cbd5e1',
+                            color: 'var(--text-code)',
                             lineHeight: 1.6,
                             fontSize: '0.95rem',
                             whiteSpace: 'pre-wrap',
-                            background: '#02061750',
+                            background: 'var(--bg-deep)',
                             padding: 16,
                             borderRadius: 12,
-                            border: '1px solid #1e293b'
+                            border: '1px solid var(--border-panel)'
                         }}>
                             {explanation}
                         </div>
@@ -913,14 +911,14 @@ export default function PathfinderCard() {
                     title="Ir arriba"
                     style={{
                         width: 44, height: 44, borderRadius: '50%',
-                        background: '#1e293b', border: '1px solid #334155',
+                        background: 'var(--bg-surface)', border: '1px solid var(--border-surface)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#f8fafc', cursor: 'pointer',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                        color: 'var(--text-body)', cursor: 'pointer',
+                        boxShadow: 'var(--shadow-panel)',
                         transition: 'all 0.2s'
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#334155'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface-hover)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
                     <ArrowUp size={20} />
                 </button>
@@ -929,14 +927,14 @@ export default function PathfinderCard() {
                     title="Ir abajo"
                     style={{
                         width: 44, height: 44, borderRadius: '50%',
-                        background: '#1e293b', border: '1px solid #334155',
+                        background: 'var(--bg-surface)', border: '1px solid var(--border-surface)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#f8fafc', cursor: 'pointer',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                        color: 'var(--text-body)', cursor: 'pointer',
+                        boxShadow: 'var(--shadow-panel)',
                         transition: 'all 0.2s'
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#334155'; e.currentTarget.style.transform = 'translateY(2px)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#1e293b'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface-hover)'; e.currentTarget.style.transform = 'translateY(2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
                     <ArrowDown size={20} />
                 </button>

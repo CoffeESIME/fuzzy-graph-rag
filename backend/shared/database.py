@@ -3,7 +3,7 @@ from config.settings import get_settings
 from typing import Generator
 
 # Import models so SQLModel can register them
-from app.models import Asset, VectorStatus
+from app.models import Asset, VectorStatus, OntologyAudit
 
 settings = get_settings()
 

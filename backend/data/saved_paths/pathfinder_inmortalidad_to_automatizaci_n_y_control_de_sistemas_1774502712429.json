@@ -1,0 +1,170 @@
+{
+  "exported_at": "2026-03-26T05:25:12.429Z",
+  "mode": "direct",
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+    "label": "Inmortalidad",
+    "type": "Concept"
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+    "label": "Automatización y Control de Sistemas",
+    "type": "Concept"
+  },
+  "path_length": 8,
+  "message": "3 camino(s) encontrado(s): 10 nodos Ãºnicos, 11 aristas Ãºnicas.",
+  "llm_explanation": "{\n  \"pathfinder_analysis\": {\n    \"direccion_narrativa\": \"De lo trascendental/espiritual a lo material/distópico\",\n    \"punto_de_partida\": \"La filosofía de la inmortalidad en Rabindranath Tagore\",\n    \"punto_de_llegada\": \"La deshumanización tecnológica y el terror nuclear de Espécimen\",\n    \"pasos_del_camino\": [\n      {\n        \"paso\": 1,\n        \"nodos\": [\"text_173d7547.txt\", \"Inmortalidad\", \"Rabindranath Tagore\"],\n        \"descripcion\": \"El camino comienza con la visión de Tagore sobre la 'Inmortalidad'. En su texto 'El sentido de la vida', el autor propone que el poeta trasciende su individualidad al encontrar un 'idioma común' que transforma el sentimiento personal en alegría universal, superando la soledad de la muerte.\"\n      },\n      {\n        \"paso\": 2,\n        \"nodos\": [\"text_d62fd0ca.txt\", \"text_Tumblr_Post_-_190355135863html_322d6232.txt\", \"Mortalidad\"],\n        \"descripcion\": \"La narrativa transita hacia la 'Mortalidad' como un proceso necesario. A través de 'Los pájaros perdidos', Tagore explora la paradoja de morir 'una y otra vez' para comprender la vida interminable. Aquí, la muerte es el puente donde lo múltiple se convierte en unidad, sugiriendo una trascendencia espiritual donde incluso los nombres de Dios deben morir para alcanzar la verdadera unidad.\"\n      },\n      {\n        \"paso\": 3,\n        \"nodos\": [\"Espécimen - Este Es Mi Mundo.mp3\", \"Mortalidad\"],\n        \"descripcion\": \"Se produce una conexión crítica donde el concepto de 'Mortalidad' abandona el plano metafísico de Tagore para entrar en el plano crudo y físico de la banda de punk Espécimen. El peso de esta conexión (0.943) indica una transición fluida pero impactante: la muerte ya no es un ciclo de aprendizaje espiritual, sino una consecuencia de la miseria, el hambre y la violencia del mundo real.\",\n        \"observacion_peso\": \"Conexión sólida que vincula la filosofía existencial con la crítica social.\"\n      },\n      {\n        \"paso\": 4,\n        \"nodos\": [\"Armas y Terror Nuclear\", \"text_20df6016.txt\"],\n        \"descripcion\": \"El concepto de 'Armas y Terror Nuclear' actúa como el puente hacia la distopía tecnológica. La canción 'Este Es Mi Mundo' describe cielos oscurecidos por pruebas nucleares, lo cual se profundiza en el análisis del texto '20df6016.txt' sobre las canciones 'Tecnología' y 'Radioactividad'. Aquí, la mortalidad es provocada por la alienación mecánica.\"\n      },\n      {\n        \"paso\": 5,\n        \"nodos\": [\"Automatización y Control de Sistemas\"],\n        \"descripcion\": \"El camino culmina en la 'Automatización y Control de Sistemas'. Lo que inició como una búsqueda de la voz verdadera del poeta termina en la 'jaula invisible' de los sistemas SCADA y microcontroladores que, según el análisis de la obra de Espécimen, condicionan al ser humano y lo deshumanizan.\"\n      }\n    ],\n    \"conclusion_del_subsistema\": \"Este camino asociativo revela una involución temática fascinante: parte de la aspiración humana por la inmortalidad poética y la unidad espiritual (Tagore) y desciende gradualmente hasta la degradación de la vida por la tecnología y la amenaza nuclear (Espécimen). La dirección narrativa de lo profundo a lo mundano es la más coherente porque permite contrastar cómo la 'muerte' pasa de ser una herramienta de iluminación espiritual a convertirse en un producto de la deshumanización técnica. El concepto de 'Mortalidad' funciona como el eje central (hub) que une la filosofía mística del siglo XX con la crítica punk contemporánea.\"\n  }\n}",
+  "options": {
+    "privacy_mode": false
+  },
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "label": "Inmortalidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:925",
+      "label": "text_173d7547.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "173d75474a51795c931a8b156fbe0920b7b90b032a698f95ed998af9ab422328",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "label": "Rabindranath Tagore",
+      "node_type": "Person",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1217",
+      "label": "text_d62fd0ca.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "d62fd0ca95734cbfe6d71db4f28aaa91e002626e800626c56503aca53bde8b16",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+      "label": "Mortalidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "label": "Espécimen - Este Es Mi Mundo.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "645d95bc576fdd2d45fbd4d3bb8cd004d9e43cc3136a3bed90686a97d8fbc5bc",
+      "mime_type": "audio/mpeg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "label": "Armas y Terror Nuclear",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+      "label": "text_20df6016.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "20df601634e7614a61319f8f9ae8734e5b1788b5ab33ecd422f850efc29ef0c0",
+      "mime_type": "text/plain"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2146",
+      "label": "text_Tumblr_Post_-_190355135863html_322d6232.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "322d6232774e6ba7daad4bfc2f9ba0ab72a93d118bcfb4627228a9847b2dc297",
+      "mime_type": "text/plain"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:925",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.9
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:925",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1217",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "rel_type": "CREATED_BY",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1217",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.943
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2043",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1217",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2146",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:940",
+      "rel_type": "MENTIONS",
+      "weight": 1
+    },
+    {
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2146",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 1
+    }
+  ]
+}

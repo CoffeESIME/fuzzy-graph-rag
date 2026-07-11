@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useTheme } from './hooks/useTheme';
 import NavigationBar from './components/NavigationBar';
 import SearchPage from './components/search/SearchPage';
 import HomePage from './components/HomePage';
@@ -21,10 +22,13 @@ import SavedPathsViewer from './components/analysis/SavedPathsViewer';
 import EnrichmentDashboard from './components/enrichment/EnrichmentDashboard';
 
 export default function App() {
+  // Initialize theme at root — applies data-theme to <html> immediately.
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <BrowserRouter>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%', background: 'var(--bg-primary)' }}>
-        <NavigationBar />
+        <NavigationBar theme={theme} onToggleTheme={toggleTheme} />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', width: '100%' }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
