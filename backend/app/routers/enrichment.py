@@ -121,7 +121,7 @@ def request_enrichment(req: EnrichRequest):
         
     return {
         "status": "accepted", 
-        "message": f"Se han encolado {len(req.node_ids)} nodos para enriquecimiento semÃƒÂ¡ntico.",
+        "message": f"Se han encolado {len(req.node_ids)} nodos para enriquecimiento semántico.",
         "queued_count": len(req.node_ids)
     }
 
@@ -164,7 +164,7 @@ def get_preview_weights(
             
             description = record["description"]
             if not description:
-                raise HTTPException(status_code=400, detail="Este nodo aÃƒÂºn no ha sido enriquecido (no tiene 'description').")
+                raise HTTPException(status_code=400, detail="Este nodo aún no ha sido enriquecido (no tiene 'description').")
                 
             assets = record["assets"]
             # filter out empty 
@@ -463,7 +463,7 @@ Your task is twofold:
 
 CRITICAL DISTINCTIONS FOR MERGING: 
 - Do NOT group concepts just because they are related. 
-- "EvoluciÃƒÂ³n biolÃƒÂ³gica" and "EvoluciÃƒÂ³n de ideas" MUST remain separate. Do not merge across different domains (e.g., Biology vs. Sociology).
+- "Evolución biológica" and "Evolución de ideas" MUST remain separate. Do not merge across different domains (e.g., Biology vs. Sociology).
 - ONLY group them if a user searching for Concept A would be 100% satisfied with results for Concept B (e.g., "Muerte" and "Finitud humana", or "IA" and "Inteligencia Artificial").
 
 
@@ -474,7 +474,7 @@ Structure:
 {
   "merges": [
     {
-      "hub_name": "Nombre unificado en espaÃƒÂ±ol",
+      "hub_name": "Nombre unificado en español",
       "hub_domain": "Broad category like 'Computer Science', 'Arts', 'Philosophy', etc. (English)",
       "concept_indices": [1, 5] 
     }
@@ -482,7 +482,7 @@ Structure:
 }
 
 STRICT RULES:
-1. Semantic Equivalence: Only merge exact same entities. "ManipulaciÃƒÂ³n psicolÃƒÂ³gica" and "ManipulaciÃƒÂ³n genÃƒÂ©tica" are DIFFERENT.
+1. Semantic Equivalence: Only merge exact same entities. "Manipulación psicológica" and "Manipulación genética" are DIFFERENT.
 2. Root Word Trap: Do not group items simply because they share a word (e.g., "Libertad" and "Libertad financiera").
 3. Demotion is Crucial: Be aggressive in demoting anything that you can touch, see, or that describes a file format. Only pure knowledge, entities, and abstractions deserve to be Graph Hubs.
 4. The "hub_name" MUST be in Spanish and represent the most academic/standard term for the cluster.
