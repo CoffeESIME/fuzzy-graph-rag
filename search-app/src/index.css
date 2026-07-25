@@ -1,6 +1,10 @@
-// ==========================================
-//   DESIGN TOKENS — DARK (default)
-// ==========================================
+@import "tailwindcss";
+
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
+/* ==========================================
+   DESIGN TOKENS — DARK (default)
+   ========================================== */
 :root {
   color-scheme: dark;
 
@@ -78,7 +82,7 @@
 
   /* Backgrounds */
   --bg-primary:       #f8fafc;
-  --bg-secondary:     #f1f5f9;
+  --bg-secondary:     #ffffff;
   --bg-card:          #ffffff;
   --bg-card-hover:    #f8fafc;
   --bg-input:         #f1f5f9;
@@ -90,21 +94,21 @@
   --bg-surface-deep:  #f8fafc;
 
   /* Borders */
-  --border-subtle:    #e2e8f0;
+  --border-subtle:    #cbd5e1;
   --border-active:    #6366f1;
-  --border-panel:     #e2e8f0;
-  --border-surface:   #cbd5e1;
+  --border-panel:     #cbd5e1;
+  --border-surface:   #94a3b8;
 
   /* Text */
   --text-primary:     #0f172a;
   --text-body:        #1e293b;
-  --text-secondary:   #475569;
-  --text-tertiary:    #64748b;
-  --text-muted:       #94a3b8;
+  --text-secondary:   #334155;
+  --text-tertiary:    #475569;
+  --text-muted:       #64748b;
   --text-muted-alt:   #64748b;
-  --text-dim:         #94a3b8;
-  --text-code:        #334155;
-  --text-subtle:      #475569;
+  --text-dim:         #64748b;
+  --text-code:        #1e293b;
+  --text-subtle:      #334155;
 
   /* Gradients */
   --gradient-card:        linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
@@ -209,7 +213,7 @@ body {
    CARDS & PANELS
    ========================================== */
 .search-card {
-  background: var(--gradient-card);
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 24px;
@@ -275,6 +279,32 @@ body {
 }
 
 .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-surface);
+}
+
+.btn-secondary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

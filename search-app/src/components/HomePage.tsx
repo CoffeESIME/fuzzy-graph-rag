@@ -22,7 +22,7 @@ export default function HomePage() {
                 </div>
                 <h1 style={{
                     fontSize: '3rem', fontWeight: 800, marginBottom: 16,
-                    background: 'linear-gradient(to right, #fff, #94a3b8)',
+                    background: 'linear-gradient(to right, var(--text-primary), var(--accent-indigo))',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
                 }}>
                     Multimodal Graph RAG

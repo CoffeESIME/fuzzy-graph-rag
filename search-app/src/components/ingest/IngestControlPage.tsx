@@ -20,10 +20,10 @@ export default function IngestControlPage() {
     const navigate = useNavigate();
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg-primary, #0f172a)' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* Header */}
             <div style={{
-                padding: '24px 48px', borderBottom: '1px solid var(--border-subtle, #1e293b)',
+                padding: '24px 48px', borderBottom: '1px solid var(--border-subtle)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between'
             }}>
                 <div>
@@ -34,7 +34,7 @@ export default function IngestControlPage() {
                     }}>
                         Ingesta y Control de Tareas
                     </h1>
-                    <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.95rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
                         Gestión de archivos, procesamiento y calidad de datos.
                     </p>
                 </div>
@@ -53,8 +53,8 @@ export default function IngestControlPage() {
             {/* Tab Bar */}
             <div style={{
                 display: 'flex', gap: 0, padding: '0 48px',
-                borderBottom: '1px solid var(--border-subtle, #1e293b)',
-                background: 'var(--bg-secondary, #1e293b20)'
+                borderBottom: '1px solid var(--border-subtle)',
+                background: 'var(--bg-secondary)'
             }}>
                 {TABS.map((tab) => {
                     const Icon = tab.icon;
@@ -66,9 +66,9 @@ export default function IngestControlPage() {
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 8,
                                 padding: '14px 24px', fontSize: '0.9rem', fontWeight: isActive ? 600 : 400,
-                                color: isActive ? '#818cf8' : 'var(--text-secondary, #94a3b8)',
+                                color: isActive ? 'var(--accent-indigo)' : 'var(--text-secondary)',
                                 background: 'transparent', border: 'none', cursor: 'pointer',
-                                borderBottom: isActive ? '2px solid #818cf8' : '2px solid transparent',
+                                borderBottom: isActive ? '2px solid var(--accent-indigo)' : '2px solid transparent',
                                 transition: 'all 0.15s ease'
                             }}
                         >

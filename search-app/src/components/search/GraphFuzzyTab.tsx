@@ -164,7 +164,7 @@ export default function GraphFuzzyTab() {
                     ref={containerRef}
                     style={{
                         flex: 1,
-                        background: '#0f172a',
+                        background: 'var(--bg-card)',
                         borderRadius: 12,
                         border: '1px solid var(--border-subtle)',
                         overflow: 'hidden',
@@ -177,7 +177,7 @@ export default function GraphFuzzyTab() {
                             position: 'absolute', inset: 0,
                             display: 'flex', flexDirection: 'column',
                             alignItems: 'center', justifyContent: 'center',
-                            color: 'rgba(255,255,255,0.3)'
+                            color: 'var(--text-muted)'
                         }}>
                             <Radar size={48} style={{ marginBottom: 16, opacity: 0.5 }} />
                             <p>Búsqueda Vectorial → Expansión en Grafo</p>

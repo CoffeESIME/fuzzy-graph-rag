@@ -167,7 +167,7 @@ export default function GraphCrispTab() {
                     ref={containerRef}
                     style={{
                         flex: 1,
-                        background: '#0f172a',
+                        background: 'var(--bg-card)',
                         borderRadius: 12,
                         border: '1px solid var(--border-subtle)',
                         overflow: 'hidden',

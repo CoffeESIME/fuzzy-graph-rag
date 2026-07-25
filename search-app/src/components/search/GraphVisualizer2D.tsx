@@ -81,7 +81,7 @@ export default function GraphVisualizer2D({
             linkWidth={link => (link as any).weight * 2}
 
             // Configuración de Motor
-            backgroundColor="#0f172a"
+            backgroundColor="transparent"
             cooldownTicks={100} // Detener simulación tras 100 ticks para estabilidad
             onEngineStop={onEngineStop}
 
