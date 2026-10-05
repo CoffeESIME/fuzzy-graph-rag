@@ -29,7 +29,7 @@ export default function IngestControlPage() {
                 <div>
                     <h1 style={{
                         fontSize: '1.75rem', fontWeight: 800, marginBottom: 4,
-                        background: 'linear-gradient(to right, #6366f1, #a855f7)',
+                        background: 'var(--gradient-primary)',
                         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
                     }}>
                         Ingesta y Control de Tareas

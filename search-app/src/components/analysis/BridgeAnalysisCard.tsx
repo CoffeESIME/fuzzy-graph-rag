@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import ReactFlow, { Background, Controls } from 'reactflow';
+import ReactFlow from '../graph/GraphCanvas';
+import { Background, Controls } from 'reactflow';
 import type { Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Network, Loader2, RefreshCw, Info } from 'lucide-react';
@@ -27,13 +28,13 @@ type BridgeMode = 'standard' | 'fuzzy';
 const NARRATIVES: Record<BridgeMode, { title: string; icon: string; desc: string; scoreLabel: string }> = {
     standard: {
         title: 'Puentes Estructurales (Standard)',
-        icon: '🌉',
+        icon: '',
         desc: 'Conceptos que unen la mayor cantidad de archivos de diferentes temáticas. Muestra los "cuellos de botella" físicos de tu información.',
         scoreLabel: 'diversidad × nodos conectados',
     },
     fuzzy: {
         title: 'Puentes Interdisciplinarios (Fuzzy)',
-        icon: '✨',
+        icon: '',
         desc: 'Filtra el ruido usando los pesos de la IA. Solo muestra conceptos que conectan mundos dispares con ALTA certeza semántica. Ideal para descubrir tus verdaderas asociaciones interdisciplinarias.',
         scoreLabel: 'diversidad × peso difuso',
     },
@@ -55,9 +56,9 @@ function buildBowtieGraph(bridge: BridgeItem): { nodes: Node[]; edges: Edge[] } 
     nodes.push({
         id: 'bridge',
         position: { x: centerX, y: centerY },
-        data: { label: `🌉 ${bridge.id}` },
+        data: { label: ` ${bridge.id}` },
         style: {
-            background: 'linear-gradient(135deg, #ef4444, #f97316)',
+            background: 'var(--gradient-primary)',
             color: '#fff',
             borderRadius: '50%',
             width: 80,
@@ -82,7 +83,7 @@ function buildBowtieGraph(bridge: BridgeItem): { nodes: Node[]; edges: Edge[] } 
             position: { x: 30, y },
             data: { label: name },
             style: {
-                background: '#1e293b',
+                background: 'var(--surface)',
                 color: '#93c5fd',
                 border: '1px solid #3b82f6',
                 borderRadius: 8,
@@ -110,7 +111,7 @@ function buildBowtieGraph(bridge: BridgeItem): { nodes: Node[]; edges: Edge[] } 
             position: { x: 570, y },
             data: { label: name },
             style: {
-                background: '#1e293b',
+                background: 'var(--surface)',
                 color: '#86efac',
                 border: '1px solid #22c55e',
                 borderRadius: 8,
@@ -210,7 +211,7 @@ export default function BridgeAnalysisCard() {
             {error ? (
                 <div className="p-8 text-red-500 border border-red-200 rounded">{error}</div>
             ) : (
-                <div style={{ display: 'flex', gap: 20 }}>
+                <div className="responsive-panels" style={{ display: 'flex', gap: 20 }}>
                     {/* Left Panel — Toggle + Leaderboard */}
                     <div style={{ width: 280, flexShrink: 0 }}>
                         <div
@@ -220,7 +221,7 @@ export default function BridgeAnalysisCard() {
                             {/* Mode Toggle */}
                             <div style={{
                                 display: 'flex', borderRadius: 8, overflow: 'hidden',
-                                border: '1px solid #334155', marginBottom: 16,
+                                border: '1px solid var(--border)', marginBottom: 16,
                             }}>
                                 {(['standard', 'fuzzy'] as BridgeMode[]).map(m => (
                                     <button
@@ -232,11 +233,11 @@ export default function BridgeAnalysisCard() {
                                             transition: 'all 0.25s ease',
                                             background: method === m
                                                 ? (m === 'fuzzy' ? '#7c3aed' : '#dc2626')
-                                                : '#0f172a',
-                                            color: method === m ? '#ffffff' : '#64748b',
+                                                : 'var(--background-secondary)',
+                                            color: method === m ? '#ffffff' : 'var(--text-muted)',
                                         }}
                                     >
-                                        {m === 'standard' ? '🌉 Standard' : '✨ Fuzzy'}
+                                        {m === 'standard' ? ' Standard' : ' Fuzzy'}
                                     </button>
                                 ))}
                             </div>
@@ -244,8 +245,8 @@ export default function BridgeAnalysisCard() {
                             {/* Filtro de Umbral (Slider) */}
                             <div style={{ marginBottom: 20 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Umbral Mínimo:</span>
-                                    <span style={{ fontSize: '0.75rem', color: '#f8fafc', fontWeight: 700, fontFamily: 'monospace' }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Umbral Mínimo:</span>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', fontWeight: 700, fontFamily: 'monospace' }}>
                                         {minWeight.toFixed(2)}
                                     </span>
                                 </div>
@@ -257,19 +258,19 @@ export default function BridgeAnalysisCard() {
                                     style={{ width: '100%', accentColor: method === 'fuzzy' ? '#7c3aed' : '#ef4444' }}
                                 />
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                                    <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Más Ruido</span>
-                                    <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Más Estricto</span>
+                                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Más Ruido</span>
+                                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Más Estricto</span>
                                 </div>
                             </div>
 
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
-                                🏆 Ranking de Puentes
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+                                 Ranking de Puentes
                             </div>
 
                             {loading ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 24 }}>
                                     <Loader2 className="animate-spin mb-2 text-red-400" size={24} />
-                                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                                         Buscando {method === 'fuzzy' ? 'fuzzy' : 'standard'} bridges...
                                     </span>
                                 </div>
@@ -287,8 +288,8 @@ export default function BridgeAnalysisCard() {
                                                     justifyContent: 'space-between',
                                                     padding: '10px 12px',
                                                     borderRadius: 10,
-                                                    border: isActive ? '1px solid #ef4444' : '1px solid #334155',
-                                                    background: isActive ? '#ef444418' : '#0f172a',
+                                                    border: isActive ? '1px solid #ef4444' : '1px solid var(--border)',
+                                                    background: isActive ? '#ef444418' : 'var(--background-secondary)',
                                                     cursor: 'pointer',
                                                     transition: 'all 0.15s',
                                                     textAlign: 'left',
@@ -300,8 +301,8 @@ export default function BridgeAnalysisCard() {
                                                             width: 24,
                                                             height: 24,
                                                             borderRadius: '50%',
-                                                            background: i === 0 ? '#ef4444' : i < 3 ? '#f9731630' : '#1e293b',
-                                                            color: i === 0 ? '#fff' : '#94a3b8',
+                                                            background: i === 0 ? '#ef4444' : i < 3 ? '#f9731630' : 'var(--surface)',
+                                                            color: i === 0 ? '#fff' : 'var(--text-secondary)',
                                                             display: 'flex',
                                                             alignItems: 'center',
                                                             justifyContent: 'center',
@@ -312,11 +313,11 @@ export default function BridgeAnalysisCard() {
                                                     >
                                                         {i + 1}
                                                     </div>
-                                                    <span style={{ fontSize: '0.82rem', color: isActive ? '#fca5a5' : '#e2e8f0', fontWeight: isActive ? 600 : 400 }}>
+                                                    <span style={{ fontSize: '0.82rem', color: isActive ? '#fca5a5' : 'var(--text-primary)', fontWeight: isActive ? 600 : 400 }}>
                                                         {b.id}
                                                     </span>
                                                 </div>
-                                                <span style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'monospace' }}>
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                                                     {b.score}
                                                 </span>
                                             </button>
@@ -326,7 +327,7 @@ export default function BridgeAnalysisCard() {
                             )}
 
                             {!loading && bridges.length === 0 && (
-                                <div style={{ padding: 20, textAlign: 'center', color: '#475569', fontSize: '0.8rem' }}>
+                                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                                     No se encontraron puentes.
                                 </div>
                             )}
@@ -350,16 +351,16 @@ export default function BridgeAnalysisCard() {
                                         top: 12,
                                         left: 16,
                                         zIndex: 10,
-                                        background: '#0f172acc',
+                                        background: 'color-mix(in srgb, var(--background-secondary) 80%, transparent)',
                                         backdropFilter: 'blur(8px)',
                                         padding: '6px 14px',
                                         borderRadius: 20,
                                         fontSize: '0.72rem',
-                                        color: '#94a3b8',
-                                        border: '1px solid #334155',
+                                        color: 'var(--text-secondary)',
+                                        border: '1px solid var(--border)',
                                     }}
                                 >
-                                    {method === 'fuzzy' ? '✨' : '🌉'} Bowtie: <strong style={{ color: '#fca5a5' }}>{activeBridge.id}</strong>
+                                    {method === 'fuzzy' ? '' : ''} Bowtie: <strong style={{ color: '#fca5a5' }}>{activeBridge.id}</strong>
                                 </div>
                                 <ReactFlow
                                     nodes={flowNodes}
@@ -368,7 +369,7 @@ export default function BridgeAnalysisCard() {
                                     minZoom={0.5}
                                     nodesDraggable={false}
                                 >
-                                    <Background color="#334155" gap={30} />
+                                    <Background color="var(--border)" gap={30} />
                                     <Controls />
                                 </ReactFlow>
                             </>
@@ -382,29 +383,29 @@ export default function BridgeAnalysisCard() {
                     >
                         {/* Dynamic narrative */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
-                            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc', marginBottom: 6 }}>
+                            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                                 {narrative.icon} {narrative.title}
                             </div>
-                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                                 {narrative.desc}
                             </p>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                             <Info size={18} className="text-red-400" />
-                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                                 Puente Semántico
                             </h3>
                         </div>
 
                         {activeBridge ? (
                             <>
-                                <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 16 }}>
                                     El concepto <strong style={{ color: '#fca5a5' }}>{activeBridge.id}</strong> es
-                                    un <strong style={{ color: '#e2e8f0' }}>puente crítico</strong>. Está
+                                    un <strong style={{ color: 'var(--text-primary)' }}>puente crítico</strong>. Está
                                     conectando temas como{' '}
                                     <strong style={{ color: '#93c5fd' }}>
                                         {activeBridge.context[0] || '—'}
@@ -415,41 +416,41 @@ export default function BridgeAnalysisCard() {
                                     </strong>
                                     .
                                 </p>
-                                <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 16 }}>
                                     Sin este concepto, estos temas estarían <em>aislados</em> en el grafo.
                                 </p>
 
                                 <div style={{
-                                    background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                                    border: '1px solid #334155'
+                                    background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                                    border: '1px solid var(--border)'
                                 }}>
-                                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8 }}>
                                         CONECTA
                                     </div>
                                     {activeBridge.context.map((c, i) => (
-                                        <div key={i} style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 3 }}>
+                                        <div key={i} style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 3 }}>
                                             • {c}
                                         </div>
                                     ))}
                                 </div>
 
                                 <div style={{
-                                    background: '#1e293b', borderRadius: 8, padding: 12,
-                                    border: '1px solid #334155'
+                                    background: 'var(--surface)', borderRadius: 8, padding: 12,
+                                    border: '1px solid var(--border)'
                                 }}>
-                                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 4 }}>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>
                                         SCORE
                                     </div>
                                     <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ef4444', fontFamily: 'monospace' }}>
                                         {activeBridge.score}
                                     </div>
-                                    <div style={{ fontSize: '0.65rem', color: '#475569', marginTop: 2 }}>
+                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2 }}>
                                         {narrative.scoreLabel}
                                     </div>
                                 </div>
                             </>
                         ) : (
-                            <p style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.6 }}>
+                            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
                                 Selecciona un concepto del ranking para ver su visualización Bowtie y
                                 entender qué mundos conecta.
                             </p>
@@ -461,7 +462,7 @@ export default function BridgeAnalysisCard() {
                                 padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
                                 border: '1px solid #22c55e30'
                             }}>
-                                ✅ {message}
+                                 {message}
                             </div>
                         )}
                     </div>

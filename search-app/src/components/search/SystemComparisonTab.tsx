@@ -432,7 +432,7 @@ export default function SystemComparisonTab() {
                         title="Exportar resultados como JSON"
                         style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.5)', background: 'rgba(99,102,241,0.1)', color: '#818cf8', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap' }}
                     >
-                        📥 Exportar JSON
+                         Exportar JSON
                     </button>
                 )}
             </div>
@@ -688,7 +688,7 @@ export default function SystemComparisonTab() {
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                🧠 Panel de Generación RAG (Control de Usuario)
+                                 Panel de Generación RAG (Control de Usuario)
                             </h4>
                             <button
                                 className="btn-primary"
@@ -713,8 +713,8 @@ export default function SystemComparisonTab() {
                                     onChange={(e) => setRagConfig(prev => ({ ...prev, model: e.target.value as 'local' | 'cloud' }))}
                                     style={{ width: '100%', cursor: 'pointer' }}
                                 >
-                                    <option value="cloud">☁️ Cloud Advanced (Mejor razonamiento)</option>
-                                    <option value="local">💻 Local Edge (Privacidad absoluta)</option>
+                                    <option value="cloud"> Cloud Advanced (Mejor razonamiento)</option>
+                                    <option value="local"> Local Edge (Privacidad absoluta)</option>
                                 </select>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>
                                     Usa Cloud (ej. OpenAI/Gemini) para razonamiento complejo. Usa Local Edge para procesar todo en tu máquina.
@@ -765,7 +765,7 @@ export default function SystemComparisonTab() {
 
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 8px', background: ragConfig.privacy_mode ? 'rgba(239, 68, 68, 0.1)' : 'transparent', border: `1px solid ${ragConfig.privacy_mode ? '#ef4444' : 'var(--border-subtle)'}`, borderRadius: 8, transition: 'all 0.2s', marginTop: 'auto' }}>
                                     <div style={{ fontSize: '0.8rem', color: ragConfig.privacy_mode ? '#ef4444' : 'var(--text-primary)', fontWeight: ragConfig.privacy_mode ? 600 : 400 }}>
-                                        🕵️‍♂️ Modo Incógnito
+                                         Modo Incógnito
                                     </div>
                                     <div className={`toggle-switch ${ragConfig.privacy_mode ? 'on' : 'off'}`} onClick={() => setRagConfig(prev => ({ ...prev, privacy_mode: !prev.privacy_mode }))} style={{ cursor: 'pointer' }}>
                                         <div className="toggle-slider" style={{
@@ -793,7 +793,7 @@ export default function SystemComparisonTab() {
                             }}>
                                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
                                     <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Métricas RAG:</span>
-                                    {synthResponse.is_private && <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 12, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444' }}>Incógnito ✅</span>}
+                                    {synthResponse.is_private && <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 12, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444' }}>Incógnito </span>}
                                     <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 12, background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-indigo)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>{synthResponse.sources_used.length} Fuentes Citadas</span>
                                 </div>
 

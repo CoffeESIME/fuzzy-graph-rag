@@ -58,7 +58,7 @@ export default function SearchResults({ data, loading, error }: Props) {
                 background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.3)',
                 borderRadius: 'var(--radius-md)', color: 'var(--accent-rose)',
             }}>
-                ❌ {error}
+                 {error}
             </div>
         );
     }
@@ -235,7 +235,7 @@ export default function SearchResults({ data, loading, error }: Props) {
                                             <div style={{
                                                 position: 'absolute', top: -36, left: 0,
                                                 padding: '5px 10px', borderRadius: 8,
-                                                fontSize: '0.7rem', color: '#e2e8f0',
+                                                fontSize: '0.7rem', color: 'var(--text-primary)',
                                                 background: 'rgba(15, 23, 42, 0.95)',
                                                 border: '1px solid rgba(100,116,139,0.3)',
                                                 whiteSpace: 'nowrap',
@@ -284,12 +284,12 @@ export default function SearchResults({ data, loading, error }: Props) {
                                     {/* Audio Specific Metadata */}
                                     {item.space === 'AudioSpace' && (
                                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                                            {item.properties.genre && <span className="badge-meta">🎵 {item.properties.genre}</span>}
-                                            {item.properties.tempo && <span className="badge-meta">⏱️ {item.properties.tempo}</span>}
-                                            {item.properties.audio_type && <span className="badge-meta">💿 {item.properties.audio_type}</span>}
-                                            {item.properties.emotion && <span className="badge-meta">😊 {item.properties.emotion}</span>}
+                                            {item.properties.genre && <span className="badge-meta"> {item.properties.genre}</span>}
+                                            {item.properties.tempo && <span className="badge-meta">⏱ {item.properties.tempo}</span>}
+                                            {item.properties.audio_type && <span className="badge-meta"> {item.properties.audio_type}</span>}
+                                            {item.properties.emotion && <span className="badge-meta"> {item.properties.emotion}</span>}
                                             {Array.isArray(item.properties.instruments) && item.properties.instruments.length > 0 && (
-                                                <span className="badge-meta">🎸 {item.properties.instruments.slice(0, 3).join(', ')}</span>
+                                                <span className="badge-meta"> {item.properties.instruments.slice(0, 3).join(', ')}</span>
                                             )}
                                         </div>
                                     )}
@@ -297,9 +297,9 @@ export default function SearchResults({ data, loading, error }: Props) {
                                     {/* Visual Specific Metadata */}
                                     {item.space === 'VisualSpace' && (
                                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                                            {item.properties.image_type && <span className="badge-meta">🖼️ {item.properties.image_type}</span>}
-                                            {item.properties.art_style && <span className="badge-meta">🎨 {item.properties.art_style}</span>}
-                                            {item.properties.visual_mood && <span className="badge-meta">✨ {item.properties.visual_mood}</span>}
+                                            {item.properties.image_type && <span className="badge-meta"> {item.properties.image_type}</span>}
+                                            {item.properties.art_style && <span className="badge-meta"> {item.properties.art_style}</span>}
+                                            {item.properties.visual_mood && <span className="badge-meta"> {item.properties.visual_mood}</span>}
                                             {Array.isArray(item.properties.dominant_colors) && item.properties.dominant_colors.map((color: string, i: number) => (
                                                 <span key={i} className="badge-meta" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                     <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: color, border: '1px solid var(--border-subtle)' }}></span>
@@ -313,8 +313,8 @@ export default function SearchResults({ data, loading, error }: Props) {
                                     {item.space === 'TextSpace' && (
                                         <div style={{ marginTop: 8 }}>
                                             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                                                {item.properties.document_type && <span className="badge-meta">📄 {item.properties.document_type}</span>}
-                                                {item.properties.rhetorical_tone && <span className="badge-meta">🗣️ {item.properties.rhetorical_tone}</span>}
+                                                {item.properties.document_type && <span className="badge-meta"> {item.properties.document_type}</span>}
+                                                {item.properties.rhetorical_tone && <span className="badge-meta"> {item.properties.rhetorical_tone}</span>}
                                             </div>
                                             <button
                                                 onClick={() => setSelectedTextItem(item)}
@@ -346,11 +346,11 @@ export default function SearchResults({ data, loading, error }: Props) {
                                     {item.space === 'MemorySpace' && (
                                         <div style={{ marginTop: 8 }}>
                                             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                                                {item.properties.sentiment && <span className="badge-meta">❤️ {item.properties.sentiment}</span>}
+                                                {item.properties.sentiment && <span className="badge-meta"> {item.properties.sentiment}</span>}
                                                 {item.properties.emotional_intensity !== undefined && (
-                                                    <span className="badge-meta">🔥 Intensidad: {item.properties.emotional_intensity}</span>
+                                                    <span className="badge-meta"> Intensidad: {item.properties.emotional_intensity}</span>
                                                 )}
-                                                {item.properties.connection_type && <span className="badge-meta">🔗 {item.properties.connection_type}</span>}
+                                                {item.properties.connection_type && <span className="badge-meta"> {item.properties.connection_type}</span>}
                                             </div>
                                             <button
                                                 onClick={() => setSelectedTextItem(item)}
@@ -429,7 +429,7 @@ export default function SearchResults({ data, loading, error }: Props) {
                                 {selectedTextItem.properties.filename || 'Detalle'}
                             </h3>
                             <button onClick={() => setSelectedTextItem(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}>
-                                ✕
+
                             </button>
                         </div>
 

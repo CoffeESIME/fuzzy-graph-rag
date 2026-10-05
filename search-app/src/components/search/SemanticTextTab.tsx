@@ -5,10 +5,10 @@ import { useSearchStore } from '../../store/searchStore';
 import SearchResults from './SearchResults';
 
 const SPACES = [
-    { id: 'TextSpace', label: 'Texto', icon: '📄' },
-    { id: 'VisualSpace', label: 'Visual', icon: '📸' },
-    { id: 'AudioSpace', label: 'Audio', icon: '🎵' },
-    { id: 'MemorySpace', label: 'Memoria', icon: '🧠' },
+    { id: 'TextSpace', label: 'Texto', icon: '' },
+    { id: 'VisualSpace', label: 'Visual', icon: '' },
+    { id: 'AudioSpace', label: 'Audio', icon: '' },
+    { id: 'MemorySpace', label: 'Memoria', icon: '' },
 ];
 
 const ALPHA_PRESETS = [
@@ -273,7 +273,7 @@ export default function SemanticTextTab() {
                                             border: '1px solid rgba(16, 185, 129, 0.3)',
                                         }}
                                     >
-                                        🏷️ {tag}
+                                         {tag}
                                         <button
                                             onClick={() => removeTag(tag)}
                                             style={{

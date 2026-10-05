@@ -1,5 +1,8 @@
+import MethodDetails from '../graph/MethodDetails';
+import Explanation from '../graph/Explanation';
 import { useState, useCallback, useEffect, useRef } from 'react';
-import ReactFlow, {
+import ReactFlow from '../graph/GraphCanvas';
+import {
     Controls,
     Background,
     Handle,
@@ -116,8 +119,9 @@ function buildReactFlowData(response: PathfinderResponse): { nodes: Node[]; edge
             target: tgt,
             type: 'smoothstep',
             animated: true,
+            data: { relation: e.rel_type, weight: e.weight },
             label: e.weight != null ? `${e.rel_type}\n${e.weight}` : e.rel_type,
-            labelStyle: { fill: '#1e293b', fontSize: 10, fontWeight: 600 },
+            labelStyle: { fill: 'var(--surface)', fontSize: 10, fontWeight: 600 },
             labelBgStyle: { fill: '#ffffff', fillOpacity: 0.95 },
             labelBgPadding: [4, 2] as [number, number],
             labelBgBorderRadius: 4,
@@ -132,44 +136,6 @@ function buildReactFlowData(response: PathfinderResponse): { nodes: Node[]; edge
     return layoutPathHorizontal(rfNodes, rfEdges);
 }
 
-
-// =================== Custom React Flow Node ===================
-// React Flow renders on a light canvas, so node BG stays readable against white.
-function PathNode({ data }: { data: { label: string; nodeType: string; raw: PathfinderNodeData } }) {
-    const color = NODE_COLORS[data.nodeType] || '#475569';
-    const bg = NODE_BG[data.nodeType] || '#f8fafc';
-    return (
-        <div style={{
-            background: bg,
-            border: `2.5px solid ${color}`,
-            borderRadius: 10,
-            padding: '8px 14px',
-            maxWidth: 170,
-            minWidth: 110,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            cursor: 'pointer',
-            boxShadow: `0 2px 8px ${color}40`,
-        }}>
-            {/* CRITICAL: Handles are required for edges to connect */}
-            <Handle type="target" position={Position.Left} style={{ background: color, width: 8, height: 8, border: '2px solid white' }} />
-            <Handle type="source" position={Position.Right} style={{ background: color, width: 8, height: 8, border: '2px solid white' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, color }}>
-                {NODE_ICONS[data.nodeType] || <Move size={12} />}
-                <span style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {data.nodeType}
-                </span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#1e293b', textAlign: 'center', fontWeight: 600, lineHeight: 1.3 }}>
-                {data.label.length > 28 ? data.label.slice(0, 28) + '…' : data.label}
-            </div>
-        </div>
-    );
-}
-
-const NODE_TYPES = { pathNode: PathNode };
 
 // =================== Search Panel ===================
 
@@ -287,7 +253,7 @@ function NodeSearchPanel({
                 {(['fuzzy', 'entity'] as const).map(m => (
                     <button key={m} onClick={() => m === 'entity' ? switchToEntity() : setMode('fuzzy')}
                         style={{ padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, background: mode === m ? color : 'transparent', color: mode === m ? '#fff' : 'var(--text-muted-alt)', transition: 'all 0.15s' }}>
-                        {m === 'fuzzy' ? '🔍 Búsqueda' : '📋 Por Tipo'}
+                        {m === 'fuzzy' ? ' Búsqueda' : ' Por Tipo'}
                     </button>
                 ))}
             </div>
@@ -310,7 +276,7 @@ function NodeSearchPanel({
                                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{r.label}</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span style={{ fontSize: '0.65rem', color: NODE_COLORS[r.type] || 'var(--text-muted-alt)', background: `${NODE_COLORS[r.type] || '#475569'}20`, padding: '1px 6px', borderRadius: 4 }}>{r.type}</span>
+                                        <span style={{ fontSize: '0.65rem', color: NODE_COLORS[r.type] || 'var(--text-muted-alt)', background: `${NODE_COLORS[r.type] || 'var(--text-muted)'}20`, padding: '1px 6px', borderRadius: 4 }}>{r.type}</span>
                                         <ChevronRight size={14} color="var(--text-dim)" />
                                     </div>
                                 </div>
@@ -362,94 +328,6 @@ function NodeSearchPanel({
 }
 
 // =================== Asset Detail Panel ===================
-function AssetDetailPanel({ node, onClose }: { node: PathfinderNodeData; onClose: () => void }) {
-    const [preview, setPreview] = useState<AssetPreviewResponse | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        setLoading(true);
-        getAssetPreview(node.id)
-            .then(setPreview)
-            .catch(() => setPreview(null))
-            .finally(() => setLoading(false));
-    }, [node.id]);
-
-    return (
-        <div style={{
-            background: 'var(--bg-panel)',
-            border: '1px solid var(--border-surface)',
-            borderRadius: 16,
-            overflow: 'hidden',
-            marginTop: 16,
-        }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-surface)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {NODE_ICONS[node.node_type] || <File size={16} />}
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-body)' }}>{node.label}</span>
-                    <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 10, background: 'var(--bg-surface-hover)', color: 'var(--text-subtle)' }}>{node.node_type}</span>
-                </div>
-                <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted-alt)' }}>
-                    <X size={18} />
-                </button>
-            </div>
-
-            {/* Body */}
-            <div style={{ padding: 20 }}>
-                {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
-                        <Loader2 className="animate-spin text-amber-500" size={28} />
-                    </div>
-                ) : preview ? (
-                    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                        {/* Meta column */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 200, flex: '0 0 220px' }}>
-                            {preview.tags?.length > 0 && (
-                                <div>
-                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted-alt)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>ETIQUETAS</div>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                        {preview.tags.map((t, i) => (
-                                            <span key={i} style={{ fontSize: '0.65rem', background: '#92400e30', color: '#fbbf24', border: '1px solid #92400e50', padding: '1px 8px', borderRadius: 12 }}>
-                                                #{t}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            {preview.mime_type && (
-                                <div>
-                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted-alt)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>TIPO</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>{preview.mime_type}</div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Content column */}
-                        <div style={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            {(preview.download_url || preview.minio_path) && (
-                                <div>
-                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted-alt)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>VISTA PREVIA</div>
-                                    <MediaPreview url={preview.download_url || undefined} path={preview.minio_path || undefined} />
-                                </div>
-                            )}
-                            {preview.content && preview.content !== 'No textual content available' && (
-                                <div>
-                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted-alt)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>CONTENIDO EXTRAÍDO</div>
-                                    <div style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-surface)', borderRadius: 8, padding: 14, fontSize: '0.78rem', color: 'var(--text-code)', whiteSpace: 'pre-wrap', fontFamily: 'monospace', lineHeight: 1.6, maxHeight: 280, overflowY: 'auto' }} className="custom-scrollbar">
-                                        {preview.content}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div style={{ color: 'var(--text-dim)', textAlign: 'center', padding: 24 }}>No se pudo cargar la vista previa.</div>
-                )}
-            </div>
-        </div>
-    );
-}
-
 // =================== Main Component ===================
 export default function PathfinderCard() {
     const [sourceNode, setSourceNode] = useState<PinnedNode | null>(null);
@@ -494,7 +372,7 @@ export default function PathfinderCard() {
             setResult(res);
             if (res.status === 'success' && res.nodes.length > 0) {
                 const { nodes: n, edges: e } = buildReactFlowData(res);
-                setRfNodes(n);
+                setRfNodes(n.map(node => ({ ...node, data: { ...node.data, role: node.data.raw.id === sourceNode?.id ? 'Origen' : node.data.raw.id === targetNode?.id ? 'Destino' : undefined } })));
                 setRfEdges(e);
             } else {
                 setError(res.message);
@@ -525,10 +403,10 @@ export default function PathfinderCard() {
             if (res.status === 'success') {
                 setExplanation(res.explanation);
             } else {
-                setExplanation(`⚠️ ${res.explanation}`);
+                setExplanation(` ${res.explanation}`);
             }
         } catch (err: unknown) {
-            setExplanation('⚠️ Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
+            setExplanation(' Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
         } finally {
             setExplaining(false);
         }
@@ -584,7 +462,7 @@ export default function PathfinderCard() {
                     <Route size={22} color="#06b6d4" />
                 </div>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, background: 'linear-gradient(to right, #06b6d4, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                         Navegador Latente
                     </h1>
                     <p style={{ margin: 0, color: 'var(--text-muted-alt)', fontSize: '0.9rem' }}>
@@ -623,12 +501,12 @@ export default function PathfinderCard() {
                                     transition: 'all 0.2s',
                                 }}
                             >
-                                {m === 'direct' ? '⚡ Directo' : m === 'lateral' ? '🌀 Lateral' : '🕸️ Topológico'}
+                                {m === 'direct' ? ' Directo' : m === 'lateral' ? ' Lateral' : ' Topológico'}
                             </button>
                         ))}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', flex: 1 }}>
-                        {mode === 'direct' ? 'Camino más corto sin restricciones.' : mode === 'lateral' ? `Evita conexiones muy fuertes (>${threshold}), forzando rutas creativas.` : topoThreshold > 0 ? `Solo saltos con peso ≥ ${topoThreshold.toFixed(2)} — conexiones débiles eliminadas del grafo.` : 'Menor cantidad de saltos, ignorando la fuerza de la conexión.'}
+                        {mode === 'direct' ? 'Minimiza la suma de (1 − peso).' : mode === 'lateral' ? `Penaliza pesos fuera del intervalo ${threshold - 0.3}–${threshold} y conceptos muy conectados.` : topoThreshold > 0 ? `Solo saltos con peso ≥ ${topoThreshold.toFixed(2)} — conexiones débiles eliminadas del grafo.` : 'Menor cantidad de saltos, ignorando la fuerza de la conexión.'}
                     </div>
                     {/* Paths Count Select */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-surface)', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-surface)' }}>
@@ -683,7 +561,7 @@ export default function PathfinderCard() {
                             transition: 'border-color 0.2s', minWidth: 260,
                         }}>
                             <span style={{ fontSize: '0.7rem', color: '#84cc16', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                🔗 Umbral de Conexión:
+                                 Umbral de Conexión:
                             </span>
                             <input
                                 id="topo-threshold-slider"
@@ -713,7 +591,7 @@ export default function PathfinderCard() {
                             borderRadius: 10,
                             border: 'none',
                             cursor: canTrace ? 'pointer' : 'not-allowed',
-                            background: canTrace ? 'linear-gradient(135deg, #06b6d4, #6366f1)' : 'var(--bg-surface)',
+                            background: canTrace ? 'var(--gradient-primary)' : 'var(--bg-surface)',
                             color: canTrace ? '#fff' : 'var(--text-dim)',
                             fontWeight: 700,
                             fontSize: '0.9rem',
@@ -729,16 +607,18 @@ export default function PathfinderCard() {
                 </div>
             </div>
 
+            <MethodDetails method="pathfinder" />
+
             {/* Error */}
             {error && (
                 <div style={{ background: '#7f1d1d30', border: '1px solid #7f1d1d', borderRadius: 12, padding: '12px 16px', color: '#fca5a5', fontSize: '0.85rem' }}>
-                    ⚠️ {error}
+                     {error}
                 </div>
             )}
 
             {/* React Flow Canvas */}
             {rfNodes.length > 0 && (
-                <div style={{ background: '#f8fafc', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden' }}>
+                <div style={{ background: 'var(--background)', border: '1px solid var(--border-subtle)', borderRadius: 16, overflow: 'hidden' }}>
                     {/* Status bar */}
                     {result && (
                         <div style={{ padding: '10px 20px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-surface)', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -748,26 +628,26 @@ export default function PathfinderCard() {
                         </div>
                     )}
                     {/* React Flow always renders on a light canvas */}
-                    <div style={{ height: 380 }}>
+                    <div style={{ height: 620 }}>
                         <ReactFlow
                             nodes={rfNodes}
                             edges={rfEdges}
                             onNodesChange={onNodesChange}
                             onEdgesChange={onEdgesChange}
-                            onNodeClick={onNodeClick}
-                            nodeTypes={NODE_TYPES}
+
+                            title="Pathfinder · Navegador latente"
                             fitView
                             fitViewOptions={{ padding: 0.3 }}
                             attributionPosition="bottom-right"
                             proOptions={{ hideAttribution: true }}
                         >
                             <Controls />
-                            <Background color="#e2e8f0" gap={20} />
+                            <Background color="var(--text-primary)" gap={20} />
                         </ReactFlow>
                     </div>
                     <div style={{ padding: '10px 20px', background: 'var(--bg-surface)', borderTop: '1px solid var(--border-surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
-                            💡 Haz clic en cualquier nodo para ver sus detalles abajo.
+                            Selecciona un nodo para inspeccionar sus relaciones y contenido.
                         </span>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -825,7 +705,7 @@ export default function PathfinderCard() {
                                     alignItems: 'center',
                                     gap: 6,
                                     padding: '6px 14px',
-                                    background: 'linear-gradient(to right, #4c1d95, #7e22ce)',
+                                    background: 'var(--gradient-primary)',
                                     color: '#fff',
                                     border: 'none',
                                     borderRadius: 8,
@@ -836,7 +716,7 @@ export default function PathfinderCard() {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {explaining ? <Loader2 size={14} className="animate-spin" /> : <span>🪄</span>}
+                                {explaining ? <Loader2 size={14} className="animate-spin" /> : <span></span>}
                                 Explicar Camino con IA
                             </button>
                         </div>
@@ -855,10 +735,10 @@ export default function PathfinderCard() {
                     overflow: 'hidden',
                     transition: 'all 0.3s'
                 }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(to right, #a855f7, #3b82f6)' }} />
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'var(--gradient-primary)' }} />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showExplanation ? 16 : 0 }}>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-body)', fontSize: '1.1rem' }}>
-                            <span>🪄</span> Explicación del Camino
+                            <span></span> Explicación del Camino
                         </h3>
                         <button
                             onClick={() => setShowExplanation(!showExplanation)}
@@ -885,15 +765,10 @@ export default function PathfinderCard() {
                             borderRadius: 12,
                             border: '1px solid var(--border-panel)'
                         }}>
-                            {explanation}
+                            <Explanation content={explanation} />
                         </div>
                     )}
                 </div>
-            )}
-
-            {/* Asset Detail Panel */}
-            {selectedNode && (
-                <AssetDetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
             )}
 
             {/* Floating Navigation Controls */}

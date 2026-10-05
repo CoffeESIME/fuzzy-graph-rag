@@ -1,8 +1,10 @@
+import Explanation from '../graph/Explanation';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FileDown, RefreshCw, X, FolderOpen, MousePointerClick, Image, Music, Video, File, ChevronRight, Activity, Cpu, BrainCircuit } from 'lucide-react';
-import ReactFlow, {
+import ReactFlow from '../graph/GraphCanvas';
+import {
     Background,
     Controls,
     MiniMap,
@@ -126,14 +128,14 @@ export default function SavedPathsViewer() {
                         label: (
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontWeight: 'bold', fontSize: 12, marginBottom: 4 }}>{p.name}</div>
-                                <div style={{ fontSize: 10, color: '#64748b' }}>{p.type}</div>
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{p.type}</div>
                                 {p.weight && <div style={{ fontSize: 10, color: '#0ea5e9', marginTop: 2 }}>w: {p.weight.toFixed(2)}</div>}
                             </div>
                         ),
                         fullData: p
                     },
                     style: {
-                        background: isAsset ? '#1e293b' : '#312e81',
+                        background: isAsset ? 'var(--surface)' : '#312e81',
                         color: 'white',
                         border: `1px solid ${isAsset ? '#3b82f6' : '#6366f1'}`,
                         borderRadius: 8,
@@ -149,6 +151,7 @@ export default function SavedPathsViewer() {
                         id: `e-${data.path[idx - 1].id}-${p.id}`,
                         source: data.path[idx - 1].id,
                         target: p.id,
+                        data: { relation: '', weight: p.weight, kind: 'serendipity' },
                         animated: true,
                         style: { stroke: '#6366f1', strokeWidth: 2 }
                     });
@@ -167,13 +170,13 @@ export default function SavedPathsViewer() {
                         label: (
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontWeight: 'bold', fontSize: 12, marginBottom: 4 }}>{n.label || n.name}</div>
-                                <div style={{ fontSize: 10, color: '#64748b' }}>{n.node_type || n.type}</div>
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{n.node_type || n.type}</div>
                             </div>
                         ),
                         fullData: n
                     },
                     style: {
-                        background: isAsset ? '#1e293b' : '#312e81',
+                        background: isAsset ? 'var(--surface)' : '#312e81',
                         color: 'white',
                         border: `1px solid ${isAsset ? '#3b82f6' : '#6366f1'}`,
                         borderRadius: 8,
@@ -188,9 +191,10 @@ export default function SavedPathsViewer() {
                     id: `e-${e.source}-${e.target}-${idx}`,
                     source: e.source,
                     target: e.target,
+                    data: { relation: e.rel_type, weight: e.weight },
                     label: e.weight ? e.weight.toFixed(2) : '',
-                    labelStyle: { fill: '#94a3b8', fontSize: 10, fontWeight: 700 },
-                    labelBgStyle: { fill: '#1e293b', fillOpacity: 0.8 },
+                    labelStyle: { fill: 'var(--text-secondary)', fontSize: 10, fontWeight: 700 },
+                    labelBgStyle: { fill: 'var(--surface)', fillOpacity: 0.8 },
                     animated: true,
                     style: { stroke: '#4f46e5', strokeWidth: 1.5 },
                     markerEnd: { type: MarkerType.ArrowClosed, color: '#4f46e5' },
@@ -237,10 +241,10 @@ export default function SavedPathsViewer() {
                         <FolderOpen size={24} color="#6366f1" />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: '#f8fafc' }}>
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
                             Visualizador de Caminos
                         </h1>
-                        <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem', marginTop: 2 }}>
+                        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 2 }}>
                             Galería de descubrimientos de Serendipia y Pathfinder.
                         </p>
                     </div>
@@ -251,19 +255,19 @@ export default function SavedPathsViewer() {
             <div style={{ display: 'flex', flex: 1, gap: 20, minHeight: 0 }}>
                 {/* Sidebar List */}
                 <div style={{
-                    width: 320, background: '#0f172a', borderRadius: 16, border: '1px solid #1e293b',
+                    width: 320, background: 'var(--background-secondary)', borderRadius: 16, border: '1px solid var(--surface)',
                     display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0
                 }}>
-                    <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f8fafc', margin: 0 }}>Archivos Guardados</h3>
-                        <button onClick={fetchPaths} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Archivos Guardados</h3>
+                        <button onClick={fetchPaths} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                             <RefreshCw size={14} className={loadingList ? 'animate-spin' : ''} />
                         </button>
                     </div>
 
                     <div style={{ overflowY: 'auto', flex: 1, padding: 10 }}>
                         {paths.length === 0 && !loadingList && (
-                            <div style={{ textAlign: 'center', color: '#64748b', marginTop: 40, fontSize: '0.85rem' }}>
+                            <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: 40, fontSize: '0.85rem' }}>
                                 No hay archivos guardados aún.
                             </div>
                         )}
@@ -277,7 +281,7 @@ export default function SavedPathsViewer() {
                                     onClick={() => loadPathContent(p)}
                                     style={{
                                         padding: '12px 16px', borderRadius: 8, cursor: 'pointer',
-                                        background: isSelected ? '#1e293b' : 'transparent',
+                                        background: isSelected ? 'var(--surface)' : 'transparent',
                                         border: `1px solid ${isSelected ? '#3b82f6' : 'transparent'}`,
                                         marginBottom: 4, transition: 'all 0.2s'
                                     }}
@@ -286,15 +290,15 @@ export default function SavedPathsViewer() {
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                                         {isSerendipity ? <Activity size={16} color="#ec4899" /> : <Cpu size={16} color="#0ea5e9" />}
-                                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {p.filename}
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 26 }}>
-                                        <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                                             {new Date(p.created_at).toLocaleString()}
                                         </span>
-                                        <span style={{ fontSize: '0.7rem', color: '#64748b', background: '#1e293b', padding: '2px 6px', borderRadius: 4 }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', background: 'var(--surface)', padding: '2px 6px', borderRadius: 4 }}>
                                             {(p.size_bytes / 1024).toFixed(1)} KB
                                         </span>
                                     </div>
@@ -306,11 +310,11 @@ export default function SavedPathsViewer() {
 
                 {/* Main Content Area */}
                 <div style={{
-                    flex: 1, background: '#0f172a', borderRadius: 16, border: '1px solid #1e293b',
+                    flex: 1, background: 'var(--background-secondary)', borderRadius: 16, border: '1px solid var(--surface)',
                     display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative'
                 }}>
                     {!selectedPathInfo ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
                             <FileDown size={48} style={{ marginBottom: 16, opacity: 0.5 }} />
                             <p>Selecciona un archivo del panel izquierdo para visualizarlo.</p>
                         </div>
@@ -321,12 +325,12 @@ export default function SavedPathsViewer() {
                     ) : (
                         <>
                             {/* Top Info Bar */}
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', background: '#0f172a', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--surface)', background: 'var(--background-secondary)', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
                                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: 1 }}>
                                         {selectedPathInfo.tool_type.replace('_', ' ')}
                                     </span>
-                                    <h2 style={{ fontSize: '1.1rem', margin: '4px 0 0 0', color: '#f8fafc' }}>{selectedPathInfo.filename}</h2>
+                                    <h2 style={{ fontSize: '1.1rem', margin: '4px 0 0 0', color: 'var(--text-primary)' }}>{selectedPathInfo.filename}</h2>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                                     {pathContent?.message && (
@@ -335,11 +339,11 @@ export default function SavedPathsViewer() {
                                         </div>
                                     )}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: '#94a3b8', cursor: 'pointer' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                                             <input type="checkbox" checked={privacyMode} onChange={e => setPrivacyMode(e.target.checked)} />
                                             Privacy Mode
                                         </label>
-                                        <button onClick={handleExplainPath} disabled={explaining} style={{ background: '#3b82f6', color: '#f8fafc', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: explaining ? 'not-allowed' : 'pointer', opacity: explaining ? 0.7 : 1 }}>
+                                        <button onClick={handleExplainPath} disabled={explaining} style={{ background: '#3b82f6', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: explaining ? 'not-allowed' : 'pointer', opacity: explaining ? 0.7 : 1 }}>
                                             {explaining ? <RefreshCw size={14} className="animate-spin" /> : <BrainCircuit size={14} />}
                                             {explaining ? 'Generando...' : 'Explicar con IA'}
                                         </button>
@@ -356,127 +360,32 @@ export default function SavedPathsViewer() {
                                         onNodesChange={onNodesChange}
                                         fitView
                                         fitViewOptions={{ padding: 0.2 }}
-                                        onNodeClick={async (_, node) => {
-                                            const nData = node.data.fullData;
-                                            setSelectedNodeData(nData);
-                                            setPreviewData(null);
-
-                                            // Fetch presigned URL if it's an asset
-                                            if (nData.type === 'Asset' || nData.node_type === 'DigitalAsset') {
-                                                try {
-                                                    const res = await getAssetPreview(nData.id);
-                                                    setPreviewData(res);
-                                                } catch (err) {
-                                                    console.error("Error fetching preview", err);
-                                                }
-                                            }
-                                        }}
+                                        title="Caminos guardados" initialLayout="auto"
                                         proOptions={{ hideAttribution: true }}
                                     >
-                                        <Background gap={20} size={1} color="#334155" />
+                                        <Background gap={20} size={1} color="var(--border)" />
                                         <Controls />
                                     </ReactFlow>
 
-                                    {/* Selected Node Overlay (if clicking an Asset) */}
-                                    {selectedNodeData && (
-                                        <div style={{
-                                            position: 'absolute', right: 20, top: 20, width: 340,
-                                            background: '#0f172a', borderRadius: 12, border: '1px solid #334155',
-                                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)', overflow: 'hidden',
-                                            zIndex: 50, display: 'flex', flexDirection: 'column'
-                                        }}>
-                                            <div style={{ padding: '12px 16px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e293b' }}>
-                                                <h3 style={{ fontSize: '0.9rem', margin: 0, color: '#f8fafc' }}>
-                                                    {selectedNodeData.type === 'Asset' || selectedNodeData.node_type === 'DigitalAsset' ? 'Ver Archivo' : 'Concepto'}
-                                                </h3>
-                                                <button onClick={() => setSelectedNodeData(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-
-                                            <div style={{ padding: 16 }}>
-                                                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#f8fafc', marginBottom: 12, wordBreak: 'break-all' }}>
-                                                    {selectedNodeData.name || selectedNodeData.label}
-                                                </div>
-
-                                                {(selectedNodeData.type === 'Asset' || selectedNodeData.node_type === 'DigitalAsset') ? (
-                                                    selectedNodeData.file_hash ? (
-                                                        <div style={{ marginTop: 10, background: '#000', borderRadius: 8, overflow: 'hidden' }}>
-                                                            {previewData ? (
-                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                                                    {(previewData.download_url || previewData.minio_path) && (
-                                                                        <MediaPreview
-                                                                            url={previewData.download_url}
-                                                                            path={previewData.minio_path}
-                                                                        />
-                                                                    )}
-                                                                    {previewData.content && previewData.content !== 'No textual content available' && (
-                                                                        <div style={{ padding: 12 }}>
-                                                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>CONTENIDO TEXTUAL</div>
-                                                                            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #334155', borderRadius: 6, padding: 12, fontSize: '0.8rem', color: '#e2e8f0', whiteSpace: 'pre-wrap', maxHeight: 200, overflowY: 'auto' }}>
-                                                                                {previewData.content}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ) : (
-                                                                <div style={{ color: '#94a3b8', padding: 12, textAlign: 'center' }}>Cargando preview...</div>
-                                                            )}
-                                                        </div>
-                                                    ) : (
-                                                        <div style={{ color: '#ef4444', fontSize: '0.8rem', padding: 12, background: '#7f1d1d20', borderRadius: 6, border: '1px solid #7f1d1d' }}>
-                                                            No se pudo recuperar el hash para visualizar el archivo.
-                                                        </div>
-                                                    )
-                                                ) : (
-                                                    <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                                                        Este es un nodo conceptual estructural semántico.
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
 
                                 {/* Right Info Area (LLM Explanation) */}
                                 {(liveExplanation || pathContent?.llm_explanation) && (
                                     <div style={{
-                                        width: 320, borderLeft: '1px solid #1e293b', background: '#020617',
+                                        width: 320, borderLeft: '1px solid var(--surface)', background: 'var(--background)',
                                         display: 'flex', flexDirection: 'column', height: '100%'
                                     }}>
-                                        <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', flexShrink: 0 }}>
+                                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--surface)', flexShrink: 0 }}>
                                             <h3 style={{ fontSize: '0.9rem', margin: 0, color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 6 }}>
                                                 <Activity size={16} /> Explicación IA
                                             </h3>
                                         </div>
                                         <div style={{ padding: 20, overflowY: 'auto', flex: 1 }} className="custom-scrollbar">
                                             <div style={{
-                                                fontSize: '0.85rem', color: '#cbd5e1', lineHeight: 1.6,
-                                                background: '#1e293b', padding: 16, borderRadius: 12, border: '1px solid #334155'
+                                                fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6,
+                                                background: 'var(--surface)', padding: 16, borderRadius: 12, border: '1px solid var(--border)'
                                             }}>
-                                                {/* Prettier rendering if it is stringified JSON */}
-                                                {(() => {
-                                                    const contentToParse = liveExplanation || pathContent.llm_explanation;
-                                                    try {
-                                                        const parsed = typeof contentToParse === 'string'
-                                                            ? JSON.parse(contentToParse)
-                                                            : contentToParse;
-
-                                                        if (parsed.explanation && Array.isArray(parsed.explanation)) {
-                                                            return parsed.explanation.map((step: any, i: number) => (
-                                                                <div key={i} style={{ marginBottom: 16 }}>
-                                                                    <div style={{ fontWeight: 600, color: '#f8fafc', marginBottom: 4 }}>
-                                                                        Paso {step.step}: {step.from} → {step.to}
-                                                                    </div>
-                                                                    <div style={{ color: '#94a3b8' }}>{step.reason}</div>
-                                                                </div>
-                                                            ));
-                                                        }
-                                                        return <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>{JSON.stringify(parsed, null, 2)}</pre>;
-                                                    } catch (e) {
-                                                        return <div style={{ whiteSpace: 'pre-wrap' }}>{contentToParse}</div>;
-                                                    }
-                                                })()}
+                                                <Explanation content={liveExplanation || pathContent.llm_explanation} />
                                             </div>
                                         </div>
                                     </div>

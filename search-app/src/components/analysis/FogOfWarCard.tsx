@@ -1,3 +1,4 @@
+import ChartFrame from '../graph/ChartFrame';
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
@@ -119,9 +120,9 @@ export default function FogOfWarCard() {
 
                     {/* Chart */}
                     <div className="h-[300px] w-full mb-8">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ChartFrame title="Cobertura del corpus"><ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--text-primary)" />
                                 <XAxis
                                     dataKey="range"
                                     label={{ value: 'Rango de Peso (Fuerza)', position: 'insideBottom', offset: -20 }}
@@ -156,14 +157,14 @@ export default function FogOfWarCard() {
                                         return (
                                             <Cell
                                                 key={`cell-${index}`}
-                                                fill={isActive ? '#6366f1' : '#e2e8f0'}
+                                                fill={isActive ? '#6366f1' : 'var(--text-primary)'}
                                                 className="transition-all duration-300"
                                             />
                                         );
                                     })}
                                 </Bar>
                             </BarChart>
-                        </ResponsiveContainer>
+                        </ResponsiveContainer></ChartFrame>
                     </div>
 
                     {/* Slider Control */}

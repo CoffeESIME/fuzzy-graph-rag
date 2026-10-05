@@ -57,3 +57,4 @@ graph-rag/
 frontend/.streamlit/secrets.toml.template
 backend/poetry.lock
 tumblr/
+data_dev/

@@ -71,7 +71,7 @@ export default function GraphCrispTab() {
             case 'Event': return '#ec4899'; // Pink
             case 'Project': return '#14b8a6'; // Teal
             case 'DigitalAsset': return '#10b981'; // Emerald
-            default: return '#64748b'; // Slate
+            default: return 'var(--text-muted)'; // Slate
         }
     };
 
@@ -280,7 +280,7 @@ export default function GraphCrispTab() {
                                     <div style={{
                                         background: 'rgba(0,0,0,0.3)', padding: 8, borderRadius: 6,
                                         fontFamily: 'monospace', fontSize: '0.65rem', whiteSpace: 'pre-wrap',
-                                        color: '#cbd5e1'
+                                        color: 'var(--text-secondary)'
                                     }}>
                                         {`MATCH (n:Concept|Person|Location|...)
 WHERE n.name CONTAINS "${query}"

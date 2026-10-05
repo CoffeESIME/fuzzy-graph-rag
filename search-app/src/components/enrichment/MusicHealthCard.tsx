@@ -82,7 +82,7 @@ export default function MusicHealthCard() {
                     color: message.type === 'success' ? '#86efac' : '#fca5a5',
                     border: `1px solid ${message.type === 'success' ? '#22c55e30' : '#ef444430'}`
                 }}>
-                    {message.type === 'success' ? '✅' : '❌'} {message.text}
+                    {message.type === 'success' ? '' : ''} {message.text}
                 </div>
             )}
 
@@ -145,7 +145,7 @@ export default function MusicHealthCard() {
                             disabled={repairingArtists || loadingStats || stats?.orphaned_audio_no_artist === 0}
                             style={{
                                 padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600,
-                                background: 'linear-gradient(135deg, #10b981, #34d399)', color: '#000', border: 'none',
+                                background: 'var(--gradient-primary)', color: '#000', border: 'none',
                                 cursor: (repairingArtists || stats?.orphaned_audio_no_artist === 0) ? 'not-allowed' : 'pointer',
                                 display: 'flex', alignItems: 'center', gap: '8px', opacity: (repairingArtists || stats?.orphaned_audio_no_artist === 0) ? 0.5 : 1
                             }}
@@ -155,7 +155,7 @@ export default function MusicHealthCard() {
                         </button>
                     </div>
                     {stats?.orphaned_audio_no_artist === 0 && (
-                        <span style={{ fontSize: '0.8rem', color: '#10b981' }}>✓ No hay audios huérfanos de artista actualmente.</span>
+                        <span style={{ fontSize: '0.8rem', color: '#10b981' }}> No hay audios huérfanos de artista actualmente.</span>
                     )}
                 </div>
 
@@ -178,7 +178,7 @@ export default function MusicHealthCard() {
                             disabled={backfillingProjects || loadingStats || stats?.orphaned_audio_no_project === 0}
                             style={{
                                 padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600,
-                                background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff', border: 'none',
+                                background: 'var(--gradient-primary)', color: '#fff', border: 'none',
                                 cursor: (backfillingProjects || stats?.orphaned_audio_no_project === 0) ? 'not-allowed' : 'pointer',
                                 display: 'flex', alignItems: 'center', gap: '8px', opacity: (backfillingProjects || stats?.orphaned_audio_no_project === 0) ? 0.5 : 1
                             }}
@@ -188,7 +188,7 @@ export default function MusicHealthCard() {
                         </button>
                     </div>
                     {stats?.orphaned_audio_no_project === 0 && (
-                        <span style={{ fontSize: '0.8rem', color: '#10b981' }}>✓ No hay audios huérfanos de proyecto actualmente.</span>
+                        <span style={{ fontSize: '0.8rem', color: '#10b981' }}> No hay audios huérfanos de proyecto actualmente.</span>
                     )}
                 </div>
 

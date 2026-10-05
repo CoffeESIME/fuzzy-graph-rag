@@ -1,3 +1,5 @@
+import GraphCanvas from '../graph/GraphCanvas';
+import Explanation from '../graph/Explanation';
 import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { Loader2, RefreshCw, Dice5, Info, FileText, X, Sparkles, Image, Music, Video, File, Download } from 'lucide-react';
@@ -44,7 +46,7 @@ function WeightBadge({ weight }: { weight: number | null }) {
                 boxShadow: isFuzzy ? '0 0 8px #f9731666' : '0 0 8px #22c55e44',
             }}
         >
-            {isFuzzy ? '✨' : '✅'} {weight.toFixed(2)}
+            {isFuzzy ? '' : ''} {weight.toFixed(2)}
         </div>
     );
 }
@@ -60,121 +62,12 @@ function getMimeIcon(mime: string | null | undefined) {
 
 function getMimeLabel(mime: string | null | undefined) {
     if (!mime) return 'Archivo';
-    if (mime.startsWith('image')) return '🖼️ Imagen';
-    if (mime.startsWith('audio')) return '🎵 Audio';
-    if (mime.startsWith('video')) return '🎬 Video';
-    if (mime.includes('pdf')) return '📄 PDF';
-    if (mime.startsWith('text')) return '📝 Texto';
-    return '📎 Archivo';
-}
-
-function StepNode({
-    step,
-    isSelected,
-    onClick,
-}: {
-    step: PathStep;
-    isSelected: boolean;
-    onClick: () => void;
-}) {
-    const isConcept = step.type === 'Concept';
-    const isAsset = step.type === 'Asset';
-    return (
-        <div
-            onClick={isAsset ? onClick : undefined}
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6,
-                minWidth: 100,
-                cursor: isAsset ? 'pointer' : 'default',
-            }}
-        >
-            <div
-                style={{
-                    width: isConcept ? 64 : 56,
-                    height: isConcept ? 64 : 56,
-                    borderRadius: isConcept ? '50%' : 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: isConcept ? 22 : 18,
-                    background: isConcept
-                        ? 'linear-gradient(135deg, #7c3aed, #a78bfa)'
-                        : 'var(--bg-surface)',
-                    color: '#fff',
-                    border: isSelected
-                        ? '3px solid #fbbf24'
-                        : isConcept
-                            ? '3px solid var(--node-concept-border)'
-                            : '2px solid var(--node-asset-border)',
-                    boxShadow: isSelected
-                        ? '0 0 20px #fbbf2466'
-                        : isConcept
-                            ? '0 0 16px var(--node-concept-shadow)'
-                            : '0 2px 8px rgba(0,0,0,0.2)',
-                    transition: 'all 0.2s',
-                }}
-            >
-                {isConcept ? '💡' : getMimeIcon(step.mime_type)}
-            </div>
-            <span
-                style={{
-                    fontSize: '0.75rem',
-                    color: isSelected ? '#fbbf24' : isConcept ? 'var(--node-concept-text)' : 'var(--text-tertiary)',
-                    fontWeight: isConcept || isSelected ? 600 : 400,
-                    textAlign: 'center',
-                    maxWidth: 120,
-                    wordBreak: 'break-word',
-                }}
-            >
-                {step.name || step.id}
-            </span>
-            <span
-                style={{
-                    fontSize: '0.6rem',
-                    color: 'var(--text-dim)',
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                }}
-            >
-                {step.type}
-                {isAsset && <span style={{ color: 'var(--text-muted-alt)', marginLeft: 4 }}>👆</span>}
-            </span>
-        </div>
-    );
-}
-
-function Connector({ weight }: { weight: number | null }) {
-    const isFuzzy = weight !== null && weight < 0.8;
-    return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 4,
-                minWidth: 60,
-            }}
-        >
-            <WeightBadge weight={weight} />
-            <div
-                style={{
-                    height: 3,
-                    width: 60,
-                    borderRadius: 2,
-                    background: isFuzzy
-                        ? 'linear-gradient(90deg, #f97316, #fbbf24)'
-                        : 'linear-gradient(90deg, #22c55e, #86efac)',
-                    opacity: 0.7,
-                }}
-            />
-            <span style={{ fontSize: '0.55rem', color: 'var(--text-dim)' }}>
-                {isFuzzy ? 'difusa' : 'segura'}
-            </span>
-        </div>
-    );
+    if (mime.startsWith('image')) return ' Imagen';
+    if (mime.startsWith('audio')) return ' Audio';
+    if (mime.startsWith('video')) return ' Video';
+    if (mime.includes('pdf')) return ' PDF';
+    if (mime.startsWith('text')) return ' Texto';
+    return ' Archivo';
 }
 
 export default function SerendipityCard() {
@@ -194,27 +87,7 @@ export default function SerendipityCard() {
 
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!selectedAsset || selectedAsset.type !== 'Asset') {
-            setPreviewAsset(null);
-            return;
-        }
-        let isMounted = true;
 
-        const fetchPreview = async () => {
-            setIsLoadingPreview(true);
-            try {
-                const res = await getAssetPreview(selectedAsset.id);
-                if (isMounted) setPreviewAsset(res);
-            } catch (err: any) {
-                console.error("Failed to fetch asset preview:", err);
-            } finally {
-                if (isMounted) setIsLoadingPreview(false);
-            }
-        };
-        fetchPreview();
-        return () => { isMounted = false; };
-    }, [selectedAsset]);
 
     const generate = useCallback(async () => {
         setLoading(true);
@@ -267,10 +140,10 @@ export default function SerendipityCard() {
             if (res.status === 'success') {
                 setExplanation(res.explanation);
             } else {
-                setExplanation(`⚠️ ${res.explanation}`);
+                setExplanation(` ${res.explanation}`);
             }
         } catch (err: unknown) {
-            setExplanation('⚠️ Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
+            setExplanation(' Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
         } finally {
             setExplaining(false);
         }
@@ -332,7 +205,7 @@ export default function SerendipityCard() {
                 <div className="p-4 mb-6 text-red-500 border border-red-200 rounded-xl">{error}</div>
             )}
 
-            <div style={{ display: 'flex', gap: 20 }}>
+            <div className="responsive-panels" style={{ display: 'flex', gap: 20 }}>
                 {/* Main panel */}
                 <div
                     style={{
@@ -355,7 +228,7 @@ export default function SerendipityCard() {
                                     borderRadius: 16,
                                     border: 'none',
                                     cursor: 'pointer',
-                                    background: 'linear-gradient(135deg, #f97316, #fbbf24)',
+                                    background: 'var(--gradient-primary)',
                                     color: '#fff',
                                     boxShadow: '0 4px 20px #f9731655',
                                     display: 'flex',
@@ -366,7 +239,7 @@ export default function SerendipityCard() {
                                 onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
                                 onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                             >
-                                <Dice5 size={24} /> 🎲 Generar Camino de Serendipia
+                                <Dice5 size={24} />  Generar Camino de Serendipia
                             </button>
                             <p style={{ marginTop: 16, color: 'var(--text-dim)', fontSize: '0.82rem', textAlign: 'center', maxWidth: 400 }}>
                                 Descubre asociaciones ocultas saltando entre conceptos y archivos
@@ -385,7 +258,7 @@ export default function SerendipityCard() {
                     {generated && !loading && path.length === 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 360 }}>
                             <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', textAlign: 'center' }}>
-                                No se encontró un camino difuso esta vez. Intenta de nuevo 🎲
+                                No se encontró un camino difuso esta vez. Intenta de nuevo
                             </p>
                             <button
                                 onClick={generate}
@@ -402,29 +275,11 @@ export default function SerendipityCard() {
 
                     {generated && !loading && path.length > 0 && (
                         <div>
-                            {/* Metro line */}
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 12,
-                                    padding: '30px 0',
-                                    overflowX: 'auto',
-                                }}
-                            >
-                                {path.map((step, i) => (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <StepNode
-                                            step={step}
-                                            isSelected={selectedAsset?.id === step.id && step.type === 'Asset'}
-                                            onClick={() => step.type === 'Asset' && setSelectedAsset(step)}
-                                        />
-                                        {i < path.length - 1 && (
-                                            <Connector weight={path[i + 1].weight} />
-                                        )}
-                                    </div>
-                                ))}
+                            <div style={{ height: 620 }}>
+                                <GraphCanvas title="Serendipity · Recorrido" initialLayout="horizontal"
+                                    nodes={path.map((step, i) => ({ id: `step-${i}`, position: { x: i * 300, y: 0 }, data: { raw: step } }))}
+                                    edges={path.slice(1).map((step, i) => ({ id: `edge-${i}`, source: `step-${i}`, target: `step-${i+1}`, data: { kind: 'serendipity', weight: step.weight } }))}
+                                />
                             </div>
 
                             {/* Actions row */}
@@ -474,7 +329,7 @@ export default function SerendipityCard() {
                                     style={{
                                         padding: '10px 28px', fontSize: '0.85rem', fontWeight: 600,
                                         borderRadius: 12, border: 'none', cursor: explaining ? 'not-allowed' : 'pointer',
-                                        background: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+                                        background: 'var(--gradient-primary)',
                                         color: '#fff', boxShadow: '0 2px 12px #ec489944',
                                         display: 'inline-flex', alignItems: 'center', gap: 8,
                                         opacity: explaining ? 0.7 : 1,
@@ -513,7 +368,7 @@ export default function SerendipityCard() {
                                     position: 'relative',
                                     overflow: 'hidden'
                                 }}>
-                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(to right, #ec4899, #8b5cf6)' }} />
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'var(--gradient-primary)' }} />
                                     <h3 style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-body)', fontSize: '1.1rem' }}>
                                         <Sparkles size={20} className="text-pink-400" /> Explicación del Camino
                                     </h3>
@@ -527,166 +382,11 @@ export default function SerendipityCard() {
                                         borderRadius: 12,
                                         border: '1px solid var(--border-panel)',
                                     }}>
-                                        {explanation}
+                                        <Explanation content={explanation} />
                                     </div>
                                 </div>
                             )}
 
-                            {/* Asset Detail Panel */}
-                            {selectedAsset && (
-                                <div
-                                    style={{
-                                        marginTop: 24,
-                                        background: 'var(--bg-panel)',
-                                        border: '1px solid var(--border-surface)',
-                                        borderRadius: 16,
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    {/* Header */}
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            padding: '12px 20px',
-                                            background: 'var(--bg-surface)',
-                                            borderBottom: '1px solid var(--border-surface)',
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <FileText size={16} className="text-amber-400" />
-                                            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-body)' }}>
-                                                {selectedAsset.name || selectedAsset.id}
-                                            </span>
-                                            <span
-                                                style={{
-                                                    fontSize: '0.68rem', padding: '2px 8px', borderRadius: 10,
-                                                    background: 'var(--bg-surface-hover)', color: 'var(--text-subtle)',
-                                                }}
-                                            >
-                                                DigitalAsset
-                                            </span>
-                                            {selectedAsset.weight !== null && (
-                                                <WeightBadge weight={selectedAsset.weight} />
-                                            )}
-                                        </div>
-                                        <button
-                                            onClick={() => setSelectedAsset(null)}
-                                            style={{
-                                                background: 'transparent', border: 'none', cursor: 'pointer',
-                                                color: 'var(--text-muted-alt)', padding: 4,
-                                            }}
-                                        >
-                                            <X size={18} />
-                                        </button>
-                                    </div>
-
-                                    {/* Body */}
-                                    <div style={{ padding: 20 }}>
-                                        {isLoadingPreview ? (
-                                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 120 }}>
-                                                <Loader2 className="animate-spin text-amber-500" size={32} />
-                                            </div>
-                                        ) : previewAsset ? (
-                                            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                                                {/* Properties column */}
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 200, flex: '0 0 240px' }}>
-                                                    <div>
-                                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                                                            FILENAME
-                                                        </div>
-                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-subtle)', wordBreak: 'break-word' }}>
-                                                            {previewAsset.name || selectedAsset.id}
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                                                            TIPO
-                                                        </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-subtle)', fontSize: '0.85rem' }}>
-                                                            {getMimeIcon(previewAsset.mime_type || selectedAsset.mime_type)}
-                                                            <span>{getMimeLabel(previewAsset.mime_type || selectedAsset.mime_type)}</span>
-                                                        </div>
-                                                        {(previewAsset.mime_type || selectedAsset.mime_type) && (
-                                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: 2, fontFamily: 'monospace' }}>
-                                                                {previewAsset.mime_type || selectedAsset.mime_type}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {previewAsset.tags && previewAsset.tags.length > 0 && (
-                                                        <div>
-                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                                                                ETIQUETAS
-                                                            </div>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {previewAsset.tags.map((tag, idx) => (
-                                                                    <span key={idx} className="bg-amber-900/30 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full text-[0.65rem]">#{tag}</span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {(selectedAsset.file_hash) && (
-                                                        <div>
-                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                                                                HASH
-                                                            </div>
-                                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted-alt)', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                                                                {selectedAsset.file_hash}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    {/* Connection context */}
-                                                    <div style={{
-                                                        background: 'var(--bg-surface)', borderRadius: 8, padding: 10,
-                                                        border: '1px solid var(--border-surface)', fontSize: '0.78rem', color: 'var(--text-tertiary)', lineHeight: 1.6
-                                                    }}>
-                                                        Peso: <WeightBadge weight={selectedAsset.weight} />{' '}
-                                                        {selectedAsset.weight !== null && selectedAsset.weight < 0.8
-                                                            ? '— conexión difusa, fuente de serendipia'
-                                                            : '— conexión sólida'}
-                                                    </div>
-                                                </div>
-
-                                                {/* Media column */}
-                                                <div style={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                                    {(previewAsset.download_url || previewAsset.minio_path) ? (
-                                                        <div>
-                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                                                                VISTA PREVIA
-                                                            </div>
-                                                            <MediaPreview
-                                                                url={previewAsset.download_url || undefined}
-                                                                path={previewAsset.minio_path || undefined}
-                                                            />
-                                                        </div>
-                                                    ) : <></>}
-
-                                                    {previewAsset.content && (
-                                                        <div>
-                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted-alt)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                                                                CONTENIDO EXTRAÍDO
-                                                            </div>
-                                                            <div style={{
-                                                                background: 'var(--bg-deep)', border: '1px solid var(--border-surface)', borderRadius: 8, padding: 16,
-                                                                fontSize: '0.8rem', color: 'var(--text-code)', whiteSpace: 'pre-wrap', fontFamily: 'monospace',
-                                                                lineHeight: 1.6, maxHeight: 300, overflowY: 'auto'
-                                                            }} className="custom-scrollbar">
-                                                                {previewAsset.content}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 120, color: 'var(--text-dim)' }}>
-                                                <File size={32} className="mb-2 opacity-50" />
-                                                <span style={{ fontSize: '0.85rem' }}>No se pudo cargar la vista previa</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>
@@ -716,8 +416,8 @@ export default function SerendipityCard() {
                     </p>
 
                     <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', lineHeight: 1.7, marginBottom: 16 }}>
-                        <strong style={{ color: 'var(--text-subtle)' }}>Haz clic</strong> en cualquier <strong style={{ color: 'var(--text-subtle)' }}>📄 Asset</strong> del recorrido
-                        para ver sus datos y vista previa en el panel inferior.
+                        <strong style={{ color: 'var(--text-subtle)' }}>Haz clic</strong> en cualquier <strong style={{ color: 'var(--text-subtle)' }}> Asset</strong> del recorrido
+                        para ver sus datos y vista previa en el inspector lateral.
                     </p>
 
                     {generated && path.length > 0 && firstConcept && lastConcept && (
@@ -738,40 +438,13 @@ export default function SerendipityCard() {
                         </div>
                     )}
 
-                    <div style={{
-                        background: 'var(--bg-surface)', borderRadius: 8, padding: 12, marginBottom: 16,
-                        border: '1px solid var(--border-surface)'
-                    }}>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted-alt)', fontWeight: 600, marginBottom: 8 }}>
-                            LEYENDA
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', lineHeight: 1.8 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7c3aed' }} />
-                                <span>💡 Concepto</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: 3, background: 'var(--node-asset-border)' }} />
-                                <span>📄 DigitalAsset (clic para ver)</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                                <span style={{ background: '#f97316', borderRadius: 8, padding: '1px 6px', fontSize: '0.6rem', color: '#fff' }}>✨ 0.7</span>
-                                <span>Difusa ({"< 0.8"})</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ background: '#22c55e', borderRadius: 8, padding: '1px 6px', fontSize: '0.6rem', color: '#fff' }}>✅ 0.9</span>
-                                <span>Segura (≥ 0.8)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {message && (
+                        {message && (
                         <div style={{
                             fontSize: '0.7rem', color: '#4ade80',
                             padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
                             border: '1px solid #22c55e30'
                         }}>
-                            ✅ {message}
+                             {message}
                         </div>
                     )}
                 </div>

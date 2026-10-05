@@ -1,3 +1,6 @@
+import MethodDetails from '../graph/MethodDetails';
+import ChartFrame from '../graph/ChartFrame';
+import { communityColors } from '../graph/visualSystem';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ResponsiveCirclePacking } from '@nivo/circle-packing';
@@ -25,22 +28,18 @@ interface AnalysisResponse {
 
 type CommunityMode = 'standard' | 'fuzzy';
 
-const COMMUNITY_COLORS = [
-    '#8b5cf6', '#f97316', '#22c55e', '#3b82f6',
-    '#ec4899', '#eab308', '#14b8a6', '#ef4444',
-    '#6366f1', '#84cc16', '#f59e0b', '#06b6d4',
-];
+const COMMUNITY_COLORS = communityColors;
 
 const NARRATIVES: Record<CommunityMode, { title: string; icon: string; desc: string }> = {
     standard: {
         title: 'Comunidades Físicas (Standard)',
-        icon: '🌍',
+        icon: '',
         desc: 'Los grupos se forman por la cantidad de veces que los conceptos comparten el mismo archivo. Las burbujas reflejan el volumen bruto de conexiones. Muestra áreas de interés amplias y literales.',
     },
     fuzzy: {
         title: 'Comunidades Semánticas (Fuzzy)',
-        icon: '🧠',
-        desc: 'El algoritmo es estricto. Usa la "certeza" de la IA, agrupando conceptos solo si evocan un significado profundo y simultáneo. Las burbujas reflejan el peso semántico. Revela clústeres más refinados y puros.',
+        icon: '',
+        desc: 'Agrupa conceptos con Louvain ponderado. El peso entre conceptos suma el mínimo de sus dos pesos por archivo compartido, tras aplicar el umbral.',
     },
 };
 
@@ -51,6 +50,7 @@ export default function CommunityAnalysisCard() {
     const [message, setMessage] = useState('');
     const [method, setMethod] = useState<CommunityMode>('standard');
     const [minWeight, setMinWeight] = useState<number>(0.9);
+    const [focused, setFocused] = useState(false);
     const [selectedCommunity, setSelectedCommunity] = useState<PackingNode | null>(null);
     const navigate = useNavigate();
 
@@ -117,11 +117,12 @@ export default function CommunityAnalysisCard() {
                 </button>
             </div>
 
+            <MethodDetails method="communities" />
             {error && (
                 <div className="p-4 mb-6 text-red-500 border border-red-200 rounded-xl">{error}</div>
             )}
 
-            <div style={{ display: 'flex', gap: 20 }}>
+            <div className="responsive-panels" style={{ display: 'flex', gap: 20 }}>
                 {/* Main Circle Packing Panel */}
                 <div
                     className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -130,25 +131,32 @@ export default function CommunityAnalysisCard() {
                     {loading && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 800 }}>
                             <Loader2 className="animate-spin mb-4 text-purple-400" size={40} />
-                            <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                                 Ejecutando {method === 'fuzzy' ? 'Fuzzy' : 'Standard'} Louvain...
                             </span>
-                            <span style={{ color: '#475569', fontSize: '0.7rem', marginTop: 6 }}>Proyectando grafo virtual en GDS</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: 6 }}>Proyectando grafo virtual en GDS</span>
                         </div>
                     )}
 
                     {!loading && data && data.children && data.children.length > 0 && (
                         <div style={{ height: 800, width: '100%', cursor: 'pointer' }}>
+                            <ChartFrame title="Comunidades · Louvain" controls={<><label><input type="checkbox" checked={focused} disabled={!selectedCommunity} onChange={e => setFocused(e.target.checked)}/> Focus comunidad</label><button onClick={() => { setSelectedCommunity(null); setFocused(false); }}>Limpiar selección</button><select aria-label="Seleccionar comunidad" value={selectedCommunity?.name ?? ''} onChange={e => setSelectedCommunity(findCommunityByName(e.target.value))}><option value="">Todas las comunidades</option>{data.children?.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}</select></>}
+                                legend={<div className="graph-legend"><span>Círculo exterior: comunidad · interior: concepto</span><span>Tamaño: {method === 'fuzzy' ? 'suma de pesos' : 'archivos asociados'}</span><span>{focused && selectedCommunity ? selectedCommunity.name : 'Todas las comunidades recibidas'}</span></div>}
+                                inspector={selectedCommunity && <details open><summary>{selectedCommunity.name} · conceptos recibidos</summary><ul>{selectedCommunity.children?.map(c => <li key={c.name}>{c.name} · {formatDegree(c.degree)}</li>)}</ul></details>}>
+
                             <ResponsiveCirclePacking
                                 data={data}
+                                zoomedId={focused ? selectedCommunity?.name : undefined}
                                 id="name"
                                 value="loc"
                                 padding={4}
                                 enableLabels={true}
-                                labelsFilter={(label) => label.node.depth === 2}
-                                labelsSkipRadius={15}
+                                labelsFilter={(label) => focused ? label.node.depth === 2 : label.node.depth === 1}
+                                labelsSkipRadius={24}
                                 labelTextColor="#ffffff"
                                 colors={(node) => {
+                                    const communityName = node.depth === 1 ? node.id : node.parent?.id;
+                                    if (selectedCommunity && node.depth > 0 && communityName !== selectedCommunity.name) return 'var(--surface-elevated)';
                                     if (node.depth === 1) {
                                         const parentIndex = data.children?.findIndex(c => c.name === node.id) ?? 0;
                                         return COMMUNITY_COLORS[parentIndex % COMMUNITY_COLORS.length];
@@ -156,9 +164,9 @@ export default function CommunityAnalysisCard() {
                                     if (node.depth === 2 && node.parent) {
                                         const parentIndex = data.children?.findIndex(c => c.name === node.parent!.id) ?? 0;
                                         const baseColor = COMMUNITY_COLORS[parentIndex % COMMUNITY_COLORS.length];
-                                        return baseColor + 'cc';
+                                        return baseColor;
                                     }
-                                    return '#1e293b';
+                                    return 'var(--surface)';
                                 }}
                                 borderWidth={2}
                                 borderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
@@ -175,20 +183,20 @@ export default function CommunityAnalysisCard() {
                                     },
                                     tooltip: {
                                         container: {
-                                            background: '#0f172a', color: '#f8fafc',
-                                            borderRadius: '8px', border: '1px solid #334155',
+                                            background: 'var(--background-secondary)', color: 'var(--text-primary)',
+                                            borderRadius: '8px', border: '1px solid var(--border)',
                                             fontSize: '13px', padding: '8px 12px',
                                         },
                                     },
                                 }}
                                 tooltip={({ id, value, depth }) => (
                                     <div style={{
-                                        background: '#0f172a', border: '1px solid #334155',
-                                        borderRadius: 8, padding: '8px 12px', color: '#f8fafc', fontSize: 12,
+                                        background: 'var(--background-secondary)', border: '1px solid var(--border)',
+                                        borderRadius: 8, padding: '8px 12px', color: 'var(--text-primary)', fontSize: 12,
                                     }}>
                                         <strong>{id}</strong>
                                         {depth === 2 && (
-                                            <span style={{ color: '#94a3b8', marginLeft: 8 }}>
+                                            <span style={{ color: 'var(--text-secondary)', marginLeft: 8 }}>
                                                 {method === 'fuzzy'
                                                     ? `peso: ${typeof value === 'number' ? value.toFixed(2) : value}`
                                                     : `${value} archivo${value !== 1 ? 's' : ''}`
@@ -203,15 +211,16 @@ export default function CommunityAnalysisCard() {
                                     </div>
                                 )}
                                 motionConfig="gentle"
-                                animate={true}
+                                animate={false}
                             />
+                            </ChartFrame>
                         </div>
                     )}
 
                     {!loading && (!data || !data.children || data.children.length === 0) && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 800 }}>
-                            <Dna size={48} color="#475569" />
-                            <span style={{ color: '#475569', marginTop: 12 }}>
+                            <Dna size={48} color="var(--text-muted)" />
+                            <span style={{ color: 'var(--text-muted)', marginTop: 12 }}>
                                 No se detectaron comunidades. Agrega más datos al grafo.
                             </span>
                         </div>
@@ -226,7 +235,7 @@ export default function CommunityAnalysisCard() {
                     {/* Mode Toggle */}
                     <div style={{
                         display: 'flex', borderRadius: 8, overflow: 'hidden',
-                        border: '1px solid #334155', marginBottom: 20,
+                        border: '1px solid var(--border)', marginBottom: 20,
                     }}>
                         {(['standard', 'fuzzy'] as CommunityMode[]).map(m => (
                             <button
@@ -238,11 +247,11 @@ export default function CommunityAnalysisCard() {
                                     transition: 'all 0.25s ease',
                                     background: method === m
                                         ? (m === 'fuzzy' ? '#7c3aed' : '#8b5cf6')
-                                        : '#0f172a',
-                                    color: method === m ? '#ffffff' : '#64748b',
+                                        : 'var(--background-secondary)',
+                                    color: method === m ? '#ffffff' : 'var(--text-muted)',
                                 }}
                             >
-                                {m === 'standard' ? '🌍 Standard' : '🧠 Fuzzy'}
+                                {m === 'standard' ? ' Standard' : ' Fuzzy'}
                             </button>
                         ))}
                     </div>
@@ -250,8 +259,8 @@ export default function CommunityAnalysisCard() {
                     {/* Filtro de Umbral (Slider) */}
                     <div style={{ marginBottom: 20 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Umbral Mínimo:</span>
-                            <span style={{ fontSize: '0.75rem', color: '#f8fafc', fontWeight: 700, fontFamily: 'monospace' }}>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Umbral Mínimo:</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', fontWeight: 700, fontFamily: 'monospace' }}>
                                 {minWeight.toFixed(2)}
                             </span>
                         </div>
@@ -263,38 +272,38 @@ export default function CommunityAnalysisCard() {
                             style={{ width: '100%', accentColor: method === 'fuzzy' ? '#7c3aed' : '#8b5cf6' }}
                         />
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                            <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Más Ruido</span>
-                            <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Más Estricto</span>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Más Ruido</span>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Más Estricto</span>
                         </div>
                     </div>
 
                     {/* Dynamic narrative */}
                     <div style={{
-                        background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                        border: '1px solid #334155',
+                        background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                        border: '1px solid var(--border)',
                     }}>
-                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc', marginBottom: 6 }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                             {narrative.icon} {narrative.title}
                         </div>
-                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                             {narrative.desc}
                         </p>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                         <Info size={18} className="text-purple-400" />
-                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                             ¿Qué es esto?
                         </h3>
                     </div>
 
-                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 16 }}>
                         El algoritmo de <strong style={{ color: '#a78bfa' }}>Louvain Modularity</strong> identifica
                         clústeres de conceptos que aparecen juntos frecuentemente en tus archivos.
                     </p>
 
-                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
-                        El <strong style={{ color: '#e2e8f0' }}>tamaño de cada burbuja</strong> refleja{' '}
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 16 }}>
+                        El <strong style={{ color: 'var(--text-primary)' }}>tamaño de cada burbuja</strong> refleja{' '}
                         {method === 'fuzzy'
                             ? 'la suma de los pesos semánticos de las relaciones de ese concepto.'
                             : 'cuántos archivos mencionan ese concepto. Las más grandes son los más referenciados.'
@@ -303,16 +312,16 @@ export default function CommunityAnalysisCard() {
 
                     {communityCount > 0 && (
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155'
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)'
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>
                                 RESULTADO
                             </div>
-                            <p style={{ fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                                 El algoritmo ha agrupado tus datos en{' '}
                                 <strong style={{ color: '#a78bfa' }}>{communityCount}</strong> grandes mundos.
-                                Haz <strong style={{ color: '#e2e8f0' }}>click en una burbuja</strong> para
+                                Haz <strong style={{ color: 'var(--text-primary)' }}>click en una burbuja</strong> para
                                 ver los detalles de esa comunidad.
                             </p>
                         </div>
@@ -321,10 +330,10 @@ export default function CommunityAnalysisCard() {
                     {/* Community legend */}
                     {data?.children && data.children.length > 0 && (
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155'
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)'
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8 }}>
                                 COMUNIDADES
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
@@ -336,7 +345,7 @@ export default function CommunityAnalysisCard() {
                                             display: 'flex', alignItems: 'center', gap: 8,
                                             cursor: 'pointer', padding: '2px 4px', borderRadius: 4,
                                             transition: 'background 0.2s',
-                                            background: selectedCommunity?.name === community.name ? '#334155' : 'transparent',
+                                            background: selectedCommunity?.name === community.name ? 'var(--border)' : 'transparent',
                                         }}
                                     >
                                         <div style={{
@@ -344,9 +353,9 @@ export default function CommunityAnalysisCard() {
                                             background: COMMUNITY_COLORS[i % COMMUNITY_COLORS.length],
                                             flexShrink: 0,
                                         }} />
-                                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.3 }}>
+                                        <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
                                             {community.name}
-                                            <span style={{ color: '#475569', marginLeft: 4 }}>
+                                            <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>
                                                 ({community.children?.length || 0})
                                             </span>
                                         </span>
@@ -362,7 +371,7 @@ export default function CommunityAnalysisCard() {
                             padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
                             border: '1px solid #22c55e30'
                         }}>
-                            ✅ {message}
+                             {message}
                         </div>
                     )}
                 </div>
@@ -372,7 +381,7 @@ export default function CommunityAnalysisCard() {
             {selectedCommunity && selectedCommunity.children && (
                 <div style={{
                     marginTop: 20, padding: 20, borderRadius: 16,
-                    background: '#0f172a', border: '1px solid #334155',
+                    background: 'var(--background-secondary)', border: '1px solid var(--border)',
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -380,7 +389,7 @@ export default function CommunityAnalysisCard() {
                                 width: 14, height: 14, borderRadius: '50%',
                                 background: selectedColor,
                             }} />
-                            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                                 {selectedCommunity.name}
                             </h3>
                             <span style={{
@@ -395,14 +404,14 @@ export default function CommunityAnalysisCard() {
                                 color: method === 'fuzzy' ? '#c4b5fd' : '#a5b4fc',
                                 padding: '3px 8px', borderRadius: 4,
                             }}>
-                                {method === 'fuzzy' ? '🧠 Peso Semántico' : '🌍 Conteo de Archivos'}
+                                {method === 'fuzzy' ? ' Peso Semántico' : ' Conteo de Archivos'}
                             </span>
                         </div>
                         <button
                             onClick={() => setSelectedCommunity(null)}
                             style={{
-                                background: '#1e293b', border: '1px solid #334155', borderRadius: 6,
-                                color: '#94a3b8', cursor: 'pointer', padding: 4,
+                                background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6,
+                                color: 'var(--text-secondary)', cursor: 'pointer', padding: 4,
                             }}
                         >
                             <X size={14} />
@@ -416,11 +425,11 @@ export default function CommunityAnalysisCard() {
                         {selectedCommunity.children.map((child, idx) => (
                             <div key={idx} style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                background: '#1e293b', padding: '8px 12px', borderRadius: 8,
-                                border: '1px solid #334155',
+                                background: 'var(--surface)', padding: '8px 12px', borderRadius: 8,
+                                border: '1px solid var(--border)',
                             }}>
                                 <span style={{
-                                    fontSize: '0.82rem', color: '#e2e8f0',
+                                    fontSize: '0.82rem', color: 'var(--text-primary)',
                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                     marginRight: 8, flex: 1,
                                 }} title={child.name}>

@@ -98,7 +98,7 @@ function MiniCard({
                     borderRadius: 8, background: 'var(--bg-input)',
                     color: 'var(--text-muted)', flexShrink: 0,
                 }}>
-                    {item.space_icon || '📄'}
+                    {item.space_icon || ''}
                 </span>
             </div>
 
@@ -225,8 +225,8 @@ export default function HybridVisualTab() {
 
     // Alpha dominance label
     const getDominanceLabel = () => {
-        if (alpha < 0.2) return { icon: '👁️', text: 'Dominancia Visual' };
-        if (alpha > 0.8) return { icon: '📝', text: 'Dominancia Textual' };
+        if (alpha < 0.2) return { icon: '', text: 'Dominancia Visual' };
+        if (alpha > 0.8) return { icon: '', text: 'Dominancia Textual' };
         return null;
     };
     const dominance = getDominanceLabel();
@@ -235,7 +235,7 @@ export default function HybridVisualTab() {
         <div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 20 }}>
                 Fusión <strong>Multimodal</strong>: vectores <em>SigLIP</em> (visual) + <em>BGE-M3</em> (texto).
-                Los resultados se muestran en columnas separadas. Los que aparecen en ambas columnas son <strong>🔥 Perfect Match</strong>.
+                Los resultados se muestran en columnas separadas. Los que aparecen en ambas columnas son <strong> Perfect Match</strong>.
             </p>
 
             {/* Image area */}
@@ -369,7 +369,7 @@ export default function HybridVisualTab() {
                     background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.3)',
                     borderRadius: 'var(--radius-md)', color: 'var(--accent-rose)',
                 }}>
-                    ❌ {fusionError}
+                     {fusionError}
                 </div>
             )}
 
@@ -385,7 +385,7 @@ export default function HybridVisualTab() {
                             <strong>{fusionData.total_results}</strong> resultados totales
                             {crossRefUuids.size > 0 && (
                                 <span style={{ marginLeft: 8, color: '#f59e0b' }}>
-                                    · 🔥 {crossRefUuids.size} coincidencia{crossRefUuids.size > 1 ? 's' : ''} cruzada{crossRefUuids.size > 1 ? 's' : ''}
+                                    ·  {crossRefUuids.size} coincidencia{crossRefUuids.size > 1 ? 's' : ''} cruzada{crossRefUuids.size > 1 ? 's' : ''}
                                 </span>
                             )}
                         </span>
@@ -394,7 +394,7 @@ export default function HybridVisualTab() {
                             padding: '3px 10px', borderRadius: 12,
                             background: 'rgba(245,158,11,0.12)', color: '#f59e0b',
                         }}>
-                            🔀 Multimodal · α={fusionData.alpha.toFixed(2)}
+                             Multimodal · α={fusionData.alpha.toFixed(2)}
                         </span>
                     </div>
 

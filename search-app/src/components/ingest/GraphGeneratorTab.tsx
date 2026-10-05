@@ -74,24 +74,24 @@ function EditableTable<T extends Record<string, any>>({
     };
 
     const cellStyle: React.CSSProperties = {
-        padding: '6px 8px', borderBottom: '1px solid #1e293b', fontSize: '0.75rem', color: '#cbd5e1'
+        padding: '6px 8px', borderBottom: '1px solid var(--surface)', fontSize: '0.75rem', color: 'var(--text-secondary)'
     };
     const headerStyle: React.CSSProperties = {
         padding: '8px 8px', textAlign: 'left', fontSize: '0.7rem', fontWeight: 600,
-        color: '#94a3b8', borderBottom: '1px solid #334155', whiteSpace: 'nowrap'
+        color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap'
     };
     const inputStyle: React.CSSProperties = {
         width: '100%', padding: '4px 6px', borderRadius: 4, fontSize: '0.75rem',
-        background: '#0f172a', border: '1px solid #334155', color: '#f8fafc', outline: 'none'
+        background: 'var(--background-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none'
     };
 
     return (
         <div>
-            <div style={{ overflowX: 'auto', border: '1px solid #1e293b', borderRadius: 6 }}>
+            <div style={{ overflowX: 'auto', border: '1px solid var(--surface)', borderRadius: 6 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                         {table.getHeaderGroups().map(hg => (
-                            <tr key={hg.id} style={{ background: '#0f172a' }}>
+                            <tr key={hg.id} style={{ background: 'var(--background-secondary)' }}>
                                 {hg.headers.map(h => (
                                     <th key={h.id} style={headerStyle}>
                                         {flexRender(h.column.columnDef.header, h.getContext())}
@@ -104,7 +104,7 @@ function EditableTable<T extends Record<string, any>>({
                     <tbody>
                         {table.getRowModel().rows.map((row, rowIdx) => (
                             <tr key={row.id}
-                                onMouseEnter={e => (e.currentTarget.style.background = '#1e293b30')}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in srgb, var(--surface) 19%, transparent)')}
                                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                             >
                                 {row.getVisibleCells().map(cell => {
@@ -152,7 +152,7 @@ function EditableTable<T extends Record<string, any>>({
             </div>
             <button onClick={addRow} style={{
                 padding: '4px 12px', borderRadius: 4, fontSize: '0.7rem', marginTop: 6,
-                background: '#334155', color: '#94a3b8', border: '1px solid #475569',
+                background: 'var(--border)', color: 'var(--text-secondary)', border: '1px solid var(--text-muted)',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
             }}>
                 <Plus size={10} /> Agregar fila
@@ -245,18 +245,18 @@ function EntityEditor({ item, onApprove }: { item: InboxItem; onApprove: (data: 
     };
 
     const tabs: { key: EntityTab; label: string; count: number }[] = [
-        { key: 'persons', label: '👤 Personas', count: persons.length },
-        { key: 'locations', label: '📍 Lugares', count: locations.length },
-        { key: 'organizations', label: '🏢 Organizaciones', count: orgs.length },
-        { key: 'concepts', label: '💡 Conceptos', count: concepts.length },
-        { key: 'tags', label: '🏷️ Tags', count: tagsStr.split(',').filter(t => t.trim()).length },
+        { key: 'persons', label: ' Personas', count: persons.length },
+        { key: 'locations', label: ' Lugares', count: locations.length },
+        { key: 'organizations', label: ' Organizaciones', count: orgs.length },
+        { key: 'concepts', label: ' Conceptos', count: concepts.length },
+        { key: 'tags', label: ' Tags', count: tagsStr.split(',').filter(t => t.trim()).length },
     ];
 
     const tabBtnStyle = (key: EntityTab): React.CSSProperties => ({
         padding: '6px 12px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600,
-        background: activeTab === key ? '#334155' : 'transparent',
-        color: activeTab === key ? '#f8fafc' : '#64748b',
-        border: activeTab === key ? '1px solid #475569' : '1px solid transparent',
+        background: activeTab === key ? 'var(--border)' : 'transparent',
+        color: activeTab === key ? 'var(--text-primary)' : 'var(--text-muted)',
+        border: activeTab === key ? '1px solid var(--text-muted)' : '1px solid transparent',
         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
     });
 
@@ -269,7 +269,7 @@ function EntityEditor({ item, onApprove }: { item: InboxItem; onApprove: (data: 
                         {t.label}
                         <span style={{
                             padding: '0 5px', borderRadius: 4, fontSize: '0.6rem',
-                            background: '#1e293b', color: '#64748b'
+                            background: 'var(--surface)', color: 'var(--text-muted)'
                         }}>{t.count}</span>
                     </button>
                 ))}
@@ -290,15 +290,15 @@ function EntityEditor({ item, onApprove }: { item: InboxItem; onApprove: (data: 
             )}
             {activeTab === 'tags' && (
                 <div>
-                    <p style={{ color: '#64748b', fontSize: '0.7rem', marginBottom: 6 }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: 6 }}>
                         Tags separados por comas. Los duplicados con nombres de entidades se filtrarán automáticamente.
                     </p>
                     <textarea value={tagsStr} onChange={e => setTagsStr(e.target.value)}
                         placeholder="ciencia ficción, robots, futuro, IA..."
                         style={{
                             width: '100%', minHeight: 60, padding: '8px 12px', borderRadius: 6,
-                            fontSize: '0.8rem', background: '#0f172a', border: '1px solid #334155',
-                            color: '#f8fafc', outline: 'none', resize: 'vertical', fontFamily: 'inherit'
+                            fontSize: '0.8rem', background: 'var(--background-secondary)', border: '1px solid var(--border)',
+                            color: 'var(--text-primary)', outline: 'none', resize: 'vertical', fontFamily: 'inherit'
                         }}
                     />
                     {tagsStr && (
@@ -318,8 +318,8 @@ function EntityEditor({ item, onApprove }: { item: InboxItem; onApprove: (data: 
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                 <button onClick={handleApprove} style={{
                     padding: '8px 20px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600,
-                    background: 'linear-gradient(135deg, #22c55e, #4ade80)',
-                    color: '#0f172a', border: 'none', cursor: 'pointer',
+                    background: 'var(--gradient-primary)',
+                    color: 'var(--background-secondary)', border: 'none', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
                     boxShadow: '0 2px 8px rgba(34,197,94,0.3)'
                 }}>
@@ -327,7 +327,7 @@ function EntityEditor({ item, onApprove }: { item: InboxItem; onApprove: (data: 
                 </button>
                 <button style={{
                     padding: '8px 16px', borderRadius: 6, fontSize: '0.8rem',
-                    background: '#334155', color: '#94a3b8', border: '1px solid #475569',
+                    background: 'var(--border)', color: 'var(--text-secondary)', border: '1px solid var(--text-muted)',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
                 }}>
                     <Trash2 size={14} /> Rechazar
@@ -371,16 +371,16 @@ function InboxCurator() {
         try {
             const res = await axios.post(`${API}/inbox/${fileHash}/approve`, data);
             const d = res.data;
-            setActionResult(`✅ Aprobado: ${d.nodes_created || 0} nodos, ${d.relationships_created || 0} relaciones creadas`);
+            setActionResult(` Aprobado: ${d.nodes_created || 0} nodos, ${d.relationships_created || 0} relaciones creadas`);
             setTimeout(() => fetchData(), 1500);
         } catch (err: any) {
-            setActionResult(`❌ Error: ${err.response?.data?.detail || err.message}`);
+            setActionResult(` Error: ${err.response?.data?.detail || err.message}`);
         }
     };
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: 8, color: '#94a3b8' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: 8, color: 'var(--text-secondary)' }}>
                 <Loader2 size={20} className="animate-spin" /> Cargando inbox...
             </div>
         );
@@ -389,12 +389,12 @@ function InboxCurator() {
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                     Revisa y aprueba las entidades extraídas por IA antes de ingestarlas al grafo.
                 </p>
                 <button onClick={fetchData} style={{
                     display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
-                    borderRadius: 6, background: '#334155', color: '#94a3b8', border: '1px solid #475569',
+                    borderRadius: 6, background: 'var(--border)', color: 'var(--text-secondary)', border: '1px solid var(--text-muted)',
                     cursor: 'pointer', fontSize: '0.75rem'
                 }}>
                     <RefreshCw size={12} /> Refrescar
@@ -427,7 +427,7 @@ function InboxCurator() {
                     padding: 24, borderRadius: 10, background: '#22c55e08',
                     border: '1px solid #22c55e20', textAlign: 'center', color: '#86efac'
                 }}>
-                    🎉 ¡Todo al día! No hay items pendientes de revisión.
+                     ¡Todo al día! No hay items pendientes de revisión.
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -435,7 +435,7 @@ function InboxCurator() {
                         padding: '8px 12px', borderRadius: 6, fontSize: '0.8rem',
                         background: '#eab30815', color: '#fbbf24', border: '1px solid #eab30830'
                     }}>
-                        📥 <strong>{items.length}</strong> items pendientes de revisión
+                         <strong>{items.length}</strong> items pendientes de revisión
                     </div>
 
                     {items.map((item) => {
@@ -447,7 +447,7 @@ function InboxCurator() {
 
                         return (
                             <div key={hash} style={{
-                                background: '#1e293b', borderRadius: 8, border: '1px solid #334155',
+                                background: 'var(--surface)', borderRadius: 8, border: '1px solid var(--border)',
                                 overflow: 'hidden'
                             }}>
                                 {/* Item header */}
@@ -456,43 +456,43 @@ function InboxCurator() {
                                         display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
                                         cursor: 'pointer', transition: 'background 0.15s'
                                     }}
-                                    onMouseEnter={e => (e.currentTarget.style.background = '#334155')}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
                                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                                 >
                                     {isExpanded ? <ChevronDown size={14} style={{ color: '#818cf8' }} />
                                         : <ChevronRight size={14} style={{ color: '#818cf8' }} />}
-                                    <span style={{ color: '#eab308' }}>🔶</span>
-                                    <span style={{ color: '#f8fafc', fontWeight: 600, fontSize: '0.9rem' }}>
+                                    <span style={{ color: '#eab308' }}></span>
+                                    <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.9rem' }}>
                                         {item.filename}
                                     </span>
-                                    <span style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                                         — {totalEntities} entidades, {totalConcepts} conceptos
                                     </span>
-                                    <span style={{ color: '#475569', fontSize: '0.6rem', marginLeft: 'auto' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem', marginLeft: 'auto' }}>
                                         {hash.substring(0, 12)}...
                                     </span>
                                 </div>
 
                                 {/* Expanded content */}
                                 {isExpanded && (
-                                    <div style={{ padding: '0 16px 16px', borderTop: '1px solid #334155' }}>
+                                    <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border)' }}>
                                         {/* AI Summary */}
                                         <div style={{ marginTop: 12, marginBottom: 16 }}>
-                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc', marginBottom: 6 }}>
-                                                📝 Resumen AI
+                                            <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
+                                                 Resumen AI
                                             </h4>
                                             <div style={{
                                                 padding: 10, borderRadius: 6, fontSize: '0.8rem',
-                                                background: '#0f172a', border: '1px solid #1e293b',
-                                                color: '#94a3b8', maxHeight: 100, overflow: 'auto'
+                                                background: 'var(--background-secondary)', border: '1px solid var(--surface)',
+                                                color: 'var(--text-secondary)', maxHeight: 100, overflow: 'auto'
                                             }}>
                                                 {item.ai_summary || 'Sin resumen disponible'}
                                             </div>
                                         </div>
 
                                         {/* Entity Editor */}
-                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc', marginBottom: 10 }}>
-                                            ✏️ Editar Entidades y Conceptos
+                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>
+                                             Editar Entidades y Conceptos
                                         </h4>
                                         <EntityEditor
                                             item={item}
@@ -510,9 +510,9 @@ function InboxCurator() {
             {actionResult && (
                 <div style={{
                     padding: '10px 14px', borderRadius: 8, fontSize: '0.85rem', marginTop: 12,
-                    background: actionResult.startsWith('✅') ? '#22c55e15' : '#ef444415',
-                    color: actionResult.startsWith('✅') ? '#86efac' : '#fca5a5',
-                    border: `1px solid ${actionResult.startsWith('✅') ? '#22c55e30' : '#ef444430'}`
+                    background: actionResult.startsWith('') ? '#22c55e15' : '#ef444415',
+                    color: actionResult.startsWith('') ? '#86efac' : '#fca5a5',
+                    border: `1px solid ${actionResult.startsWith('') ? '#22c55e30' : '#ef444430'}`
                 }}>
                     {actionResult}
                 </div>
@@ -553,7 +553,7 @@ function ManualNodeCreator() {
     const handleCreate = async () => {
         const filtered = Object.fromEntries(Object.entries(properties).filter(([_, v]) => v.trim()));
         if (Object.keys(filtered).length === 0) {
-            setResult('⚠️ Debes llenar al menos una propiedad');
+            setResult(' Debes llenar al menos una propiedad');
             return;
         }
         setCreating(true);
@@ -564,7 +564,7 @@ function ManualNodeCreator() {
                 properties: filtered
             });
             if (res.data.success) {
-                setResult(`✅ ${res.data.message}`);
+                setResult(` ${res.data.message}`);
                 setCreatedNodes(prev => [...prev, {
                     type: selectedType, nodeId: res.data.neo4j_node_id || '?', props: filtered
                 }]);
@@ -575,7 +575,7 @@ function ManualNodeCreator() {
                 }
             }
         } catch (err: any) {
-            setResult(`❌ Error: ${err.response?.data?.detail || err.message}`);
+            setResult(` Error: ${err.response?.data?.detail || err.message}`);
         } finally {
             setCreating(false);
         }
@@ -583,23 +583,23 @@ function ManualNodeCreator() {
 
     const inputStyle: React.CSSProperties = {
         width: '100%', padding: '8px 12px', borderRadius: 6, fontSize: '0.8rem',
-        background: '#0f172a', border: '1px solid #334155', color: '#f8fafc', outline: 'none'
+        background: 'var(--background-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none'
     };
 
     return (
         <div>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: 16 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 16 }}>
                 Crea nodos manualmente en el grafo de conocimiento.
             </p>
 
             {nodeTypes.length === 0 ? (
-                <div style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                     Cargando tipos de nodo...
                 </div>
             ) : (
                 <>
                     <div style={{ marginBottom: 16 }}>
-                        <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                        <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
                             Tipo de Nodo
                         </label>
                         <select value={selectedType} onChange={e => setSelectedType(e.target.value)}
@@ -612,13 +612,13 @@ function ManualNodeCreator() {
 
                     {selectedNode && (
                         <div style={{ marginBottom: 16 }}>
-                            <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600 }}>
                                 Propiedades para {selectedNode.name}:
                             </span>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
                                 {selectedNode.properties.map(prop => (
                                     <div key={prop}>
-                                        <label style={{ color: '#64748b', fontSize: '0.7rem', display: 'block', marginBottom: 2 }}>
+                                        <label style={{ color: 'var(--text-muted)', fontSize: '0.7rem', display: 'block', marginBottom: 2 }}>
                                             {prop.charAt(0).toUpperCase() + prop.slice(1)}
                                         </label>
                                         {['content', 'description', 'summary'].includes(prop) ? (
@@ -638,7 +638,7 @@ function ManualNodeCreator() {
 
                     <button onClick={handleCreate} disabled={creating} style={{
                         padding: '8px 20px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600,
-                        background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff',
+                        background: 'var(--gradient-primary)', color: '#fff',
                         border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                         boxShadow: '0 2px 8px rgba(99,102,241,0.3)'
                     }}>
@@ -651,9 +651,9 @@ function ManualNodeCreator() {
             {result && (
                 <div style={{
                     padding: '8px 12px', borderRadius: 6, fontSize: '0.8rem', marginTop: 12,
-                    background: result.startsWith('✅') ? '#22c55e15' : result.startsWith('⚠️') ? '#eab30815' : '#ef444415',
-                    color: result.startsWith('✅') ? '#86efac' : result.startsWith('⚠️') ? '#fbbf24' : '#fca5a5',
-                    border: `1px solid ${result.startsWith('✅') ? '#22c55e30' : result.startsWith('⚠️') ? '#eab30830' : '#ef444430'}`
+                    background: result.startsWith('') ? '#22c55e15' : result.startsWith('') ? '#eab30815' : '#ef444415',
+                    color: result.startsWith('') ? '#86efac' : result.startsWith('') ? '#fbbf24' : '#fca5a5',
+                    border: `1px solid ${result.startsWith('') ? '#22c55e30' : result.startsWith('') ? '#eab30830' : '#ef444430'}`
                 }}>
                     {result}
                 </div>
@@ -662,13 +662,13 @@ function ManualNodeCreator() {
             {/* Created nodes in session */}
             {createdNodes.length > 0 && (
                 <div style={{ marginTop: 20 }}>
-                    <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc', marginBottom: 8 }}>
-                        📋 Nodos Creados en Esta Sesión
+                    <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>
+                         Nodos Creados en Esta Sesión
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {createdNodes.map((n, i) => (
-                            <div key={i} style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
-                                <strong style={{ color: '#cbd5e1' }}>{i + 1}.</strong>{' '}
+                            <div key={i} style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                                <strong style={{ color: 'var(--text-secondary)' }}>{i + 1}.</strong>{' '}
                                 <code style={{ color: '#818cf8' }}>{n.type}</code> — ID: <code style={{ color: '#4ade80' }}>{n.nodeId}</code>
                             </div>
                         ))}
@@ -700,7 +700,7 @@ function SchemaViewer() {
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: 8, color: '#94a3b8' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: 8, color: 'var(--text-secondary)' }}>
                 <Loader2 size={20} className="animate-spin" /> Cargando schema...
             </div>
         );
@@ -710,46 +710,46 @@ function SchemaViewer() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             {/* Node Types */}
             <div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f8fafc', marginBottom: 10 }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>
                     Tipos de Nodos
                 </h4>
                 {nodeTypes.map(nt => (
-                    <ExpandableSchemaCard key={nt.id} title={`🔷 ${nt.name}`}>
-                        <p style={{ color: '#64748b', fontSize: '0.75rem', marginBottom: 4 }}>
+                    <ExpandableSchemaCard key={nt.id} title={` ${nt.name}`}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: 4 }}>
                             <strong>Label:</strong> <code style={{ color: '#818cf8' }}>{nt.label}</code>
                         </p>
-                        <p style={{ color: '#64748b', fontSize: '0.75rem', marginBottom: 4 }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: 4 }}>
                             <strong>Descripción:</strong> {nt.description}
                         </p>
-                        <p style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                             <strong>Propiedades:</strong> {nt.properties.map(p => (
-                                <code key={p} style={{ color: '#cbd5e1', marginRight: 4 }}>{p}</code>
+                                <code key={p} style={{ color: 'var(--text-secondary)', marginRight: 4 }}>{p}</code>
                             ))}
                         </p>
                     </ExpandableSchemaCard>
                 ))}
                 {nodeTypes.length === 0 && (
-                    <p style={{ color: '#475569', fontSize: '0.8rem' }}>No se encontraron tipos de nodo.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No se encontraron tipos de nodo.</p>
                 )}
             </div>
 
             {/* Connection Types */}
             <div>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#f8fafc', marginBottom: 10 }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>
                     Tipos de Relaciones
                 </h4>
                 {connectionTypes.map(ct => (
-                    <ExpandableSchemaCard key={ct.id} title={`↔️ ${ct.name}`}>
-                        <p style={{ color: '#64748b', fontSize: '0.75rem', marginBottom: 4 }}>
+                    <ExpandableSchemaCard key={ct.id} title={`↔ ${ct.name}`}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: 4 }}>
                             <strong>Label:</strong> <code style={{ color: '#818cf8' }}>{ct.label}</code>
                         </p>
-                        <p style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                             <strong>Descripción:</strong> {ct.description}
                         </p>
                     </ExpandableSchemaCard>
                 ))}
                 {connectionTypes.length === 0 && (
-                    <p style={{ color: '#475569', fontSize: '0.8rem' }}>No se encontraron tipos de relación.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No se encontraron tipos de relación.</p>
                 )}
             </div>
         </div>
@@ -759,10 +759,10 @@ function SchemaViewer() {
 function ExpandableSchemaCard({ title, children }: { title: string; children: React.ReactNode }) {
     const [open, setOpen] = useState(false);
     return (
-        <div style={{ background: '#0f172a', borderRadius: 8, border: '1px solid #1e293b', overflow: 'hidden', marginBottom: 6 }}>
+        <div style={{ background: 'var(--background-secondary)', borderRadius: 8, border: '1px solid var(--surface)', overflow: 'hidden', marginBottom: 6 }}>
             <div onClick={() => setOpen(!open)} style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '10px 12px',
-                cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc'
+                cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)'
             }}>
                 {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                 {title}
@@ -783,19 +783,19 @@ export default function GraphGeneratorTab() {
 
     const tabStyle = (tab: MainTab): React.CSSProperties => ({
         padding: '8px 16px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600,
-        background: activeTab === tab ? '#1e293b' : 'transparent',
-        color: activeTab === tab ? '#f8fafc' : '#64748b',
-        border: activeTab === tab ? '1px solid #334155' : '1px solid transparent',
+        background: activeTab === tab ? 'var(--surface)' : 'transparent',
+        color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
+        border: activeTab === tab ? '1px solid var(--border)' : '1px solid transparent',
         cursor: 'pointer', transition: 'all 0.15s',
         display: 'flex', alignItems: 'center', gap: 6
     });
 
     return (
         <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', marginBottom: 4 }}>
-                🔗 Generador de Nodos & Curador
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                 Generador de Nodos & Curador
             </h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: 20 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 20 }}>
                 Gestiona la creación de nodos en el grafo de conocimiento.
             </p>
 

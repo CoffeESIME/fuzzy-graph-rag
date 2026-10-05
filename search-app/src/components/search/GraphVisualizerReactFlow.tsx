@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
-import ReactFlow, {
+import ReactFlow from '../graph/GraphCanvas';
+import {
     Controls,
     Background,
     useNodesState,
@@ -79,9 +80,9 @@ export default function GraphVisualizerReactFlow({
                             node.type === 'Organization' ? '#3b82f6' :
                                 node.type === 'Event' ? '#ec4899' :
                                     node.type === 'Project' ? '#14b8a6' :
-                                        node.type === 'DigitalAsset' ? '#10b981' : '#64748b',
+                                        node.type === 'DigitalAsset' ? '#10b981' : 'var(--text-muted)',
                 color: '#fff',
-                border: '1px solid #334155',
+                border: '1px solid var(--border)',
                 width: 150,
                 fontSize: 12
             }
@@ -92,16 +93,17 @@ export default function GraphVisualizerReactFlow({
             source: typeof link.source === 'object' ? (link.source as any).id : link.source,
             target: typeof link.target === 'object' ? (link.target as any).id : link.target,
             type: 'smoothstep',
+            data: { relation: link.type, weight: link.weight },
             label: `${link.type} (${link.weight})`, // Show relationship type and weight
-            labelStyle: { fill: '#94a3b8', fontSize: 11, fontWeight: 500 },
-            labelBgStyle: { fill: '#0f172a', fillOpacity: 0.8, rx: 4, ry: 4 },
+            labelStyle: { fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 500 },
+            labelBgStyle: { fill: 'var(--background-secondary)', fillOpacity: 0.8, rx: 4, ry: 4 },
             labelBgPadding: [4, 2],
             labelBgBorderRadius: 4,
             animated: true,
-            style: { stroke: '#94a3b8' },
+            style: { stroke: 'var(--text-secondary)' },
             markerEnd: {
                 type: MarkerType.ArrowClosed,
-                color: '#94a3b8',
+                color: 'var(--text-secondary)',
             },
         }));
 
@@ -128,7 +130,7 @@ export default function GraphVisualizerReactFlow({
             attributionPosition="bottom-right"
         >
             <Controls style={{ fill: '#fff' }} />
-            <Background color="#334155" gap={16} />
+            <Background color="var(--border)" gap={16} />
         </ReactFlow>
     );
 }

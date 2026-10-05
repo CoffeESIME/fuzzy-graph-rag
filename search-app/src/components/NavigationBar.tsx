@@ -32,6 +32,7 @@ export default function NavigationBar({ theme, onToggleTheme }: NavigationBarPro
             zIndex: 1000,
             boxShadow: 'var(--shadow-panel)',
         }}>
+            <div className="observatory-brand"><Share2 size={23} /><span>Graph RAG<small>Knowledge Observatory</small></span></div>
             {/* Nav items */}
             {navItems.map((item) => {
                 const isActive = location.pathname === item.path ||
@@ -40,6 +41,7 @@ export default function NavigationBar({ theme, onToggleTheme }: NavigationBarPro
                 return (
                     <button
                         key={item.path}
+                        aria-current={isActive ? "page" : undefined}
                         onClick={() => navigate(item.path)}
                         style={{
                             display: 'flex',

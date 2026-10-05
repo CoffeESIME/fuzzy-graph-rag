@@ -1,3 +1,4 @@
+import ChartFrame from '../graph/ChartFrame';
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ResponsiveBar } from '@nivo/bar';
@@ -48,17 +49,17 @@ export default function WeightDistributionCard() {
 
     const theme = {
         background: 'transparent',
-        textColor: '#94a3b8',
+        textColor: 'var(--text-secondary)',
         fontSize: 11,
         axis: {
-            domain: { line: { stroke: '#475569', strokeWidth: 1 } },
-            ticks: { line: { stroke: '#475569', strokeWidth: 1 }, text: { fill: '#94a3b8' } }
+            domain: { line: { stroke: 'var(--text-muted)', strokeWidth: 1 } },
+            ticks: { line: { stroke: 'var(--text-muted)', strokeWidth: 1 }, text: { fill: 'var(--text-secondary)' } }
         },
-        grid: { line: { stroke: '#334155', strokeWidth: 1 } },
+        grid: { line: { stroke: 'var(--border)', strokeWidth: 1 } },
         tooltip: {
             container: {
-                background: '#1e293b',
-                color: '#f8fafc',
+                background: 'var(--surface)',
+                color: 'var(--text-primary)',
                 fontSize: 12,
                 borderRadius: 4,
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
@@ -88,7 +89,7 @@ export default function WeightDistributionCard() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid #334155' }}>
+                    <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
                         {[0.1, 0.05].map(s => (
                             <button
                                 key={s}
@@ -96,8 +97,8 @@ export default function WeightDistributionCard() {
                                 style={{
                                     padding: '6px 12px', fontSize: '0.75rem', fontWeight: 600,
                                     border: 'none', cursor: 'pointer', transition: 'all 0.25s ease',
-                                    background: step === s ? '#06b6d4' : '#0f172a',
-                                    color: step === s ? '#ffffff' : '#94a3b8',
+                                    background: step === s ? '#06b6d4' : 'var(--background-secondary)',
+                                    color: step === s ? '#ffffff' : 'var(--text-secondary)',
                                 }}
                             >
                                 Paso {s}
@@ -119,7 +120,7 @@ export default function WeightDistributionCard() {
                             No data available.
                         </div>
                     ) : (
-                        <ResponsiveBar
+                        <ChartFrame title="Distribución de pesos"><ResponsiveBar
                             data={data}
                             keys={['count']}
                             indexBy="range"
@@ -153,7 +154,7 @@ export default function WeightDistributionCard() {
                             theme={theme}
                             role="application"
                             ariaLabel="Weight Distribution Histogram"
-                        />
+                        /></ChartFrame>
                     )}
                 </div>
             )}

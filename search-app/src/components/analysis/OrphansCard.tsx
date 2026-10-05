@@ -76,7 +76,7 @@ export default function OrphansCard() {
                 <div className="min-h-[400px]">
                     {nodes.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-64 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/30 text-green-700 dark:text-green-300">
-                            <span className="text-4xl mb-4">🎉</span>
+                            <span className="text-4xl mb-4"></span>
                             <p className="font-semibold">¡Todo limpio!</p>
                             <p className="text-sm opacity-80">No hay nodos huérfanos. Todos los archivos están conectados.</p>
                         </div>

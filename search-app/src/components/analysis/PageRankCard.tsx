@@ -1,3 +1,4 @@
+import ChartFrame from '../graph/ChartFrame';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ResponsiveBar } from '@nivo/bar';
@@ -25,12 +26,12 @@ type PRMode = 'standard' | 'fuzzy';
 const NARRATIVES: Record<PRMode, { title: string; icon: string; desc: string }> = {
     standard: {
         title: 'PageRank Discreto (Popularidad Estructural)',
-        icon: '👑',
+        icon: '',
         desc: 'Mide la "popularidad" pura. Un concepto es influyente si aparece en muchos archivos junto a otros conceptos también populares. Revela la columna vertebral literal de tus datos.',
     },
     fuzzy: {
         title: 'PageRank Difuso (Autoridad Semántica)',
-        icon: '🎯',
+        icon: '',
         desc: 'Mide la "autoridad" profunda. Toma en cuenta la certeza de la IA. Un concepto gana influencia solo si sus conexiones son fuertes e inequívocas (pesos cercanos a 1.0), filtrando el ruido genérico.',
     },
 };
@@ -78,18 +79,18 @@ export default function PageRankCard() {
 
     const theme = {
         background: 'transparent',
-        textColor: '#94a3b8',
+        textColor: 'var(--text-secondary)',
         fontSize: 11,
         axis: {
-            domain: { line: { stroke: '#475569', strokeWidth: 1 } },
-            ticks: { line: { stroke: '#475569', strokeWidth: 1 }, text: { fill: '#94a3b8' } },
+            domain: { line: { stroke: 'var(--text-muted)', strokeWidth: 1 } },
+            ticks: { line: { stroke: 'var(--text-muted)', strokeWidth: 1 }, text: { fill: 'var(--text-secondary)' } },
         },
-        grid: { line: { stroke: '#334155', strokeWidth: 1 } },
+        grid: { line: { stroke: 'var(--border)', strokeWidth: 1 } },
         tooltip: {
             container: {
-                background: '#0f172a', color: '#f8fafc', fontSize: 12,
+                background: 'var(--background-secondary)', color: 'var(--text-primary)', fontSize: 12,
                 borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                padding: '10px 14px', border: '1px solid #334155',
+                padding: '10px 14px', border: '1px solid var(--border)',
             },
         },
     };
@@ -116,7 +117,7 @@ export default function PageRankCard() {
             {error ? (
                 <div className="p-8 text-red-500 border border-red-200 rounded">{error}</div>
             ) : (
-                <div style={{ display: 'flex', gap: 20 }}>
+                <div className="responsive-panels" style={{ display: 'flex', gap: 20 }}>
                     {/* Main Bar Chart */}
                     <div
                         className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -132,7 +133,7 @@ export default function PageRankCard() {
                                 No significant ranking data found.
                             </div>
                         ) : (
-                            <ResponsiveBar
+                            <ChartFrame title="PageRank"><ResponsiveBar
                                 data={data}
                                 keys={['value']}
                                 indexBy="id"
@@ -162,8 +163,8 @@ export default function PageRankCard() {
                                 motionConfig="gentle"
                                 tooltip={({ indexValue, value }) => (
                                     <div style={{
-                                        background: '#0f172a', border: '1px solid #334155',
-                                        borderRadius: 8, padding: '10px 14px', color: '#f8fafc',
+                                        background: 'var(--background-secondary)', border: '1px solid var(--border)',
+                                        borderRadius: 8, padding: '10px 14px', color: 'var(--text-primary)',
                                         fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                                     }}>
                                         <div style={{ fontWeight: 700, marginBottom: 4 }}>{indexValue}</div>
@@ -179,7 +180,7 @@ export default function PageRankCard() {
                                         </div>
                                     </div>
                                 )}
-                            />
+                            /></ChartFrame>
                         )}
                     </div>
 
@@ -191,7 +192,7 @@ export default function PageRankCard() {
                         {/* Mode Toggle */}
                         <div style={{
                             display: 'flex', borderRadius: 8, overflow: 'hidden',
-                            border: '1px solid #334155', marginBottom: 20,
+                            border: '1px solid var(--border)', marginBottom: 20,
                         }}>
                             {(['standard', 'fuzzy'] as PRMode[]).map(m => (
                                 <button
@@ -203,25 +204,25 @@ export default function PageRankCard() {
                                         transition: 'all 0.25s ease',
                                         background: method === m
                                             ? (m === 'fuzzy' ? '#7c3aed' : '#d97706')
-                                            : '#0f172a',
-                                        color: method === m ? '#ffffff' : '#64748b',
+                                            : 'var(--background-secondary)',
+                                        color: method === m ? '#ffffff' : 'var(--text-muted)',
                                     }}
                                 >
-                                    {m === 'standard' ? '👑 Standard' : '🎯 Fuzzy'}
+                                    {m === 'standard' ? ' Standard' : ' Fuzzy'}
                                 </button>
                             ))}
                         </div>
 
                         {/* Threshold Slider */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                                     UMBRAL DE CONFIANZA
                                 </div>
-                                <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 700 }}>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 700 }}>
                                     {minWeight.toFixed(2)}
                                 </div>
                             </div>
@@ -232,51 +233,51 @@ export default function PageRankCard() {
                                 onChange={(e) => setMinWeight(parseFloat(e.target.value))}
                                 style={{ width: '100%', cursor: 'pointer', accentColor: barColor }}
                             />
-                            <p style={{ fontSize: '0.65rem', color: '#64748b', margin: '8px 0 0 0', lineHeight: 1.4 }}>
+                            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', margin: '8px 0 0 0', lineHeight: 1.4 }}>
                                 Ignora conexiones menores al umbral para reducir el ruido.
                             </p>
                         </div>
 
                         {/* Dynamic Narrative */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
-                            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc', marginBottom: 6 }}>
+                            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                                 {narrative.icon} {narrative.title}
                             </div>
-                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                                 {narrative.desc}
                             </p>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                             <Info size={18} style={{ color: barColor }} />
-                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                                 ¿Qué es PageRank?
                             </h3>
                         </div>
 
-                        <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
-                            Inventado por Google, <strong style={{ color: '#e2e8f0' }}>PageRank</strong> mide la
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 16 }}>
+                            Inventado por Google, <strong style={{ color: 'var(--text-primary)' }}>PageRank</strong> mide la
                             importancia de un nodo no solo por sus conexiones directas, sino por la importancia de
                             <em> quién lo conecta</em>.
                         </p>
 
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>
                                 FÓRMULA
                             </div>
                             <p style={{
-                                fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.5, margin: 0,
+                                fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0,
                                 fontFamily: 'monospace',
                             }}>
                                 PR(A) = (1−d) + d × Σ PR(T<sub>i</sub>) / C(T<sub>i</sub>)
                             </p>
-                            <p style={{ fontSize: '0.65rem', color: '#64748b', marginTop: 4, margin: 0 }}>
+                            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>
                                 d = 0.85 (damping factor)
                             </p>
                         </div>
@@ -287,7 +288,7 @@ export default function PageRankCard() {
                                 padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
                                 border: '1px solid #22c55e30',
                             }}>
-                                ✅ {message}
+                                 {message}
                             </div>
                         )}
                     </div>

@@ -1,3 +1,4 @@
+import ChartFrame from '../graph/ChartFrame';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ResponsiveScatterPlot } from '@nivo/scatterplot';
@@ -53,23 +54,23 @@ export default function AbstractConceptsCard() {
 
     const nivoTheme = {
         background: 'transparent',
-        textColor: '#94a3b8',
+        textColor: 'var(--text-secondary)',
         fontSize: 11,
         axis: {
-            domain: { line: { stroke: '#475569', strokeWidth: 1 } },
-            ticks: { line: { stroke: '#475569', strokeWidth: 1 }, text: { fill: '#94a3b8', fontSize: 11 } },
-            legend: { text: { fill: '#cbd5e1', fontSize: 12, fontWeight: 600 } },
+            domain: { line: { stroke: 'var(--text-muted)', strokeWidth: 1 } },
+            ticks: { line: { stroke: 'var(--text-muted)', strokeWidth: 1 }, text: { fill: 'var(--text-secondary)', fontSize: 11 } },
+            legend: { text: { fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 } },
         },
-        grid: { line: { stroke: '#1e293b', strokeWidth: 1 } },
+        grid: { line: { stroke: 'var(--surface)', strokeWidth: 1 } },
         tooltip: {
             container: {
-                background: '#0f172a',
-                color: '#f8fafc',
+                background: 'var(--background-secondary)',
+                color: 'var(--text-primary)',
                 fontSize: 12,
                 borderRadius: 8,
                 boxShadow: '0 8px 24px rgb(0 0 0 / 0.4)',
                 padding: '10px 14px',
-                border: '1px solid #334155',
+                border: '1px solid var(--border)',
             },
         },
     };
@@ -106,7 +107,7 @@ export default function AbstractConceptsCard() {
             {error ? (
                 <div className="p-8 text-red-500 border border-red-200 rounded">{error}</div>
             ) : (
-                <div style={{ display: 'flex', gap: 20 }}>
+                <div className="responsive-panels" style={{ display: 'flex', gap: 20 }}>
                     {/* Chart */}
                     <div
                         className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -117,7 +118,7 @@ export default function AbstractConceptsCard() {
                                 No se encontraron conceptos con degree ≥ 2.
                             </div>
                         ) : (
-                            <ResponsiveScatterPlot
+                            <ChartFrame title="Conceptos abstractos"><ResponsiveScatterPlot
                                 data={data}
                                 margin={{ top: 30, right: 30, bottom: 70, left: 80 }}
                                 xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
@@ -149,28 +150,28 @@ export default function AbstractConceptsCard() {
                                     return (
                                         <div
                                             style={{
-                                                background: '#0f172a',
-                                                color: '#f8fafc',
+                                                background: 'var(--background-secondary)',
+                                                color: 'var(--text-primary)',
                                                 padding: '10px 14px',
                                                 borderRadius: 8,
-                                                border: '1px solid #334155',
+                                                border: '1px solid var(--border)',
                                                 fontSize: 12,
                                                 maxWidth: 220,
                                             }}
                                         >
                                             <div style={{ fontWeight: 700, marginBottom: 4, color: '#a78bfa' }}>
-                                                💡 {pt.name || node.id}
+                                                 {pt.name || node.id}
                                             </div>
-                                            <div style={{ color: '#94a3b8' }}>
-                                                Conexiones: <strong style={{ color: '#e2e8f0' }}>{pt.x}</strong>
+                                            <div style={{ color: 'var(--text-secondary)' }}>
+                                                Conexiones: <strong style={{ color: 'var(--text-primary)' }}>{pt.x}</strong>
                                             </div>
-                                            <div style={{ color: '#94a3b8' }}>
-                                                Certeza: <strong style={{ color: '#e2e8f0' }}>{pt.y}</strong>
+                                            <div style={{ color: 'var(--text-secondary)' }}>
+                                                Certeza: <strong style={{ color: 'var(--text-primary)' }}>{pt.y}</strong>
                                             </div>
                                         </div>
                                     );
                                 }}
-                            />
+                            /></ChartFrame>
                         )}
                     </div>
 
@@ -181,50 +182,50 @@ export default function AbstractConceptsCard() {
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                             <Info size={18} className="text-purple-400" />
-                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                                 ¿Qué veo aquí?
                             </h3>
                         </div>
 
-                        <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>
-                            Cada punto es un <strong style={{ color: '#e2e8f0' }}>Concepto</strong> de tu grafo
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+                            Cada punto es un <strong style={{ color: 'var(--text-primary)' }}>Concepto</strong> de tu grafo
                             de conocimiento.
                         </p>
 
                         <div
                             style={{
-                                background: '#1e293b',
+                                background: 'var(--surface)',
                                 borderRadius: 8,
                                 padding: 12,
                                 marginBottom: 16,
-                                border: '1px solid #334155',
+                                border: '1px solid var(--border)',
                             }}
                         >
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8 }}>
                                 EJES
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.7 }}>
-                                <strong style={{ color: '#e2e8f0' }}>X — Grado:</strong> Cuántos archivos lo
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                                <strong style={{ color: 'var(--text-primary)' }}>X — Grado:</strong> Cuántos archivos lo
                                 mencionan. Más a la derecha = más popular.
                                 <br />
-                                <strong style={{ color: '#e2e8f0' }}>Y — Certeza:</strong> Peso promedio de
+                                <strong style={{ color: 'var(--text-primary)' }}>Y — Certeza:</strong> Peso promedio de
                                 sus relaciones. Más arriba = mayor confianza.
                             </div>
                         </div>
 
                         <div
                             style={{
-                                background: '#1e293b',
+                                background: 'var(--surface)',
                                 borderRadius: 8,
                                 padding: 12,
                                 marginBottom: 16,
-                                border: '1px solid #334155',
+                                border: '1px solid var(--border)',
                             }}
                         >
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8 }}>
                                 INTERPRETACIÓN
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.7 }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                                 <strong style={{ color: '#34d399' }}>↗ Arriba-derecha:</strong> Conceptos concretos y
                                 frecuentes (pilares).
                                 <br />
@@ -250,7 +251,7 @@ export default function AbstractConceptsCard() {
                                     border: '1px solid #22c55e30',
                                 }}
                             >
-                                ✅ {message}
+                                 {message}
                             </div>
                         )}
                     </div>

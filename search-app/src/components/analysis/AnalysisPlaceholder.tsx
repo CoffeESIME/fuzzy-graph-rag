@@ -61,7 +61,7 @@ export default function AnalysisPlaceholder(props: AnalysisPlaceholderProps) {
                 </div>
 
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>
-                    🛠️ {info.title}
+                     {info.title}
                 </h2>
 
                 <p style={{ maxWidth: 500, color: 'var(--text-secondary)', lineHeight: 1.6 }}>

@@ -1,3 +1,4 @@
+import { nodeColors, canonicalType } from '../graph/visualSystem';
 import { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -37,7 +38,7 @@ export default function GraphVisualizerThree({
 
         // 1. Scene setup
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0f172a); // Mismo fondo que el 2D
+        scene.background = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--background').trim()); // Mismo fondo que el 2D
         sceneRef.current = scene;
 
         // 2. Camera setup
@@ -67,8 +68,15 @@ export default function GraphVisualizerThree({
         directionalLight.position.set(100, 100, 100);
         scene.add(directionalLight);
 
+        const updateTheme = () => {
+            scene.background = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--background').trim());
+            linkLinesRef.current.forEach(line => (line.material as THREE.LineBasicMaterial).color.set(getComputedStyle(document.documentElement).getPropertyValue('--graph-edge').trim()));
+        };
+        const themeObserver = new MutationObserver(updateTheme);
+        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
         // Cleanup
         return () => {
+            themeObserver.disconnect();
             if (mountRef.current && renderer.domElement) {
                 mountRef.current.removeChild(renderer.domElement);
             }
@@ -106,20 +114,12 @@ export default function GraphVisualizerThree({
 
         // Crear geometría y material compartidos para optimizar
         const sphereGeo = new THREE.SphereGeometry(1, 16, 16); // Radio base 1, escalaremos
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.6 });
+        const lineMaterial = new THREE.LineBasicMaterial({ color: getComputedStyle(document.documentElement).getPropertyValue('--graph-edge').trim(), transparent: true, opacity: 0.6 });
 
         // Nodos
         graphData.nodes.forEach((node: any) => {
-            let color = 0x64748b; // Slate default
-            let radius = 5;
-
-            if (node.type === 'Concept') {
-                color = 0x8b5cf6; // Violet
-                radius = 7;
-            } else if (node.type === 'DigitalAsset') {
-                color = 0x10b981; // Emerald
-                radius = 7;
-            }
+            const color = nodeColors[canonicalType(node.type)] ?? '#78818c';
+            const radius = ['Concept','DigitalAsset'].includes(node.type) ? 7 : 5;
 
             const material = new THREE.MeshLambertMaterial({ color });
             const mesh = new THREE.Mesh(sphereGeo, material);

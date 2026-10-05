@@ -1,3 +1,4 @@
+import ChartFrame from '../graph/ChartFrame';
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ResponsiveHeatMap } from '@nivo/heatmap';
@@ -20,8 +21,8 @@ interface AnalysisResponse {
 type JaccardMode = 'standard' | 'fuzzy';
 
 const MODES: { key: JaccardMode; label: string; icon: string }[] = [
-    { key: 'standard', label: 'Clásico', icon: '📐' },
-    { key: 'fuzzy', label: 'Difuso', icon: '🌊' },
+    { key: 'standard', label: 'Clásico', icon: '' },
+    { key: 'fuzzy', label: 'Difuso', icon: '' },
 ];
 
 const NARRATIVES: Record<JaccardMode, { title: string; desc: string; uso: string }> = {
@@ -78,19 +79,19 @@ export default function HeatmapAnalysisCard() {
 
     const theme = {
         background: 'transparent',
-        textColor: '#94a3b8',
+        textColor: 'var(--text-secondary)',
         fontSize: 10,
         axis: {
-            domain: { line: { stroke: '#334155', strokeWidth: 1 } },
-            ticks: { line: { stroke: '#334155', strokeWidth: 1 }, text: { fill: '#94a3b8', fontSize: 10 } },
-            legend: { text: { fill: '#64748b', fontSize: 11 } },
+            domain: { line: { stroke: 'var(--border)', strokeWidth: 1 } },
+            ticks: { line: { stroke: 'var(--border)', strokeWidth: 1 }, text: { fill: 'var(--text-secondary)', fontSize: 10 } },
+            legend: { text: { fill: 'var(--text-muted)', fontSize: 11 } },
         },
         labels: { text: { fontSize: 9 } },
         tooltip: {
             container: {
-                background: '#0f172a', color: '#f8fafc', fontSize: 12,
+                background: 'var(--background-secondary)', color: 'var(--text-primary)', fontSize: 12,
                 borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                padding: '10px 14px', border: '1px solid #334155',
+                padding: '10px 14px', border: '1px solid var(--border)',
             },
         },
     };
@@ -98,8 +99,8 @@ export default function HeatmapAnalysisCard() {
     const colorScheme = method === 'fuzzy' ? 'purples' : 'reds';
     const accentColor = method === 'fuzzy' ? '#a78bfa' : '#fca5a5';
     const accentGradient = method === 'fuzzy'
-        ? 'linear-gradient(90deg, #0f172a, #5b21b6, #7c3aed, #a78bfa, #c4b5fd)'
-        : 'linear-gradient(90deg, #0f172a, #7f1d1d, #dc2626, #ef4444, #fca5a5)';
+        ? 'var(--gradient-primary)'
+        : 'var(--gradient-primary)';
 
     return (
         <div style={{ padding: 24, paddingBottom: 60, width: '100%' }}>
@@ -125,7 +126,7 @@ export default function HeatmapAnalysisCard() {
             {error ? (
                 <div className="p-8 text-red-500 border border-red-200 rounded">{error}</div>
             ) : (
-                <div style={{ display: 'flex', gap: 20 }}>
+                <div className="responsive-panels" style={{ display: 'flex', gap: 20 }}>
                     {/* Main Heatmap */}
                     <div
                         className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -142,7 +143,7 @@ export default function HeatmapAnalysisCard() {
                             </div>
                         ) : (
                             <div style={{ height: 700 }}>
-                                <ResponsiveHeatMap
+                                <ChartFrame title="Matriz de relaciones"><ResponsiveHeatMap
                                     data={data}
                                     margin={{ top: 120, right: 20, bottom: 20, left: 120 }}
                                     valueFormat=">-.2f"
@@ -161,11 +162,11 @@ export default function HeatmapAnalysisCard() {
                                         minValue: 0,
                                         maxValue: 1,
                                     }}
-                                    emptyColor="#0f172a"
+                                    emptyColor="var(--background-secondary)"
                                     borderWidth={1}
-                                    borderColor="#1e293b"
+                                    borderColor="var(--surface)"
                                     labelTextColor={({ value }) =>
-                                        (value ?? 0) > 0.5 ? '#fef2f2' : '#64748b'
+                                        (value ?? 0) > 0.5 ? '#fef2f2' : 'var(--text-muted)'
                                     }
                                     theme={theme}
                                     hoverTarget="cell"
@@ -173,8 +174,8 @@ export default function HeatmapAnalysisCard() {
                                     motionConfig="gentle"
                                     tooltip={({ cell }) => (
                                         <div style={{
-                                            background: '#0f172a', border: '1px solid #334155',
-                                            borderRadius: 8, padding: '10px 14px', color: '#f8fafc',
+                                            background: 'var(--background-secondary)', border: '1px solid var(--border)',
+                                            borderRadius: 8, padding: '10px 14px', color: 'var(--text-primary)',
                                             fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
                                         }}>
                                             <div style={{ fontWeight: 700, marginBottom: 4 }}>
@@ -192,7 +193,7 @@ export default function HeatmapAnalysisCard() {
                                             </div>
                                         </div>
                                     )}
-                                />
+                                /></ChartFrame>
                             </div>
                         )}
                     </div>
@@ -205,7 +206,7 @@ export default function HeatmapAnalysisCard() {
                         {/* Mode Toggle */}
                         <div style={{
                             display: 'flex', borderRadius: 8, overflow: 'hidden',
-                            border: '1px solid #334155', marginBottom: 20,
+                            border: '1px solid var(--border)', marginBottom: 20,
                         }}>
                             {MODES.map(m => (
                                 <button
@@ -217,8 +218,8 @@ export default function HeatmapAnalysisCard() {
                                         transition: 'all 0.25s ease',
                                         background: method === m.key
                                             ? (m.key === 'fuzzy' ? '#7c3aed' : '#dc2626')
-                                            : '#0f172a',
-                                        color: method === m.key ? '#ffffff' : '#64748b',
+                                            : 'var(--background-secondary)',
+                                        color: method === m.key ? '#ffffff' : 'var(--text-muted)',
                                     }}
                                 >
                                     {m.icon} {m.label}
@@ -228,14 +229,14 @@ export default function HeatmapAnalysisCard() {
 
                         {/* Threshold Slider */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                                     UMBRAL DE CONFIANZA
                                 </div>
-                                <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 700 }}>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 700 }}>
                                     {minWeight.toFixed(2)}
                                 </div>
                             </div>
@@ -246,7 +247,7 @@ export default function HeatmapAnalysisCard() {
                                 onChange={(e) => setMinWeight(parseFloat(e.target.value))}
                                 style={{ width: '100%', cursor: 'pointer', accentColor }}
                             />
-                            <p style={{ fontSize: '0.65rem', color: '#64748b', margin: '8px 0 0 0', lineHeight: 1.4 }}>
+                            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', margin: '8px 0 0 0', lineHeight: 1.4 }}>
                                 Ignora conexiones menores al umbral para reducir el ruido.
                             </p>
                         </div>
@@ -254,42 +255,42 @@ export default function HeatmapAnalysisCard() {
                         {/* Dynamic Title */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                             <Info size={18} style={{ color: accentColor }} />
-                            <h3 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                            <h3 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                                 {narrative.title}
                             </h3>
                         </div>
 
                         {/* Description */}
-                        <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.7, marginBottom: 16 }}>
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 16 }}>
                             {narrative.desc}
                         </p>
 
                         {/* Uso */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>
                                 USO
                             </div>
-                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
                                 {narrative.uso}
                             </p>
                         </div>
 
                         {/* Color scale */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 8 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8 }}>
                                 ESCALA DE SIMILITUD
                             </div>
                             <div style={{
                                 height: 12, borderRadius: 6, marginBottom: 6,
                                 background: accentGradient,
                             }} />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: '#64748b' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
                                 <span>0.0 — Sin relación</span>
                                 <span>1.0 — Idénticos</span>
                             </div>
@@ -297,14 +298,14 @@ export default function HeatmapAnalysisCard() {
 
                         {/* Formula */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>
                                 FÓRMULA
                             </div>
                             <p style={{
-                                fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.5, margin: 0,
+                                fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0,
                                 fontFamily: 'monospace',
                             }}>
                                 {method === 'fuzzy' ? (
@@ -313,7 +314,7 @@ export default function HeatmapAnalysisCard() {
                                     </>
                                 ) : (
                                     <>
-                                        <strong style={{ color: '#e2e8f0' }}>J</strong> = |A ∩ B| / |A ∪ B|
+                                        <strong style={{ color: 'var(--text-primary)' }}>J</strong> = |A ∩ B| / |A ∪ B|
                                     </>
                                 )}
                             </p>
@@ -325,7 +326,7 @@ export default function HeatmapAnalysisCard() {
                                 padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
                                 border: '1px solid #22c55e30',
                             }}>
-                                ✅ {message}
+                                 {message}
                             </div>
                         )}
                     </div>

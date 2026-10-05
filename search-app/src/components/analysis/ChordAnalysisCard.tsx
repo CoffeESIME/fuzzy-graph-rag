@@ -1,3 +1,4 @@
+import ChartFrame from '../graph/ChartFrame';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ResponsiveChord } from '@nivo/chord';
@@ -22,12 +23,12 @@ type ChordMode = 'standard' | 'fuzzy';
 const NARRATIVES: Record<ChordMode, { title: string; icon: string; desc: string }> = {
     standard: {
         title: 'Flujo Literal',
-        icon: '🔗',
+        icon: '',
         desc: 'Cuenta el volumen físico de archivos que conectan dos categorías. Ideal para ver la distribución de tu base de datos.',
     },
     fuzzy: {
         title: 'Flujo Semántico',
-        icon: '🧠',
+        icon: '',
         desc: 'Filtra el ruido usando los pesos de la IA. Muestra cintas gruesas solo cuando la IA tiene alta certeza de que dos categorías están profundamente relacionadas en el mismo contexto.',
     },
 };
@@ -37,12 +38,12 @@ const NARRATIVES: Record<ChordMode, { title: string; icon: string; desc: string 
 const CATEGORY_COLORS = ['#60a5fa', '#34d399', '#f87171', '#a78bfa', '#fbbf24', '#f472b6'];
 
 const CATEGORY_ICONS: Record<string, string> = {
-    Person: '👤',
-    Organization: '🏢',
-    Location: '📍',
-    Concept: '💡',
-    Event: '📅',
-    Project: '📁',
+    Person: '',
+    Organization: '',
+    Location: '',
+    Concept: '',
+    Event: '',
+    Project: '',
 };
 
 export default function ChordAnalysisCard() {
@@ -92,7 +93,7 @@ export default function ChordAnalysisCard() {
                     <button onClick={() => navigate('/analysis')} className="btn-secondary">Back</button>
                     <div>
                         <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-100">
-                            🍩 Diagrama de Cuerdas
+                             Diagrama de Cuerdas
                         </h2>
                         <p className="text-sm text-slate-500">
                             Flujo de información entre categorías del grafo
@@ -107,7 +108,7 @@ export default function ChordAnalysisCard() {
             {error ? (
                 <div className="p-8 text-red-500 border border-red-200 rounded">{error}</div>
             ) : (
-                <div style={{ display: 'flex', gap: 20 }}>
+                <div className="responsive-panels" style={{ display: 'flex', gap: 20 }}>
                     {/* Chart */}
                     <div
                         className="bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -123,7 +124,7 @@ export default function ChordAnalysisCard() {
                                 Sin datos de flujo entre categorías.
                             </div>
                         ) : (
-                            <ResponsiveChord
+                            <ChartFrame title="Relaciones entre comunidades"><ResponsiveChord
                                 data={data.matrix}
                                 keys={data.keys}
                                 margin={{ top: 60, right: 60, bottom: 60, left: 60 }}
@@ -140,15 +141,15 @@ export default function ChordAnalysisCard() {
                                 label="id"
                                 labelOffset={12}
                                 labelRotation={-90}
-                                labelTextColor="#cbd5e1"
+                                labelTextColor="var(--text-secondary)"
                                 arcTooltip={({ arc }) => (
                                     <div
                                         style={{
-                                            background: '#0f172a',
-                                            color: '#f8fafc',
+                                            background: 'var(--background-secondary)',
+                                            color: 'var(--text-primary)',
                                             padding: '8px 14px',
                                             borderRadius: 8,
-                                            border: '1px solid #334155',
+                                            border: '1px solid var(--border)',
                                             fontSize: 12,
                                         }}
                                     >
@@ -156,9 +157,9 @@ export default function ChordAnalysisCard() {
                                             {CATEGORY_ICONS[arc.id] || ''} {arc.id}
                                         </strong>
                                         <br />
-                                        <span style={{ color: '#94a3b8' }}>
+                                        <span style={{ color: 'var(--text-secondary)' }}>
                                             Total {method === 'fuzzy' ? 'peso' : 'flujo'}:{' '}
-                                            <strong style={{ color: '#e2e8f0' }}>
+                                            <strong style={{ color: 'var(--text-primary)' }}>
                                                 {typeof arc.value === 'number' ? arc.value.toFixed(method === 'fuzzy' ? 2 : 0) : arc.value}
                                             </strong>
                                         </span>
@@ -167,11 +168,11 @@ export default function ChordAnalysisCard() {
                                 ribbonTooltip={({ ribbon }) => (
                                     <div
                                         style={{
-                                            background: '#0f172a',
-                                            color: '#f8fafc',
+                                            background: 'var(--background-secondary)',
+                                            color: 'var(--text-primary)',
                                             padding: '10px 14px',
                                             borderRadius: 8,
-                                            border: '1px solid #334155',
+                                            border: '1px solid var(--border)',
                                             fontSize: 12,
                                         }}
                                     >
@@ -184,9 +185,9 @@ export default function ChordAnalysisCard() {
                                                 {CATEGORY_ICONS[ribbon.target.id] || ''} {ribbon.target.id}
                                             </span>
                                         </div>
-                                        <span style={{ color: '#94a3b8' }}>
+                                        <span style={{ color: 'var(--text-secondary)' }}>
                                             {method === 'fuzzy' ? 'Peso difuso' : 'Archivos compartidos'}:{' '}
-                                            <strong style={{ color: '#e2e8f0' }}>
+                                            <strong style={{ color: 'var(--text-primary)' }}>
                                                 {typeof ribbon.source.value === 'number'
                                                     ? ribbon.source.value.toFixed(method === 'fuzzy' ? 2 : 0)
                                                     : ribbon.source.value}
@@ -195,18 +196,18 @@ export default function ChordAnalysisCard() {
                                     </div>
                                 )}
                                 theme={{
-                                    labels: { text: { fill: '#cbd5e1', fontSize: 12, fontWeight: 600 } },
+                                    labels: { text: { fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 } },
                                     tooltip: {
                                         container: {
-                                            background: '#0f172a',
-                                            color: '#f8fafc',
+                                            background: 'var(--background-secondary)',
+                                            color: 'var(--text-primary)',
                                             fontSize: 12,
                                             borderRadius: 8,
-                                            border: '1px solid #334155',
+                                            border: '1px solid var(--border)',
                                         },
                                     },
                                 }}
-                            />
+                            /></ChartFrame>
                         )}
                     </div>
 
@@ -218,7 +219,7 @@ export default function ChordAnalysisCard() {
                         {/* Mode Toggle */}
                         <div style={{
                             display: 'flex', borderRadius: 8, overflow: 'hidden',
-                            border: '1px solid #334155', marginBottom: 16,
+                            border: '1px solid var(--border)', marginBottom: 16,
                         }}>
                             {(['standard', 'fuzzy'] as ChordMode[]).map(m => (
                                 <button
@@ -230,25 +231,25 @@ export default function ChordAnalysisCard() {
                                         transition: 'all 0.25s ease',
                                         background: method === m
                                             ? (m === 'fuzzy' ? '#7c3aed' : '#0ea5e9')
-                                            : '#0f172a',
-                                        color: method === m ? '#ffffff' : '#64748b',
+                                            : 'var(--background-secondary)',
+                                        color: method === m ? '#ffffff' : 'var(--text-muted)',
                                     }}
                                 >
-                                    {m === 'standard' ? '🔗 Standard' : '🧠 Fuzzy'}
+                                    {m === 'standard' ? ' Standard' : ' Fuzzy'}
                                 </button>
                             ))}
                         </div>
 
                         {/* Threshold Slider */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                                     UMBRAL DE CONFIANZA
                                 </div>
-                                <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 700 }}>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 700 }}>
                                     {minWeight.toFixed(1)}
                                 </div>
                             </div>
@@ -262,40 +263,40 @@ export default function ChordAnalysisCard() {
                                     accentColor: method === 'fuzzy' ? '#7c3aed' : '#0ea5e9'
                                 }}
                             />
-                            <p style={{ fontSize: '0.65rem', color: '#64748b', margin: '8px 0 0 0', lineHeight: 1.4 }}>
+                            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', margin: '8px 0 0 0', lineHeight: 1.4 }}>
                                 Ignora conexiones menores al umbral para reducir el ruido visual.
                             </p>
                         </div>
 
                         {/* Dynamic Narrative */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                            border: '1px solid #334155',
+                            background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                            border: '1px solid var(--border)',
                         }}>
-                            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc', marginBottom: 6 }}>
+                            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                                 {narrative.icon} {narrative.title}
                             </div>
-                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                                 {narrative.desc}
                             </p>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                             <Info size={18} className="text-cyan-400" />
-                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                                 Interconexión de Categorías
                             </h3>
                         </div>
 
-                        <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>
-                            Cada <strong style={{ color: '#e2e8f0' }}>arco</strong> representa una categoría.
-                            Las <strong style={{ color: '#e2e8f0' }}>cintas</strong> muestran{' '}
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+                            Cada <strong style={{ color: 'var(--text-primary)' }}>arco</strong> representa una categoría.
+                            Las <strong style={{ color: 'var(--text-primary)' }}>cintas</strong> muestran{' '}
                             {method === 'fuzzy'
                                 ? 'la fuerza semántica de la conexión entre categorías.'
                                 : 'cuántos archivos (DigitalAssets) conectan una categoría con otra.'}
                         </p>
 
-                        <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 20 }}>
+                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
                             {method === 'fuzzy'
                                 ? 'Una cinta gruesa = alta certeza de la IA en esa conexión.'
                                 : 'Una cinta gruesa = muchos archivos mencionan ambas categorías.'}
@@ -304,10 +305,10 @@ export default function ChordAnalysisCard() {
 
                         {/* Category Legend */}
                         <div style={{
-                            background: '#1e293b', borderRadius: 8, padding: 12,
-                            border: '1px solid #334155'
+                            background: 'var(--surface)', borderRadius: 8, padding: 12,
+                            border: '1px solid var(--border)'
                         }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 10 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 10 }}>
                                 CATEGORÍAS
                             </div>
                             {data?.keys.map((name, i) => (
@@ -320,7 +321,7 @@ export default function ChordAnalysisCard() {
                                         background: CATEGORY_COLORS[i] || '#666',
                                         flexShrink: 0
                                     }} />
-                                    <span style={{ color: '#94a3b8' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>
                                         {CATEGORY_ICONS[name] || ''} {name}
                                     </span>
                                 </div>
@@ -333,7 +334,7 @@ export default function ChordAnalysisCard() {
                                 padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
                                 border: '1px solid #22c55e30'
                             }}>
-                                ✅ {message}
+                                 {message}
                             </div>
                         )}
                     </div>

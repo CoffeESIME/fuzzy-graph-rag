@@ -13,23 +13,23 @@ import {
 const API = '/api';
 
 const VECTOR_OPTS = [
-    { id: 'visual_siglip', label: 'Visual SigLIP', icon: '🖼️' },
-    { id: 'visual_semantic', label: 'Visual Semantic', icon: '🎨' },
-    { id: 'text_ocr', label: 'Text OCR', icon: '📝' },
-    { id: 'audio_clap', label: 'Audio CLAP', icon: '🎵' },
-    { id: 'audio_transcript', label: 'Audio Transcript', icon: '🎙️' },
-    { id: 'text_chunk', label: 'Text Chunk', icon: '📄' },
-    { id: 'user_memory_required', label: 'User Memory', icon: '🧠' },
+    { id: 'visual_siglip', label: 'Visual SigLIP', icon: '' },
+    { id: 'visual_semantic', label: 'Visual Semantic', icon: '' },
+    { id: 'text_ocr', label: 'Text OCR', icon: '' },
+    { id: 'audio_clap', label: 'Audio CLAP', icon: '' },
+    { id: 'audio_transcript', label: 'Audio Transcript', icon: '' },
+    { id: 'text_chunk', label: 'Text Chunk', icon: '' },
+    { id: 'user_memory_required', label: 'User Memory', icon: '' },
 ];
 
 const OPERATION_OPTS = [
-    { id: 'standard', label: '📄 Estándar (1 archivo = 1 asset)' },
-    { id: 'merge_ocr', label: '📑 Merge OCR (N archivos = 1 asset)' },
+    { id: 'standard', label: ' Estándar (1 archivo = 1 asset)' },
+    { id: 'merge_ocr', label: ' Merge OCR (N archivos = 1 asset)' },
 ];
 
 const PRIVACY_OPTS = [
-    { id: 'strict_local', label: '🔒 Estricto Local (no cloud AI)' },
-    { id: 'public_cloud', label: '☁️ Nube Pública (OpenAI, etc.)' },
+    { id: 'strict_local', label: ' Estricto Local (no cloud AI)' },
+    { id: 'public_cloud', label: ' Nube Pública (OpenAI, etc.)' },
 ];
 
 interface FileGroup {
@@ -60,7 +60,7 @@ function getMimeIcon(mime: string) {
     if (mime.startsWith('audio/')) return <Music size={14} style={{ color: '#22c55e' }} />;
     if (mime.startsWith('video/')) return <Video size={14} style={{ color: '#ef4444' }} />;
     if (mime.startsWith('text/')) return <FileText size={14} style={{ color: '#3b82f6' }} />;
-    return <File size={14} style={{ color: '#64748b' }} />;
+    return <File size={14} style={{ color: 'var(--text-muted)' }} />;
 }
 
 function formatSize(bytes: number): string {
@@ -111,14 +111,14 @@ function FilePreview({ file }: { file: File }) {
     }
     if (textContent !== null) {
         return <pre style={{
-            background: '#0f172a', padding: 10, borderRadius: 6, fontSize: '0.7rem',
-            color: '#94a3b8', maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap',
-            border: '1px solid #1e293b', margin: 0
+            background: 'var(--background-secondary)', padding: 10, borderRadius: 6, fontSize: '0.7rem',
+            color: 'var(--text-secondary)', maxHeight: 200, overflow: 'auto', whiteSpace: 'pre-wrap',
+            border: '1px solid var(--surface)', margin: 0
         }}>{textContent}</pre>;
     }
 
-    return <p style={{ color: '#475569', fontSize: '0.75rem', fontStyle: 'italic' }}>
-        📄 Preview no disponible para <code>{mime || 'tipo desconocido'}</code>
+    return <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontStyle: 'italic' }}>
+         Preview no disponible para <code>{mime || 'tipo desconocido'}</code>
     </p>;
 }
 
@@ -137,7 +137,7 @@ function FileUploader({ onFilesAdded }: { onFilesAdded: (files: File[]) => void 
 
     return (
         <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#f8fafc', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Upload size={16} style={{ color: '#818cf8' }} /> Cargar Archivos
             </h3>
             <div
@@ -146,17 +146,17 @@ function FileUploader({ onFilesAdded }: { onFilesAdded: (files: File[]) => void 
                 onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
                 onClick={() => inputRef.current?.click()}
                 style={{
-                    border: `2px dashed ${dragging ? '#818cf8' : '#334155'}`,
+                    border: `2px dashed ${dragging ? '#818cf8' : 'var(--border)'}`,
                     borderRadius: 12, padding: '32px 24px', textAlign: 'center',
                     cursor: 'pointer', transition: 'all 0.2s',
-                    background: dragging ? '#818cf810' : '#1e293b40',
+                    background: dragging ? '#818cf810' : 'color-mix(in srgb, var(--surface) 25%, transparent)',
                 }}
             >
-                <Upload size={28} style={{ color: dragging ? '#818cf8' : '#475569', marginBottom: 8 }} />
-                <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: 4 }}>
+                <Upload size={28} style={{ color: dragging ? '#818cf8' : 'var(--text-muted)', marginBottom: 8 }} />
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 4 }}>
                     Arrastra archivos aquí o <strong style={{ color: '#818cf8' }}>haz clic para seleccionar</strong>
                 </p>
-                <p style={{ color: '#475569', fontSize: '0.7rem' }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
                     Imágenes, audio, video, texto, PDF, etc.
                 </p>
             </div>
@@ -184,17 +184,17 @@ function UngroupedFiles({ files, ungroupedNames }: { files: File[]; ungroupedNam
                 padding: 16, borderRadius: 8, background: '#22c55e08',
                 border: '1px solid #22c55e20', color: '#86efac', fontSize: '0.85rem'
             }}>
-                ✨ Todos los archivos han sido asignados a grupos.
+                 Todos los archivos han sido asignados a grupos.
             </div>
         );
     }
 
     return (
         <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#f8fafc', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                📋 Archivos Sin Asignar
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                 Archivos Sin Asignar
             </h3>
-            <p style={{ color: '#64748b', fontSize: '0.75rem', marginBottom: 10 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: 10 }}>
                 <strong>{ungroupedFiles.length}</strong> archivo(s) disponibles para agrupar
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -202,24 +202,24 @@ function UngroupedFiles({ files, ungroupedNames }: { files: File[]; ungroupedNam
                     const expanded = expandedFile === f.name;
                     return (
                         <div key={f.name} style={{
-                            background: '#0f172a', borderRadius: 8, border: '1px solid #1e293b', overflow: 'hidden'
+                            background: 'var(--background-secondary)', borderRadius: 8, border: '1px solid var(--surface)', overflow: 'hidden'
                         }}>
                             <div onClick={() => setExpandedFile(expanded ? null : f.name)}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
                                     cursor: 'pointer', fontSize: '0.8rem'
                                 }}>
-                                {expanded ? <ChevronDown size={12} style={{ color: '#64748b' }} /> : <ChevronRight size={12} style={{ color: '#64748b' }} />}
+                                {expanded ? <ChevronDown size={12} style={{ color: 'var(--text-muted)' }} /> : <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} />}
                                 {getMimeIcon(f.type || '')}
-                                <span style={{ color: '#f8fafc', fontWeight: 500 }}>{f.name}</span>
-                                <span style={{ color: '#475569', fontSize: '0.7rem' }}>({formatSize(f.size)})</span>
+                                <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{f.name}</span>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>({formatSize(f.size)})</span>
                                 <span style={{
                                     padding: '1px 6px', borderRadius: 4, fontSize: '0.6rem',
-                                    background: '#334155', color: '#94a3b8'
+                                    background: 'var(--border)', color: 'var(--text-secondary)'
                                 }}>{f.type || 'unknown'}</span>
                             </div>
                             {expanded && (
-                                <div style={{ padding: '8px 12px 12px 32px', borderTop: '1px solid #1e293b' }}>
+                                <div style={{ padding: '8px 12px 12px 32px', borderTop: '1px solid var(--surface)' }}>
                                     <FilePreview file={f} />
                                 </div>
                             )}
@@ -295,31 +295,31 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
     if (ungroupedNames.length === 0) {
         return (
             <div style={{ padding: 16, borderRadius: 8, background: '#eab30808', border: '1px solid #eab30820', color: '#fbbf24', fontSize: '0.85rem' }}>
-                ⚠️ No hay archivos disponibles para agrupar. Carga archivos primero.
+                 No hay archivos disponibles para agrupar. Carga archivos primero.
             </div>
         );
     }
 
     const inputStyle: React.CSSProperties = {
         width: '100%', padding: '8px 12px', borderRadius: 6, fontSize: '0.8rem',
-        background: '#0f172a', border: '1px solid #334155', color: '#f8fafc', outline: 'none'
+        background: 'var(--background-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none'
     };
 
     return (
-        <div style={{ background: '#1e293b', borderRadius: 12, border: '1px solid #334155', padding: 20 }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#f8fafc', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)', padding: 20 }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <FolderPlus size={16} style={{ color: '#818cf8' }} /> Crear Nuevo Grupo
             </h3>
 
             {/* File selection */}
             <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block' }}>
+                    <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block' }}>
                         Selecciona archivos para el grupo
                     </label>
                     <button onClick={handleSelectAll} style={{
-                        background: 'transparent', border: '1px solid #334155', borderRadius: 4,
-                        padding: '2px 8px', fontSize: '0.65rem', color: '#cbd5e1', cursor: 'pointer',
+                        background: 'transparent', border: '1px solid var(--border)', borderRadius: 4,
+                        padding: '2px 8px', fontSize: '0.65rem', color: 'var(--text-secondary)', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', gap: 4
                     }}>
                         <Check size={10} />
@@ -329,14 +329,14 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
                 <div style={{
                     display: 'flex', flexDirection: 'column', gap: 4,
                     maxHeight: 180, overflow: 'auto', padding: 8, borderRadius: 6,
-                    background: '#0f172a', border: '1px solid #334155'
+                    background: 'var(--background-secondary)', border: '1px solid var(--border)'
                 }}>
                     {ungroupedNames.map(name => (
                         <label key={name} style={{
                             display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px',
                             borderRadius: 4, cursor: 'pointer', fontSize: '0.8rem',
                             background: selectedFiles.has(name) ? '#818cf815' : 'transparent',
-                            color: '#f8fafc'
+                            color: 'var(--text-primary)'
                         }}>
                             <input type="checkbox" checked={selectedFiles.has(name)}
                                 onChange={() => toggleFile(name)} style={{ accentColor: '#818cf8' }} />
@@ -354,7 +354,7 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
             {/* Operation & Privacy */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                 <div>
-                    <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                    <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
                         Tipo de Operación
                     </label>
                     <select value={operation} onChange={e => setOperation(e.target.value)}
@@ -365,8 +365,8 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
                     </select>
                 </div>
                 <div>
-                    <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                        🔐 Nivel de Privacidad
+                    <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                         Nivel de Privacidad
                     </label>
                     <select value={privacy} onChange={e => setPrivacy(e.target.value)}
                         style={{ ...inputStyle, cursor: 'pointer' }}>
@@ -379,7 +379,7 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
 
             {/* Vector types */}
             <div style={{ marginBottom: 16 }}>
-                <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 6 }}>
                     Vectores Deseados
                 </label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -387,9 +387,9 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
                         <button key={v.id} onClick={() => toggleVector(v.id)}
                             style={{
                                 padding: '5px 10px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600,
-                                background: vectors.has(v.id) ? '#818cf825' : '#0f172a',
-                                color: vectors.has(v.id) ? '#a5b4fc' : '#64748b',
-                                border: `1px solid ${vectors.has(v.id) ? '#818cf850' : '#334155'}`,
+                                background: vectors.has(v.id) ? '#818cf825' : 'var(--background-secondary)',
+                                color: vectors.has(v.id) ? '#a5b4fc' : 'var(--text-muted)',
+                                border: `1px solid ${vectors.has(v.id) ? '#818cf850' : 'var(--border)'}`,
                                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                                 transition: 'all 0.15s'
                             }}>
@@ -403,13 +403,13 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
             <div style={{ marginBottom: 16 }}>
                 <label style={{
                     display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-                    fontSize: '0.8rem', color: '#cbd5e1', marginBottom: 10
+                    fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: 10
                 }}>
                     <input type="checkbox" checked={discard} onChange={e => setDiscard(e.target.checked)}
                         style={{ accentColor: '#ef4444' }} />
-                    🗑️ Descartar Original (eliminar binarios después de extracción)
+                     Descartar Original (eliminar binarios después de extracción)
                 </label>
-                <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
                     Notas del Usuario (Opcional)
                 </label>
                 <textarea value={notes} onChange={e => setNotes(e.target.value)}
@@ -424,14 +424,14 @@ function GroupBuilder({ ungroupedNames, onCreateGroup }: {
                     padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', marginBottom: 10,
                     background: '#ef444415', color: '#fca5a5', border: '1px solid #ef444430'
                 }}>
-                    ❌ {error}
+                     {error}
                 </div>
             )}
 
             {/* Create button */}
             <button onClick={handleCreate} style={{
                 padding: '10px 20px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600,
-                background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff',
+                background: 'var(--gradient-primary)', color: '#fff',
                 border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
                 boxShadow: '0 2px 8px rgba(99,102,241,0.3)'
             }}>
@@ -454,26 +454,26 @@ function ReadyGroups({ groups, onDeleteGroup }: {
     if (groups.length === 0) {
         return (
             <div style={{
-                padding: 16, borderRadius: 8, background: '#1e293b30',
-                border: '1px solid #1e293b', color: '#64748b', fontSize: '0.85rem'
+                padding: 16, borderRadius: 8, background: 'color-mix(in srgb, var(--surface) 19%, transparent)',
+                border: '1px solid var(--surface)', color: 'var(--text-muted)', fontSize: '0.85rem'
             }}>
-                📭 No hay grupos creados aún.
+                 No hay grupos creados aún.
             </div>
         );
     }
 
     return (
         <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#f8fafc', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                📦 Grupos Listos ({groups.length})
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                 Grupos Listos ({groups.length})
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {groups.map(g => {
                     const exp = expandedId === g.id;
-                    const privIcon = g.privacyLevel === 'strict_local' ? '🔒' : '☁️';
+                    const privIcon = g.privacyLevel === 'strict_local' ? '' : '';
                     return (
                         <div key={g.id} style={{
-                            background: '#0f172a', borderRadius: 8, border: '1px solid #1e293b', overflow: 'hidden'
+                            background: 'var(--background-secondary)', borderRadius: 8, border: '1px solid var(--surface)', overflow: 'hidden'
                         }}>
                             <div onClick={() => setExpandedId(exp ? null : g.id)}
                                 style={{
@@ -481,13 +481,13 @@ function ReadyGroups({ groups, onDeleteGroup }: {
                                     cursor: 'pointer', fontSize: '0.85rem'
                                 }}>
                                 {exp ? <ChevronDown size={12} style={{ color: '#818cf8' }} /> : <ChevronRight size={12} style={{ color: '#818cf8' }} />}
-                                <span style={{ color: '#f8fafc', fontWeight: 600 }}>Grupo {g.id}</span>
-                                <span style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                                <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Grupo {g.id}</span>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                                     — {g.fileNames.length} archivo(s)
                                 </span>
                                 <span style={{
                                     padding: '1px 6px', borderRadius: 4, fontSize: '0.6rem',
-                                    background: '#334155', color: '#94a3b8'
+                                    background: 'var(--border)', color: 'var(--text-secondary)'
                                 }}>{g.operation}</span>
                                 <span style={{ fontSize: '0.7rem' }}>{privIcon}</span>
                                 <button onClick={e => { e.stopPropagation(); onDeleteGroup(g.id); }}
@@ -499,25 +499,25 @@ function ReadyGroups({ groups, onDeleteGroup }: {
                                 </button>
                             </div>
                             {exp && (
-                                <div style={{ padding: '0 14px 12px 32px', borderTop: '1px solid #1e293b' }}>
+                                <div style={{ padding: '0 14px 12px 32px', borderTop: '1px solid var(--surface)' }}>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 20px', marginTop: 8 }}>
                                         <div>
-                                            <span style={{ color: '#64748b', fontSize: '0.7rem' }}><strong>Archivos:</strong></span>
+                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}><strong>Archivos:</strong></span>
                                             {g.fileNames.map(fn => (
-                                                <div key={fn} style={{ color: '#94a3b8', fontSize: '0.75rem', paddingLeft: 8 }}>• {fn}</div>
+                                                <div key={fn} style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', paddingLeft: 8 }}>• {fn}</div>
                                             ))}
                                         </div>
                                         <div>
-                                            <p style={{ color: '#64748b', fontSize: '0.7rem' }}>
-                                                <strong>Operación:</strong> <code style={{ color: '#cbd5e1' }}>{g.operation}</code>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+                                                <strong>Operación:</strong> <code style={{ color: 'var(--text-secondary)' }}>{g.operation}</code>
                                             </p>
-                                            <p style={{ color: '#64748b', fontSize: '0.7rem' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
                                                 <strong>Privacidad:</strong> {privIcon} {g.privacyLevel === 'strict_local' ? 'Estricto Local' : 'Nube Pública'}
                                             </p>
-                                            <p style={{ color: '#64748b', fontSize: '0.7rem' }}>
-                                                <strong>Descartar Original:</strong> {g.discardOriginal ? '✅ Sí' : '❌ No'}
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+                                                <strong>Descartar Original:</strong> {g.discardOriginal ? ' Sí' : ' No'}
                                             </p>
-                                            <p style={{ color: '#64748b', fontSize: '0.7rem' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
                                                 <strong>Vectores:</strong>{' '}
                                                 {g.vectors.map(v => (
                                                     <code key={v} style={{ color: '#a5b4fc', marginRight: 4 }}>{v}</code>
@@ -526,7 +526,7 @@ function ReadyGroups({ groups, onDeleteGroup }: {
                                         </div>
                                     </div>
                                     {g.notes && (
-                                        <p style={{ color: '#64748b', fontSize: '0.7rem', marginTop: 6 }}>
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: 6 }}>
                                             <strong>Notas:</strong> {g.notes}
                                         </p>
                                     )}
@@ -585,15 +585,15 @@ function TextIngestForm() {
 
     const inputStyle: React.CSSProperties = {
         width: '100%', padding: '8px 12px', borderRadius: 6, fontSize: '0.8rem',
-        background: '#0f172a', border: '1px solid #334155', color: '#f8fafc', outline: 'none'
+        background: 'var(--background-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none'
     };
 
     return (
         <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#f8fafc', marginBottom: 4 }}>
-                📝 Ingesta de Texto
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
+                 Ingesta de Texto
             </h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: 16 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 16 }}>
                 Ingresa texto directamente al sistema. Se guardará en MinIO y las tareas quedarán en <strong>ON_HOLD</strong>.
             </p>
 
@@ -601,30 +601,30 @@ function TextIngestForm() {
             <div style={{
                 display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16,
                 padding: '10px 14px', borderRadius: 8,
-                background: isMemory ? '#a855f715' : '#1e293b',
-                border: `1px solid ${isMemory ? '#a855f730' : '#334155'}`
+                background: isMemory ? '#a855f715' : 'var(--surface)',
+                border: `1px solid ${isMemory ? '#a855f730' : 'var(--border)'}`
             }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                     <input type="checkbox" checked={isMemory} onChange={e => setIsMemory(e.target.checked)}
                         style={{ accentColor: '#a855f7' }} />
-                    <Brain size={16} style={{ color: isMemory ? '#a855f7' : '#64748b' }} />
-                    <span style={{ color: isMemory ? '#c4b5fd' : '#94a3b8', fontSize: '0.85rem', fontWeight: 600 }}>
+                    <Brain size={16} style={{ color: isMemory ? '#a855f7' : 'var(--text-muted)' }} />
+                    <span style={{ color: isMemory ? '#c4b5fd' : 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 600 }}>
                         Memoria de Usuario
                     </span>
                 </label>
                 <span style={{
                     padding: '2px 8px', borderRadius: 4, fontSize: '0.65rem',
-                    background: isMemory ? '#a855f720' : '#334155',
-                    color: isMemory ? '#c4b5fd' : '#64748b'
+                    background: isMemory ? '#a855f720' : 'var(--border)',
+                    color: isMemory ? '#c4b5fd' : 'var(--text-muted)'
                 }}>
-                    {isMemory ? '🧠 memory_ prefix, STRICT_LOCAL, USER_MEMORY' : '📝 text_ prefix, TEXT_CHUNK'}
+                    {isMemory ? ' memory_ prefix, STRICT_LOCAL, USER_MEMORY' : ' text_ prefix, TEXT_CHUNK'}
                 </span>
             </div>
 
             {/* Title */}
             <div style={{ marginBottom: 12 }}>
-                <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                    📌 Título (opcional)
+                <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                     Título (opcional)
                 </label>
                 <input value={title} onChange={e => setTitle(e.target.value)}
                     placeholder="Ej: Notas de la reunión, Ideas del proyecto..."
@@ -633,23 +633,23 @@ function TextIngestForm() {
 
             {/* Content */}
             <div style={{ marginBottom: 12 }}>
-                <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                    📄 Contenido del texto
+                <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                     Contenido del texto
                 </label>
                 <textarea value={content} onChange={e => setContent(e.target.value)}
                     placeholder="Escribe o pega aquí el texto que deseas guardar y analizar..."
                     style={{ ...inputStyle, minHeight: 180, resize: 'vertical', fontFamily: 'inherit' }} />
                 {content && (
-                    <span style={{ color: '#475569', fontSize: '0.7rem', marginTop: 2, display: 'block' }}>
-                        📊 {charCount.toLocaleString()} caracteres | {wordCount.toLocaleString()} palabras
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: 2, display: 'block' }}>
+                         {charCount.toLocaleString()} caracteres | {wordCount.toLocaleString()} palabras
                     </span>
                 )}
             </div>
 
             {/* Notes */}
             <div style={{ marginBottom: 12 }}>
-                <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                    💬 Notas adicionales (opcional)
+                <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                     Notas adicionales (opcional)
                 </label>
                 <textarea value={userNotes} onChange={e => setUserNotes(e.target.value)}
                     placeholder="Contexto adicional, recordatorios, por qué es importante..."
@@ -659,8 +659,8 @@ function TextIngestForm() {
             {/* Privacy */}
             {!isMemory && (
                 <div style={{ marginBottom: 16 }}>
-                    <label style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
-                        🔐 Nivel de Privacidad
+                    <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                         Nivel de Privacidad
                     </label>
                     <select value={privacy} onChange={e => setPrivacy(e.target.value)}
                         style={{ ...inputStyle, cursor: 'pointer' }}>
@@ -672,14 +672,14 @@ function TextIngestForm() {
             )}
             {isMemory && (
                 <p style={{ color: '#a855f7', fontSize: '0.7rem', marginBottom: 16 }}>
-                    🔒 Privacidad forzada a <strong>Estricto Local</strong> para memorias de usuario
+                     Privacidad forzada a <strong>Estricto Local</strong> para memorias de usuario
                 </p>
             )}
 
             {/* Submit */}
             <button onClick={handleSubmit} disabled={sending} style={{
                 padding: '10px 24px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600,
-                background: 'linear-gradient(135deg, #22c55e, #4ade80)', color: '#0f172a',
+                background: 'var(--gradient-primary)', color: 'var(--background-secondary)',
                 border: 'none', cursor: sending ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', gap: 6,
                 boxShadow: '0 2px 8px rgba(34,197,94,0.3)',
@@ -697,16 +697,16 @@ function TextIngestForm() {
                     color: result.success ? '#86efac' : '#fca5a5',
                     border: `1px solid ${result.success ? '#22c55e30' : '#ef444430'}`
                 }}>
-                    {result.success ? '✅' : '❌'} {result.message}
+                    {result.success ? '' : ''} {result.message}
 
                     {result.success && result.asset && (
-                        <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#94a3b8' }}>
+                        <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             <p><strong>ID:</strong> <code style={{ color: '#818cf8' }}>{result.asset.id}</code></p>
-                            <p><strong>Archivo:</strong> <code style={{ color: '#cbd5e1' }}>{result.asset.filename}</code></p>
-                            <p><strong>Ruta MinIO:</strong> <code style={{ color: '#cbd5e1' }}>{result.asset.minio_path}</code></p>
+                            <p><strong>Archivo:</strong> <code style={{ color: 'var(--text-secondary)' }}>{result.asset.filename}</code></p>
+                            <p><strong>Ruta MinIO:</strong> <code style={{ color: 'var(--text-secondary)' }}>{result.asset.minio_path}</code></p>
                             <p><strong>Tareas creadas:</strong> {result.asset.vector_tasks_created}</p>
                             <p style={{ color: '#60a5fa', marginTop: 4 }}>
-                                💡 Las tareas están en ON_HOLD. Ve a "Control de Tareas" para iniciar el procesamiento.
+                                 Las tareas están en ON_HOLD. Ve a "Control de Tareas" para iniciar el procesamiento.
                             </p>
                         </div>
                     )}
@@ -822,18 +822,18 @@ export default function IngestGroupingTab() {
 
     const tabBtnStyle = (tab: SubTab): React.CSSProperties => ({
         padding: '8px 16px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600,
-        background: subTab === tab ? '#1e293b' : 'transparent',
-        color: subTab === tab ? '#f8fafc' : '#64748b',
-        border: subTab === tab ? '1px solid #334155' : '1px solid transparent',
+        background: subTab === tab ? 'var(--surface)' : 'transparent',
+        color: subTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
+        border: subTab === tab ? '1px solid var(--border)' : '1px solid transparent',
         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
     });
 
     return (
         <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', marginBottom: 4 }}>
-                📤 Ingesta y Agrupación
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                 Ingesta y Agrupación
             </h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: 20 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 20 }}>
                 Carga de archivos, agrupación por operación, configuración de vectores y envío al backend.
             </p>
 
@@ -864,7 +864,7 @@ export default function IngestGroupingTab() {
                                     <button onClick={handleSend} disabled={sending}
                                         style={{
                                             padding: '12px 28px', borderRadius: 8, fontSize: '0.9rem', fontWeight: 700,
-                                            background: 'linear-gradient(135deg, #22c55e, #4ade80)', color: '#0f172a',
+                                            background: 'var(--gradient-primary)', color: 'var(--background-secondary)',
                                             border: 'none', cursor: sending ? 'not-allowed' : 'pointer',
                                             display: 'flex', alignItems: 'center', gap: 8, width: '100%',
                                             justifyContent: 'center',
@@ -872,7 +872,7 @@ export default function IngestGroupingTab() {
                                             opacity: sending ? 0.7 : 1, transition: 'all 0.2s'
                                         }}>
                                         {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                                        🚀 Enviar al Servidor ({groups.length} grupo(s), {files.length} archivo(s))
+                                         Enviar al Servidor ({groups.length} grupo(s), {files.length} archivo(s))
                                     </button>
 
                                     {sendResult && (
@@ -882,10 +882,10 @@ export default function IngestGroupingTab() {
                                             color: sendResult.success ? '#86efac' : '#fca5a5',
                                             border: `1px solid ${sendResult.success ? '#22c55e30' : '#ef444430'}`
                                         }}>
-                                            {sendResult.success ? '✅' : '❌'} {sendResult.message}
+                                            {sendResult.success ? '' : ''} {sendResult.message}
 
                                             {sendResult.success && sendResult.assets && (
-                                                <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#94a3b8' }}>
+                                                <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                                                     {sendResult.assets.map((a, i) => (
                                                         <div key={i} style={{ marginBottom: 4 }}>
                                                             <strong>{i + 1}.</strong>{' '}
@@ -894,7 +894,7 @@ export default function IngestGroupingTab() {
                                                         </div>
                                                     ))}
                                                     <p style={{ color: '#60a5fa', marginTop: 6 }}>
-                                                        🔄 Estado limpiado. Puedes cargar nuevos archivos.
+                                                         Estado limpiado. Puedes cargar nuevos archivos.
                                                     </p>
                                                 </div>
                                             )}

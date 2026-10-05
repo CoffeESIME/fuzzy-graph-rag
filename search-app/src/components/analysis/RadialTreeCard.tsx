@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import ReactFlow, {
+import ReactFlow from '../graph/GraphCanvas';
+import {
     Controls,
     Background,
     useNodesState,
@@ -40,12 +41,12 @@ type RadialMode = 'standard' | 'fuzzy';
 const NARRATIVES: Record<RadialMode, { title: string; icon: string; desc: string }> = {
     standard: {
         title: 'Órbita Literal',
-        icon: '🌐',
+        icon: '',
         desc: 'Muestra los conceptos que coexisten más frecuentemente en tus archivos, sin importar el contexto profundo.',
     },
     fuzzy: {
         title: 'Órbita Semántica',
-        icon: '🧠',
+        icon: '',
         desc: 'Muestra los conceptos que resuenan con mayor fuerza y certeza. Los temas secundarios desaparecen, acercando las ideas verdaderamente afines al centro.',
     },
 };
@@ -60,7 +61,7 @@ const TYPE_COLORS: Record<string, { bg: string; border: string; text: string }> 
 };
 
 const TYPE_ICONS: Record<string, string> = {
-    Concept: '💡', Person: '👤', Location: '📍', Event: '📅', Organization: '🏢',
+    Concept: '', Person: '', Location: '', Event: '', Organization: '',
 };
 
 function getNodeStyle(level: number, type: string) {
@@ -132,7 +133,7 @@ export default function RadialTreeCard() {
             if (l0.length > 0) {
                 computedNodes.push({
                     id: l0[0].id,
-                    data: { label: `${TYPE_ICONS[l0[0].type || 'Concept'] || '💡'} ${l0[0].id}` },
+                    data: { label: l0[0].id, nodeType: l0[0].type || 'Concept' },
                     position: { x: 0, y: 0 },
                     style: getNodeStyle(0, l0[0].type || 'Concept'),
                 });
@@ -146,7 +147,7 @@ export default function RadialTreeCard() {
                 l1AngleMap[node.id] = angle;
                 computedNodes.push({
                     id: node.id,
-                    data: { label: `${TYPE_ICONS[node.type || 'Concept'] || '💡'} ${node.id}` },
+                    data: { label: node.id, nodeType: node.type || 'Concept' },
                     position: { x: R1 * Math.cos(angle), y: R1 * Math.sin(angle) },
                     style: getNodeStyle(1, node.type || 'Concept'),
                 });
@@ -172,7 +173,7 @@ export default function RadialTreeCard() {
                         : startAngle + (totalSpread * i) / (children.length - 1);
                     computedNodes.push({
                         id: node.id,
-                        data: { label: `${TYPE_ICONS[node.type || 'Concept'] || '💡'} ${node.id}` },
+                        data: { label: node.id, nodeType: node.type || 'Concept' },
                         position: { x: R2 * Math.cos(angle), y: R2 * Math.sin(angle) },
                         style: getNodeStyle(2, node.type || 'Concept'),
                     });
@@ -186,7 +187,7 @@ export default function RadialTreeCard() {
                 source: e.source,
                 target: e.target,
                 type: 'straight',
-                style: { stroke: '#475569', strokeWidth: 1.5 },
+                style: { stroke: 'var(--text-muted)', strokeWidth: 1.5 },
                 animated: false,
             }));
             setEdges(computedEdges);
@@ -259,7 +260,7 @@ export default function RadialTreeCard() {
                         </div>
                     )}
 
-                    <ReactFlow
+                    <ReactFlow title="Árbol radial"
                         nodes={nodes}
                         edges={edges}
                         onNodesChange={onNodesChange}
@@ -269,7 +270,7 @@ export default function RadialTreeCard() {
                         minZoom={0.1}
                         nodesDraggable={false}
                     >
-                        <Background color="#334155" gap={30} />
+                        <Background color="var(--border)" gap={30} />
                         <Controls />
                     </ReactFlow>
                 </div>
@@ -282,7 +283,7 @@ export default function RadialTreeCard() {
                     {/* Mode Toggle */}
                     <div style={{
                         display: 'flex', borderRadius: 8, overflow: 'hidden',
-                        border: '1px solid #334155', marginBottom: 16,
+                        border: '1px solid var(--border)', marginBottom: 16,
                     }}>
                         {(['standard', 'fuzzy'] as RadialMode[]).map(m => (
                             <button
@@ -294,25 +295,25 @@ export default function RadialTreeCard() {
                                     transition: 'all 0.25s ease',
                                     background: method === m
                                         ? (m === 'fuzzy' ? '#7c3aed' : '#0891b2')
-                                        : '#0f172a',
-                                    color: method === m ? '#ffffff' : '#64748b',
+                                        : 'var(--background-secondary)',
+                                    color: method === m ? '#ffffff' : 'var(--text-muted)',
                                 }}
                             >
-                                {m === 'standard' ? '🌐 Standard' : '🧠 Fuzzy'}
+                                {m === 'standard' ? ' Standard' : ' Fuzzy'}
                             </button>
                         ))}
                     </div>
 
                     {/* Threshold Slider */}
                     <div style={{
-                        background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                        border: '1px solid #334155',
+                        background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                        border: '1px solid var(--border)',
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                                 UMBRAL DE CONFIANZA
                             </div>
-                            <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 700 }}>
+                            <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 700 }}>
                                 {minWeight.toFixed(2)}
                             </div>
                         </div>
@@ -326,50 +327,50 @@ export default function RadialTreeCard() {
                                 accentColor: method === 'fuzzy' ? '#7c3aed' : '#0ea5e9'
                             }}
                         />
-                        <p style={{ fontSize: '0.65rem', color: '#64748b', margin: '8px 0 0 0', lineHeight: 1.4 }}>
+                        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', margin: '8px 0 0 0', lineHeight: 1.4 }}>
                             Ignora conexiones menores al umbral para reducir el ruido.
                         </p>
                     </div>
 
                     {/* Dynamic Narrative */}
                     <div style={{
-                        background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                        border: '1px solid #334155',
+                        background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                        border: '1px solid var(--border)',
                     }}>
-                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc', marginBottom: 6 }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
                             {narrative.icon} {narrative.title}
                         </div>
-                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                             {narrative.desc}
                         </p>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                         <Info size={18} className="text-cyan-400" />
-                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                             ¿Qué veo aquí?
                         </h3>
                     </div>
 
-                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>
-                        El <strong style={{ color: '#e2e8f0' }}>centro</strong> es el concepto raíz.
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+                        El <strong style={{ color: 'var(--text-primary)' }}>centro</strong> es el concepto raíz.
                         Los <strong style={{ color: '#a5b4fc' }}>nodos del anillo interior</strong> son sus
                         {method === 'fuzzy' ? ' 8 vecinos de mayor peso difuso.' : ' 8 vecinos más frecuentes (comparten archivos).'}
                         {' '}El <strong style={{ color: '#e0e7ff' }}>anillo exterior</strong> muestra los
                         vecinos de los vecinos.
                     </p>
 
-                    <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: 20 }}>
-                        ¿Quieres explorar más? <strong style={{ color: '#e2e8f0' }}>Haz click en cualquier nodo</strong> para
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
+                        ¿Quieres explorar más? <strong style={{ color: 'var(--text-primary)' }}>Haz click en cualquier nodo</strong> para
                         convertirlo en la nueva raíz.
                     </p>
 
                     {/* Type legend */}
                     <div style={{
-                        background: '#1e293b', borderRadius: 8, padding: 12, marginBottom: 16,
-                        border: '1px solid #334155'
+                        background: 'var(--surface)', borderRadius: 8, padding: 12, marginBottom: 16,
+                        border: '1px solid var(--border)'
                     }}>
-                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 10 }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 10 }}>
                             TIPOS DE ENTIDAD
                         </div>
                         {Object.entries(TYPE_COLORS).map(([name, c]) => (
@@ -382,7 +383,7 @@ export default function RadialTreeCard() {
                                     background: c.bg, border: `1px solid ${c.border}`,
                                     flexShrink: 0
                                 }} />
-                                <span style={{ color: '#94a3b8' }}>
+                                <span style={{ color: 'var(--text-secondary)' }}>
                                     {TYPE_ICONS[name]} {name}
                                 </span>
                             </div>
@@ -390,16 +391,16 @@ export default function RadialTreeCard() {
                     </div>
 
                     <div style={{
-                        background: '#1e293b', borderRadius: 8, padding: 12,
-                        border: '1px solid #334155'
+                        background: 'var(--surface)', borderRadius: 8, padding: 12,
+                        border: '1px solid var(--border)'
                     }}>
-                        <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, marginBottom: 6 }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>
                             NIVELES
                         </div>
-                        <p style={{ fontSize: '0.72rem', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
-                            <strong style={{ color: '#e2e8f0' }}>Nivel 0</strong> — Raíz (centro)<br />
-                            <strong style={{ color: '#e2e8f0' }}>Nivel 1</strong> — 8 vecinos directos<br />
-                            <strong style={{ color: '#e2e8f0' }}>Nivel 2</strong> — 3 vecinos por L1
+                        <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                            <strong style={{ color: 'var(--text-primary)' }}>Nivel 0</strong> — Raíz (centro)<br />
+                            <strong style={{ color: 'var(--text-primary)' }}>Nivel 1</strong> — 8 vecinos directos<br />
+                            <strong style={{ color: 'var(--text-primary)' }}>Nivel 2</strong> — 3 vecinos por L1
                         </p>
                     </div>
 
@@ -409,7 +410,7 @@ export default function RadialTreeCard() {
                             padding: '8px 12px', background: '#22c55e10', borderRadius: 6,
                             border: '1px solid #22c55e30'
                         }}>
-                            ✅ {message}
+                             {message}
                         </div>
                     )}
                 </div>
@@ -417,7 +418,7 @@ export default function RadialTreeCard() {
 
             {/* Bottom hint bar */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-slate-900/80 backdrop-blur px-4 py-2 rounded-full text-xs text-slate-400 border border-slate-700 shadow-sm pointer-events-none z-20">
-                🎯 Click en cualquier nodo para convertirlo en el nuevo centro
+                 Click en cualquier nodo para convertirlo en el nuevo centro
             </div>
         </div>
     );

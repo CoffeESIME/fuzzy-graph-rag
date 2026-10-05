@@ -159,7 +159,7 @@ function AssetGroupCard({ group, editedWeights, editedRelTypes, approvingIds, al
                         title="Validar conexiones con el LLM local"
                         style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.7rem', fontWeight: 600, padding: '4px 10px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.4)', background: 'rgba(99,102,241,0.1)', color: '#818cf8', cursor: validating ? 'not-allowed' : 'pointer', opacity: group.items.length === 0 ? 0.4 : 1 }}
                     >
-                        {validating ? <RefreshCw size={12} className="animate-spin" /> : '🤖'}
+                        {validating ? <RefreshCw size={12} className="animate-spin" /> : ''}
                         {validating ? 'Validando…' : 'Validar con LLM'}
                     </button>
                     <button onClick={() => setExpanded(e => !e)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}>
@@ -171,7 +171,7 @@ function AssetGroupCard({ group, editedWeights, editedRelTypes, approvingIds, al
             {/* LLM validation result note */}
             {llmNote && (
                 <div style={{ padding: '8px 20px', background: llmNote.removed > 0 ? 'rgba(99,102,241,0.08)' : 'rgba(16,185,129,0.08)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>{llmNote.removed > 0 ? '🧠' : '✅'}</span>
+                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>{llmNote.removed > 0 ? '' : ''}</span>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '0.72rem', fontWeight: 600, color: llmNote.removed > 0 ? '#818cf8' : '#34d399', marginBottom: 2 }}>
                             {llmNote.removed > 0 ? `${llmNote.removed} conexión(es) descartada(s) por el LLM` : 'El LLM validó todas las conexiones'}
@@ -357,7 +357,7 @@ function AssetGroupCard({ group, editedWeights, editedRelTypes, approvingIds, al
                                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: 3 }}>
-                                                {s.direction === 'seed_to_neighbor' ? 'Semilla ➞ Vecino' : 'Vecino ➞ Semilla'}
+                                                {s.direction === 'seed_to_neighbor' ? 'Semilla  Vecino' : 'Vecino  Semilla'}
                                             </div>
                                             <div style={{ fontWeight: 700, color: '#f472b6', fontSize: '1rem' }}>{s.target_concept_name}</div>
                                          </div>
@@ -691,9 +691,9 @@ export default function LatentExplorer() {
                         {/* Sort mode buttons */}
                         <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
                             {([
-                                { id: 'top_connected', label: '🏆 Top', title: 'Más conectados' },
-                                { id: 'random', label: '🎲 Aleatorio', title: 'Muestra aleatoria' },
-                                { id: 'least_connected', label: '🌱 Menos explorados', title: 'Menos conexiones' },
+                                { id: 'top_connected', label: ' Top', title: 'Más conectados' },
+                                { id: 'random', label: ' Aleatorio', title: 'Muestra aleatoria' },
+                                { id: 'least_connected', label: ' Menos explorados', title: 'Menos conexiones' },
                             ] as const).map(opt => (
                                 <button
                                     key={opt.id}

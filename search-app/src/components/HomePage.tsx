@@ -15,14 +15,14 @@ export default function HomePage() {
             <div style={{ textAlign: 'center', marginBottom: 60 }}>
                 <div style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)',
+                    width: 80, height: 80, borderRadius: '50%', background: 'var(--gradient-primary)',
                     marginBottom: 24, boxShadow: '0 0 40px rgba(99, 102, 241, 0.3)'
                 }}>
                     <Database size={40} color="white" />
                 </div>
                 <h1 style={{
                     fontSize: '3rem', fontWeight: 800, marginBottom: 16,
-                    background: 'linear-gradient(to right, var(--text-primary), var(--accent-indigo))',
+                    background: 'var(--gradient-primary)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
                 }}>
                     Multimodal Graph RAG

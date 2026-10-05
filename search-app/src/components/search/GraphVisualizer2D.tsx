@@ -1,4 +1,10 @@
-import { useCallback } from 'react';
+import VisualizationFrame, { type FigurePreset } from '../graph/VisualizationFrame';
+import GraphLegend from '../graph/GraphLegend';
+import AssetInspector from '../graph/AssetInspector';
+import { nodeColors, canonicalType, shapeFor } from '../graph/visualSystem';
+import { useCanvasTheme } from '../../hooks/useCanvasTheme';
+import { downloadBlob } from '../graph/figureExport';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import type { GraphNode, GraphEdge } from '../../types/search';
 
@@ -16,12 +22,18 @@ export default function GraphVisualizer2D({
     onEngineStop
 }: GraphVisualizer2DProps) {
 
+    const host = useRef<HTMLDivElement>(null);
+    const graph = useRef<any>(null);
+    const colors = useCanvasTheme(host);
+    const [preset, setPreset] = useState<FigurePreset>('screen');
+    const [labels, setLabels] = useState(true);
+    const [selected, setSelected] = useState<GraphNode | null>(null);
+    const [size, setSize] = useState(dimensions);
+    useEffect(() => { if (!host.current) return; const observer = new ResizeObserver(entries => { const r = entries[0].contentRect; if (r.width && r.height) setSize({width:r.width,height:r.height}); }); observer.observe(host.current); return () => observer.disconnect(); }, []);
     // --- Callbacks estables para pintado ---
 
     const getNodeColor = useCallback((node: any) => {
-        if (node.type === 'Concept') return '#8b5cf6'; // Violet
-        if (node.type === 'DigitalAsset') return '#10b981'; // Emerald
-        return '#64748b'; // Slate
+        return nodeColors[canonicalType(node.type)] ?? '#78818c';
     }, []);
 
     const getNodeVal = useCallback((_node: any) => {
@@ -38,19 +50,22 @@ export default function GraphVisualizer2D({
         // Dibujar Círculo
         const r = Math.sqrt(getNodeVal(node)) * 4;
         ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+        const shape = shapeFor(canonicalType(node.type));
+        if (shape === 'square') ctx.rect(node.x-r, node.y-r, r*2, r*2);
+        else if (shape === 'diamond') { ctx.moveTo(node.x,node.y-r*1.4); ctx.lineTo(node.x+r*1.4,node.y); ctx.lineTo(node.x,node.y+r*1.4); ctx.lineTo(node.x-r*1.4,node.y); ctx.closePath(); }
+        else ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
         ctx.fillStyle = getNodeColor(node);
         ctx.fill();
 
         // Dibujar Etiqueta (Solo si el zoom es suficiente para evitar ruido visual)
-        if (globalScale > 1.2) {
+        if (labels && (globalScale > 1.2 || preset !== 'screen')) {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillStyle = colors.text;
             // Dibujar texto debajo del nodo
             ctx.fillText(label, node.x, node.y + r + fontSize);
         }
-    }, [getNodeColor, getNodeVal]);
+    }, [getNodeColor, getNodeVal, colors.text, labels, preset]);
 
     // Función crítica para la interacción (Click/Hover)
     const nodePointerAreaPaint = useCallback((node: any, color: string, ctx: any) => {
@@ -63,10 +78,13 @@ export default function GraphVisualizer2D({
     }, [getNodeVal]);
 
     return (
-        // @ts-ignore - ForceGraph2D types workaround
-        <ForceGraph2D
-            width={dimensions.width}
-            height={dimensions.height}
+        <VisualizationFrame title="Grafo de búsqueda · Canvas" preset={preset} onPresetChange={setPreset}
+            toolbar={<><button onClick={() => graph.current?.zoom(graph.current.zoom()*1.25, 0)}>Zoom +</button><button onClick={() => graph.current?.zoom(graph.current.zoom()/1.25, 0)}>Zoom −</button><button onClick={() => graph.current?.zoomToFit(0, 30)}>Ajustar / centrar</button><label><input type="checkbox" checked={labels} onChange={e => setLabels(e.target.checked)} /> Labels</label><button onClick={() => host.current?.querySelector('canvas')?.toBlob(blob => { if (blob) downloadBlob(blob,'knowledge-canvas.png'); })}>PNG · resolución del canvas</button><span>SVG disponible en vista React Flow</span></>}
+            legend={<GraphLegend types={graphData.nodes.map(n => n.type)} kinds={['normal']} weighted />}>
+        <div ref={host} className="graph-stage">
+        <ForceGraph2D ref={graph}
+            width={size.width}
+            height={size.height}
             graphData={graphData}
 
             // Funciones optimizadas
@@ -77,17 +95,18 @@ export default function GraphVisualizer2D({
             nodePointerAreaPaint={nodePointerAreaPaint}
 
             // Configuración de Enlaces
-            linkColor={() => '#334155'}
+            linkColor={() => colors.edge}
             linkWidth={link => (link as any).weight * 2}
 
             // Configuración de Motor
-            backgroundColor="transparent"
+            backgroundColor={colors.background}
             cooldownTicks={100} // Detener simulación tras 100 ticks para estabilidad
             onEngineStop={onEngineStop}
 
             // Interacción
             onNodeClick={(node) => {
                 console.log("GraphVisualizer2D Node clicked:", node);
+                setSelected(node as GraphNode);
                 onNodeClick(node as GraphNode);
             }}
             onNodeHover={(node: any) => {
@@ -107,12 +126,12 @@ export default function GraphVisualizer2D({
                 ctx.beginPath();
                 ctx.moveTo(start.x, start.y);
                 ctx.lineTo(end.x, end.y);
-                ctx.strokeStyle = '#334155';
+                ctx.strokeStyle = colors.edge;
                 ctx.lineWidth = (link.weight || 0.5) * 2;
                 ctx.stroke();
 
                 // Mostrar tipo de relación al hacer zoom
-                if (globalScale > 2.5) {
+                if (labels && globalScale > 2.5) {
                     const textPos = {
                         x: start.x + (end.x - start.x) / 2,
                         y: start.y + (end.y - start.y) / 2
@@ -120,12 +139,14 @@ export default function GraphVisualizer2D({
                     const relType = link.type;
                     const fontSize = 10 / globalScale;
                     ctx.font = `${fontSize}px Sans-Serif`;
-                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillStyle = colors.text;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(relType, textPos.x, textPos.y);
                 }
             }}
         />
+        {selected && <AssetInspector key={selected.id} id={selected.id} label={selected.label} type={canonicalType(selected.type)} metadata={selected} context={graphData.links.filter(e => (typeof e.source === 'object' ? (e.source as any).id : e.source) === selected.id || (typeof e.target === 'object' ? (e.target as any).id : e.target) === selected.id).map(e => `${e.type} · Peso ${e.weight}`)} onClose={() => setSelected(null)} />}
+        </div></VisualizationFrame>
     );
 }

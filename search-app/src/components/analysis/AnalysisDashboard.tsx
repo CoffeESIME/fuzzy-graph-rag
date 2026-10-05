@@ -24,7 +24,7 @@ const ANALYSIS_TOOLS = [
     { id: 'bridges', title: 'Puentes Semánticos', description: 'Nodos conectores y centralidad', icon: Network, color: '#3b82f6' },
     { id: 'serendipity', title: 'Camino de Serendipia', description: 'Rutas extrañas entre nodos', icon: BrainCircuit, color: '#ec4899' },
     { id: 'pathfinder', title: 'Navegador Latente', description: 'Traza el camino entre dos ideas', icon: Route, color: '#06b6d4' },
-    { id: 'fog-of-war', title: 'Niebla de Guerra', description: 'Filtrado progresivo por confianza', icon: CloudFog, color: '#64748b' },
+    { id: 'fog-of-war', title: 'Niebla de Guerra', description: 'Filtrado progresivo por confianza', icon: CloudFog, color: 'var(--text-muted)' },
     { id: 'heatmap', title: 'Matriz de Calor', description: 'Adyacencia de conceptos', icon: Grid3X3, color: '#ef4444' },
     { id: 'chord', title: 'Diagrama de Cuerdas', description: 'Relaciones entre categorías', icon: CircleDot, color: '#f59e0b' },
     { id: 'radial-tree', title: 'Árbol Radial', description: 'Jerarquías desde nodo central', icon: Target, color: '#10b981' },
@@ -42,7 +42,7 @@ export default function AnalysisDashboard() {
         <div style={{ padding: '24px 48px', maxWidth: 1400, width: '100%', margin: '0 auto' }}>
             <div style={{ marginBottom: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8, background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8, background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                         System Analysis
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>

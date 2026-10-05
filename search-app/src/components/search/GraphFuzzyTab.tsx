@@ -68,7 +68,7 @@ export default function GraphFuzzyTab() {
             case 'Event': return '#ec4899'; // Pink
             case 'Project': return '#14b8a6'; // Teal
             case 'DigitalAsset': return '#10b981'; // Emerald
-            default: return '#64748b'; // Slate
+            default: return 'var(--text-muted)'; // Slate
         }
     };
 
@@ -233,11 +233,11 @@ export default function GraphFuzzyTab() {
                             <span>Asset Digital</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                            <span style={{ fontSize: '0.8rem' }}>🌱</span>
+                            <span style={{ fontSize: '0.8rem' }}></span>
                             <span style={{ color: '#fff' }}>Semilla Vectorial</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: '0.8rem' }}>🔭</span>
+                            <span style={{ fontSize: '0.8rem' }}></span>
                             <span style={{ color: '#fff' }}>Descubrimiento</span>
                         </div>
                     </div>
@@ -277,7 +277,7 @@ export default function GraphFuzzyTab() {
                                     <div style={{
                                         background: 'rgba(0,0,0,0.3)', padding: 8, borderRadius: 6,
                                         fontFamily: 'monospace', fontSize: '0.65rem', whiteSpace: 'pre-wrap',
-                                        color: '#cbd5e1'
+                                        color: 'var(--text-secondary)'
                                     }}>
                                         {`MATCH (seed:DigitalAsset)
 WHERE seed.uuid IN [vector_results]
@@ -312,7 +312,7 @@ RETURN seed, target, discovery`}
                                         fontSize: '0.75rem', padding: '2px 8px', borderRadius: 12,
                                         background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', border: '1px solid #10b981'
                                     }}>
-                                        🌱 Semilla
+                                         Semilla
                                     </span>
                                 )}
                                 {selectedNode.properties.is_discovery && (
@@ -320,7 +320,7 @@ RETURN seed, target, discovery`}
                                         fontSize: '0.75rem', padding: '2px 8px', borderRadius: 12,
                                         background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa', border: '1px solid #8b5cf6'
                                     }}>
-                                        🔭 Descubrimiento
+                                         Descubrimiento
                                     </span>
                                 )}
                             </div>
