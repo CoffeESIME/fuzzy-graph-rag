@@ -1,195 +1,84 @@
-# Guía de Uso — GraphRAG Multimodal v2
+# Guía visual de uso — GraphRAG
 
-## 🔍 Búsqueda
+**Español** · [English](../en/USAGE_GUIDE.md) · [Índice](../README.md)
 
-### Tab 1: Búsqueda Semántica (`/search`)
+El objetivo es convertir un conjunto de archivos en un corpus que puedas buscar y explorar por sus relaciones. Antes de empezar, sigue el [arranque](QUICKSTART.md). Para obtener resultados necesitas archivos procesados, vectores en los espacios consultados y relaciones en el grafo.
 
-**Qué hace:** Encuentra archivos por significado, no por texto exacto. Combina BM25 (keywords) con BGE-M3 (vectores semánticos).
+Las capturas muestran la app real en su estado inicial de navegación y configuración; no representan resultados ni métricas de un corpus de demostración.
 
-**Cómo usarlo:**
-1. Escribe tu consulta en el campo de texto (ej: "memes de gatos")
-2. Ajusta el **slider Alpha**:
-   - `α = 0.0` → Solo keywords (BM25)
-   - `α = 0.5` → Balanceado (recomendado)
-   - `α = 1.0` → Solo vectorial (significado puro)
-3. Selecciona los **espacios** a buscar (Text, Visual, Audio, Memory)
-4. Opcionalmente agrega **tags** para filtrar
-5. Los resultados muestran: score, propiedades, y preview multimedia via MinIO
+## 1. Incorporar material
 
-### Tab 2: Búsqueda Visual SigLIP
+Abre **Ingesta → Ingesta y Agrupación**. La página de Ingesta abre inicialmente Control de Tareas, así que selecciona la pestaña de agrupación para cargar material.
 
-**Qué hace:** Sube una imagen y encuentra contenido visualmente similar usando embeddings SigLIP (1152 dimensiones).
+![Ingesta y Agrupación con selector de archivos o texto](../images/ingesta.jpg)
 
-**Cómo usarlo:**
-1. Arrastra o selecciona una imagen
-2. El sistema codifica la imagen con SigLIP
-3. Busca en VisualSpace por similitud coseno
-4. Resultados: imágenes similares con score de distancia
+*Archivos permite cargar material multimedia; Texto permite incorporar contenido escrito. La agrupación y los vectores se configuran después de añadir material.*
 
-### Tab 3: Búsqueda Multimodal
+1. Selecciona archivos o introduce texto.
+2. Configura los grupos y operaciones que necesites: Standard conserva el procesamiento individual; Merge OCR agrupa material para extracción de texto.
+3. Selecciona los tipos de procesamiento adecuados al contenido: texto, representación visual, transcripción o memoria, según las opciones disponibles.
+4. Envía los grupos y revisa su estado en **Control de Tareas**.
 
-**Qué hace:** Fusiona búsqueda por imagen + texto usando Reciprocal Rank Fusion (RRF).
+Las tareas pueden pasar por `ON_HOLD → PENDING → PROCESSING → COMPLETED`, o terminar con error. Una tarea en espera necesita activación; cargar un archivo no significa que ya esté indexado. Revisa las tareas fallidas antes de reintentarlas.
 
-**Cómo usarlo:**
-1. Sube una imagen + escribe contexto textual
-2. Ajusta alpha (peso imagen vs texto)
-3. Vista dividida: resultados de texto (izq), visuales (der), fusionados (centro)
-4. Los archivos que aparecen en ambas columnas se marcan como "Perfect Match"
+En **Cola de Revisión**, inspecciona las entidades y relaciones propuestas antes de aprobarlas. **Generador de Nodos** permite trabajar manualmente con nodos y conexiones.
 
-### Tab 4: Grafo Crisp (`/search` → Grafo Crisp)
+## 2. Buscar contenido
 
-**Qué hace:** Traversal del grafo Neo4j con un umbral de corte alpha. Solo muestra relaciones con peso ≥ alpha.
+![Búsqueda semántica, espacios y opciones avanzadas](../images/busqueda.jpg)
 
-**Cómo usarlo:**
-1. Escribe un concepto (ej: "melancolía")
-2. Ajusta el **alpha-cut** (ej: 0.7 = solo relaciones con peso ≥ 0.7)
-3. El grafo se renderiza con React Flow / D3
-4. Click en un nodo para ver sus propiedades, preview multimedia, y texto
+*Elige primero qué representación del contenido quieres consultar: Texto, Visual, Audio o Memoria. Solo habrá resultados si ese espacio tiene vectores para tu material.*
 
-### Tab 5: Grafo Fuzzy
+En **Búsqueda → Semántica**, escribe una consulta, elige espacios y límite y pulsa **Buscar**. En **Opciones avanzadas** puedes ajustar el balance híbrido: alpha 0 prioriza BM25, alpha 1 usa similitud vectorial y los valores intermedios combinan ambos.
 
-**Qué hace:** Primero busca vectorialmente los assets más similares, luego expande vía Neo4j para descubrir conceptos y personas conectados.
+| Pestaña | Pregunta que ayuda a responder |
+|---|---|
+| Semántica | ¿Qué archivos hablan de esta idea? |
+| Visual | ¿Qué imágenes se parecen a esta referencia? |
+| Multimodal | ¿Qué contenido coincide con esta imagen y esta descripción? |
+| Grafo | ¿Qué entidades están conectadas mediante relaciones explícitas? |
+| Grafo Difuso | ¿Qué vecinos aparecen al expandir una búsqueda por similitud? |
+| Comparativa | ¿Cómo cambian los resultados entre sistemas de recuperación? |
 
-**Cómo usarlo:**
-1. Escribe una consulta
-2. El sistema busca en Weaviate → usa los assets encontrados como semillas en Neo4j
-3. Expande a conceptos, personas, y assets vecinos
-4. Visualizado en 3D (Three.js) o 2D (D3)
+Abre la previsualización o el archivo original para contrastar el resultado. Una puntuación de recuperación ordena coincidencias; no demuestra que una afirmación sea verdadera. El alpha de búsqueda híbrida y el umbral de relaciones del grafo tienen funciones distintas.
 
----
+## 3. Conectar dos ideas con Pathfinder
 
-## 📊 Análisis
+Desde Inicio, selecciona **Conecta dos ideas**, o abre `/analysis/pathfinder`. La pantalla se titula **Navegador Latente**.
 
-Navega a `/analysis` para ver el dashboard con todas las herramientas. Click en cualquier card para abrir la herramienta.
+![Pathfinder con origen, destino y modos de recorrido](../images/pathfinder.jpg)
 
-### Comunidades (Louvain)
-**Ruta:** `/analysis/communities`
-**Qué ves:** Burbujas agrupadas (Circle Packing). Cada burbuja grande es un clúster temático, las pequeñas son conceptos.
-**Usa:** Neo4j GDS Louvain Modularity sobre un grafo virtual de co-ocurrencia (Concepto ← Asset → Concepto).
-**Interpretación:** Si ves un clúster "Meme, Humor, Ironía" y otro "Melancolía, Dualidad, Gothic Metal", el sistema está entendiendo la estructura temática de tu mente.
+*Los dos selectores definen los extremos del recorrido. El modo cambia el criterio con el que se buscan caminos.*
 
-### Puentes Semánticos
-**Ruta:** `/analysis/bridges`
-**Qué ves:** Cards con conceptos que actúan como puentes entre mundos temáticos.
-**Interpretación:** Un concepto con alto "bridge score" conecta comunidades distintas — es un concepto bisagra.
+1. Busca y selecciona un nodo de origen y uno de destino; también puedes usar **Por Tipo**.
+2. Elige **Directo**, **Lateral** o **Topológico** y el número de caminos.
+3. Abre **¿Cómo funciona? · Detalles del método** para consultar los criterios. El modo Directo minimiza la suma de `1 − peso`.
+4. Pulsa **Trazar Camino** y examina las relaciones del recorrido y sus archivos de origen.
+5. Si guardas un recorrido, puedes volver a él desde **Caminos guardados** (`/analysis/saved-paths`).
 
-### Camino de Serendipia
-**Ruta:** `/analysis/serendipity`
-**Qué ves:** Una línea de metro con conceptos (💡) y assets (📄) conectados por pesos difusos.
-**Interacción:** Click en un asset para ver preview multimedia + metadatos (hash, MIME type, nombre).
-**Interpretación:** Las conexiones naranjas (✨ < 0.8) son las serendipias — asociaciones débiles pero reales.
+Si no hay un camino, comprueba los nodos elegidos y la conectividad del corpus; no todos los pares tienen una ruta.
 
-### Fog of War
-**Ruta:** `/analysis/fog-of-war`
-**Qué ves:** Distribución de nodos por grado de conectividad.
-**Interpretación:** Los nodos con bajo grado están en la "niebla" — áreas poco exploradas de tu conocimiento.
+## 4. Descubrir y analizar
 
-### Heatmap Jaccard
-**Ruta:** `/analysis/heatmap`
-**Qué ves:** Matriz de calor con similitud Jaccard entre conceptos.
-**Interpretación:** Celdas calientes = conceptos que co-ocurren frecuentemente.
+![Herramientas de análisis del grafo](../images/analisis.jpg)
 
-### Diagrama de Cuerdas
-**Ruta:** `/analysis/chord`
-**Qué ves:** Flujos entre categorías (Concept, Person, etc.) basados en co-ocurrencia via DigitalAssets.
-**Interpretación:** Las cuerdas gruesas indican categorías que frecuentemente aparecen juntas.
+*El panel ofrece distintas vistas del mismo conocimiento: agrupaciones, conexiones, recorridos y calidad del grafo.*
 
-### Árbol Radial
-**Ruta:** `/analysis/radial-tree`
-**Qué ves:** Árbol expandido desde un nodo raíz, mostrando co-ocurrencias en anillos concéntricos.
-**Interacción:** Puedes cambiar el nodo raíz para explorar diferentes regiones del grafo.
+**Serendipity** (`/analysis/serendipity`) sirve para seguir un recorrido exploratorio. **Comunidades** agrupa conceptos; **Puentes Semánticos** ayuda a identificar conectores. Las vistas de calor, cuerdas y árbol radial muestran otras formas de relación. Huérfanos y distribución de pesos ayudan a revisar la estructura.
 
-### Conceptos Abstractos
-**Ruta:** `/analysis/abstract-concepts`
-**Qué ves:** Scatter plot con Grado (X) vs Peso Promedio (Y).
-**Interpretación:** Conceptos arriba-derecha = bien conectados Y con alta certeza. Abajo-izquierda = poco conectados Y difusos.
+Comunidades y PageRank necesitan GDS, que no está instalado por el Compose principal. Consulta la [guía de arranque](QUICKSTART.md) si estas herramientas devuelven errores.
 
-### PageRank
-**Ruta:** `/analysis/pagerank`
-**Qué ves:** Ranking de nodos por importancia estructural (algoritmo GDS PageRank).
-**Interpretación:** Los nodos con mayor PageRank son los más "influyentes" en tu grafo.
+## 5. Enriquecer y evaluar los hallazgos
 
-### Nodos Huérfanos
-**Ruta:** `/analysis/orphans`
-**Qué ves:** Lista de conceptos sin conexiones (grado = 0).
-**Interpretación:** Estos nodos están aislados y podrían beneficiarse de más contexto o relaciones.
+En **Enriquecimiento** (`/enrichment`) se reúnen herramientas para ajustar pesos, descubrir conexiones y limpiar entidades. Revisa las propuestas y el alcance de cada operación antes de modificar tu grafo.
 
-### Distribución de Pesos
-**Ruta:** `/analysis/weight-distribution`
-**Qué ves:** Histograma de pesos de relaciones [0–1].
-**Interpretación:** Si la mayoría de pesos están > 0.8, el LLM está muy seguro. Si hay muchos < 0.5, hay alta incertidumbre.
+Los pesos difusos expresan grados de relación según el método, no probabilidades verificadas. Consulta los archivos originales, el razonamiento disponible y los [detalles de lógica difusa](../backend/FUZZY_LOGIC.md). Una conexión sugerida es una hipótesis que investigar.
 
----
+## Si no aparecen resultados
 
-## 📥 Ingesta
+- Comprueba que las tareas terminaron y que seleccionaste un espacio con vectores.
+- Revisa filtros, umbrales y conectividad del grafo.
+- Si hay errores de API, revisa backend, worker y gateway siguiendo el [arranque](QUICKSTART.md).
+- Si el archivo no abre, comprueba el acceso a MinIO; los puertos del anfitrión y de los contenedores son distintos.
 
-### Tab 1: Carga y Agrupación
-
-1. **Arrastra archivos** al panel de carga
-2. **Crea grupos** con la configuración deseada:
-   - **Operación**: Standard (1 archivo → 1 asset) o Merge OCR (N → 1)
-   - **Vectores**: Selecciona qué tipos de embeddings generar
-   - **Opciones**: Descartar originales, notas contextuales
-3. **Enviar** al servidor — crea DigitalAssets y tareas en staging
-
-### Tab 2: Control de Tareas
-
-- Ver estado de todas las tareas: `ON_HOLD → PENDING → PROCESSING → COMPLETED`
-- **Activar** tareas individualmente o en batch
-- **Retry** tareas fallidas
-- **Cancel** tareas pendientes
-
-### Tab 3: Cola de Revisión (Review Queue)
-
-- Antes de ingresar al grafo, los conceptos/personas extraídos pasan por aprobación humana
-- **Aprobar**: Crea el nodo y relaciones en Neo4j
-- **Rechazar**: Descarta la sugerencia
-- **Editar**: Modifica el nombre o peso antes de aprobar
-
-### Tab 4: Graph Generator
-
-- Crear nodos manualmente: Concept, Person, Location, Event
-- Crear conexiones con peso y tipo de relación
-- Buscar nodos existentes para vincular
-
----
-
-## 📋 Casos de Uso
-
-### Galería de Fotos
-```
-Archivos: foto1.jpg, foto2.jpg, foto3.jpg
-Operación: standard
-Vectores: visual_siglip, visual_semantic
-→ Busca por similitud visual o por conceptos extraídos vía OCR
-```
-
-### Screenshots de Documentos
-```
-Archivos: screenshot1.png, screenshot2.png
-Operación: merge_ocr
-Vectores: text_chunk
-→ Extrae texto con Qwen3-VL, chunked en Weaviate
-```
-
-### Podcast / Audio
-```
-Archivo: podcast.mp3
-Vectores: audio_clap, audio_transcript
-→ Busca por sonido (CLAP) o por transcripción (Whisper + BGE-M3)
-```
-
-### Notas Personales
-```
-Texto: "Hoy aprendí sobre grafos difusos..."
-Vectores: user_memory
-→ Almacena en MemorySpace, incluye contexto del usuario
-```
-
-### Exploración del Grafo
-```
-1. Busca "melancolía" en Grafo Crisp → ve conexiones fuertes
-2. Busca en Grafo Fuzzy → descubre assets y conceptos vecinos
-3. Usa Serendipia → encuentra caminos inesperados
-4. Ve Comunidades → valida clusters temáticos
-```
+Consulta también [resolución de problemas](../backend/TROUBLESHOOTING.md).

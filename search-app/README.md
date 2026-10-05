@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# Frontend React — GraphRAG
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Español** · [English project guide](../README.en.md) · [Documentación](../docs/README.md)
 
-Currently, two official plugins are available:
+Interfaz principal del observatorio: React, TypeScript y Vite. Incluye búsqueda multimodal, ingesta y revisión, análisis de grafos y enriquecimiento. El panel Streamlit de `frontend/` es heredado.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Desarrollo
 
-## React Compiler
+Desde esta carpeta:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm ci
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Abre [http://localhost:5173](http://localhost:5173). Vite reenvía `/api/*` a `http://localhost:8000`, eliminando `/api`. Para configurar backend y almacenamiento, consulta el [arranque](../docs/general/QUICKSTART.md).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
+npm run lint
 ```
+
+`build` comprueba TypeScript y genera `dist/`. `preview` permite servir esa compilación, pero no configura el proxy de desarrollo de `server.proxy`; para usar la API en el despliegue, el contenedor incluye Nginx y su proxy `/api`.
+
+## Rutas
+
+| Ruta | Pantalla |
+|---|---|
+| `/` | Inicio: Serendipity, Pathfinder y accesos al corpus. |
+| `/search` | Semántica, Visual, Multimodal, Grafo, Grafo Difuso y Comparativa. |
+| `/ingest` | Ingesta y Agrupación, Control de Tareas, Cola de Revisión y Generador de Nodos. |
+| `/analysis` | Catálogo de herramientas de análisis. |
+| `/analysis/pathfinder` | Navegador Latente: caminos entre dos nodos. |
+| `/analysis/serendipity` | Recorridos exploratorios. |
+| `/analysis/saved-paths` | Caminos guardados. |
+| `/enrichment` | Enriquecimiento y limpieza del grafo. |
+
+Las rutas están declaradas en `src/App.tsx`. La [guía visual](../docs/general/USAGE_GUIDE.md) explica cómo usar la interfaz; [la versión inglesa](../docs/en/USAGE_GUIDE.md) conserva los nombres de botones en español.

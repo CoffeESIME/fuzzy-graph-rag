@@ -1,55 +1,41 @@
-# 📚 Documentación — GraphRAG
+# Documentación — GraphRAG
 
-Documentación técnica del sistema multimodal de recuperación aumentada por grafos.
+**Español (principal)** · [English documentation](en/README.md) · [Proyecto](../README.md)
 
----
+## Empieza aquí
 
-## 📁 Estructura
+| Documento | Contenido |
+|---|---|
+| [Presentación del proyecto](../README.md) | Propósito, capacidades y vista general con capturas. |
+| [Arranque](general/QUICKSTART.md) | Compose principal, dependencias de modelos, puertos y desarrollo local. |
+| [Guía visual de uso](general/USAGE_GUIDE.md) | Incorporar archivos, buscar, recorrer conexiones e interpretar hallazgos. |
+| [Frontend React](../search-app/README.md) | Interfaz actual, comandos y rutas. |
 
-```
-docs/
-├── general/          ← Arquitectura del sistema y guías transversales
-├── backend/          ← APIs, workers, enriquecimiento
-└── frontend/         ← Componentes UI, guías de uso visual
-```
+Estas guías de entrada están actualizadas para las rutas y el Compose actuales. Para el arranque y la navegación, tienen prioridad sobre los ejemplos históricos de las referencias técnicas.
 
----
+## Referencias técnicas
 
-## 🌐 General
+| Documento | Contenido |
+|---|---|
+| [Arquitectura](general/ARCHITECTURE.md) | Diseño del sistema. |
+| [Diagramas](general/diagrams.md) | Modelo de datos y flujos Mermaid. |
+| [Integración](general/INTEGRATION.md) | Conexión entre backend y frontend. |
+| [Referencia rápida](general/QUICK_REFERENCE.md) | Referencia técnica complementaria. |
+| [Recorrido técnico](general/WALKTHROUGH.md) | Sesión de trabajo y procesamiento. |
+| [Lógica difusa](backend/FUZZY_LOGIC.md) | Fórmulas, pesos e interpretación. |
+| [Enriquecimiento](backend/enrichment_summary.md) | APIs de enriquecimiento y exploración. |
+| [Entidades difusas](backend/fuzzy_concept_summary.md) | Ciclo de vida de entidades. |
+| [Celery](backend/CELERY_GUIDE.md) | Procesamiento distribuido. |
+| [Resolución de problemas](backend/TROUBLESHOOTING.md) | Errores y soluciones. |
+| [Panel Streamlit heredado](frontend/README.md) | Documentación del frontend anterior. |
+| [Previsualización de archivos](frontend/FILE_PREVIEW_GUIDE.md) | Referencia del sistema de previews. |
 
-| Documento | Descripción |
-|-----------|-------------|
-| [QUICKSTART.md](general/QUICKSTART.md) | ⚡ Arranque rápido de toda la infraestructura con Docker |
-| [docker-compose.yml](general/docker-compose.yml) | Compose con Neo4j + Weaviate + MinIO + Redis + PostgreSQL |
-| [ARCHITECTURE.md](general/ARCHITECTURE.md) | Vista de alto nivel del sistema completo |
-| [USAGE_GUIDE.md](general/USAGE_GUIDE.md) | Guía de uso del sistema |
-| [QUICK_REFERENCE.md](general/QUICK_REFERENCE.md) | Comandos y referencias rápidas |
-| [WALKTHROUGH.md](general/WALKTHROUGH.md) | Flujo completo de una sesión de trabajo |
-| [diagrams.md](general/diagrams.md) | Diagramas Mermaid del sistema (arquitectura, modelo de datos, flujos) |
-| [INTEGRATION.md](general/INTEGRATION.md) | Conexión Backend ↔ Frontend: URLs, módulos, CORS, env vars |
+El [Compose principal](../docker-compose.yml) despliega aplicación e infraestructura. El [Compose alternativo](general/docker-compose.yml) es una configuración de infraestructura distinta; no mezcles sus instrucciones o puertos.
 
----
+Con el backend activo: [Swagger UI](http://localhost:8000/docs), [ReDoc](http://localhost:8000/redoc) y [OpenAPI](http://localhost:8000/openapi.json).
 
-## 🔧 Backend
+## Idiomas y capturas
 
-| Documento | Descripción |
-|-----------|-------------|
-| [enrichment_summary.md](backend/enrichment_summary.md) | Referencia técnica de todos los endpoints de enriquecimiento (`/api/enrichment`, `/api/explore`) |
-| [FUZZY_LOGIC.md](backend/FUZZY_LOGIC.md) | 🧮 **Guía técnica completa** — Mínimo de Zadeh, fórmulas, ejemplos, uso por herramienta |
-| [fuzzy_concept_summary.md](backend/fuzzy_concept_summary.md) | Resumen ejecutivo del ciclo de vida de entidades difusas |
-| [CELERY_GUIDE.md](backend/CELERY_GUIDE.md) | Configuración y uso del worker Celery |
-| [TROUBLESHOOTING.md](backend/TROUBLESHOOTING.md) | Errores comunes y soluciones |
+El español es el idioma principal del proyecto. La [lectura en inglés](en/README.md) incluye presentación, arranque y guía visual; las referencias aún sin traducir se identifican como contenido en español. Los nombres de los controles se conservan para encontrarlos en la app.
 
-**API interactiva (con servidor corriendo):**
-- Swagger UI → `http://localhost:8000/docs`
-- ReDoc → `http://localhost:8000/redoc`
-- OpenAPI JSON → `http://localhost:8000/openapi.json`
-
----
-
-## 🖥️ Frontend
-
-| Documento | Descripción |
-|-----------|-------------|
-| [FILE_PREVIEW_GUIDE.md](frontend/FILE_PREVIEW_GUIDE.md) | Sistema de previsualización de archivos multimedia |
-| [README.md](frontend/README.md) | Setup y estructura del proyecto React/Vite |
+Las imágenes se comparten entre ambos idiomas, con texto alternativo y explicaciones traducidas. Consulta su [procedencia y actualización](images/README.md).

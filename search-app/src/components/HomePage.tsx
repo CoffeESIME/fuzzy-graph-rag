@@ -1,156 +1,61 @@
-import { useNavigate } from 'react-router-dom';
-import { Search, Activity, Database, Upload, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Search, Network, Upload, Sparkles, CircleHelp, Route, FolderOpen, ChevronDown } from 'lucide-react';
+import './HomePage.css';
+
+const workspace = [
+    { to: '/search', icon: Search, title: 'Buscar en el corpus', description: 'Encuentra archivos por su contenido, significado o conexiones.', index: '01' },
+    { to: '/analysis', icon: Network, title: 'Observar el grafo', description: 'Explora comunidades, relaciones y la estructura del conocimiento.', index: '02' },
+    { to: '/ingest', icon: Upload, title: 'Incorporar archivos', description: 'Añade material al corpus y revisa su procesamiento.', index: '03' },
+    { to: '/enrichment', icon: Sparkles, title: 'Enriquecer conexiones', description: 'Revisa las herramientas de expansión y organización del grafo.', index: '04' },
+];
 
 export default function HomePage() {
-    const navigate = useNavigate();
-
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'var(--bg-primary)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            padding: 24
-        }}>
-            <div style={{ textAlign: 'center', marginBottom: 60 }}>
-                <div style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 80, height: 80, borderRadius: '50%', background: 'var(--gradient-primary)',
-                    marginBottom: 24, boxShadow: '0 0 40px rgba(99, 102, 241, 0.3)'
-                }}>
-                    <Database size={40} color="white" />
-                </div>
-                <h1 style={{
-                    fontSize: '3rem', fontWeight: 800, marginBottom: 16,
-                    background: 'var(--gradient-primary)',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                }}>
-                    Multimodal Graph RAG
-                </h1>
-                <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', maxWidth: 600, margin: '0 auto' }}>
-                    Plataforma de recuperación y análisis de conocimiento aumentada por grafos y búsqueda vectorial multimodal.
-                </p>
-            </div>
-
-            <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                gap: 32, width: '100%', maxWidth: 1100
-            }}>
-                {/* Search Card */}
-                <div
-                    onClick={() => navigate('/search')}
-                    className="home-card"
-                    style={{
-                        background: 'var(--bg-secondary)', borderRadius: 24, padding: 40,
-                        border: '1px solid var(--border-subtle)', cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                >
-                    <div style={{
-                        width: 64, height: 64, borderRadius: 16, background: 'rgba(59, 130, 246, 0.1)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24
-                    }}>
-                        <Search size={32} className="text-blue-500" />
+        <main className="observatory-home">
+            <header className="home-intro">
+                <div className="home-kicker"><span /> OBSERVATORIO DE CONOCIMIENTO <span className="home-kicker-product">/ Multimodal Graph RAG</span></div>
+                <div className="home-intro-layout">
+                    <div>
+                        <h1>La máquina de <em>serendipia.</em></h1>
+                        <p className="home-description">Explora tus archivos, sigue sus conexiones y descubre ideas que no estabas buscando.</p>
                     </div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>Search & Retrieval</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                        Búsqueda semántica, visual y exploración de grafos. Encuentra información específica y atraviesa conexiones.
-                    </p>
+                    <div className="home-intro-note"><span>DEL ARCHIVO AL HALLAZGO</span><p>Un espacio para buscar con intención<br />y dejar lugar a lo inesperado.</p></div>
                 </div>
-
-                {/* Analysis Card */}
-                <div
-                    onClick={() => navigate('/analysis')}
-                    className="home-card"
-                    style={{
-                        background: 'var(--bg-secondary)', borderRadius: 24, padding: 40,
-                        border: '1px solid var(--border-subtle)', cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                >
-                    <div style={{
-                        width: 64, height: 64, borderRadius: 16, background: 'rgba(168, 85, 247, 0.1)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24
-                    }}>
-                        <Activity size={32} className="text-purple-500" />
+                <details className="home-about">
+                    <summary><CircleHelp size={18} aria-hidden="true" /><span>Sobre la herramienta</span><ChevronDown size={15} className="home-about-chevron" aria-hidden="true" /></summary>
+                    <div className="home-about-content">
+                        <section><h2>¿Qué es?</h2><p>Un entorno de exploración de conocimiento que combina búsqueda multimodal y grafos. Permite recorrer las relaciones entre archivos, conceptos y entidades de tu corpus.</p></section>
+                        <section><h2>¿Por dónde empiezo?</h2><p>Si todavía no tienes material, empieza por <Link to="/ingest">incorporar archivos</Link>. Si ya tienes un corpus, busca un tema, conecta dos entidades con Pathfinder o explora un recorrido de Serendipity.</p></section>
+                        <section><h2>¿Cómo interpreto un hallazgo?</h2><p>Una conexión es una pista para investigar. Inspecciona las relaciones y sus pesos, abre los archivos de origen y contrasta su contenido. Los detalles del método explican los criterios disponibles en cada vista.</p></section>
                     </div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>System Analysis</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                        Detección de comunidades, métricas de centralidad y visualizaciones avanzadas de la estructura del conocimiento.
-                    </p>
-                </div>
+                </details>
+            </header>
 
-                {/* Ingest & Control Card */}
-                <div
-                    onClick={() => navigate('/ingest')}
-                    className="home-card"
-                    style={{
-                        background: 'var(--bg-secondary)', borderRadius: 24, padding: 40,
-                        border: '1px solid var(--border-subtle)', cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                >
-                    <div style={{
-                        width: 64, height: 64, borderRadius: 16, background: 'rgba(234, 179, 8, 0.1)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24
-                    }}>
-                        <Upload size={32} className="text-yellow-500" />
+            <section className="home-exploration" aria-labelledby="home-explore-title">
+                <div className="home-section-heading"><h2 id="home-explore-title">Sigue una conexión</h2><span>Recorridos por tu conocimiento</span></div>
+                <div className="home-discovery-layout">
+                    <Link to="/analysis/serendipity" className="home-discovery" aria-label="Descubrir un recorrido de Serendipity">
+                        <div className="home-discovery-copy"><span className="home-eyebrow"><Sparkles size={15} aria-hidden="true" /> SERENDIPITY</span><h3>Encuentra lo<br />inesperado.</h3><p>Deja que las relaciones del corpus te lleven de una idea a otra.</p><span className="home-action">Descubrir un recorrido <ArrowRight size={18} aria-hidden="true" /></span></div>
+                        <svg className="home-connection-map" viewBox="0 0 360 220" aria-hidden="true" focusable="false">
+                            <g fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M54 136 158 70 291 110" /><path d="M158 70 210 180 291 110" strokeDasharray="3 6" /><path d="M54 136 210 180" opacity=".35" /></g>
+                            <g className="home-map-node"><rect x="42" y="124" width="24" height="24" rx="3" /><circle cx="158" cy="70" r="12" /><path d="m291 95 15 15-15 15-15-15Z" /><circle cx="210" cy="180" r="9" /></g>
+                            <g className="home-map-label"><text x="54" y="170" textAnchor="middle">Archivo</text><text x="158" y="42" textAnchor="middle">Concepto</text><text x="291" y="147" textAnchor="middle">Conexión</text></g>
+                        </svg>
+                    </Link>
+                    <div className="home-path-menu">
+                        <Link to="/analysis/pathfinder" className="home-path-link"><Route size={21} aria-hidden="true" /><div><h3>Conecta dos ideas</h3><p>Elige un origen y un destino. Explora los caminos que los unen.</p><span>Pathfinder <ArrowRight size={15} aria-hidden="true" /></span></div></Link>
+                        <Link to="/analysis/saved-paths" className="home-path-link"><FolderOpen size={21} aria-hidden="true" /><div><h3>Retoma un hallazgo</h3><p>Vuelve a tus caminos guardados y examina sus conexiones.</p><span>Caminos guardados <ArrowRight size={15} aria-hidden="true" /></span></div></Link>
                     </div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>Ingest & Control</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                        Ingesta de archivos, control de tareas de procesamiento, cola de revisión y generación de nodos.
-                    </p>
                 </div>
+            </section>
 
-                {/* Enrichment Card */}
-                <div
-                    onClick={() => navigate('/enrichment')}
-                    className="home-card"
-                    style={{
-                        background: 'var(--bg-secondary)', borderRadius: 24, padding: 40,
-                        border: '1px solid var(--border-subtle)', cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                >
-                    <div style={{
-                        width: 64, height: 64, borderRadius: 16, background: 'rgba(236, 72, 153, 0.1)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24
-                    }}>
-                        <Sparkles size={32} className="text-pink-500" />
-                    </div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 12 }}>Graph Enrichment</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                        Descubrimiento automático, deducción de relaciones ocultas y expansión semántica del conocimiento.
-                    </p>
-                </div>
-            </div>
-
-            <div style={{ marginTop: 60, display: 'flex', gap: 24, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }}></div>
-                    Graph: Online
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }}></div>
-                    Vector DB: Online
-                </span>
-            </div>
-
-            <style>{`
-                .home-card:hover {
-                    transform: translateY(-8px);
-                    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
-                    border-color: var(--accent-indigo);
-                }
-                .text-blue-500 { color: #3b82f6; }
-                .text-purple-500 { color: #a855f7; }
-                .text-yellow-500 { color: #eab308; }
-                .text-pink-500 { color: #ec4899; }
-            `}</style>
-        </div>
+            <section className="home-workspace" aria-labelledby="home-workspace-title">
+                <div className="home-section-heading"><h2 id="home-workspace-title">Tu espacio de trabajo</h2><span>Buscar · observar · ampliar</span></div>
+                <div className="home-workspace-menu">{workspace.map(({ to, icon: Icon, title, description, index }) => (
+                    <Link to={to} className="home-workspace-link" key={to}><span className="home-menu-index">{index}</span><Icon size={20} aria-hidden="true" /><div><h3>{title}</h3><p>{description}</p></div><ArrowRight size={18} className="home-menu-arrow" aria-hidden="true" /></Link>
+                ))}</div>
+            </section>
+            <footer className="home-footer"><span>Archivos, conceptos y relaciones en un mismo lugar.</span><span>Multimodal Graph RAG</span></footer>
+        </main>
     );
 }
