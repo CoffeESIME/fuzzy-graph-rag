@@ -1,0 +1,21 @@
+.pathfinder-routes { min-width: 0; color: var(--text-primary); background: var(--surface); }
+.pathfinder-routes > header, .route-sequence, .route-inspection { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.pathfinder-routes p { font-size: 12px; line-height: 1.7; color: var(--text-secondary); }
+.route-selector { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 20px; }
+.route-selector button { display: flex; flex-direction: column; gap: 5px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); background: var(--background); text-align: left; font-size: 12px; cursor: pointer; }
+.route-selector button[aria-pressed="true"] { border-color: var(--accent); background: var(--surface); box-shadow: inset 0 -2px var(--accent); }
+.route-selector button span, .route-selector button small { color: var(--text-secondary); }
+.pathfinder-routes button:focus-visible, .pathfinder-routes summary:focus-visible, .pathfinder-routes select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.route-comparison { overflow-x: auto; padding: 0 20px 12px; }
+.route-comparison table { width: 100%; text-align: left; font-size: 12px; border-collapse: collapse; }
+.route-comparison caption { text-align: left; color: var(--text-secondary); font-size: 11px; padding-block: 10px; }
+.route-comparison th, .route-comparison td { padding: 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.route-help, .route-legacy { padding: 12px 20px; }
+.route-sequence ol { display: flex; flex-wrap: wrap; gap: 6px 24px; list-style: decimal inside; margin: 12px 0; font-size: 12px; }
+.route-sequence details { margin-top: 10px; font-size: 12px; }
+.route-sequence select { background: var(--background); color: var(--text-primary); border: 1px solid var(--border); padding: 6px; margin-left: 10px; }
+.route-edge-details { padding: 12px; font-size: 12px; }
+.route-edge-details dd, .route-edge-details pre, .route-sequence pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.route-edge-details dt { margin-top: 12px; color: var(--text-secondary); }
+.route-canvas { height: 620px; }
+@media (max-width: 600px) { .route-canvas { height: 480px; } .route-selector { padding: 12px; } }

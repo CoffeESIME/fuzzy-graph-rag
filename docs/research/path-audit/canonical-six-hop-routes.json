@@ -1,0 +1,3268 @@
+[
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Fade To Black.mp3",
+        "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2502",
+        "labels": [
+          "Person"
+        ],
+        "name": "Metallica",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": ""
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5324",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explícito en la letra: 'Need the end to set me free', 'Death greets me warm'. La muerte es personificada como bienvenida.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:02.533000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4976",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2502",
+        "type": "MENTIONS",
+        "properties": {
+          "reasoning": "",
+          "weight": 1,
+          "count": 1,
+          "role": "Artista / Banda",
+          "created_at": "2026-03-16T18:41:02.491000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4990",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2502",
+        "type": "MENTIONS",
+        "properties": {
+          "reasoning": "",
+          "weight": 1,
+          "count": 1,
+          "role": "Artista / Banda",
+          "created_at": "2026-03-16T18:41:10.201000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Slayer - Unit 731.mp3",
+        "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Thrash Metal",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2734",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Constantly referenced throughout the lyrics: 'dead still see', 'last breath the sword comes down', 'speaking death to me', 'pile up the dead', 'pleasure in death', 'factories of death'.",
+          "weight": 0.959,
+          "created_at": "2026-02-25T21:24:47.564000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3783",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Similarity: 70% (AudioSpace). Hub degree: 1 (penalty: 0.99x). Transfer: [text_e38f43e0.txt] -> [Slayer - Unit 731.mp3].",
+          "weight": 1.0,
+          "source": "interactive_latent_explorer",
+          "created_at": "2026-03-01T17:06:47.838000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4991",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Evidencia directa: Metallica es el exponente más reconocido del thrash metal y esta canción es su obra más representativa del género.",
+          "weight": 1,
+          "created_at": "2026-03-16T18:41:10.205000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Fade To Black.mp3",
+        "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Thrash Metal",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5324",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explícito en la letra: 'Need the end to set me free', 'Death greets me warm'. La muerte es personificada como bienvenida.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:02.533000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4989",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metallica es uno de los 'Big Four' del thrash metal, aunque esta canción específica es más lenta que el thrash clásico.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:02.539000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4991",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Evidencia directa: Metallica es el exponente más reconocido del thrash metal y esta canción es su obra más representativa del género.",
+          "weight": 1,
+          "created_at": "2026-03-16T18:41:10.205000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_117815483099html_001fdf7f.txt",
+        "file_hash": "001fdf7faf76cb93b20c8c797bd071fec1cdc4461e9b4cde75089619e15a7e3f",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Autodestrucción",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1287",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Inferencia filosófica: 'we expel ourselves' señala agencia propia, no fuerza externa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:29:15.040000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1247",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Directamente expresado en la cita: 'somos nuestros propios demonios'.",
+          "weight": 0.9,
+          "created_at": "2026-03-16T18:29:15.028000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4994",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Mención explícita: 'I'm your source of self-destruction', 'Your life burns faster', 'I will help you die'.",
+          "weight": 0.9,
+          "created_at": "2026-03-16T18:41:10.216000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:887",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_08b1f073.txt",
+        "file_hash": "08b1f0737ee60de11b3acbe74468944e16888f0b5167f728cd851dbc2f9a22ea",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2621",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:887",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explicitly stated ('Mi hijo murió').",
+          "weight": 0.923,
+          "created_at": "2026-02-21T07:23:41.979000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1244",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:887",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "The overall tone and the narrator's resignation suggest a state of despair.",
+          "weight": 0.677,
+          "created_at": "2026-02-21T07:23:41.986000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.677
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Warcry - Capitán Lawrence.mp3",
+        "file_hash": "973c11eebaf474a570e24d508314e7f8b5365d13226abddbdca3adcdfe3ffa9e",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5725",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "La canción culmina con 'Solo en la noche él murió' y 'El último aliento'.",
+          "weight": 0.918,
+          "created_at": "2026-02-26T00:01:11.555000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1949",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "La letra menciona explícitamente 'Hoy, hoy la esperanza murió'.",
+          "weight": 0.831,
+          "created_at": "2026-02-26T00:01:11.493000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Nargaroth - I Got My Dead Man Sleep.mp3",
+        "file_hash": "1661cc8574a47715fe35db3ab5878450c14f2c1cd659ffdd6261843699df3d57",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5705",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explicit lyrical content: 'dead man sleep', 'dig out all my bones', 'My rest seems now calm and deep'.",
+          "weight": 0.963,
+          "created_at": "2026-02-24T16:10:13.900000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2118",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Strong inference from lyrical content: 'While I dream I wither away', 'I'll never see the spring in May'.",
+          "weight": 0.782,
+          "created_at": "2026-02-24T16:10:13.918000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1629",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Angizia - Der Teufel hält die Fäden.mp3",
+        "file_hash": "93c3e3d01e53b9a0c5ba1e5ca8d8753cd20f5dfdda76f005f76a83d9cc087b0c",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5706",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1629",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Repeated mentions of 'tot', 'Leiche', 'Totenkahn', 'Totenacker', 'Judengruft'.",
+          "weight": 0.919,
+          "created_at": "2026-02-24T23:16:31.238000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2169",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1629",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Overall somber tone and descriptions of coldness, torment, and lack of joy.",
+          "weight": 0.755,
+          "created_at": "2026-02-24T23:16:31.262000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2127",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Stravaganzza - Agonía.mp3",
+        "file_hash": "5ee5abc087ca51a41bf8e8c97533e482a970e1f3ce818acf79a4b10de6220ce9",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5694",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2127",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Múltiples referencias explícitas a la muerte y el deseo de morir.",
+          "weight": 0.963,
+          "created_at": "2026-02-25T21:32:13.760000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2825",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2127",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Exclamaciones y frases que denotan una profunda falta de esperanza y angustia.",
+          "weight": 0.791,
+          "created_at": "2026-02-25T21:32:13.778000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Haggard - Awaking the Centuries.mp3",
+        "file_hash": "b6faf6e0a2793ef909619e7e4b719940e71f518b8679ccfd00df43018fb7bc67",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4278",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explicit lyrical content: 'Death in all the centuries is what I left behind', 'Dead bodies on the ground'.",
+          "weight": 0.94,
+          "created_at": "2026-02-26T00:02:07.194000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2956",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Implied by themes of darkness, death, and the burning of humanity.",
+          "weight": 0.695,
+          "created_at": "2026-02-26T00:02:07.216000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.695
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Condición Humana",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Haggard - Awaking the Centuries.mp3",
+        "file_hash": "b6faf6e0a2793ef909619e7e4b719940e71f518b8679ccfd00df43018fb7bc67",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3569",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Explicitamente mencionada y definida",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.674000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5687",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explicit lyrical content: 'sign of humanity is burning tonight', 'Humanity's burning tonight'.",
+          "weight": 0.8,
+          "created_at": "2026-02-26T00:02:07.202000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2956",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Implied by themes of darkness, death, and the burning of humanity.",
+          "weight": 0.695,
+          "created_at": "2026-02-26T00:02:07.216000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.695
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt",
+        "file_hash": "d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Matemáticas",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "Las matemáticas (del latín *mathematĭca*, y del griego *mathēmatiká*, derivado de *máthēma*, 'lo que se comprende') constituyen una ciencia formal que estudia patrones, propiedades, estructuras y relaciones presentes en sistemas lógicos y abstractos creados por la mente humana, abarcando conceptos fundamentales como cantidad, forma, espacio y número. Su alcance trasciende la mera aritmética o geometría elemental: las matemáticas han sido el lenguaje privilegiado con el que figuras como Euler revolucionaron la teoría de redes, Einstein formalizó el espacio-tiempo mediante geometrías no euclidianas, Boltzmann definió la entropía, Dirac articuló los fundamentos de la física cuántica y Al-Biruni aplicó principios trigonométricos para medir la Tierra. Esta universalidad las convierte en un puente entre disciplinas aparentemente distantes: la física teórica, la biología computacional, los algoritmos de optimización inspirados en la evolución natural, la lógica difusa aplicada a la inteligencia artificial y hasta la ingeniería de túneles en la Antigüedad han recurrido al razonamiento matemático como sustento estructural.\n\nEl contexto en que las matemáticas son evocadas revela además una dimensión cultural y filosófica profunda. Aparecen en debates epistemológicos sobre la naturaleza de la realidad —como la creencia de Dirac en que el universo es intrínsecamente matemático— y en discusiones históricas que van desde el siglo XVIII ilustrado hasta el Proyecto Manhattan, donde los métodos de Monte Carlo emplearon la aleatoriedad para resolver problemas deterministas. También se manifiestan en la cultura popular a través del humor y los memes, que reflejan tanto la admiración como la perplejidad que generan conceptos como la teoría de números, el cálculo o los valores propios. Esta dualidad —rigor abstracto y resonancia cultural— define a las matemáticas no solo como una herramienta del conocimiento científico, sino como una forma de pensamiento que moldea profundamente la manera en que los seres humanos comprenden y representan el mundo."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "FB_IMG_1743639238757.jpg",
+        "file_hash": "a054c02d897c0646f84df54b02a8ce16d60087c539c7916dfdcda9b589123103",
+        "mime_type": "image/jpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5900",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Manual connection via Latent Explorer (Concept)",
+          "weight": 0.865,
+          "source": "interactive_latent_explorer",
+          "created_at": "2026-03-20T06:16:40.916000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3316",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Similarity: 65% in Weaviate (TextSpace). Semantic Transfer: [FB_IMG_1745769671603.jpg] -> [text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt].",
+          "weight": 0.783,
+          "source": "interactive_latent_explorer",
+          "created_at": "2026-02-26T20:02:33.146000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3415",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Strongly inferred from the explicit mention of 'Vectores y Valores Propios'.",
+          "weight": 0.763,
+          "created_at": "2026-02-26T04:02:13.259000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3260",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Inferred from Stu's expression and the statement 'perdí el control de mi vida'.",
+          "weight": 0.621,
+          "created_at": "2026-02-26T04:02:13.288000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.621
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Fade To Black.mp3",
+        "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Desesperación",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": "La desesperación es un estado psíquico y existencial que va mucho más allá de la simple ausencia de esperanza: constituye una reacción positiva y violenta del ánimo ante un bien que se percibe como necesario pero imposible de alcanzar. Santo Tomás de Aquino, siguiendo a Aristóteles, la clasificó entre las pasiones irascibles, pues el alma que desespera no se limita a detenerse, sino que se repliega con fuerza contraria, como un resorte que, tras tensarse al máximo en la búsqueda del bien anhelado, se invierte bruscamente al topar con la muralla de lo imposible. Søren Kierkegaard profundizó esta noción al definirla como \"la pérdida total de esperanzas, inclusive la de morir\", señalando así su dimensión más abismal: no es el dolor de quien todavía aguarda algo, sino el de quien ha agotado hasta el último recurso del deseo y se encuentra suspendido en un vacío sin salida posible.\n\nEste concepto resuena con particular intensidad en las expresiones artísticas que lo evocan desde distintos ángulos: la música gótica, el doom metal y el symphonic metal lo articulan a través de imágenes de oscuridad, frío, muerte y abandono divino —frases como \"Very little hope, I assure you\", \"God is long since dead\" o \"Hoy la esperanza murió\" condensan líricamente lo que la filosofía describe con rigor conceptual—, mientras que la literatura y la imagen lo sugieren mediante tonos de resignación, pérdida de control y duelo irreparable. En todos estos registros, la desesperación aparece no como pasividad melancólica, sino como una energía concentrada y oscura que, al no encontrar salida hacia el bien, puede volverse sobre sí misma con una intensidad destructiva, confirmando la antigua intuición de que quien verdaderamente desespera no ha dejado de desear, sino que desea con una violencia que ya no encuentra objeto."
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5324",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explícito en la letra: 'Need the end to set me free', 'Death greets me warm'. La muerte es personificada como bienvenida.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:02.533000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5611",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Las letras lo mencionan explícitamente: 'I have lost the will to live', 'Nothing matters, no one else'.",
+          "weight": 0.9,
+          "created_at": "2026-03-16T18:41:02.504000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:10.223000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.7
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:885",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_a8445982.txt",
+        "file_hash": "a84459826abc554079cce06ec7b76de699e6f981bc3c293318a87b166512db00",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5699",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:885",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explicitly stated as 'consiento en mi muerte perpetua'.",
+          "weight": 0.89,
+          "created_at": "2026-02-21T07:00:26.474000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1274",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:885",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Strongly implied by the rejection of divine love, consolation, and salvation, coupled with the acceptance of perpetual death.",
+          "weight": 0.8,
+          "created_at": "2026-02-21T07:00:26.477000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Slayer - Unit 731.mp3",
+        "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2734",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Constantly referenced throughout the lyrics: 'dead still see', 'last breath the sword comes down', 'speaking death to me', 'pile up the dead', 'pleasure in death', 'factories of death'.",
+          "weight": 0.959,
+          "created_at": "2026-02-25T21:24:47.564000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3493",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implied by the 'justified action' for atrocities, lack of mercy, and embrace of madness, suggesting a rejection of conventional moral values.",
+          "weight": 0.75,
+          "created_at": "2026-02-25T21:24:47.540000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1432",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_180847053804html_3cce01d1.txt",
+        "file_hash": "3cce01d1bae065dc4452808caf8f5ac5999a1ca23fd7ddd5355f921488700176",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5722",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1432",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explicitly mentioned 'ni en la muerte'.",
+          "weight": 0.956,
+          "created_at": "2026-02-24T14:04:50.105000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3546",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1432",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Strongly implied by 'ni creencia en nada, ni en verdades, ni en dudas, ni en la muerte'.",
+          "weight": 0.7,
+          "created_at": "2026-02-24T14:04:50.137000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt",
+        "file_hash": "d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2049",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Determinismo y Ausencia de Libre Albedrío",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1067",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Bad Religion - Shattered Faith.mp3",
+        "file_hash": "9e87dce8396d233c19d221226e31d05b251f41c2b6dfe92b354daef1db758a10",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5900",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Manual connection via Latent Explorer (Concept)",
+          "weight": 0.865,
+          "source": "interactive_latent_explorer",
+          "created_at": "2026-03-20T06:16:40.916000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5899",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2049",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Manual connection via Latent Explorer (Concept)",
+          "weight": 0.822,
+          "source": "interactive_latent_explorer",
+          "created_at": "2026-03-20T06:16:31.436000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4873",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1067",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2049",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Implícito en 'we weren't given a choice' y 'accept your fate'; el científico niega el propósito y el teólogo afirma el diseño.",
+          "weight": 0.88,
+          "created_at": "2026-03-16T18:39:25.216000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3770",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1067",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Inferido del contexto: 'there ain't no purpose', 'no reward', 'directionless wandering'.",
+          "weight": 0.82,
+          "created_at": "2026-03-16T18:39:25.224000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2703",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_190066452016html_9aee3391.txt",
+        "file_hash": "9aee3391a21893dbf366fcc1ce6b236cced2def065cf5bad01bdbf00d1f3beda",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4980",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2703",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Explicitamente mencionado: 'We shall be fables presently' - tema central del fragmento",
+          "weight": 1,
+          "created_at": "2026-03-17T22:36:08.555000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4958",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2703",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Cita directa de Montaigne: 'there's nothing new or true, — and no matter'",
+          "weight": 0.9,
+          "created_at": "2026-03-17T22:36:08.567000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Fade To Black.mp3",
+        "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5324",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explícito en la letra: 'Need the end to set me free', 'Death greets me warm'. La muerte es personificada como bienvenida.",
+          "weight": 0.85,
+          "created_at": "2026-03-16T18:41:02.533000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5797",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Mención explícita en la letra: 'Emptiness is filling me / To the point of agony'.",
+          "weight": 0.9,
+          "created_at": "2026-03-16T18:41:02.512000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1095",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "The Beatles - Eleanor Rigby (Remastered 2009).mp3",
+        "file_hash": "191f95ae0dc51fe089391cd38036c95e148f0c9906f95f8560f28eac79b31673",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5444",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1095",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Explicit lyrical content: 'died in the church and was buried along with her name / nobody came'.",
+          "weight": 0.9,
+          "created_at": "2026-03-16T18:38:25.259000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5798",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1095",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Inferred from the rhetorical questions in the chorus; not explicitly stated as philosophy but strongly implied.",
+          "weight": 0.75,
+          "created_at": "2026-03-16T18:38:25.256000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Mortalidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1537",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_159322051174html_b6d51788.txt",
+        "file_hash": "b6d51788dfbf094551b4b05b9e209d1ffcc86f1ec1bacc0df896a099428900ff",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.668000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5715",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1537",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Similarity: 59% in Weaviate (TextSpace). Semantic Transfer: [text_ed8a7632.txt] -> [text_Tumblr_Post_-_159322051174html_b6d51788.txt].",
+          "weight": 0.985,
+          "source": "interactive_latent_explorer",
+          "created_at": "2026-02-27T00:29:43.145000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5799",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1537",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Metaphorical description 'una especie de abismo Mezquino y portátil'.",
+          "weight": 0.7,
+          "created_at": "2026-02-24T14:17:50.913000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  },
+  {
+    "nodes": [
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Libre albedrío y responsabilidad",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+        "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Condición Humana",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1430",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "text_Tumblr_Post_-_142519328434html_2d85e909.txt",
+        "file_hash": "2d85e9095f4f395405507c2a44ddf7d83d3deb2241479907a24d3ee8d6c87434",
+        "mime_type": "text/plain",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Nihilismo y Vacío Existencial",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "labels": [
+          "DigitalAsset"
+        ],
+        "name": null,
+        "filename": "Metallica - Master of Puppets.mp3",
+        "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+        "mime_type": "audio/mpeg",
+        "description": null
+      },
+      {
+        "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "labels": [
+          "Concept"
+        ],
+        "name": "Laberinto sin Salida",
+        "filename": null,
+        "file_hash": null,
+        "mime_type": null,
+        "description": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "weight": 0.85,
+          "created_at": "2026-03-17T22:35:51.677000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3569",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Explicitamente mencionada y definida",
+          "weight": 1,
+          "created_at": "2026-03-17T22:35:51.674000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1479",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1430",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "El texto describe una característica universal de la experiencia humana según el autor.",
+          "weight": 0.8,
+          "created_at": "2026-02-24T14:05:02.630000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5800",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1430",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Concepto explícitamente mencionado como consecuencia de la torpeza intelectual.",
+          "weight": 1,
+          "created_at": "2026-02-24T14:05:02.598000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5756",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3151",
+        "type": "EVOKES_CONCEPT",
+        "properties": {
+          "reasoning": "Interpretación temática: 'Just a rhyme without a reason', 'Now your life is out of season' evocan una existencia sin propósito ni dirección.",
+          "weight": 0.65,
+          "created_at": "2026-03-16T18:41:10.236000000+00:00"
+        }
+      },
+      {
+        "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+        "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+        "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+        "type": "EVOKES",
+        "properties": {
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "weight": 0.7,
+          "created_at": "2026-03-16T18:41:10.230000000+00:00"
+        }
+      }
+    ],
+    "minimum_weight": 0.65
+  }
+]

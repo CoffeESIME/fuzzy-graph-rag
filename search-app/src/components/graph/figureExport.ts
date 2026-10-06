@@ -39,7 +39,7 @@ export function graphSvg(nodes: Node[], edges: Edge[], options: { title: string;
         const vertical = Math.abs(t.y - s.y) > Math.abs(t.x - s.x);
         const x1 = s.x + (vertical ? 100 : t.x >= s.x ? 200 : 0), y1 = s.y + (vertical ? t.y >= s.y ? 76 : 0 : 38);
         const x2 = t.x + (vertical ? 100 : t.x >= s.x ? 0 : 200), y2 = t.y + (vertical ? t.y >= s.y ? 0 : 76 : 38);
-        const label = [options.labels ? v.relation : '', options.weights && v.weight !== undefined ? String(v.weight) : ''].filter(Boolean).join(' · ');
+        const label = [options.labels ? e.data?.routeLabel : '', options.labels ? v.relation : '', options.weights && v.weight !== undefined ? String(v.weight) : ''].filter(Boolean).join(' · ');
         return `<path d="M${x1} ${y1}L${x2} ${y2}" fill="none" stroke="${options.line}" stroke-width="${1.5 + Math.max(0, Math.min(1, v.weight ?? .5)) * 2}" ${v.dash ? `stroke-dasharray="${v.dash}"` : ''} ${e.markerEnd ? 'marker-end="url(#arrow)"' : ''}/>${label ? `<text x="${(x1+x2)/2}" y="${(y1+y2)/2-9}" text-anchor="middle" font-size="12" paint-order="stroke" stroke="${options.background}" stroke-width="4" stroke-linejoin="round">${escape(label)}</text>` : ''}`;
     }).join('')}
     ${nodes.map(n => { const p = point(n), v = visualNode(n), color = nodeColors[v.type] ?? '#78818c';

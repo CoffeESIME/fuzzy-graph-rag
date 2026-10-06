@@ -2,9 +2,28 @@
 
 **Español** · [English](README.en.md)
 
-Explora tus archivos, sigue sus conexiones y descubre ideas que no estabas buscando.
+Explora tus archivos a través de asociaciones, analogías y conexiones inesperadas.
 
-GraphRAG combina búsqueda multimodal, un grafo de conocimiento y relaciones con pesos difusos para explorar documentos, imágenes, audio y video. Su propósito es recuperar material relevante y descubrir conexiones entre archivos, conceptos y entidades: del archivo al hallazgo.
+El proyecto parte de una pregunta de investigación:
+
+> ¿Puede un sistema de conocimiento ayudarnos a descubrir relaciones que no sabíamos que estábamos buscando?
+
+## Motivación intelectual
+
+Dos influencias motivaron esta pregunta computacional:
+
+- **Douglas Hofstadter y Emmanuel Sander, *Surfaces and Essences*:** la analogía y su papel en la categorización.
+- **Marcel Danesi, *Poetic Logic and the Origins of the Mathematical Imagination*:** el pensamiento poético, la metáfora, la abducción y la creación conceptual.
+
+Son influencias intelectuales, no una validación de la arquitectura. El sistema no pretende modelar ni reproducir la cognición humana. La pregunta de diseño es:
+
+> ¿Cómo sería un sistema de exploración del conocimiento si las relaciones no tuvieran que ser siempre binarias y las asociaciones débiles o indirectas pudieran seguir siendo explorables?
+
+Los grafos con pesos difusos son una respuesta experimental: la hipótesis computacional es que mantener distintos grados de relación disponibles para recorrerlos puede ofrecer pistas de investigación más allá de la similitud directa.
+
+La recuperación convencional optimiza principalmente la relevancia. GraphRAG combina esa búsqueda con la exploración de relaciones más débiles, indirectas e inesperadas mediante recorridos por el grafo difuso, Pathfinder y Serendipity.
+
+El sistema combina búsqueda multimodal, un grafo de conocimiento y relaciones con pesos difusos para explorar documentos, imágenes, audio y video. Su propósito es recuperar material relevante y hacer visibles posibles conexiones entre archivos, conceptos y entidades: del archivo al hallazgo.
 
 ![Inicio del observatorio con accesos a Serendipity y Pathfinder](docs/images/inicio.jpg)
 
@@ -19,7 +38,7 @@ GraphRAG combina búsqueda multimodal, un grafo de conocimiento y relaciones con
 
 Por ejemplo, una colección de notas, fotografías y entrevistas puede explorarse por un tema común y después por las conexiones entre sus entidades. Es un ejemplo de uso; los resultados dependen del material incorporado, los modelos y la calidad del grafo.
 
-Un peso entre 0 y 1 representa la intensidad de una relación según el método usado; no es una probabilidad verificada. Una conexión es una pista para investigar: abre los archivos de origen y contrasta el contenido.
+Un peso difuso entre 0 y 1 representa la fuerza de una relación según el método usado; no es una probabilidad de verdad. Los recorridos inesperados son pistas de investigación, no conclusiones. El sistema expone los caminos y el material de origen para la evaluación humana: inspecciona cada vínculo, abre los archivos y contrasta su contenido antes de decidir si una conexión es significativa.
 
 ## Del archivo al hallazgo
 

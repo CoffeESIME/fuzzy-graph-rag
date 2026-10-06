@@ -2,9 +2,28 @@
 
 [Español (principal)](README.md) · **English**
 
-Explore your files, follow their connections, and discover ideas you were not looking for.
+Explore your files through associations, analogies, and unexpected connections.
 
-GraphRAG combines multimodal search, a knowledge graph, and fuzzy weighted relationships to explore documents, images, audio, and video. Its purpose is to retrieve relevant material and reveal connections between files, concepts, and entities.
+The project begins with a research question:
+
+> Can a knowledge system help us discover relationships we did not know we were looking for?
+
+## Intellectual motivation
+
+Two influences motivated this computational question:
+
+- **Douglas Hofstadter and Emmanuel Sander, *Surfaces and Essences*:** analogy and its role in categorization.
+- **Marcel Danesi, *Poetic Logic and the Origins of the Mathematical Imagination*:** poetic thought, metaphor, abduction, and conceptual creation.
+
+These are intellectual influences, not validation of the architecture. The system does not claim to model or reproduce human cognition. The design question is:
+
+> What would a knowledge exploration system look like if relationships did not always have to be binary, and if weak or indirect associations could remain explorable?
+
+Fuzzy weighted graphs are one experimental response: the computational hypothesis is that keeping different degrees of relationship available for traversal may offer research leads beyond direct similarity.
+
+Conventional retrieval primarily optimizes for relevance. GraphRAG combines that search with exploration of weaker, indirect, and unexpected relationships through fuzzy graph traversal, Pathfinder, and Serendipity.
+
+The system combines multimodal search, a knowledge graph, and fuzzy weighted relationships to explore documents, images, audio, and video. Its purpose is to retrieve relevant material and make possible connections between files, concepts, and entities visible: from files to discoveries.
 
 ![Observatory home with Serendipity and Pathfinder entry points](docs/images/inicio.jpg)
 
@@ -19,7 +38,7 @@ GraphRAG combines multimodal search, a knowledge graph, and fuzzy weighted relat
 
 For example, a collection of notes, photographs, and interviews can be explored through a shared topic and then through connections between its entities. This is an illustrative use case; results depend on the corpus, models, and graph quality.
 
-A weight between 0 and 1 describes relationship strength according to the method used; it is not a verified probability. Treat a connection as a research lead and check the original files.
+A fuzzy weight between 0 and 1 describes relationship strength according to the method used; it is not a probability of truth. Unexpected paths are research leads, not conclusions. The system exposes paths and source material for human evaluation: inspect each link, open the files, and check their content before deciding whether a connection is meaningful.
 
 ## From files to discoveries
 

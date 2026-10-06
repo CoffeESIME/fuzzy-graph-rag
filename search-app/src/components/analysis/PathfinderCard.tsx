@@ -1,3 +1,6 @@
+import PathfinderRoutes from './PathfinderRoutes';
+import { exportPathfinder, explanationFor, explanationInput } from '../../lib/pathfinderRoutes';
+import type { PathfinderPath, PathfinderExplanation } from '../../types/pathfinder';
 import MethodDetails from '../graph/MethodDetails';
 import Explanation from '../graph/Explanation';
 import { useState, useCallback, useEffect, useRef } from 'react';
@@ -338,11 +341,15 @@ export default function PathfinderCard() {
     const [kPaths, setKPaths] = useState<number>(3);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<PathfinderResponse | null>(null);
+    const [selectedRoute, setSelectedRoute] = useState<PathfinderPath | null>(null);
+    const explanationRequest = useRef(0);
     const [error, setError] = useState<string | null>(null);
     const [selectedNode, setSelectedNode] = useState<PathfinderNodeData | null>(null);
 
     // LLM Explanation State
-    const [explanation, setExplanation] = useState<string | null>(null);
+    const [explanations, setExplanations] = useState<PathfinderExplanation[]>([]);
+    const [explanationError, setExplanationError] = useState<string | null>(null);
+    const explanation = explanationFor(explanations, selectedRoute?.id ?? null);
     const [explaining, setExplaining] = useState(false);
     const [privacyMode, setPrivacyMode] = useState(false);
     const [showExplanation, setShowExplanation] = useState(true);
@@ -356,8 +363,10 @@ export default function PathfinderCard() {
         setLoading(true);
         setError(null);
         setResult(null);
+        setSelectedRoute(null);
+        explanationRequest.current += 1;
         setSelectedNode(null);
-        setExplanation(null);
+        setExplanations([]); setExplanationError(null);
         setRfNodes([]);
         setRfEdges([]);
         try {
@@ -369,7 +378,7 @@ export default function PathfinderCard() {
                 topo_threshold: mode === 'topological' ? topoThreshold : undefined,
                 k_paths: kPaths,
             });
-            setResult(res);
+            setResult({ ...res, source: res.source ?? { id: sourceNode.id, label: sourceNode.label, node_type: sourceNode.type }, target: res.target ?? { id: targetNode.id, label: targetNode.label, node_type: targetNode.type } });
             if (res.status === 'success' && res.nodes.length > 0) {
                 const { nodes: n, edges: e } = buildReactFlowData(res);
                 setRfNodes(n.map(node => ({ ...node, data: { ...node.data, role: node.data.raw.id === sourceNode?.id ? 'Origen' : node.data.raw.id === targetNode?.id ? 'Destino' : undefined } })));
@@ -391,22 +400,24 @@ export default function PathfinderCard() {
 
     const handleExplain = async () => {
         if (!result || !result.nodes.length) return;
+        const requestId = ++explanationRequest.current;
         setExplaining(true);
-        setExplanation(null);
+        setExplanationError(null);
         try {
             const res = await explainAnalyticalPath({
                 tool_name: 'pathfinder',
-                nodes: result.nodes,
-                edges: result.edges,
+                ...explanationInput(result, selectedRoute),
                 privacy_mode: privacyMode,
             });
+            if (requestId !== explanationRequest.current) return;
             if (res.status === 'success') {
-                setExplanation(res.explanation);
+                setExplanations(previous => [...previous, { path_id: selectedRoute?.id ?? null, path_ids: (selectedRoute ? [selectedRoute] : result.paths ?? []).map(p => p.id), explanation: res.explanation, generated_at: new Date().toISOString(), privacy_mode: privacyMode }]);
             } else {
-                setExplanation(` ${res.explanation}`);
+                setExplanationError(res.explanation);
             }
         } catch (err: unknown) {
-            setExplanation(' Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
+            if (requestId !== explanationRequest.current) return;
+            setExplanationError('Error al generar la explicación: ' + (err instanceof Error ? err.message : String(err)));
         } finally {
             setExplaining(false);
         }
@@ -414,38 +425,12 @@ export default function PathfinderCard() {
 
     const handleExportJson = () => {
         if (!result) return;
-        const exportData = {
-            exported_at: new Date().toISOString(),
-            mode: result.mode,
-            source: sourceNode ? { id: sourceNode.id, label: sourceNode.label, type: sourceNode.type } : null,
-            target: targetNode ? { id: targetNode.id, label: targetNode.label, type: targetNode.type } : null,
-            path_length: result.path_length,
-            message: result.message,
-            llm_explanation: explanation || null,
-            options: {
-                privacy_mode: privacyMode,
-                threshold: result.mode === 'lateral' ? threshold : undefined
-            },
-            nodes: result.nodes.map(n => ({
-                id: n.id,
-                label: n.label,
-                node_type: n.node_type,
-                weight_to_next: n.weight_to_next ?? null,
-                file_hash: n.file_hash ?? null,
-                mime_type: n.mime_type ?? null,
-            })),
-            edges: result.edges.map(e => ({
-                source: e.source,
-                target: e.target,
-                rel_type: e.rel_type,
-                weight: e.weight ?? null,
-            })),
-        };
+        const exportData = { ...exportPathfinder(result, explanation, selectedRoute?.id ?? null, explanations), options: { privacy_mode: privacyMode } };
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        const srcLabel = (sourceNode?.label ?? 'origin').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const tgtLabel = (targetNode?.label ?? 'target').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const srcLabel = (result.source?.label ?? 'origin').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const tgtLabel = (result.target?.label ?? 'target').replace(/[^a-z0-9]/gi, '_').toLowerCase();
         a.href = url;
         a.download = `pathfinder_${srcLabel}_to_${tgtLabel}_${Date.now()}.json`;
         a.click();
@@ -624,27 +609,10 @@ export default function PathfinderCard() {
                         <div style={{ padding: '10px 20px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-surface)', display: 'flex', alignItems: 'center', gap: 12 }}>
                             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{result.message}</span>
-                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-dim)' }}>{result.path_length} salto(s) • Modo {result.mode}</span>
+                            <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-dim)' }}>Máximo {result.path_length} salto(s) · Modo {result.mode}</span>
                         </div>
                     )}
-                    {/* React Flow always renders on a light canvas */}
-                    <div style={{ height: 620 }}>
-                        <ReactFlow
-                            nodes={rfNodes}
-                            edges={rfEdges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-
-                            title="Pathfinder · Navegador latente"
-                            fitView
-                            fitViewOptions={{ padding: 0.3 }}
-                            attributionPosition="bottom-right"
-                            proOptions={{ hideAttribution: true }}
-                        >
-                            <Controls />
-                            <Background color="var(--text-primary)" gap={20} />
-                        </ReactFlow>
-                    </div>
+                    {result && <PathfinderRoutes key={result.generated_at ?? result.message} result={result} onSelectionChange={path => { setSelectedRoute(path); setExplanationError(null); }} />}
                     <div style={{ padding: '10px 20px', background: 'var(--bg-surface)', borderTop: '1px solid var(--border-surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
                             Selecciona un nodo para inspeccionar sus relaciones y contenido.
@@ -694,7 +662,7 @@ export default function PathfinderCard() {
                                 onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-body)'; e.currentTarget.style.borderColor = 'var(--text-dim)'; }}
                                 onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.borderColor = 'var(--border-surface)'; }}
                             >
-                                <Download size={14} /> Exportar JSON
+                                <Download size={14} /> Exportar JSON ({explanations.length} explicaciones)
                             </button>
 
                             <button
@@ -717,7 +685,7 @@ export default function PathfinderCard() {
                                 }}
                             >
                                 {explaining ? <Loader2 size={14} className="animate-spin" /> : <span></span>}
-                                Explicar Camino con IA
+                                {selectedRoute ? `Explicar registro ${selectedRoute.rank} con IA` : 'Explicar todas con IA'}
                             </button>
                         </div>
                     </div>
@@ -725,6 +693,8 @@ export default function PathfinderCard() {
             )}
 
             {/* Explanation Panel */}
+            {explaining && privacyMode && <p role="status">Generando localmente; la espera puede tardar hasta 15 minutos.</p>}
+            {explanationError && <p role="alert">{explanationError}</p>}
             {explanation && (
                 <div style={{
                     background: 'var(--bg-panel)',
@@ -738,7 +708,7 @@ export default function PathfinderCard() {
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'var(--gradient-primary)' }} />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showExplanation ? 16 : 0 }}>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-body)', fontSize: '1.1rem' }}>
-                            <span></span> Explicación del Camino
+                            <span></span> {selectedRoute ? `Explicación del registro ${selectedRoute.rank}` : 'Explicación conjunta de todas las rutas'}
                         </h3>
                         <button
                             onClick={() => setShowExplanation(!showExplanation)}

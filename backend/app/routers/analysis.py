@@ -311,37 +311,9 @@ def _resolve_minio_url(file_hash: Optional[str], mime_type: Optional[str] = None
 
 
 # ðŸ§­ Pathfinder (Navegador Latente)
-class PathfinderRequest(BaseModel):
-    source_element_id: str
-    target_element_id: str
-    mode: str = "direct"  # "direct" | "lateral" | "topological"
-    threshold: float = 0.85
-    topo_threshold: float = 0.0  # For topological mode: min edge weight to consider (0 = no filter)
-    k_paths: int = 3  # How many paths to return (1–10)
-
-class PathfinderNodeData(BaseModel):
-    id: str
-    label: str
-    node_type: str  # "Concept", "DigitalAsset", "Person", etc.
-    weight_to_next: Optional[float] = None
-    file_hash: Optional[str] = None
-    mime_type: Optional[str] = None
-    download_url: Optional[str] = None
-    minio_path: Optional[str] = None
-
-class PathfinderEdgeData(BaseModel):
-    source: str
-    target: str
-    weight: Optional[float]
-    rel_type: str
-
-class PathfinderResponse(BaseModel):
-    status: str
-    message: str
-    nodes: List[PathfinderNodeData]
-    edges: List[PathfinderEdgeData]
-    path_length: int
-    mode: str
+from app.pathfinder_contract import (
+    PathfinderRequest, PathfinderResponse, build_pathfinder_response,
+)
 
 @router.post("/pathfinder", response_model=PathfinderResponse)
 def pathfind(request: PathfinderRequest):
@@ -489,83 +461,7 @@ def pathfind(request: PathfinderRequest):
                 )
                 records = list(result)
 
-            if not records:
-                return PathfinderResponse(
-                    status="not_found",
-                    message=f"No path found in '{request.mode}' mode. Try 'direct' mode or select closer nodes.",
-                    nodes=[], edges=[], path_length=0, mode=request.mode
-                )
-
-            # â”€â”€ Deduplicate across all K paths â”€â”€
-            seen_nodes: dict = {}     # elementId str â†’ PathfinderNodeData
-            seen_edge_keys: set = set()
-            out_edges: List[PathfinderEdgeData] = []
-            total_hops = 0
-
-            for record in records:
-                path_nodes = record["path_nodes"]
-                path_rels = record["path_rels"]
-                total_hops = max(total_hops, len(path_rels))
-
-                # Build a local id map for this path so edges match exactly
-                local_id_map: dict = {}  # neo4j internal id â†’ our string elementId key
-
-                for n in path_nodes:
-                    nid = str(n.element_id)
-                    local_id_map[n.element_id] = nid
-
-                    if nid not in seen_nodes:
-                        node_labels = list(n.labels)
-                        node_type = "Concept"
-                        for lbl in node_labels:
-                            if lbl in ["DigitalAsset", "Person", "Location", "Organization", "Event", "Project"]:
-                                node_type = lbl
-                                break
-
-                        file_hash = n.get("file_hash") or n.get("neo4j_hash") or n.get("hash")
-                        mime_type = n.get("mime_type")
-                        minio_data = {}
-                        if node_type == "DigitalAsset" and file_hash:
-                            minio_data = _resolve_minio_url(file_hash, mime_type)
-
-                        seen_nodes[nid] = PathfinderNodeData(
-                            id=nid,
-                            label=n.get("name") or n.get("filename") or n.get("title") or "?",
-                            node_type=node_type,
-                            file_hash=file_hash,
-                            mime_type=mime_type,
-                            **minio_data
-                        )
-
-                for rel in path_rels:
-                    src_id = str(rel.start_node.element_id)
-                    tgt_id = str(rel.end_node.element_id)
-                    edge_key = (src_id, tgt_id, rel.type)
-                    if edge_key not in seen_edge_keys:
-                        seen_edge_keys.add(edge_key)
-                        w = rel.get("weight")
-                        try:
-                            w = float(w) if w is not None else None
-                        except (ValueError, TypeError):
-                            w = None
-                        out_edges.append(PathfinderEdgeData(
-                            source=src_id,
-                            target=tgt_id,
-                            weight=round(w, 3) if w is not None else None,
-                            rel_type=rel.type
-                        ))
-
-            out_nodes = list(seen_nodes.values())
-            num_paths = len(records)
-
-            return PathfinderResponse(
-                status="success",
-                message=f"{num_paths} camino(s) encontrado(s): {len(out_nodes)} nodos Ãºnicos, {len(out_edges)} aristas Ãºnicas.",
-                nodes=out_nodes,
-                edges=out_edges,
-                path_length=total_hops,
-                mode=request.mode
-            )
+            return build_pathfinder_response(records, request, _resolve_minio_url)
 
     except Exception as e:
         logger.error(f"ðŸ”¥ Pathfinder error: {e}")
@@ -709,6 +605,7 @@ class PathExplanationRequest(BaseModel):
     nodes: List[Dict[str, Any]]
     edges: List[Dict[str, Any]]
     privacy_mode: bool = False
+    paths: Optional[List[Dict[str, Any]]] = None
 
 class PathExplanationResponse(BaseModel):
     explanation: str
@@ -746,6 +643,9 @@ def explain_analytical_path(req: PathExplanationRequest):
             path_str_parts.append(step)
 
         path_context = "\n".join(path_str_parts)
+        if req.paths:
+            # Keep route boundaries and traversal order, including parallel variants.
+            path_context = json.dumps(req.paths, ensure_ascii=False)
 
         # 1.5 Fetch minio sidecars for contextual richness
         minio_contexts = []
@@ -877,6 +777,8 @@ def explain_analytical_path(req: PathExplanationRequest):
                             """
 
         user_prompt = f"Aquí tienes el conjunto de conexiones no direccionales extraídas del grafo de conocimiento:\n\n{path_context}{context_block}\n\nAnaliza este conjunto en su totalidad. Determina libremente cuál es la dirección narrativa o causal más lógica y explica detalladamente la cadena de asociaciones siguiendo esa dirección elegida, integrando la información de los archivos."
+        if req.paths:
+            user_prompt += "\nLas rutas JSON son recorridos independientes y ordenados. Explica cada ruta por su ID y rango, respeta sus límites y distingue tramos compartidos y divergentes. Si tienen la misma secuencia de nodos, descríbelas como variantes de relaciones. No inventes una única cadena combinando rutas. Las asociaciones son pistas para evaluación humana, no demuestran causalidad; los pesos no son probabilidades de verdad."
 
         # 3. Request to LLM Gateway
         url = f"{LLM_GATEWAY_URL}/v1/chat/completions"
@@ -894,7 +796,7 @@ def explain_analytical_path(req: PathExplanationRequest):
         }
         
         logger.info(f"Requesting path explanation for {len(req.nodes)} nodes via {LLM_GATEWAY_URL}")
-        response = requests.post(url, data=data, timeout=60)
+        response = requests.post(url, data=data, timeout=(10, 900 if req.privacy_mode else 60))
         
         if response.status_code == 200:
             result = response.json()

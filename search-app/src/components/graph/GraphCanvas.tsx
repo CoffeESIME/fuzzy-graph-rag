@@ -54,7 +54,7 @@ export default function GraphCanvas({ title = 'Exploración de conocimiento', in
     }, [nodes, edges, layout, labels, selected, positions, measurements]);
     const graphEdges = useMemo(() => edges.map(edge => {
         const v = edgeVisual(edge), highlighted = selected === edge.source || selected === edge.target;
-        return { ...edge, animated: false, label: [labels ? v.relation : '', weights && v.weight !== undefined ? String(v.weight) : ''].filter(Boolean).join(' · '),
+        return { ...edge, animated: false, label: [edge.data?.routeLabel, labels ? v.relation : '', weights && v.weight !== undefined ? String(v.weight) : ''].filter(Boolean).join(' · '),
             style: { ...edge.style, stroke: highlighted ? 'var(--accent)' : 'var(--graph-edge)', strokeWidth: highlighted ? 3.5 : 1.5 + 2 * Math.max(0, Math.min(1, v.weight ?? .5)), strokeDasharray: v.dash, opacity: selected && !highlighted ? .35 : 1 },
             labelStyle: { fill: 'var(--text-primary)', fontSize: preset === 'presentation' ? 14 : 12, fontWeight: 500 }, labelBgStyle: { fill: 'var(--surface)', fillOpacity: .95 },
         };

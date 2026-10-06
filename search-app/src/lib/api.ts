@@ -355,41 +355,8 @@ const analysisApi = axios.create({
     timeout: 300000, // 5 minutes – pathfinder can be slow on large graphs
 });
 
-export interface PathfinderRequest {
-    source_element_id: string;
-    target_element_id: string;
-    mode: 'direct' | 'lateral' | 'topological';
-    threshold?: number;
-    topo_threshold?: number;
-    k_paths?: number;
-}
-
-export interface PathfinderNodeData {
-    id: string;
-    label: string;
-    node_type: string;
-    weight_to_next?: number | null;
-    file_hash?: string | null;
-    mime_type?: string | null;
-    download_url?: string | null;
-    minio_path?: string | null;
-}
-
-export interface PathfinderEdgeData {
-    source: string;
-    target: string;
-    weight: number | null;
-    rel_type: string;
-}
-
-export interface PathfinderResponse {
-    status: string;
-    message: string;
-    nodes: PathfinderNodeData[];
-    edges: PathfinderEdgeData[];
-    path_length: number;
-    mode: string;
-}
+export type { PathfinderRequest, PathfinderNodeData, PathfinderEdgeData, PathfinderResponse } from '../types/pathfinder';
+import type { PathfinderRequest, PathfinderResponse } from '../types/pathfinder';
 
 export async function callPathfinder(data: PathfinderRequest): Promise<PathfinderResponse> {
     const res = await analysisApi.post<PathfinderResponse>('/pathfinder', data);
@@ -401,6 +368,7 @@ export interface PathExplanationRequest {
     nodes: Record<string, any>[];
     edges: Record<string, any>[];
     privacy_mode?: boolean;
+    paths?: import('../types/pathfinder').PathfinderPath[];
 }
 
 export interface PathExplanationResponse {
@@ -409,7 +377,7 @@ export interface PathExplanationResponse {
 }
 
 export async function explainAnalyticalPath(data: PathExplanationRequest): Promise<PathExplanationResponse> {
-    const res = await analysisApi.post<PathExplanationResponse>('/explain-path', data);
+    const res = await analysisApi.post<PathExplanationResponse>('/explain-path', data, { timeout: data.privacy_mode ? 960000 : 300000 });
     return res.data;
 }
 

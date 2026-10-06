@@ -1,7 +1,11 @@
+import PathfinderRoutes from './PathfinderRoutes';
+import { readSavedPathfinder, readPathfinderExplanations, explanationFor, explanationInput, exportPathfinder } from '../../lib/pathfinderRoutes';
+import type { PathfinderPath, PathfinderExplanation } from '../../types/pathfinder';
 import Explanation from '../graph/Explanation';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { downloadBlob } from '../graph/figureExport';
+import React, { useState, useRef, useEffect, useEffectEvent, useCallback, useMemo } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FileDown, RefreshCw, X, FolderOpen, MousePointerClick, Image, Music, Video, File, ChevronRight, Activity, Cpu, BrainCircuit } from 'lucide-react';
 import ReactFlow from '../graph/GraphCanvas';
 import {
@@ -47,12 +51,20 @@ interface PathEdgeData {
 
 export default function SavedPathsViewer() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const featuredFilename = searchParams.get('path');
     const [paths, setPaths] = useState<SavedPathInfo[]>([]);
     const [loadingList, setLoadingList] = useState(false);
 
     const [selectedPathInfo, setSelectedPathInfo] = useState<SavedPathInfo | null>(null);
     const [pathContent, setPathContent] = useState<any | null>(null);
     const [loadingContent, setLoadingContent] = useState(false);
+    const [selectedRoute, setSelectedRoute] = useState<PathfinderPath | null>(null);
+    const savedPathfinder = readSavedPathfinder(pathContent);
+    const explanationRequest = useRef(0);
+    const [explanations, setExplanations] = useState<PathfinderExplanation[]>([]);
+    const [explanationError, setExplanationError] = useState<string | null>(null);
+    const loadRequest = useRef(0);
 
     // ReactFlow states
     const [nodes, setNodes] = useState<Node[]>([]);
@@ -89,17 +101,23 @@ export default function SavedPathsViewer() {
     }, [fetchPaths]);
 
     const loadPathContent = async (info: SavedPathInfo) => {
+        const requestId = ++loadRequest.current;
+        explanationRequest.current += 1;
+        setSelectedRoute(null);
         setSelectedPathInfo(info);
         setLoadingContent(true);
         setPathContent(null);
         setSelectedNodeData(null);
         setPreviewData(null);
         setLiveExplanation(null);
+        setExplanations([]); setExplanationError(null);
 
         try {
             const res = await axios.get(`http://localhost:8000/analysis/saved-paths/${info.filename}`);
+            if (requestId !== loadRequest.current) return;
             const data = res.data;
             setPathContent(data);
+            setExplanations(readPathfinderExplanations(data));
 
             // Build Graph
             buildGraph(data, info.tool_type);
@@ -107,9 +125,15 @@ export default function SavedPathsViewer() {
         } catch (error) {
             console.error("Error loading path content:", error);
         } finally {
-            setLoadingContent(false);
+            if (requestId === loadRequest.current) setLoadingContent(false);
         }
     };
+
+    const openFeaturedPath = useEffectEvent((info: SavedPathInfo) => { void loadPathContent(info); });
+    useEffect(() => {
+        const info = paths.find(path => path.filename === featuredFilename);
+        if (info) openFeaturedPath(info);
+    }, [paths, featuredFilename]);
 
     const buildGraph = (data: any, toolType: string) => {
         let newNodes: Node[] = [];
@@ -208,21 +232,27 @@ export default function SavedPathsViewer() {
 
     const handleExplainPath = async () => {
         if (nodes.length === 0) return;
+        const requestId = ++explanationRequest.current;
         setExplaining(true);
+        setExplanationError(null);
         try {
             const res = await explainAnalyticalPath({
                 tool_name: selectedPathInfo?.tool_type || 'saved_path',
-                nodes: nodes.map(n => n.data.fullData),
-                edges: edges.map(e => ({ source: e.source, target: e.target })),
+                ...(savedPathfinder ? explanationInput(savedPathfinder, selectedRoute) : { nodes: nodes.map(n => n.data.fullData), edges: edges.map(e => ({ source: e.source, target: e.target })) }),
                 privacy_mode: privacyMode
             });
-            setLiveExplanation(res.explanation);
+            if (requestId !== explanationRequest.current) return;
+            if (res.status !== 'success') { setExplanationError(res.explanation); return; }
+            if (savedPathfinder) setExplanations(previous => [...previous, { path_id: selectedRoute?.id ?? null, path_ids: (selectedRoute ? [selectedRoute] : savedPathfinder.paths ?? []).map(p => p.id), explanation: res.explanation, generated_at: new Date().toISOString(), privacy_mode: privacyMode }]);
+            else setLiveExplanation(res.explanation);
         } catch (err) {
-            console.error("Error explaining path", err);
+            if (requestId === explanationRequest.current) setExplanationError(err instanceof Error ? err.message : String(err));
         } finally {
             setExplaining(false);
         }
     };
+
+    const displayedExplanation = savedPathfinder ? explanationFor(explanations, selectedRoute?.id ?? null) : liveExplanation || pathContent?.llm_explanation;
 
     const getIconForType = (mime?: string) => {
         if (!mime) return <File size={48} className="text-slate-500" />;
@@ -338,6 +368,8 @@ export default function SavedPathsViewer() {
                                             {pathContent.message}
                                         </div>
                                     )}
+                                    {savedPathfinder && <button onClick={() => downloadBlob(new Blob([JSON.stringify(exportPathfinder(savedPathfinder, displayedExplanation, selectedRoute?.id ?? null, explanations), null, 2)], { type: 'application/json' }), selectedPathInfo.filename)}>Exportar JSON con explicaciones</button>}
+                                    {explanationError && <p role="alert">{explanationError}</p>}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                                             <input type="checkbox" checked={privacyMode} onChange={e => setPrivacyMode(e.target.checked)} />
@@ -345,7 +377,7 @@ export default function SavedPathsViewer() {
                                         </label>
                                         <button onClick={handleExplainPath} disabled={explaining} style={{ background: '#3b82f6', color: 'var(--text-primary)', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: explaining ? 'not-allowed' : 'pointer', opacity: explaining ? 0.7 : 1 }}>
                                             {explaining ? <RefreshCw size={14} className="animate-spin" /> : <BrainCircuit size={14} />}
-                                            {explaining ? 'Generando...' : 'Explicar con IA'}
+                                            {explaining ? (privacyMode ? 'Generando localmente (hasta 15 min)…' : 'Generando…') : selectedRoute ? `Explicar registro ${selectedRoute.rank}` : 'Explicar con IA'}
                                         </button>
                                     </div>
                                 </div>
@@ -353,7 +385,8 @@ export default function SavedPathsViewer() {
 
                             <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
                                 {/* Graph Area */}
-                                <div style={{ flex: 1, position: 'relative', height: '100%' }}>
+                                <div style={{ flex: 1, minWidth: 0, position: 'relative', height: '100%', overflowY: 'auto' }}>
+                                    {savedPathfinder ? <PathfinderRoutes key={selectedPathInfo.filename} result={savedPathfinder} onSelectionChange={path => { setSelectedRoute(path); setExplanationError(null); }} /> : pathContent?.schema_version === 2 ? <p role="alert">El archivo v2 no contiene rutas válidas. No se ha inferido su orden.</p> : (
                                     <ReactFlow
                                         nodes={nodes}
                                         edges={edges}
@@ -366,11 +399,12 @@ export default function SavedPathsViewer() {
                                         <Background gap={20} size={1} color="var(--border)" />
                                         <Controls />
                                     </ReactFlow>
+                                    )}
 
                                 </div>
 
                                 {/* Right Info Area (LLM Explanation) */}
-                                {(liveExplanation || pathContent?.llm_explanation) && (
+                                {displayedExplanation && (
                                     <div style={{
                                         width: 320, borderLeft: '1px solid var(--surface)', background: 'var(--background)',
                                         display: 'flex', flexDirection: 'column', height: '100%'
@@ -385,7 +419,7 @@ export default function SavedPathsViewer() {
                                                 fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6,
                                                 background: 'var(--surface)', padding: 16, borderRadius: 12, border: '1px solid var(--border)'
                                             }}>
-                                                <Explanation content={liveExplanation || pathContent.llm_explanation} />
+                                                <Explanation content={displayedExplanation} />
                                             </div>
                                         </div>
                                     </div>
