@@ -37,6 +37,8 @@ CONFIDENCE SCORING RUBRIC (STRICT ENFORCEMENT):
 🔴 PENALTY RULES (CRITICAL):
 1. **ABSTRACT CEILING:** If the concept is intangible (Philosophy, Emotions, Desires), you MUST NOT score it 1.0. The absolute maximum for abstract ideas is 0.9.
 2. **METAPHOR PENALTY:** If the connection is poetic/metaphorical, the score MUST be < 0.7.
+Confidence values must be JSON numbers (for example 0.9), never quoted strings.
+
 3. **DIVERSITY:** Do not output all 1.0s. A realistic analysis contains uncertainty.
 4. **METAPHOR DECODING (ANTI-HALLUCINATION):**
    - **Trigger:** When you see a simile ("like a goat", "como una cabra") or metaphor ("fogoso").

@@ -58,3 +58,14 @@ frontend/.streamlit/secrets.toml.template
 backend/poetry.lock
 tumblr/
 data_dev/
+# Generated audit outputs; retain scripts, fixtures and summarized findings.
+/docs/research/path-audit/INVENTORY.md
+/docs/research/path-audit/pathfinder-diagnostics.json
+/docs/research/path-llm-audit/v2-controlled-*.json
+
+# Personal saved results stay local. Existing tracked examples remain tracked.
+# These three explicit exports support the public Home/demo and technical guide.
+/backend/data/saved_paths/*.json
+!/backend/data/saved_paths/pathfinder_astr_nomo_ciego_to_abandono_de_lo_superficial_1791347443292.json
+!/backend/data/saved_paths/pathfinder_astr_nomo_ciego_to_guerra_1791346817628.json
+!/backend/data/saved_paths/pathfinder_libre_albedr_o_y_responsabilidad_to_laberinto_sin_salida_1791345427661.json

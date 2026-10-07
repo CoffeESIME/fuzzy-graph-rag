@@ -1,0 +1,1300 @@
+{
+  "status": "success",
+  "message": "5 resultado(s), 4 secuencia(s) de nodos distinta(s).",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "label": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+      "mime_type": "text/plain",
+      "minio_path": "master_records/texts/9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081.txt"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "label": "Condición Humana",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "label": "Haggard - Awaking the Centuries.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "b6faf6e0a2793ef909619e7e4b719940e71f518b8679ccfd00df43018fb7bc67",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/b6faf6e0_Haggard - Awaking the Centuries.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "label": "Desesperación",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "label": "Metallica - Master of Puppets.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/379716c7_Metallica - Master of Puppets.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+      "label": "text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d",
+      "mime_type": "text/plain",
+      "minio_path": "master_records/texts/d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d.txt"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "label": "Matemáticas",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "label": "FB_IMG_1743639238757.jpg",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a054c02d897c0646f84df54b02a8ce16d60087c539c7916dfdcda9b589123103",
+      "mime_type": "image/jpeg",
+      "minio_path": "raw/images/a054c02d_FB_IMG_1743639238757.jpg"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+      "label": "text_Tumblr_Post_-_117815483099html_001fdf7f.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "001fdf7faf76cb93b20c8c797bd071fec1cdc4461e9b4cde75089619e15a7e3f",
+      "mime_type": "text/plain",
+      "minio_path": "master_records/texts/001fdf7faf76cb93b20c8c797bd071fec1cdc4461e9b4cde75089619e15a7e3f.txt"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+      "label": "Autodestrucción",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+      "label": "David Bowie - Lazarus.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "0f9e7c661636d6ca78ad6443341e4d549478aa047bc039fa788fa3ca2e731d8d",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/0f9e7c66_David Bowie - Lazarus.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+      "label": "Legado",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "label": "Warcry - Capitán Lawrence.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "973c11eebaf474a570e24d508314e7f8b5365d13226abddbdca3adcdfe3ffa9e",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/973c11ee_Warcry - Capitán Lawrence.mp3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85,
+      "raw_weight": 0.85,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+      "provenance": {
+        "created_at": "2026-03-17T22:35:51.677000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3569",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "rel_type": "EVOKES",
+      "weight": 1,
+      "raw_weight": 1,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "reasoning": "Explicitamente mencionada y definida",
+      "provenance": {
+        "created_at": "2026-03-17T22:35:51.674000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5687",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.8,
+      "raw_weight": 0.8,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "reasoning": "Explicit lyrical content: 'sign of humanity is burning tonight', 'Humanity's burning tonight'.",
+      "provenance": {
+        "created_at": "2026-02-26T00:02:07.202000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2956",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES",
+      "weight": 0.695,
+      "raw_weight": 0.695,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "reasoning": "Implied by themes of darkness, death, and the burning of humanity.",
+      "provenance": {
+        "created_at": "2026-02-26T00:02:07.216000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.85,
+      "raw_weight": 0.85,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+      "provenance": {
+        "created_at": "2026-03-16T18:41:10.223000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "rel_type": "EVOKES",
+      "weight": 0.7,
+      "raw_weight": 0.7,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+      "provenance": {
+        "created_at": "2026-03-16T18:41:10.230000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5900",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.865,
+      "raw_weight": 0.865,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+      "reasoning": "Manual connection via Latent Explorer (Concept)",
+      "provenance": {
+        "created_at": "2026-03-20T06:16:40.916000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3316",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.783,
+      "raw_weight": 0.783,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "reasoning": "Similarity: 65% in Weaviate (TextSpace). Semantic Transfer: [FB_IMG_1745769671603.jpg] -> [text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt].",
+      "provenance": {
+        "created_at": "2026-02-26T20:02:33.146000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3415",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.763,
+      "raw_weight": 0.763,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "reasoning": "Strongly inferred from the explicit mention of 'Vectores y Valores Propios'.",
+      "provenance": {
+        "created_at": "2026-02-26T04:02:13.259000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3260",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES",
+      "weight": 0.621,
+      "raw_weight": 0.621,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "reasoning": "Inferred from Stu's expression and the statement 'perdí el control de mi vida'.",
+      "provenance": {
+        "created_at": "2026-02-26T04:02:13.288000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4627",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "rel_type": "EVOKES",
+      "weight": 0.763,
+      "raw_weight": 0.763,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+      "reasoning": "Similarity: 56% in Weaviate (VisualSpace). Semantic Transfer: [FB_IMG_1744434305718.jpg] -> [FB_IMG_1743639238757.jpg].",
+      "provenance": {
+        "created_at": "2026-02-27T00:43:09.684000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1287",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "rel_type": "EVOKES",
+      "weight": 0.7,
+      "raw_weight": 0.7,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+      "reasoning": "Inferencia filosófica: 'we expel ourselves' señala agencia propia, no fuerza externa.",
+      "provenance": {
+        "created_at": "2026-03-16T18:29:15.040000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1247",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+      "rel_type": "EVOKES",
+      "weight": 0.9,
+      "raw_weight": 0.9,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+      "reasoning": "Directamente expresado en la cita: 'somos nuestros propios demonios'.",
+      "provenance": {
+        "created_at": "2026-03-16T18:29:15.028000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4994",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+      "rel_type": "EVOKES",
+      "weight": 0.9,
+      "raw_weight": 0.9,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+      "reasoning": "Mención explícita: 'I'm your source of self-destruction', 'Your life burns faster', 'I will help you die'.",
+      "provenance": {
+        "created_at": "2026-03-16T18:41:10.216000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3398",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.761,
+      "raw_weight": 0.761,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+      "reasoning": "Explicit lyrical content: 'I'm in danger', 'I've got nothing left to lose'.",
+      "provenance": {
+        "created_at": "2026-02-25T21:32:20.730000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2834",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+      "rel_type": "EVOKES",
+      "weight": 0.8,
+      "raw_weight": 0.8,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+      "reasoning": "Implied by 'I've got drama, can't be stolen' and self-reflection ('Ain't that just like me?').",
+      "provenance": {
+        "created_at": "2026-02-25T21:32:20.732000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2935",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+      "rel_type": "EVOKES",
+      "weight": 0.8,
+      "raw_weight": 0.8,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "reasoning": "La frase 'Recuérdame mejor de lo que fui' expresa un deseo de cómo ser recordado.",
+      "provenance": {
+        "created_at": "2026-02-26T00:01:11.564000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1949",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.831,
+      "raw_weight": 0.831,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+      "reasoning": "La letra menciona explícitamente 'Hoy, hoy la esperanza murió'.",
+      "provenance": {
+        "created_at": "2026-02-26T00:01:11.493000000+00:00"
+      }
+    }
+  ],
+  "path_length": 8,
+  "mode": "lateral",
+  "paths": [
+    {
+      "id": "route-1-ec10236dc579",
+      "rank": 1,
+      "mode": "lateral",
+      "signature": "ec10236dc579e31cd101707c5b9d21b5c4b22e32932d844f93e6d7c08581f5e1",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "label": "Libre albedrío y responsabilidad",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "label": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "label": "Condición Humana",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+          "label": "Haggard - Awaking the Centuries.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "b6faf6e0a2793ef909619e7e4b719940e71f518b8679ccfd00df43018fb7bc67",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/b6faf6e0_Haggard - Awaking the Centuries.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "label": "Desesperación",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "label": "Metallica - Master of Puppets.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/379716c7_Metallica - Master of Puppets.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "label": "Laberinto sin Salida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "provenance": {
+            "created_at": "2026-03-17T22:35:51.677000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3569",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "reasoning": "Explicitamente mencionada y definida",
+          "provenance": {
+            "created_at": "2026-03-17T22:35:51.674000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5687",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+          "reasoning": "Explicit lyrical content: 'sign of humanity is burning tonight', 'Humanity's burning tonight'.",
+          "provenance": {
+            "created_at": "2026-02-26T00:02:07.202000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2956",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "rel_type": "EVOKES",
+          "weight": 0.695,
+          "raw_weight": 0.695,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "reasoning": "Implied by themes of darkness, death, and the burning of humanity.",
+          "provenance": {
+            "created_at": "2026-02-26T00:02:07.216000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.223000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.230000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 6,
+      "metrics": {
+        "cost": 5.005907584290718,
+        "min_weight": 0.695,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-2-e12b8d4e10db",
+      "rank": 2,
+      "mode": "lateral",
+      "signature": "e12b8d4e10db81e01e5e6509ef89fa531c5cfdf58068c5a0d541b321c0a3ff1d",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "label": "Libre albedrío y responsabilidad",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "label": "text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "label": "Matemáticas",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "label": "FB_IMG_1743639238757.jpg",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a054c02d897c0646f84df54b02a8ce16d60087c539c7916dfdcda9b589123103",
+          "mime_type": "image/jpeg",
+          "minio_path": "raw/images/a054c02d_FB_IMG_1743639238757.jpg"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "label": "Desesperación",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "label": "Metallica - Master of Puppets.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/379716c7_Metallica - Master of Puppets.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "label": "Laberinto sin Salida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5900",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.865,
+          "raw_weight": 0.865,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "reasoning": "Manual connection via Latent Explorer (Concept)",
+          "provenance": {
+            "created_at": "2026-03-20T06:16:40.916000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3316",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.783,
+          "raw_weight": 0.783,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "reasoning": "Similarity: 65% in Weaviate (TextSpace). Semantic Transfer: [FB_IMG_1745769671603.jpg] -> [text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt].",
+          "provenance": {
+            "created_at": "2026-02-26T20:02:33.146000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3415",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.763,
+          "raw_weight": 0.763,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "reasoning": "Strongly inferred from the explicit mention of 'Vectores y Valores Propios'.",
+          "provenance": {
+            "created_at": "2026-02-26T04:02:13.259000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3260",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "rel_type": "EVOKES",
+          "weight": 0.621,
+          "raw_weight": 0.621,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "reasoning": "Inferred from Stu's expression and the statement 'perdí el control de mi vida'.",
+          "provenance": {
+            "created_at": "2026-02-26T04:02:13.288000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.223000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.230000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 6,
+      "metrics": {
+        "cost": 5.250854373921332,
+        "min_weight": 0.621,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-3-e12b8d4e10db",
+      "rank": 3,
+      "mode": "lateral",
+      "signature": "e12b8d4e10db81e01e5e6509ef89fa531c5cfdf58068c5a0d541b321c0a3ff1d",
+      "duplicate_of": "route-2-e12b8d4e10db",
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "label": "Libre albedrío y responsabilidad",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "label": "text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "label": "Matemáticas",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "label": "FB_IMG_1743639238757.jpg",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a054c02d897c0646f84df54b02a8ce16d60087c539c7916dfdcda9b589123103",
+          "mime_type": "image/jpeg",
+          "minio_path": "raw/images/a054c02d_FB_IMG_1743639238757.jpg"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "label": "Desesperación",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "label": "Metallica - Master of Puppets.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/379716c7_Metallica - Master of Puppets.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "label": "Laberinto sin Salida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5900",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.865,
+          "raw_weight": 0.865,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "reasoning": "Manual connection via Latent Explorer (Concept)",
+          "provenance": {
+            "created_at": "2026-03-20T06:16:40.916000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3316",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.783,
+          "raw_weight": 0.783,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "reasoning": "Similarity: 65% in Weaviate (TextSpace). Semantic Transfer: [FB_IMG_1745769671603.jpg] -> [text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt].",
+          "provenance": {
+            "created_at": "2026-02-26T20:02:33.146000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4627",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "rel_type": "EVOKES",
+          "weight": 0.763,
+          "raw_weight": 0.763,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "reasoning": "Similarity: 56% in Weaviate (VisualSpace). Semantic Transfer: [FB_IMG_1744434305718.jpg] -> [FB_IMG_1743639238757.jpg].",
+          "provenance": {
+            "created_at": "2026-02-27T00:43:09.684000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3260",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "rel_type": "EVOKES",
+          "weight": 0.621,
+          "raw_weight": 0.621,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "reasoning": "Inferred from Stu's expression and the statement 'perdí el control de mi vida'.",
+          "provenance": {
+            "created_at": "2026-02-26T04:02:13.288000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.223000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.230000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 6,
+      "metrics": {
+        "cost": 5.250854373921332,
+        "min_weight": 0.621,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-4-cd6a49e2f573",
+      "rank": 4,
+      "mode": "lateral",
+      "signature": "cd6a49e2f5738c1beb91777ec8e17f6b412c4f0f335e7392041874f52dc5576e",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "label": "Libre albedrío y responsabilidad",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+          "label": "text_Tumblr_Post_-_117815483099html_001fdf7f.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "001fdf7faf76cb93b20c8c797bd071fec1cdc4461e9b4cde75089619e15a7e3f",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/001fdf7faf76cb93b20c8c797bd071fec1cdc4461e9b4cde75089619e15a7e3f.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+          "label": "Autodestrucción",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "label": "Metallica - Master of Puppets.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/379716c7_Metallica - Master of Puppets.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "label": "Laberinto sin Salida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1287",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+          "reasoning": "Inferencia filosófica: 'we expel ourselves' señala agencia propia, no fuerza externa.",
+          "provenance": {
+            "created_at": "2026-03-16T18:29:15.040000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1247",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+          "reasoning": "Directamente expresado en la cita: 'somos nuestros propios demonios'.",
+          "provenance": {
+            "created_at": "2026-03-16T18:29:15.028000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4994",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "reasoning": "Mención explícita: 'I'm your source of self-destruction', 'Your life burns faster', 'I will help you die'.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.216000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.230000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 4,
+      "metrics": {
+        "cost": 5.290105620855803,
+        "min_weight": 0.7,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-5-8aea55e08791",
+      "rank": 5,
+      "mode": "lateral",
+      "signature": "8aea55e08791b49017f02140623a60644cb0c17125c6d7144d83c1dc08117a9d",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "label": "Libre albedrío y responsabilidad",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "label": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "label": "Condición Humana",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+          "label": "David Bowie - Lazarus.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "0f9e7c661636d6ca78ad6443341e4d549478aa047bc039fa788fa3ca2e731d8d",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/0f9e7c66_David Bowie - Lazarus.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+          "label": "Legado",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "label": "Warcry - Capitán Lawrence.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "973c11eebaf474a570e24d508314e7f8b5365d13226abddbdca3adcdfe3ffa9e",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/973c11ee_Warcry - Capitán Lawrence.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "label": "Desesperación",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "label": "Metallica - Master of Puppets.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/379716c7_Metallica - Master of Puppets.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "label": "Laberinto sin Salida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+          "provenance": {
+            "created_at": "2026-03-17T22:35:51.677000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3569",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "reasoning": "Explicitamente mencionada y definida",
+          "provenance": {
+            "created_at": "2026-03-17T22:35:51.674000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3398",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.761,
+          "raw_weight": 0.761,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+          "reasoning": "Explicit lyrical content: 'I'm in danger', 'I've got nothing left to lose'.",
+          "provenance": {
+            "created_at": "2026-02-25T21:32:20.730000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2834",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+          "rel_type": "EVOKES",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2129",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+          "reasoning": "Implied by 'I've got drama, can't be stolen' and self-reflection ('Ain't that just like me?').",
+          "provenance": {
+            "created_at": "2026-02-25T21:32:20.732000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2935",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+          "rel_type": "EVOKES",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:317",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "reasoning": "La frase 'Recuérdame mejor de lo que fui' expresa un deseo de cómo ser recordado.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.564000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1949",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.831,
+          "raw_weight": 0.831,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "reasoning": "La letra menciona explícitamente 'Hoy, hoy la esperanza murió'.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.493000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.223000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+          "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:10.230000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 8,
+      "metrics": {
+        "cost": 5.78602883901038,
+        "min_weight": 0.7,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    }
+  ],
+  "raw_result_count": 5,
+  "unique_route_count": 4,
+  "generated_at": "2026-10-07T03:52:24.246647+00:00",
+  "algorithm_version": "pathfinder-cypher-v1",
+  "parameters": {
+    "k_paths": 5,
+    "requested_k_paths": 5,
+    "max_hops": 8,
+    "lateral_threshold": 0.85,
+    "topological_threshold": null
+  },
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+    "label": "Libre albedrío y responsabilidad",
+    "node_type": "Concept",
+    "weight_to_next": null,
+    "file_hash": null,
+    "mime_type": null,
+    "minio_path": null
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+    "label": "Laberinto sin Salida",
+    "node_type": "Concept",
+    "weight_to_next": null,
+    "file_hash": null,
+    "mime_type": null,
+    "minio_path": null
+  },
+  "schema_version": 2,
+  "tool": "pathfinder",
+  "exported_at": "2026-10-07T03:57:07.660Z",
+  "llm_explanation": null,
+  "explanation_path_id": null,
+  "explanations": [],
+  "options": {
+    "privacy_mode": false
+  }
+}

@@ -1,0 +1,336 @@
+{
+  "notice": "Fuentes redactadas exclusivamente para pruebas; no son citas históricas ni letras originales.",
+  "cases": [
+    {
+      "case_id": "analogia",
+      "expected_reading": "analogía estructural, sin teoría causal de la genialidad",
+      "route": {
+        "id": "analogia",
+        "rank": 1,
+        "mode": "topological",
+        "nodes": [
+          {
+            "id": "analogia-0",
+            "label": "Fundamentos",
+            "node_type": "Concept"
+          },
+          {
+            "id": "analogia-1",
+            "label": "Khayyam (fuente sintética)",
+            "node_type": "DigitalAsset",
+            "file_hash": "616e616c6f676961100000000000000000000000000000000000000000000000"
+          },
+          {
+            "id": "analogia-2",
+            "label": "Intuición",
+            "node_type": "Concept"
+          },
+          {
+            "id": "analogia-3",
+            "label": "Ramanujan (fuente sintética)",
+            "node_type": "DigitalAsset",
+            "file_hash": "616e616c6f676961300000000000000000000000000000000000000000000000"
+          },
+          {
+            "id": "analogia-4",
+            "label": "Genialidad",
+            "node_type": "Concept"
+          }
+        ],
+        "edges": [
+          {
+            "id": "analogia-edge-1",
+            "source": "analogia-1",
+            "target": "analogia-0",
+            "traversal_source": "analogia-0",
+            "traversal_target": "analogia-1",
+            "rel_type": "EVOKES",
+            "weight": 0.6,
+            "reasoning": "El archivo examina fundamentos del conocimiento."
+          },
+          {
+            "id": "analogia-edge-2",
+            "source": "analogia-1",
+            "target": "analogia-2",
+            "traversal_source": "analogia-1",
+            "traversal_target": "analogia-2",
+            "rel_type": "EVOKES",
+            "weight": 0.6,
+            "reasoning": "El archivo contrapone intuición y demostración."
+          },
+          {
+            "id": "analogia-edge-3",
+            "source": "analogia-3",
+            "target": "analogia-2",
+            "traversal_source": "analogia-2",
+            "traversal_target": "analogia-3",
+            "rel_type": "EVOKES",
+            "weight": 0.6,
+            "reasoning": "La fuente describe intuiciones matemáticas."
+          },
+          {
+            "id": "analogia-edge-4",
+            "source": "analogia-3",
+            "target": "analogia-4",
+            "traversal_source": "analogia-3",
+            "traversal_target": "analogia-4",
+            "rel_type": "EVOKES",
+            "weight": 0.6,
+            "reasoning": "La fuente asocia creatividad matemática con genialidad."
+          }
+        ]
+      },
+      "sidecars": {
+        "616e616c6f676961100000000000000000000000000000000000000000000000": {
+          "mime_type": "text/plain",
+          "text": "Material sintético de prueba, no cita histórica. La voz de Khayyam cuestiona los fundamentos de lo que creemos saber y contrapone demostración e intuición. El pasaje explora los límites de la certeza mediante preguntas y analogías.",
+          "data_layers": {}
+        },
+        "616e616c6f676961300000000000000000000000000000000000000000000000": {
+          "mime_type": "text/plain",
+          "text": "Material sintético de prueba, no cita histórica. El texto sobre Ramanujan describe intuiciones matemáticas que anticipan resultados cuya demostración formal requiere trabajo posterior. Llama genialidad a esa capacidad creativa, sin establecer una influencia de Khayyam.",
+          "data_layers": {}
+        }
+      }
+    },
+    {
+      "case_id": "contraste",
+      "expected_reading": "contraste o divergencia, sin materialismo como causa necesaria del cinismo",
+      "route": {
+        "id": "contraste",
+        "rank": 2,
+        "mode": "topological",
+        "nodes": [
+          {
+            "id": "contraste-0",
+            "label": "Materialismo",
+            "node_type": "Concept"
+          },
+          {
+            "id": "contraste-1",
+            "label": "Khayyam (fuente sintética)",
+            "node_type": "DigitalAsset",
+            "file_hash": "636f6e7472617374651000000000000000000000000000000000000000000000"
+          },
+          {
+            "id": "contraste-2",
+            "label": "Vida y Muerte",
+            "node_type": "Concept"
+          },
+          {
+            "id": "contraste-3",
+            "label": "Marat-Sade (fuente sintética)",
+            "node_type": "DigitalAsset",
+            "file_hash": "636f6e7472617374653000000000000000000000000000000000000000000000"
+          },
+          {
+            "id": "contraste-4",
+            "label": "Desprecio",
+            "node_type": "Concept"
+          }
+        ],
+        "edges": [
+          {
+            "id": "contraste-edge-1",
+            "source": "contraste-1",
+            "target": "contraste-0",
+            "traversal_source": "contraste-0",
+            "traversal_target": "contraste-1",
+            "rel_type": "EVOKES",
+            "weight": 0.8,
+            "reasoning": "La voz parte de una visión material de la vida."
+          },
+          {
+            "id": "contraste-edge-2",
+            "source": "contraste-1",
+            "target": "contraste-2",
+            "traversal_source": "contraste-1",
+            "traversal_target": "contraste-2",
+            "rel_type": "EVOKES",
+            "weight": 0.8,
+            "reasoning": "La mortalidad motiva cuidado en esta fuente."
+          },
+          {
+            "id": "contraste-edge-3",
+            "source": "contraste-3",
+            "target": "contraste-2",
+            "traversal_source": "contraste-2",
+            "traversal_target": "contraste-3",
+            "rel_type": "EVOKES",
+            "weight": 0.8,
+            "reasoning": "La escena aborda materialidad y muerte."
+          },
+          {
+            "id": "contraste-edge-4",
+            "source": "contraste-3",
+            "target": "contraste-4",
+            "traversal_source": "contraste-3",
+            "traversal_target": "contraste-4",
+            "rel_type": "EVOKES",
+            "weight": 0.8,
+            "reasoning": "El personaje expresa indiferencia; no toda la obra la avala."
+          }
+        ]
+      },
+      "sidecars": {
+        "636f6e7472617374651000000000000000000000000000000000000000000000": {
+          "mime_type": "text/plain",
+          "text": "Material sintético de prueba, no cita histórica. La voz de Khayyam sostiene que la vida es material y finita. Ante la mortalidad, propone cuidar a otros y disfrutar sin dañar: la fragilidad compartida es motivo de consideración.",
+          "data_layers": {}
+        },
+        "636f6e7472617374653000000000000000000000000000000000000000000000": {
+          "mime_type": "text/plain",
+          "text": "Material sintético de prueba, no cita histórica. En la escena de Marat-Sade, el personaje de Sade invoca la materialidad y la muerte para expresar indiferencia ante el sufrimiento ajeno. Otra voz cuestiona esa respuesta. La obra presenta una disputa, no una conclusión universal.",
+          "data_layers": {}
+        }
+      }
+    },
+    {
+      "case_id": "contrapunto",
+      "expected_reading": "contrapunto histórico-cultural, sin validación empírica ni explicación monocausal",
+      "route": {
+        "id": "contrapunto",
+        "rank": 3,
+        "mode": "topological",
+        "nodes": [
+          {
+            "id": "contrapunto-0",
+            "label": "Identidad Nacional",
+            "node_type": "Concept"
+          },
+          {
+            "id": "contrapunto-1",
+            "label": "Thoreau (fuente sintética)",
+            "node_type": "DigitalAsset",
+            "file_hash": "636f6e74726170756e746f100000000000000000000000000000000000000000"
+          },
+          {
+            "id": "contrapunto-2",
+            "label": "Nacionalismo",
+            "node_type": "Concept"
+          },
+          {
+            "id": "contrapunto-3",
+            "label": "Sabaton - Rise of Evil (fuente sintética)",
+            "node_type": "DigitalAsset",
+            "file_hash": "636f6e74726170756e746f300000000000000000000000000000000000000000"
+          },
+          {
+            "id": "contrapunto-4",
+            "label": "Consecuencias catastróficas",
+            "node_type": "Concept"
+          }
+        ],
+        "edges": [
+          {
+            "id": "contrapunto-edge-1",
+            "source": "contrapunto-1",
+            "target": "contrapunto-0",
+            "traversal_source": "contrapunto-0",
+            "traversal_target": "contrapunto-1",
+            "rel_type": "EVOKES",
+            "weight": 0.8,
+            "reasoning": "La fuente discute pertenencia nacional y deberes."
+          },
+          {
+            "id": "contrapunto-edge-2",
+            "source": "contrapunto-1",
+            "target": "contrapunto-2",
+            "traversal_source": "contrapunto-1",
+            "traversal_target": "contrapunto-2",
+            "rel_type": "EVOKES",
+            "weight": 0.8,
+            "reasoning": "La fuente critica obediencia nacionalista incondicional."
+          },
+          {
+            "id": "contrapunto-edge-3",
+            "source": "contrapunto-3",
+            "target": "contrapunto-2",
+            "traversal_source": "contrapunto-2",
+            "traversal_target": "contrapunto-3",
+            "rel_type": "EVOKES",
+            "weight": 0.8,
+            "reasoning": "La descripción artística incluye propaganda nacionalista."
+          },
+          {
+            "id": "contrapunto-edge-4",
+            "source": "contrapunto-3",
+            "target": "contrapunto-4",
+            "traversal_source": "contrapunto-3",
+            "traversal_target": "contrapunto-4",
+            "rel_type": "EVOKES",
+            "weight": 0.8,
+            "reasoning": "La descripción aborda represión y persecución genocida."
+          }
+        ]
+      },
+      "sidecars": {
+        "636f6e74726170756e746f100000000000000000000000000000000000000000": {
+          "mime_type": "text/plain",
+          "text": "Material sintético de prueba, no cita histórica. El texto atribuido a Thoreau cuestiona que la pertenencia nacional exija obediencia incondicional al Estado. Defiende evaluar los deberes públicos mediante la conciencia individual; es un argumento normativo.",
+          "data_layers": {}
+        },
+        "636f6e74726170756e746f300000000000000000000000000000000000000000": {
+          "mime_type": "text/plain",
+          "text": "Material sintético de prueba, no letra original. La descripción de Rise of Evil trata el ascenso del régimen nacionalsocialista, propaganda, represión, decisiones políticas y persecución genocida. Es una representación artística de un proceso histórico complejo, no un estudio empírico ni una explicación monocausal.",
+          "data_layers": {}
+        }
+      }
+    },
+    {
+      "case_id": "insuficiente",
+      "expected_reading": "evidencia insuficiente aunque los pesos sean 1.0",
+      "route": {
+        "id": "insuficiente",
+        "rank": 4,
+        "mode": "topological",
+        "nodes": [
+          {
+            "id": "insuficiente-0",
+            "label": "Intuición",
+            "node_type": "Concept"
+          },
+          {
+            "id": "insuficiente-1",
+            "label": "Archivo sin contenido recuperado",
+            "node_type": "DigitalAsset",
+            "file_hash": "696e737566696369656e74651000000000000000000000000000000000000000"
+          },
+          {
+            "id": "insuficiente-2",
+            "label": "Destino",
+            "node_type": "Concept"
+          }
+        ],
+        "edges": [
+          {
+            "id": "insuficiente-edge-1",
+            "source": "insuficiente-1",
+            "target": "insuficiente-0",
+            "traversal_source": "insuficiente-0",
+            "traversal_target": "insuficiente-1",
+            "rel_type": "EVOKES",
+            "weight": 1.0,
+            "reasoning": null
+          },
+          {
+            "id": "insuficiente-edge-2",
+            "source": "insuficiente-1",
+            "target": "insuficiente-2",
+            "traversal_source": "insuficiente-1",
+            "traversal_target": "insuficiente-2",
+            "rel_type": "EVOKES",
+            "weight": 1.0,
+            "reasoning": null
+          }
+        ]
+      },
+      "sidecars": {
+        "696e737566696369656e74651000000000000000000000000000000000000000": {
+          "mime_type": "application/octet-stream",
+          "data_layers": {}
+        }
+      }
+    }
+  ]
+}

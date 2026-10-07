@@ -1,0 +1,3600 @@
+[
+  {
+    "candidate": "pathfinder_libre_albedr_o_y_responsabilidad_to_laberinto_sin_salida_1774676625062",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "type": "Concept"
+    },
+    "mode": "topological",
+    "threshold": 0,
+    "k": 3,
+    "captured_at": "2026-10-06T16:07:40.866121+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = allShortestPaths((src)-[*1..8]-(tgt))\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "name": "Libre albedrío y responsabilidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+            "name": "text_Tumblr_Post_-_117815483099html_001fdf7f.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "001fdf7faf76cb93b20c8c797bd071fec1cdc4461e9b4cde75089619e15a7e3f"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+            "name": "Autodestrucción",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "name": "Metallica - Master of Puppets.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "name": "Laberinto sin Salida",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1287",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Inferencia filosófica: 'we expel ourselves' señala agencia propia, no fuerza externa.",
+              "created_at": "2026-03-16T18:29:15.040000000+00:00",
+              "weight": 0.7
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1247",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:408",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Directamente expresado en la cita: 'somos nuestros propios demonios'.",
+              "created_at": "2026-03-16T18:29:15.028000000+00:00",
+              "weight": 0.9
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4994",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:549",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Mención explícita: 'I'm your source of self-destruction', 'Your life burns faster', 'I will help you die'.",
+              "created_at": "2026-03-16T18:41:10.216000000+00:00",
+              "weight": 0.9
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+              "created_at": "2026-03-16T18:41:10.230000000+00:00",
+              "weight": 0.7
+            }
+          }
+        ],
+        "cost": 4
+      }
+    ],
+    "seconds": 0.08
+  },
+  {
+    "candidate": "pathfinder_libre_albedr_o_y_responsabilidad_to_laberinto_sin_salida_1774676625062",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "type": "Concept"
+    },
+    "mode": "direct",
+    "threshold": 0,
+    "k": 3,
+    "captured_at": "2026-10-06T16:07:40.955281+00:00",
+    "query": "\n        MATCH (src) WHERE elementId(src) = $source\n        MATCH (tgt) WHERE elementId(tgt) = $target\n        MATCH p = (src)-[*1..8]-(tgt)\n        WITH p,\n             REDUCE(cost = 0.0, r IN relationships(p) |\n               cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))\n             ) AS totalCost\n        ORDER BY totalCost ASC\n        LIMIT 3\n        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n        ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "name": "Libre albedrío y responsabilidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "name": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "name": "Mortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "name": "Slayer - Unit 731.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+            "name": "Slayer",
+            "labels": [
+              "Organization"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "name": "Slayer - Unit 731.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "name": "Thrash Metal",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "name": "Metallica - Master of Puppets.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "name": "Laberinto sin Salida",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+              "created_at": "2026-03-17T22:35:51.677000000+00:00",
+              "weight": 0.85
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+              "weight": 1,
+              "created_at": "2026-03-17T22:35:51.668000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2734",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Constantly referenced throughout the lyrics: 'dead still see', 'last breath the sword comes down', 'speaking death to me', 'pile up the dead', 'pleasure in death', 'factories of death'.",
+              "created_at": "2026-02-25T21:24:47.564000000+00:00",
+              "weight": 0.959
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4552",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Artista",
+              "reasoning": "",
+              "count": 1,
+              "created_at": "2026-02-25T21:24:47.523000000+00:00",
+              "weight": 1,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1563",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+            "type": "CREATED_BY",
+            "properties": {
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3783",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 70% (AudioSpace). Hub degree: 1 (penalty: 0.99x). Transfer: [text_e38f43e0.txt] -> [Slayer - Unit 731.mp3].",
+              "created_at": "2026-03-01T17:06:47.838000000+00:00",
+              "weight": 1.0,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4991",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Evidencia directa: Metallica es el exponente más reconocido del thrash metal y esta canción es su obra más representativa del género.",
+              "weight": 1,
+              "created_at": "2026-03-16T18:41:10.205000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+              "created_at": "2026-03-16T18:41:10.230000000+00:00",
+              "weight": 0.7
+            }
+          }
+        ],
+        "cost": 0.4910000000000001
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "name": "Libre albedrío y responsabilidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "name": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "name": "Mortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "name": "Slayer - Unit 731.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+            "name": "Slayer",
+            "labels": [
+              "Organization"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "name": "Slayer - Unit 731.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "name": "Thrash Metal",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "name": "Metallica - Master of Puppets.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "name": "Laberinto sin Salida",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+              "created_at": "2026-03-17T22:35:51.677000000+00:00",
+              "weight": 0.85
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+              "weight": 1,
+              "created_at": "2026-03-17T22:35:51.668000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2734",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Constantly referenced throughout the lyrics: 'dead still see', 'last breath the sword comes down', 'speaking death to me', 'pile up the dead', 'pleasure in death', 'factories of death'.",
+              "created_at": "2026-02-25T21:24:47.564000000+00:00",
+              "weight": 0.959
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1563",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+            "type": "CREATED_BY",
+            "properties": {
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4552",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2729",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Artista",
+              "reasoning": "",
+              "count": 1,
+              "created_at": "2026-02-25T21:24:47.523000000+00:00",
+              "weight": 1,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3783",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 70% (AudioSpace). Hub degree: 1 (penalty: 0.99x). Transfer: [text_e38f43e0.txt] -> [Slayer - Unit 731.mp3].",
+              "created_at": "2026-03-01T17:06:47.838000000+00:00",
+              "weight": 1.0,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4991",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Evidencia directa: Metallica es el exponente más reconocido del thrash metal y esta canción es su obra más representativa del género.",
+              "weight": 1,
+              "created_at": "2026-03-16T18:41:10.205000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+              "created_at": "2026-03-16T18:41:10.230000000+00:00",
+              "weight": 0.7
+            }
+          }
+        ],
+        "cost": 0.4910000000000001
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "name": "Libre albedrío y responsabilidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "name": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "name": "Mortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "name": "Slayer - Unit 731.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "93c17f445138d47a4e00c9f9693d7643c919e606d35245e6fa577a305e6b66ec"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "name": "Thrash Metal",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:775",
+            "name": "Metallica - Ride The Lightning.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "f632038b91c6d379acac244cb2acbdddb911b7bcadf9a312001f22ff86edfad8"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2502",
+            "name": "Metallica",
+            "labels": [
+              "Person"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "name": "Metallica - Master of Puppets.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "name": "Laberinto sin Salida",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+              "created_at": "2026-03-17T22:35:51.677000000+00:00",
+              "weight": 0.85
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3042",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Tema central explícitamente discutido a lo largo del texto",
+              "weight": 1,
+              "created_at": "2026-03-17T22:35:51.668000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2734",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2037",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Constantly referenced throughout the lyrics: 'dead still see', 'last breath the sword comes down', 'speaking death to me', 'pile up the dead', 'pleasure in death', 'factories of death'.",
+              "created_at": "2026-02-25T21:24:47.564000000+00:00",
+              "weight": 0.959
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3783",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2099",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 70% (AudioSpace). Hub degree: 1 (penalty: 0.99x). Transfer: [text_e38f43e0.txt] -> [Slayer - Unit 731.mp3].",
+              "created_at": "2026-03-01T17:06:47.838000000+00:00",
+              "weight": 1.0,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4965",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:775",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1338",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Metallica es uno de los fundadores del thrash metal; la canción es un ejemplo canónico del género.",
+              "weight": 1,
+              "created_at": "2026-03-16T18:40:55.148000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4964",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:775",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2502",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Artista / Banda",
+              "reasoning": "",
+              "count": 1,
+              "weight": 1,
+              "created_at": "2026-03-16T18:40:55.117000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4990",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2502",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Artista / Banda",
+              "reasoning": "",
+              "count": 1,
+              "weight": 1,
+              "created_at": "2026-03-16T18:41:10.201000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+              "created_at": "2026-03-16T18:41:10.230000000+00:00",
+              "weight": 0.7
+            }
+          }
+        ],
+        "cost": 0.4910000000000001
+      }
+    ],
+    "seconds": 12.91
+  },
+  {
+    "candidate": "pathfinder_libre_albedr_o_y_responsabilidad_to_laberinto_sin_salida_1774676625062",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "type": "Concept"
+    },
+    "mode": "lateral",
+    "threshold": 0.85,
+    "k": 3,
+    "captured_at": "2026-10-06T16:07:53.871775+00:00",
+    "query": "\n        MATCH (src), (tgt)\n        WHERE elementId(src) = $source AND elementId(tgt) = $target\n        MATCH p = (src)-[*1..8]-(tgt)\n        WITH p,\n             // 1. COSTO DE ARISTAS: Soft Bounding (Rango de Oro)\n             REDUCE(cost = 0.0, r IN relationships(p) |\n               cost + CASE \n                 WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0\n                 WHEN toFloat(coalesce(r.weight, 0.5)) < ($threshold - 0.3) THEN 1.5\n                 ELSE (1.0 - toFloat(coalesce(r.weight, 0.5))) \n               END\n             ) AS edgeCost,\n             \n             // 2. COSTO DE NODOS: Penalización Logarítmica Ajustada\n             // Neo4j 5+ usa COUNT {} en lugar de size() para contar patrones dentro de f-strings\n             REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |\n               hubCost + (0.5 * log10(toFloat(COUNT { (n)--() }) + 1.0))\n             ) AS hubCost\n             \n        WITH p, edgeCost + hubCost AS totalCost\n        ORDER BY totalCost ASC\n        LIMIT 3\n        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n        ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "name": "Libre albedrío y responsabilidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "name": "text_Tumblr_Post_-_747139372831391744html_9b95204d.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "9b95204df50d36abce06a97e4be170390d1e82a2dd7c5f8d6f501d6abe7f4081"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+            "name": "Condición Humana",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+            "name": "Haggard - Awaking the Centuries.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "b6faf6e0a2793ef909619e7e4b719940e71f518b8679ccfd00df43018fb7bc67"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "name": "Desesperación",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "name": "Metallica - Master of Puppets.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "name": "Laberinto sin Salida",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5901",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Implícito en la elección de 'vivir' o 'regresar'",
+              "created_at": "2026-03-17T22:35:51.677000000+00:00",
+              "weight": 0.85
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3569",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2818",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Explicitamente mencionada y definida",
+              "weight": 1,
+              "created_at": "2026-03-17T22:35:51.674000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5687",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1169",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicit lyrical content: 'sign of humanity is burning tonight', 'Humanity's burning tonight'.",
+              "created_at": "2026-02-26T00:02:07.202000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2956",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2173",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Implied by themes of darkness, death, and the burning of humanity.",
+              "created_at": "2026-02-26T00:02:07.216000000+00:00",
+              "weight": 0.695
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+              "created_at": "2026-03-16T18:41:10.223000000+00:00",
+              "weight": 0.85
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+              "created_at": "2026-03-16T18:41:10.230000000+00:00",
+              "weight": 0.7
+            }
+          }
+        ],
+        "cost": 5.005907584290718
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "name": "Libre albedrío y responsabilidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+            "name": "text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+            "name": "Matemáticas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+            "name": "FB_IMG_1743639238757.jpg",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "a054c02d897c0646f84df54b02a8ce16d60087c539c7916dfdcda9b589123103"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "name": "Desesperación",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "name": "Metallica - Master of Puppets.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "name": "Laberinto sin Salida",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5900",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Manual connection via Latent Explorer (Concept)",
+              "created_at": "2026-03-20T06:16:40.916000000+00:00",
+              "weight": 0.865,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3316",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 65% in Weaviate (TextSpace). Semantic Transfer: [FB_IMG_1745769671603.jpg] -> [text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt].",
+              "created_at": "2026-02-26T20:02:33.146000000+00:00",
+              "weight": 0.783,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4627",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 56% in Weaviate (VisualSpace). Semantic Transfer: [FB_IMG_1744434305718.jpg] -> [FB_IMG_1743639238757.jpg].",
+              "created_at": "2026-02-27T00:43:09.684000000+00:00",
+              "weight": 0.763,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3260",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Inferred from Stu's expression and the statement 'perdí el control de mi vida'.",
+              "created_at": "2026-02-26T04:02:13.288000000+00:00",
+              "weight": 0.621
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+              "created_at": "2026-03-16T18:41:10.223000000+00:00",
+              "weight": 0.85
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+              "created_at": "2026-03-16T18:41:10.230000000+00:00",
+              "weight": 0.7
+            }
+          }
+        ],
+        "cost": 5.250854373921332
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "name": "Libre albedrío y responsabilidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+            "name": "text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "d1d2577ce636d5556d303e3dbe7cdfbec903b0fd60309183121fc6422aa6331d"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+            "name": "Matemáticas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+            "name": "FB_IMG_1743639238757.jpg",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "a054c02d897c0646f84df54b02a8ce16d60087c539c7916dfdcda9b589123103"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "name": "Desesperación",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "name": "Metallica - Master of Puppets.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "379716c79a609902640a8b4dc98789eb2ff5453ce816cede07680bb9d7425886"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "name": "Laberinto sin Salida",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5900",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Manual connection via Latent Explorer (Concept)",
+              "created_at": "2026-03-20T06:16:40.916000000+00:00",
+              "weight": 0.865,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3316",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2819",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 65% in Weaviate (TextSpace). Semantic Transfer: [FB_IMG_1745769671603.jpg] -> [text_Transcripción_YouTube_KZeIEiBrT_w_d1d2577c.txt].",
+              "created_at": "2026-02-26T20:02:33.146000000+00:00",
+              "weight": 0.783,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3415",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1464",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Strongly inferred from the explicit mention of 'Vectores y Valores Propios'.",
+              "created_at": "2026-02-26T04:02:13.259000000+00:00",
+              "weight": 0.763
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3260",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2340",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Inferred from Stu's expression and the statement 'perdí el control de mi vida'.",
+              "created_at": "2026-02-26T04:02:13.288000000+00:00",
+              "weight": 0.621
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5486",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1066",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Evidencia lírica directa en el puente: 'Where's the dreams that I've been after?', 'Fix me!', 'Laughing at my cries'.",
+              "created_at": "2026-03-16T18:41:10.223000000+00:00",
+              "weight": 0.85
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4998",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:748",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Metáfora explícita en la letra: 'Never-ending maze, drift on numbered days'. Conexión poética directa.",
+              "created_at": "2026-03-16T18:41:10.230000000+00:00",
+              "weight": 0.7
+            }
+          }
+        ],
+        "cost": 5.250854373921332
+      }
+    ],
+    "seconds": 12.94
+  },
+  {
+    "candidate": "pathfinder_libre_albedr_o_y_responsabilidad_to_laberinto_sin_salida_1774676625062",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.8,
+    "k": 3,
+    "captured_at": "2026-10-06T16:08:06.827647+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "routes": [],
+    "seconds": 6.64
+  },
+  {
+    "candidate": "pathfinder_libre_albedr_o_y_responsabilidad_to_laberinto_sin_salida_1774676625062",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.6,
+    "k": 3,
+    "captured_at": "2026-10-06T16:08:13.482641+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 20.84
+  },
+  {
+    "candidate": "pathfinder_libre_albedr_o_y_responsabilidad_to_laberinto_sin_salida_1774676625062",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:556",
+      "label": "Libre albedrío y responsabilidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2595",
+      "label": "Laberinto sin Salida",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.4,
+    "k": 3,
+    "captured_at": "2026-10-06T16:08:34.340762+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.25
+  },
+  {
+    "candidate": "serendipity_path_1773992550430",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "name": "Aislamiento y Soledad",
+      "type": "Concept",
+      "weight": null
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+      "name": "Crítica a Internet y la Era Digital",
+      "type": "Concept",
+      "weight": 0.85
+    },
+    "mode": "topological",
+    "threshold": 0,
+    "k": 3,
+    "captured_at": "2026-10-06T16:08:55.614643+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = allShortestPaths((src)-[*1..8]-(tgt))\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+            "name": "Aislamiento y Soledad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1080",
+            "name": "Bad Religion - I Love My Computer.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "63a132978577c117633ecb573ccf787b0cb1bde9b649e889513b097334fcf35e"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+            "name": "Crítica a Internet y la Era Digital",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4775",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1080",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Explícitamente mencionado: 'The world outside is so big / But it's safe in my domain'. El narrador elige el refugio digital sobre el mundo real.",
+              "created_at": "2026-03-16T18:38:55.261000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4839",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1080",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "El álbum 'The New America' (2000) coincide con el auge de internet; la canción anticipa debates sobre dependencia digital que se volverían centrales décadas después.",
+              "created_at": "2026-03-16T18:38:55.281000000+00:00",
+              "weight": 0.85
+            }
+          }
+        ],
+        "cost": 2
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+            "name": "Aislamiento y Soledad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1078",
+            "name": "The Motorleague - Everyone Is Digital.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "b8e0018bf08146f30c6362d968780184865c8988aa4a97aa841b81e0dc5a9e13"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+            "name": "Crítica a Internet y la Era Digital",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4852",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1078",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Inferido metafóricamente de 'all our heads are buried' y 'traded all our hearts for circuitry'. No es explícito como concepto pero es la condición descrita.",
+              "created_at": "2026-03-16T18:39:04.052000000+00:00",
+              "weight": 0.7
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5857",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1078",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 72% (AudioSpace). Hub degree: 1 (penalty: 0.99x). Transfer: [Bad Religion - I Love My Computer.mp3] -> [The Motorleague - Everyone Is Digital.mp3].",
+              "created_at": "2026-03-19T19:29:14.774000000+00:00",
+              "weight": 0.7999,
+              "source": "interactive_latent_explorer"
+            }
+          }
+        ],
+        "cost": 2
+      }
+    ],
+    "seconds": 0.02
+  },
+  {
+    "candidate": "serendipity_path_1773992550430",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "name": "Aislamiento y Soledad",
+      "type": "Concept",
+      "weight": null
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+      "name": "Crítica a Internet y la Era Digital",
+      "type": "Concept",
+      "weight": 0.85
+    },
+    "mode": "direct",
+    "threshold": 0,
+    "k": 3,
+    "captured_at": "2026-10-06T16:08:55.640484+00:00",
+    "query": "\n        MATCH (src) WHERE elementId(src) = $source\n        MATCH (tgt) WHERE elementId(tgt) = $target\n        MATCH p = (src)-[*1..8]-(tgt)\n        WITH p,\n             REDUCE(cost = 0.0, r IN relationships(p) |\n               cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))\n             ) AS totalCost\n        ORDER BY totalCost ASC\n        LIMIT 3\n        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n        ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.88
+  },
+  {
+    "candidate": "serendipity_path_1773992550430",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "name": "Aislamiento y Soledad",
+      "type": "Concept",
+      "weight": null
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+      "name": "Crítica a Internet y la Era Digital",
+      "type": "Concept",
+      "weight": 0.85
+    },
+    "mode": "lateral",
+    "threshold": 0.85,
+    "k": 3,
+    "captured_at": "2026-10-06T16:09:17.521124+00:00",
+    "query": "\n        MATCH (src), (tgt)\n        WHERE elementId(src) = $source AND elementId(tgt) = $target\n        MATCH p = (src)-[*1..8]-(tgt)\n        WITH p,\n             // 1. COSTO DE ARISTAS: Soft Bounding (Rango de Oro)\n             REDUCE(cost = 0.0, r IN relationships(p) |\n               cost + CASE \n                 WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0\n                 WHEN toFloat(coalesce(r.weight, 0.5)) < ($threshold - 0.3) THEN 1.5\n                 ELSE (1.0 - toFloat(coalesce(r.weight, 0.5))) \n               END\n             ) AS edgeCost,\n             \n             // 2. COSTO DE NODOS: Penalización Logarítmica Ajustada\n             // Neo4j 5+ usa COUNT {} en lugar de size() para contar patrones dentro de f-strings\n             REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |\n               hubCost + (0.5 * log10(toFloat(COUNT { (n)--() }) + 1.0))\n             ) AS hubCost\n             \n        WITH p, edgeCost + hubCost AS totalCost\n        ORDER BY totalCost ASC\n        LIMIT 3\n        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n        ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.25
+  },
+  {
+    "candidate": "serendipity_path_1773992550430",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "name": "Aislamiento y Soledad",
+      "type": "Concept",
+      "weight": null
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+      "name": "Crítica a Internet y la Era Digital",
+      "type": "Concept",
+      "weight": 0.85
+    },
+    "mode": "filtered",
+    "threshold": 0.8,
+    "k": 3,
+    "captured_at": "2026-10-06T16:09:38.772285+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.89
+  },
+  {
+    "candidate": "serendipity_path_1773992550430",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "name": "Aislamiento y Soledad",
+      "type": "Concept",
+      "weight": null
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+      "name": "Crítica a Internet y la Era Digital",
+      "type": "Concept",
+      "weight": 0.85
+    },
+    "mode": "filtered",
+    "threshold": 0.6,
+    "k": 3,
+    "captured_at": "2026-10-06T16:10:00.672492+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.25
+  },
+  {
+    "candidate": "serendipity_path_1773992550430",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2007",
+      "name": "Aislamiento y Soledad",
+      "type": "Concept",
+      "weight": null
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2195",
+      "name": "Crítica a Internet y la Era Digital",
+      "type": "Concept",
+      "weight": 0.85
+    },
+    "mode": "filtered",
+    "threshold": 0.4,
+    "k": 3,
+    "captured_at": "2026-10-06T16:10:21.941556+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.89
+  },
+  {
+    "candidate": "pathfinder_ciclos_temporales_y_naturales_to_l_gica_difusa_1772951118546",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "label": "Ciclos Temporales y Naturales",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "label": "Lógica Difusa",
+      "type": "Concept"
+    },
+    "mode": "topological",
+    "threshold": 0,
+    "k": 3,
+    "captured_at": "2026-10-06T16:10:43.850286+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = allShortestPaths((src)-[*1..8]-(tgt))\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "name": "text_dab32400.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "dab324006b71236acaeac052c9417a20287374e6ada1350092f9043795522f17"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "name": "Filosofía",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "name": "text_96aa4e98.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "96aa4e98fb23da96b24ec30851c578b02826e104c8f6f535db53ab9198a25af9"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:68",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Inferido de la mención de día, año y estaciones.",
+              "created_at": "2026-02-21T07:02:08.313000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4353",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 71% in Weaviate (TextSpace). Semantic Transfer: [text_92ab8dbe.txt] -> [text_dab32400.txt].",
+              "created_at": "2026-02-26T19:15:59.864000000+00:00",
+              "weight": 0.881,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4661",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 58% in Weaviate (TextSpace). Semantic Transfer: [text_Tumblr_Post_-_190126797402html_3b6a4e7c.txt] -> [text_96aa4e98.txt].",
+              "created_at": "2026-02-27T01:02:56.982000000+00:00",
+              "weight": 0.833,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4093",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Presented as an equivalent to the analogical architecture of human thought.",
+              "created_at": "2026-02-26T06:41:48.203000000+00:00",
+              "weight": 0.9
+            }
+          }
+        ],
+        "cost": 4
+      }
+    ],
+    "seconds": 0.02
+  },
+  {
+    "candidate": "pathfinder_ciclos_temporales_y_naturales_to_l_gica_difusa_1772951118546",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "label": "Ciclos Temporales y Naturales",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "label": "Lógica Difusa",
+      "type": "Concept"
+    },
+    "mode": "direct",
+    "threshold": 0,
+    "k": 3,
+    "captured_at": "2026-10-06T16:10:43.873793+00:00",
+    "query": "\n        MATCH (src) WHERE elementId(src) = $source\n        MATCH (tgt) WHERE elementId(tgt) = $target\n        MATCH p = (src)-[*1..8]-(tgt)\n        WITH p,\n             REDUCE(cost = 0.0, r IN relationships(p) |\n               cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))\n             ) AS totalCost\n        ORDER BY totalCost ASC\n        LIMIT 3\n        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n        ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "name": "text_Transcripción_YouTube_vpRd52dXHlQ_27058fbf.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "27058fbf06482ec83066154a65229db58a8da445704f8dfac18cfdb44c36c747"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "name": "Cosmología y Astronomía",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+            "name": "text_7e7470ec.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "7e7470ec5eee67a9479d846573a6b423a4f926af19f507e9a2fdfb84c1154033"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "name": "Isaac Newton",
+            "labels": [
+              "Person"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "name": "text_b28471b0.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "b28471b03d8a13a044c6768fbf7a0e880ccbc3082a0431f2d4fdf5f6f2444c9f"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2206",
+            "name": "Screenshot 2026-02-24 104006.png",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "57b3b39264d1f2b9441a25b0edf231c1075b7d7643a66337066095d70c31dcd2"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:219",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Core subject of the text, analyzed for its origins and significance.",
+              "created_at": "2026-02-26T06:32:15.106000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2620",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Key concept explaining the historical association of seven celestial bodies with timekeeping.",
+              "weight": 1,
+              "created_at": "2026-02-26T06:32:15.135000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:255",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Mencionado explícitamente como una disciplina naciente.",
+              "created_at": "2026-02-25T05:56:49.000000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1088",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Científico, Físico",
+              "reasoning": "",
+              "count": 1,
+              "weight": 1,
+              "created_at": "2026-02-25T05:56:48.952000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:949",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Matemático, Científico",
+              "reasoning": "",
+              "count": 1,
+              "weight": 1,
+              "created_at": "2026-02-25T18:25:52.309000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4791",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Used metaphorically by Leibniz to explain evil.",
+              "created_at": "2026-02-25T18:25:52.380000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3177",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2206",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 59% in Weaviate (VisualSpace). Semantic Transfer: [Screenshot 2026-02-24 142603.png] -> [Screenshot 2026-02-24 104006.png].",
+              "created_at": "2026-02-26T22:41:03.487000000+00:00",
+              "weight": 1.0,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4779",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2206",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Direct visual evidence from diagram",
+              "weight": 1.0,
+              "created_at": "2026-02-26T04:01:24.251000000+00:00"
+            }
+          }
+        ],
+        "cost": 0.0
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "name": "text_Transcripción_YouTube_vpRd52dXHlQ_27058fbf.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "27058fbf06482ec83066154a65229db58a8da445704f8dfac18cfdb44c36c747"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "name": "Cosmología y Astronomía",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+            "name": "text_7e7470ec.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "7e7470ec5eee67a9479d846573a6b423a4f926af19f507e9a2fdfb84c1154033"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "name": "Isaac Newton",
+            "labels": [
+              "Person"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "name": "text_b28471b0.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "b28471b03d8a13a044c6768fbf7a0e880ccbc3082a0431f2d4fdf5f6f2444c9f"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "name": "Screenshot 2026-02-24 142603.png",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "55614f37d3fc59098f71d4b08c0e407ef8522557f70d4173b7072176c609289a"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:219",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Core subject of the text, analyzed for its origins and significance.",
+              "created_at": "2026-02-26T06:32:15.106000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2620",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Key concept explaining the historical association of seven celestial bodies with timekeeping.",
+              "weight": 1,
+              "created_at": "2026-02-26T06:32:15.135000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:255",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Mencionado explícitamente como una disciplina naciente.",
+              "created_at": "2026-02-25T05:56:49.000000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1088",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1810",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Científico, Físico",
+              "reasoning": "",
+              "count": 1,
+              "weight": 1,
+              "created_at": "2026-02-25T05:56:48.952000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:949",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Matemático, Científico",
+              "reasoning": "",
+              "count": 1,
+              "weight": 1,
+              "created_at": "2026-02-25T18:25:52.309000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4791",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Used metaphorically by Leibniz to explain evil.",
+              "created_at": "2026-02-25T18:25:52.380000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3205",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 57% in Weaviate (VisualSpace). Semantic Transfer: [Screenshot 2026-02-24 220331.png] -> [Screenshot 2026-02-24 142603.png].",
+              "created_at": "2026-02-25T21:44:52.513000000+00:00",
+              "weight": 1.0,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4381",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 59% in Weaviate (VisualSpace). Semantic Transfer: [Screenshot 2026-02-24 104006.png] -> [Screenshot 2026-02-24 142603.png].",
+              "created_at": "2026-02-27T00:54:37.336000000+00:00",
+              "weight": 1.0,
+              "source": "interactive_latent_explorer"
+            }
+          }
+        ],
+        "cost": 0.0
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "name": "text_Transcripción_YouTube_vpRd52dXHlQ_27058fbf.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "27058fbf06482ec83066154a65229db58a8da445704f8dfac18cfdb44c36c747"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "name": "Cosmología y Astronomía",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3161",
+            "name": "text_09ff8d6c.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "09ff8d6c43db7f93e0bcfce098015dae2c48f17fd31d56c0c6ad5971085d6609"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "name": "Isaac Newton",
+            "labels": [
+              "Person"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "name": "text_b28471b0.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "b28471b03d8a13a044c6768fbf7a0e880ccbc3082a0431f2d4fdf5f6f2444c9f"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "name": "Screenshot 2026-02-24 142603.png",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "55614f37d3fc59098f71d4b08c0e407ef8522557f70d4173b7072176c609289a"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:219",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Core subject of the text, analyzed for its origins and significance.",
+              "created_at": "2026-02-26T06:32:15.106000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2620",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Key concept explaining the historical association of seven celestial bodies with timekeeping.",
+              "weight": 1,
+              "created_at": "2026-02-26T06:32:15.135000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3161",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2697",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Topic conveyed by ancient myths according to the book.",
+              "weight": 1,
+              "created_at": "2026-02-26T06:41:33.937000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4007",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3161",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Physicist, Alchemist, Theologian",
+              "reasoning": "",
+              "count": 1,
+              "weight": 1,
+              "created_at": "2026-02-26T06:41:33.874000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:949",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+            "type": "MENTIONS",
+            "properties": {
+              "role": "Matemático, Científico",
+              "reasoning": "",
+              "count": 1,
+              "weight": 1,
+              "created_at": "2026-02-25T18:25:52.309000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4791",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Used metaphorically by Leibniz to explain evil.",
+              "created_at": "2026-02-25T18:25:52.380000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3205",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 57% in Weaviate (VisualSpace). Semantic Transfer: [Screenshot 2026-02-24 220331.png] -> [Screenshot 2026-02-24 142603.png].",
+              "created_at": "2026-02-25T21:44:52.513000000+00:00",
+              "weight": 1.0,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4381",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 59% in Weaviate (VisualSpace). Semantic Transfer: [Screenshot 2026-02-24 104006.png] -> [Screenshot 2026-02-24 142603.png].",
+              "created_at": "2026-02-27T00:54:37.336000000+00:00",
+              "weight": 1.0,
+              "source": "interactive_latent_explorer"
+            }
+          }
+        ],
+        "cost": 0.0
+      }
+    ],
+    "seconds": 12.77
+  },
+  {
+    "candidate": "pathfinder_ciclos_temporales_y_naturales_to_l_gica_difusa_1772951118546",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "label": "Ciclos Temporales y Naturales",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "label": "Lógica Difusa",
+      "type": "Concept"
+    },
+    "mode": "lateral",
+    "threshold": 0.85,
+    "k": 3,
+    "captured_at": "2026-10-06T16:10:56.649081+00:00",
+    "query": "\n        MATCH (src), (tgt)\n        WHERE elementId(src) = $source AND elementId(tgt) = $target\n        MATCH p = (src)-[*1..8]-(tgt)\n        WITH p,\n             // 1. COSTO DE ARISTAS: Soft Bounding (Rango de Oro)\n             REDUCE(cost = 0.0, r IN relationships(p) |\n               cost + CASE \n                 WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0\n                 WHEN toFloat(coalesce(r.weight, 0.5)) < ($threshold - 0.3) THEN 1.5\n                 ELSE (1.0 - toFloat(coalesce(r.weight, 0.5))) \n               END\n             ) AS edgeCost,\n             \n             // 2. COSTO DE NODOS: Penalización Logarítmica Ajustada\n             // Neo4j 5+ usa COUNT {} en lugar de size() para contar patrones dentro de f-strings\n             REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |\n               hubCost + (0.5 * log10(toFloat(COUNT { (n)--() }) + 1.0))\n             ) AS hubCost\n             \n        WITH p, edgeCost + hubCost AS totalCost\n        ORDER BY totalCost ASC\n        LIMIT 3\n        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n        ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "name": "text_Transcripción_YouTube_vpRd52dXHlQ_27058fbf.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "27058fbf06482ec83066154a65229db58a8da445704f8dfac18cfdb44c36c747"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:928",
+            "name": "Virtud",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:908",
+            "name": "text_d6544adc.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "d6544adc80d4525e223095c14e815dd2ad6bb51ff66a44402f869799e4aa6e81"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+            "name": "Lógica",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "name": "Screenshot 2026-02-24 142603.png",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "55614f37d3fc59098f71d4b08c0e407ef8522557f70d4173b7072176c609289a"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:219",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Core subject of the text, analyzed for its origins and significance.",
+              "created_at": "2026-02-26T06:32:15.106000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1907",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2963",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:928",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Example of cultural significance attributed to the number seven.",
+              "created_at": "2026-02-26T06:32:15.122000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1039",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:908",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:928",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Explicitly mentioned as a component of happiness.",
+              "created_at": "2026-02-21T07:00:33.537000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3207",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:908",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Mentioned as a force that might destroy illusion.",
+              "created_at": "2026-02-21T07:00:33.546000000+00:00",
+              "weight": 0.718
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:699",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 57% (TextSpace). Hub degree: 15 (penalty: 0.8x). Transfer: [text_96aa4e98.txt] -> [Screenshot 2026-02-24 142603.png].",
+              "created_at": "2026-03-01T16:38:14.690000000+00:00",
+              "weight": 0.803,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4498",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 57% in Weaviate (TextSpace). Semantic Transfer: [text_96aa4e98.txt] -> [Screenshot 2026-02-24 142603.png].",
+              "created_at": "2026-02-26T22:42:55.462000000+00:00",
+              "weight": 0.802,
+              "source": "interactive_latent_explorer"
+            }
+          }
+        ],
+        "cost": 4.94101447721026
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "name": "text_dab32400.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "dab324006b71236acaeac052c9417a20287374e6ada1350092f9043795522f17"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+            "name": "Símbolo",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "name": "text_83b6af8d.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "83b6af8de62409ca66a298570127fd185159ec5a114d3d5cb23c2ef6beffa2f1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+            "name": "Física",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+            "name": "Haggard - The Observer.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "88b6006e3cea953cfa7b24cbeea206111792d73104d7eeceb22c38943a71b084"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+            "name": "Lógica",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "name": "Screenshot 2026-02-24 142603.png",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "55614f37d3fc59098f71d4b08c0e407ef8522557f70d4173b7072176c609289a"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:68",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Inferido de la mención de día, año y estaciones.",
+              "created_at": "2026-02-21T07:02:08.313000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4379",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 71% in Weaviate (TextSpace). Semantic Transfer: [text_92ab8dbe.txt] -> [text_dab32400.txt].",
+              "created_at": "2026-02-26T19:16:05.431000000+00:00",
+              "weight": 0.842,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2717",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 66% in Weaviate (TextSpace). Semantic Transfer: [text_92ab8dbe.txt] -> [text_83b6af8d.txt].",
+              "created_at": "2026-02-26T19:17:15.301000000+00:00",
+              "weight": 0.828,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4261",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 51% (TextSpace). Hub degree: 19 (penalty: 0.75x). Transfer: [text_Tumblr_Post_-_700949322876993536html_f44bb09b.txt] -> [text_83b6af8d.txt].",
+              "created_at": "2026-03-01T02:35:05.284000000+00:00",
+              "weight": 0.808,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4029",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 78% in Weaviate (AudioSpace). Semantic Transfer: [Haggard - Eppur si muove.mp3] -> [Haggard - The Observer.mp3].",
+              "created_at": "2026-02-25T21:47:40.184000000+00:00",
+              "weight": 0.845,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:326",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2097",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly mentioned: 'sense, reason and intellect'.",
+              "created_at": "2026-02-25T21:24:51.262000000+00:00",
+              "weight": 0.811
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:699",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:535",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 57% (TextSpace). Hub degree: 15 (penalty: 0.8x). Transfer: [text_96aa4e98.txt] -> [Screenshot 2026-02-24 142603.png].",
+              "created_at": "2026-03-01T16:38:14.690000000+00:00",
+              "weight": 0.803,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4498",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1682",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 57% in Weaviate (TextSpace). Semantic Transfer: [text_96aa4e98.txt] -> [Screenshot 2026-02-24 142603.png].",
+              "created_at": "2026-02-26T22:42:55.462000000+00:00",
+              "weight": 0.802,
+              "source": "interactive_latent_explorer"
+            }
+          }
+        ],
+        "cost": 5.716972775494078
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "name": "text_dab32400.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "dab324006b71236acaeac052c9417a20287374e6ada1350092f9043795522f17"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+            "name": "Símbolo",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "name": "text_83b6af8d.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "83b6af8de62409ca66a298570127fd185159ec5a114d3d5cb23c2ef6beffa2f1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+            "name": "Física",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1843",
+            "name": "text_8b9fca71.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "8b9fca71214a54409ea86151ef582731cce29968e9d4828f55b0aeda94eda9e9"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1823",
+            "name": "Ciencias Computacionales y Desarrollo de Software",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2082",
+            "name": "text_d874f2eb.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "d874f2eb14720b145cc85700e5dd26b705c46bbd1e77bbfdf9e5ed91250c9090"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:68",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Inferido de la mención de día, año y estaciones.",
+              "created_at": "2026-02-21T07:02:08.313000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4379",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 71% in Weaviate (TextSpace). Semantic Transfer: [text_92ab8dbe.txt] -> [text_dab32400.txt].",
+              "created_at": "2026-02-26T19:16:05.431000000+00:00",
+              "weight": 0.842,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2717",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:586",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 66% in Weaviate (TextSpace). Semantic Transfer: [text_92ab8dbe.txt] -> [text_83b6af8d.txt].",
+              "created_at": "2026-02-26T19:17:15.301000000+00:00",
+              "weight": 0.828,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4261",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 51% (TextSpace). Hub degree: 19 (penalty: 0.75x). Transfer: [text_Tumblr_Post_-_700949322876993536html_f44bb09b.txt] -> [text_83b6af8d.txt].",
+              "created_at": "2026-03-01T02:35:05.284000000+00:00",
+              "weight": 0.808,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2510",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1843",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1869",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Specific, intractable problem that led to the Monte Carlo method.",
+              "created_at": "2026-02-25T18:26:01.512000000+00:00",
+              "weight": 0.78
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1210",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1843",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1823",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly named, defined, and central to the text.",
+              "weight": 0.829,
+              "created_at": "2026-02-25T18:26:01.507000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1037",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2082",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1823",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly named and detailed in the text.",
+              "weight": 0.834,
+              "created_at": "2026-02-25T18:50:42.177000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1283",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2082",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 60% in Weaviate (TextSpace). Semantic Transfer: [Screenshot 2026-02-24 142603.png] -> [text_d874f2eb.txt].",
+              "created_at": "2026-02-25T19:10:23.765000000+00:00",
+              "weight": 0.809,
+              "source": "interactive_latent_explorer"
+            }
+          }
+        ],
+        "cost": 5.769547863353528
+      }
+    ],
+    "seconds": 12.84
+  },
+  {
+    "candidate": "pathfinder_ciclos_temporales_y_naturales_to_l_gica_difusa_1772951118546",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "label": "Ciclos Temporales y Naturales",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "label": "Lógica Difusa",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.8,
+    "k": 3,
+    "captured_at": "2026-10-06T16:11:09.505767+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "name": "text_dab32400.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "dab324006b71236acaeac052c9417a20287374e6ada1350092f9043795522f17"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "name": "Filosofía",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "name": "text_96aa4e98.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "96aa4e98fb23da96b24ec30851c578b02826e104c8f6f535db53ab9198a25af9"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:68",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Inferido de la mención de día, año y estaciones.",
+              "created_at": "2026-02-21T07:02:08.313000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4353",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 71% in Weaviate (TextSpace). Semantic Transfer: [text_92ab8dbe.txt] -> [text_dab32400.txt].",
+              "created_at": "2026-02-26T19:15:59.864000000+00:00",
+              "weight": 0.881,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4661",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 58% in Weaviate (TextSpace). Semantic Transfer: [text_Tumblr_Post_-_190126797402html_3b6a4e7c.txt] -> [text_96aa4e98.txt].",
+              "created_at": "2026-02-27T01:02:56.982000000+00:00",
+              "weight": 0.833,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4093",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Presented as an equivalent to the analogical architecture of human thought.",
+              "created_at": "2026-02-26T06:41:48.203000000+00:00",
+              "weight": 0.9
+            }
+          }
+        ],
+        "cost": 4
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "name": "text_dab32400.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "dab324006b71236acaeac052c9417a20287374e6ada1350092f9043795522f17"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1315",
+            "name": null,
+            "labels": [
+              "Project"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:958",
+            "name": "text_92ab8dbe.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "92ab8dbe4b56be196626d1cd5b42857ba4666882ac81b12aae1cea8759d837a6"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "name": "Filosofía",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "name": "text_96aa4e98.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "96aa4e98fb23da96b24ec30851c578b02826e104c8f6f535db53ab9198a25af9"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:68",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Inferido de la mención de día, año y estaciones.",
+              "created_at": "2026-02-21T07:02:08.313000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1660",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1315",
+            "type": "MENTIONS_PROJECT",
+            "properties": {
+              "last_seen": "2026-02-22T06:21:48.625000000+00:00",
+              "created_at": "2026-02-21T21:40:55.058000000+00:00",
+              "weight": 1.0,
+              "backfilled": true,
+              "mention_count": 2
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1662",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:958",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1315",
+            "type": "MENTIONS_PROJECT",
+            "properties": {
+              "last_seen": "2026-02-22T06:21:48.634000000+00:00",
+              "created_at": "2026-02-21T21:40:55.068000000+00:00",
+              "weight": 1.0,
+              "backfilled": true,
+              "mention_count": 2
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1122",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:958",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "The text presents a philosophical argument about the nature of reality and meaning.",
+              "created_at": "2026-02-21T07:02:02.244000000+00:00",
+              "weight": 0.891
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4661",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 58% in Weaviate (TextSpace). Semantic Transfer: [text_Tumblr_Post_-_190126797402html_3b6a4e7c.txt] -> [text_96aa4e98.txt].",
+              "created_at": "2026-02-27T01:02:56.982000000+00:00",
+              "weight": 0.833,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4093",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Presented as an equivalent to the analogical architecture of human thought.",
+              "created_at": "2026-02-26T06:41:48.203000000+00:00",
+              "weight": 0.9
+            }
+          }
+        ],
+        "cost": 6
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "name": "Ciclos Temporales y Naturales",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "name": "text_dab32400.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "dab324006b71236acaeac052c9417a20287374e6ada1350092f9043795522f17"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1315",
+            "name": null,
+            "labels": [
+              "Project"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "name": "text_83b6af8d.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "83b6af8de62409ca66a298570127fd185159ec5a114d3d5cb23c2ef6beffa2f1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "name": "Filosofía",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "name": "text_96aa4e98.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "96aa4e98fb23da96b24ec30851c578b02826e104c8f6f535db53ab9198a25af9"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "name": "Lógica Difusa",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:68",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Inferido de la mención de día, año y estaciones.",
+              "created_at": "2026-02-21T07:02:08.313000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1660",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:954",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1315",
+            "type": "MENTIONS_PROJECT",
+            "properties": {
+              "last_seen": "2026-02-22T06:21:48.625000000+00:00",
+              "created_at": "2026-02-21T21:40:55.058000000+00:00",
+              "weight": 1.0,
+              "backfilled": true,
+              "mention_count": 2
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1661",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1315",
+            "type": "MENTIONS_PROJECT",
+            "properties": {
+              "last_seen": "2026-02-22T06:21:48.630000000+00:00",
+              "created_at": "2026-02-21T21:40:55.063000000+00:00",
+              "weight": 1.0,
+              "backfilled": true,
+              "mention_count": 2
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4362",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:956",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 66% in Weaviate (TextSpace). Semantic Transfer: [text_92ab8dbe.txt] -> [text_83b6af8d.txt].",
+              "created_at": "2026-02-26T19:17:16.653000000+00:00",
+              "weight": 0.856,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4661",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:109",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Similarity: 58% in Weaviate (TextSpace). Semantic Transfer: [text_Tumblr_Post_-_190126797402html_3b6a4e7c.txt] -> [text_96aa4e98.txt].",
+              "created_at": "2026-02-27T01:02:56.982000000+00:00",
+              "weight": 0.833,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4093",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3163",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Presented as an equivalent to the analogical architecture of human thought.",
+              "created_at": "2026-02-26T06:41:48.203000000+00:00",
+              "weight": 0.9
+            }
+          }
+        ],
+        "cost": 6
+      }
+    ],
+    "seconds": 7.53
+  },
+  {
+    "candidate": "pathfinder_ciclos_temporales_y_naturales_to_l_gica_difusa_1772951118546",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "label": "Ciclos Temporales y Naturales",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "label": "Lógica Difusa",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.6,
+    "k": 3,
+    "captured_at": "2026-10-06T16:11:17.048001+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 20.94
+  },
+  {
+    "candidate": "pathfinder_ciclos_temporales_y_naturales_to_l_gica_difusa_1772951118546",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1852",
+      "label": "Ciclos Temporales y Naturales",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:3241",
+      "label": "Lógica Difusa",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.4,
+    "k": 3,
+    "captured_at": "2026-10-06T16:11:38.004398+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.89
+  },
+  {
+    "candidate": "pathfinder_inmortalidad_to_automatizaci_n_y_control_de_sistemas_1774502971188",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "label": "Inmortalidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "type": "Concept"
+    },
+    "mode": "topological",
+    "threshold": 0,
+    "k": 3,
+    "captured_at": "2026-10-06T16:11:59.914791+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = allShortestPaths((src)-[*1..8]-(tgt))\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "name": "Inmortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "name": "Nach - Mil Vidas.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "ced38230ae9c7b60ebfe4172fe61d89b2d4cf61416205bcfbe93a6043080e4d1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1587",
+            "name": "Opresión e Injusticia",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "name": "text_20df6016.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "20df601634e7614a61319f8f9ae8734e5b1788b5ab33ecd422f850efc29ef0c0"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:700",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "El título y el estribillo 'Mil vidas, quisiera vivirlas todas' apuntan a este concepto.",
+              "created_at": "2026-02-19T05:35:48.998000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4274",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1587",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 74% in Weaviate (AudioSpace). Semantic Transfer: [Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3] -> [Nach - Mil Vidas.mp3].",
+              "created_at": "2026-02-25T18:53:46.078000000+00:00",
+              "weight": 0.861,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2507",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1587",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly stated as a consequence seen by punk.",
+              "created_at": "2026-02-26T04:07:57.087000000+00:00",
+              "weight": 0.787
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1557",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly mentioned as a 'jaula invisible'.",
+              "created_at": "2026-02-26T04:07:57.100000000+00:00",
+              "weight": 1.0
+            }
+          }
+        ],
+        "cost": 4
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "name": "Inmortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "name": "Nach - Mil Vidas.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "ced38230ae9c7b60ebfe4172fe61d89b2d4cf61416205bcfbe93a6043080e4d1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "name": "Rebeldía y Revolución",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "name": "text_20df6016.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "20df601634e7614a61319f8f9ae8734e5b1788b5ab33ecd422f850efc29ef0c0"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:700",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "El título y el estribillo 'Mil vidas, quisiera vivirlas todas' apuntan a este concepto.",
+              "created_at": "2026-02-19T05:35:48.998000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:204",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Implícito en la mención de la Inquisición, la mafia de Al Capone, la revolución, y el movimiento Pantera Negra.",
+              "created_at": "2026-02-19T05:35:48.994000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:847",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly mentioned as a historical context.",
+              "weight": 1,
+              "created_at": "2026-02-26T04:07:57.081000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1557",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly mentioned as a 'jaula invisible'.",
+              "created_at": "2026-02-26T04:07:57.100000000+00:00",
+              "weight": 1.0
+            }
+          }
+        ],
+        "cost": 4
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "name": "Inmortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "name": "Nach - Mil Vidas.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "ced38230ae9c7b60ebfe4172fe61d89b2d4cf61416205bcfbe93a6043080e4d1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:29",
+            "name": "Libertad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1880",
+            "name": "text_4241fa5d.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "4241fa5d36f1e683c7dbc69277d5a711c6c702fa93e4899fed8e30a0e6594e67"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:700",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "El título y el estribillo 'Mil vidas, quisiera vivirlas todas' apuntan a este concepto.",
+              "created_at": "2026-02-19T05:35:48.998000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:696",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:29",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "Mencionado en el contexto de 'amor libre y al placer' y 'Mi libertad sin fin' en Woodstock.",
+              "created_at": "2026-02-19T05:35:48.992000000+00:00",
+              "weight": 0.877
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2464",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1880",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:29",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Presentado como una 'ilusión' bajo la visión determinista de Laplace.",
+              "created_at": "2026-02-25T18:26:22.495000000+00:00",
+              "weight": 0.867
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5782",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1880",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Laplace es descrito como 'pionero en el modelado de sistemas dinámicos'.",
+              "created_at": "2026-02-25T18:26:22.484000000+00:00",
+              "weight": 0.9
+            }
+          }
+        ],
+        "cost": 4
+      }
+    ],
+    "seconds": 0.01
+  },
+  {
+    "candidate": "pathfinder_inmortalidad_to_automatizaci_n_y_control_de_sistemas_1774502971188",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "label": "Inmortalidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "type": "Concept"
+    },
+    "mode": "direct",
+    "threshold": 0,
+    "k": 3,
+    "captured_at": "2026-10-06T16:11:59.942588+00:00",
+    "query": "\n        MATCH (src) WHERE elementId(src) = $source\n        MATCH (tgt) WHERE elementId(tgt) = $target\n        MATCH p = (src)-[*1..8]-(tgt)\n        WITH p,\n             REDUCE(cost = 0.0, r IN relationships(p) |\n               cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))\n             ) AS totalCost\n        ORDER BY totalCost ASC\n        LIMIT 3\n        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n        ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.22
+  },
+  {
+    "candidate": "pathfinder_inmortalidad_to_automatizaci_n_y_control_de_sistemas_1774502971188",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "label": "Inmortalidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "type": "Concept"
+    },
+    "mode": "lateral",
+    "threshold": 0.85,
+    "k": 3,
+    "captured_at": "2026-10-06T16:12:21.176032+00:00",
+    "query": "\n        MATCH (src), (tgt)\n        WHERE elementId(src) = $source AND elementId(tgt) = $target\n        MATCH p = (src)-[*1..8]-(tgt)\n        WITH p,\n             // 1. COSTO DE ARISTAS: Soft Bounding (Rango de Oro)\n             REDUCE(cost = 0.0, r IN relationships(p) |\n               cost + CASE \n                 WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0\n                 WHEN toFloat(coalesce(r.weight, 0.5)) < ($threshold - 0.3) THEN 1.5\n                 ELSE (1.0 - toFloat(coalesce(r.weight, 0.5))) \n               END\n             ) AS edgeCost,\n             \n             // 2. COSTO DE NODOS: Penalización Logarítmica Ajustada\n             // Neo4j 5+ usa COUNT {} en lugar de size() para contar patrones dentro de f-strings\n             REDUCE(hubCost = 0.0, n IN [x IN nodes(p) WHERE x:Concept] |\n               hubCost + (0.5 * log10(toFloat(COUNT { (n)--() }) + 1.0))\n             ) AS hubCost\n             \n        WITH p, edgeCost + hubCost AS totalCost\n        ORDER BY totalCost ASC\n        LIMIT 3\n        RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n        ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.91
+  },
+  {
+    "candidate": "pathfinder_inmortalidad_to_automatizaci_n_y_control_de_sistemas_1774502971188",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "label": "Inmortalidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.8,
+    "k": 3,
+    "captured_at": "2026-10-06T16:12:43.092053+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "routes": [
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "name": "Inmortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "name": "Nach - Mil Vidas.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "ced38230ae9c7b60ebfe4172fe61d89b2d4cf61416205bcfbe93a6043080e4d1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "name": "Rebeldía y Revolución",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "name": "text_20df6016.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "20df601634e7614a61319f8f9ae8734e5b1788b5ab33ecd422f850efc29ef0c0"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:700",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "El título y el estribillo 'Mil vidas, quisiera vivirlas todas' apuntan a este concepto.",
+              "created_at": "2026-02-19T05:35:48.998000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:204",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Implícito en la mención de la Inquisición, la mafia de Al Capone, la revolución, y el movimiento Pantera Negra.",
+              "created_at": "2026-02-19T05:35:48.994000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:847",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly mentioned as a historical context.",
+              "weight": 1,
+              "created_at": "2026-02-26T04:07:57.081000000+00:00"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1557",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2525",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly mentioned as a 'jaula invisible'.",
+              "created_at": "2026-02-26T04:07:57.100000000+00:00",
+              "weight": 1.0
+            }
+          }
+        ],
+        "cost": 4
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "name": "Inmortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "name": "Nach - Mil Vidas.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "ced38230ae9c7b60ebfe4172fe61d89b2d4cf61416205bcfbe93a6043080e4d1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "name": "Rebeldía y Revolución",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+            "name": "text_379436a3.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "379436a3adae46837ea9b1e7a996f80e5aced621f197dee0112f3bab08ac55c0"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:700",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "El título y el estribillo 'Mil vidas, quisiera vivirlas todas' apuntan a este concepto.",
+              "created_at": "2026-02-19T05:35:48.998000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:204",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Implícito en la mención de la Inquisición, la mafia de Al Capone, la revolución, y el movimiento Pantera Negra.",
+              "created_at": "2026-02-19T05:35:48.994000000+00:00",
+              "weight": 1.0
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:862",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2398",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Mentioned as the backdrop for mechanical automation ('automatización mecánica de la Revolución Industrial').",
+              "created_at": "2026-02-25T18:26:09.753000000+00:00",
+              "weight": 0.9
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2234",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1847",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "The text discusses 'automatización mecánica' and 'automatización del pensamiento'.",
+              "created_at": "2026-02-25T18:26:09.748000000+00:00",
+              "weight": 0.841
+            }
+          }
+        ],
+        "cost": 4
+      },
+      {
+        "nodes": [
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "name": "Inmortalidad",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "name": "Nach - Mil Vidas.mp3",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "ced38230ae9c7b60ebfe4172fe61d89b2d4cf61416205bcfbe93a6043080e4d1"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1893",
+            "name": "Existencia y Existencialismo",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "name": "text_b28471b0.txt",
+            "labels": [
+              "DigitalAsset"
+            ],
+            "file_hash": "b28471b03d8a13a044c6768fbf7a0e880ccbc3082a0431f2d4fdf5f6f2444c9f"
+          },
+          {
+            "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "name": "Automatización y Control de Sistemas",
+            "labels": [
+              "Concept"
+            ],
+            "file_hash": null
+          }
+        ],
+        "edges": [
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:700",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+            "type": "EVOKES",
+            "properties": {
+              "reasoning": "El título y el estribillo 'Mil vidas, quisiera vivirlas todas' apuntan a este concepto.",
+              "created_at": "2026-02-19T05:35:48.998000000+00:00",
+              "weight": 0.8
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3038",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:607",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1893",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Similarity: 74% in Weaviate (AudioSpace). Semantic Transfer: [Nach - Si Yo Fuera.mp3] -> [Nach - Mil Vidas.mp3].",
+              "created_at": "2026-02-25T19:03:50.585000000+00:00",
+              "weight": 0.889,
+              "source": "interactive_latent_explorer"
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3195",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1893",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Explicitly mentioned as the 'nascent' opposing side of the debate.",
+              "created_at": "2026-02-25T18:25:52.375000000+00:00",
+              "weight": 0.86
+            }
+          },
+          {
+            "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4791",
+            "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1839",
+            "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+            "type": "EVOKES_CONCEPT",
+            "properties": {
+              "reasoning": "Used metaphorically by Leibniz to explain evil.",
+              "created_at": "2026-02-25T18:25:52.380000000+00:00",
+              "weight": 1.0
+            }
+          }
+        ],
+        "cost": 4
+      }
+    ],
+    "seconds": 16.81
+  },
+  {
+    "candidate": "pathfinder_inmortalidad_to_automatizaci_n_y_control_de_sistemas_1774502971188",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "label": "Inmortalidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.6,
+    "k": 3,
+    "captured_at": "2026-10-06T16:12:59.918390+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 20.88
+  },
+  {
+    "candidate": "pathfinder_inmortalidad_to_automatizaci_n_y_control_de_sistemas_1774502971188",
+    "source": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:646",
+      "label": "Inmortalidad",
+      "type": "Concept"
+    },
+    "target": {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1920",
+      "label": "Automatización y Control de Sistemas",
+      "type": "Concept"
+    },
+    "mode": "filtered",
+    "threshold": 0.4,
+    "k": 3,
+    "captured_at": "2026-10-06T16:13:20.812155+00:00",
+    "query": "\n            MATCH (src) WHERE elementId(src) = $source\n            MATCH (tgt) WHERE elementId(tgt) = $target\n            MATCH p = (src)-[*1..8]-(tgt)\n            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)\n            WITH p, length(p) AS totalCost\n            ORDER BY totalCost ASC\n            LIMIT 3\n            RETURN nodes(p) AS path_nodes, relationships(p) AS path_rels, totalCost\n            ",
+    "error": "ClientError: {code: Neo.ClientError.Transaction.TransactionTimedOutClientConfiguration} {message: The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the timeout specified at its start by the client. You may want to retry with a longer timeout. }",
+    "seconds": 21.89
+  }
+]

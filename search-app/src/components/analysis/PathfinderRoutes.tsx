@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import GraphCanvas from '../graph/GraphCanvas';
 import { edgeKey, routeGroups, routeSignature, routeView } from '../../lib/pathfinderRoutes';
+import { comparePathfinderPaths } from '../../lib/pathfinderDiagnostics';
 import type { PathfinderEdgeData, PathfinderPath, PathfinderResponse } from '../../types/pathfinder';
 import './PathfinderRoutes.css';
 
@@ -20,6 +21,8 @@ export default function PathfinderRoutes({ result, onSelectionChange }: { result
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [selectedEdge, setSelectedEdge] = useState<PathfinderEdgeData | null>(null);
     const groups = routeGroups(result.paths ?? []);
+    const diagnostics = comparePathfinderPaths(result.paths ?? []);
+    const percent = (value: number | null | undefined) => value == null ? 'No disponible' : `${(value * 100).toFixed(1)}%`;
     const selected = result.paths?.find(p => p.id === selectedId) ?? null;
     const selectedGroup = selected ? groups.find(g => routeSignature(g.path) === routeSignature(selected)) : null;
     const graph = routeView(result, selectedId);
@@ -28,6 +31,17 @@ export default function PathfinderRoutes({ result, onSelectionChange }: { result
     return <section className="pathfinder-routes" aria-label="Rutas de Pathfinder">
         {groups.length ? <>
             <header><p>{result.paths!.length} resultados originales · {groups.length} secuencias distintas</p><p>Los rangos corresponden al algoritmo. Costes de modos diferentes no comparten escala.</p></header>
+            <details className="route-comparison">
+                <summary>Diagnóstico experimental de similitud · todos los registros originales</summary>
+                <p>Solapamiento Jaccard, sin selección ni cambios de orden. Los nodos internos y activos excluyen los extremos. Aristas = pares no dirigidos + tipo; IDs = relaciones exactas.</p>
+                <p>Las métricas de conjuntos no miden significado, orden, pesos ni repeticiones. Un conjunto vacío en ambos recorridos no aporta evidencia. No hay asignaciones de comunidades disponibles en esta respuesta.</p>
+                {diagnostics.pairs.length ? <table><caption>Comparación por pares; las variantes permanecen disponibles.</caption><thead><tr><th>Registros</th><th>Nodos internos</th><th>Aristas</th><th>IDs de relación</th><th>Activos fuente</th><th>Comunidades</th><th>Identidad</th></tr></thead><tbody>{diagnostics.pairs.map((pair, i) => <tr key={i}>
+                    <th>{result.paths!.find(p => p.id === pair.left)?.rank} ↔ {result.paths!.find(p => p.id === pair.right)?.rank}</th>
+                    <td>{percent(pair.internalNodes.jaccard)}</td><td>{percent(pair.normalizedEdges.jaccard)}</td><td>{percent(pair.relationshipIds?.jaccard)}</td><td>{percent(pair.sourceAssets.jaccard)}</td><td>{percent(pair.communities?.jaccard)}</td>
+                    <td>{pair.exactRelationshipRoute ? 'Misma secuencia y relaciones' : pair.parallelEdgeVariant ? 'Misma secuencia; relaciones distintas' : pair.sameNodeSequence ? 'Misma secuencia; IDs incompletos' : 'Secuencias distintas'}</td>
+                </tr>)}</tbody></table> : <p>Se necesitan al menos dos registros para comparar.</p>}
+                <details><summary>Evidencia: identidades compartidas, diferencias y cobertura</summary><pre>{JSON.stringify(diagnostics, null, 2)}</pre></details>
+            </details>
             <div className="route-selector" role="group" aria-label="Seleccionar recorrido">
                 <button aria-pressed={!selected} onClick={() => choose(null)}>Todas</button>
                 {groups.map((g, i) => <button key={g.path.id} aria-pressed={selectedGroup === g} onClick={() => choose(g.path)}><strong>Ruta {i + 1}</strong><span>{g.path.hop_count} saltos · {modes[g.path.mode] ?? g.path.mode}</span>{g.variants.length > 1 && <small>{g.variants.length} variantes de aristas</small>}</button>)}

@@ -1,0 +1,1306 @@
+{
+  "status": "success",
+  "message": "5 resultado(s), 4 secuencia(s) de nodos distinta(s).",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+      "label": "Astrónomo ciego",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+      "mime_type": "text/plain",
+      "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "label": "Tristeza y Melancolía",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "label": "Metallica - Fade To Black.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/a48e38dc_Metallica - Fade To Black.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "label": "Resignación",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "label": "Espécimen - Este Es Mi Mundo.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "645d95bc576fdd2d45fbd4d3bb8cd004d9e43cc3136a3bed90686a97d8fbc5bc",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/645d95bc_Espécimen - Este Es Mi Mundo.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "label": "Guerra",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "label": "Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "5eed2194b64fe1c6233d2651fb084fabc44e112722dcc87d6bd0c6ff45d94c99",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/5eed2194_Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+      "label": "Esperanza",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+      "label": "Nach - Disparos De Silencio.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "6bce8c5865b70863494bdfc4becef0eae8001147ca1338b02b572d09a489a29c",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/6bce8c58_Nach - Disparos De Silencio.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+      "label": "Nargaroth - I Got My Dead Man Sleep.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "1661cc8574a47715fe35db3ab5878450c14f2c1cd659ffdd6261843699df3d57",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/1661cc85_Nargaroth - I Got My Dead Man Sleep.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+      "label": "Salud y Enfermedad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "label": "Espécimen - Tecnología.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "8cc817ed0cc253f9b1cf249997721056d805cfd77cd7241ff11fbd27933a84bc",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/8cc817ed_Espécimen - Tecnología.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+      "label": "Autenticidad",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+      "label": "Nach - Si Yo Fuera.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "71a09ed763c947fe50ed8c82b034ba4b879f871f6eac12b8f002c6d840d95b69",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/71a09ed7_Nach - Si Yo Fuera.mp3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+      "rel_type": "EVOKES",
+      "weight": 0.9,
+      "raw_weight": 0.9,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+      "provenance": {
+        "created_at": "2026-03-17T22:15:16.368000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "rel_type": "EVOKES",
+      "weight": 1,
+      "raw_weight": 1,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "reasoning": "Tema explícito y sujeto principal del texto poético",
+      "provenance": {
+        "created_at": "2026-03-17T22:15:16.361000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4986",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "rel_type": "EVOKES",
+      "weight": 0.85,
+      "raw_weight": 0.85,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "reasoning": "El tempo lento inicial, la progresión armónica en modo menor y las letras generan un tono melancólico sostenido.",
+      "provenance": {
+        "created_at": "2026-03-16T18:41:02.530000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1390",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "rel_type": "EVOKES",
+      "weight": 0.7138,
+      "raw_weight": 0.7138,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 6 (penalty: 0.91x). Transfer: [Warcry - Capitán Lawrence.mp3] -> [Metallica - Fade To Black.mp3].",
+      "provenance": {
+        "created_at": "2026-03-19T18:01:13.139000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3455",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "rel_type": "EVOKES",
+      "weight": 0.7,
+      "raw_weight": 0.7,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "reasoning": "The repeated phrase 'Pero en fin este es mi mundo' conveys a sense of acceptance of the negative reality described.",
+      "provenance": {
+        "created_at": "2026-02-26T04:07:43.703000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4468",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "rel_type": "EXPLORES",
+      "weight": 0.801,
+      "raw_weight": 0.801,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "reasoning": "Similarity: 63% in Weaviate (AudioSpace). Semantic Transfer: [Nach - Si Yo Fuera.mp3] -> [Espécimen - Este Es Mi Mundo.mp3].",
+      "provenance": {
+        "created_at": "2026-02-26T22:33:49.268000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2414",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.801,
+      "raw_weight": 0.801,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "reasoning": "Explicitly mentioned in the lyrics ('pruebas nucleares en el suelo').",
+      "provenance": {
+        "created_at": "2026-02-26T04:07:43.699000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4615",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.729,
+      "raw_weight": 0.729,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 19 (penalty: 0.75x). Transfer: [Espécimen - Este Es Mi Mundo.mp3] -> [Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3].",
+      "provenance": {
+        "created_at": "2026-03-01T15:47:03.812000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:745",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+      "rel_type": "EVOKES",
+      "weight": 0.836,
+      "raw_weight": 0.836,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+      "reasoning": "Evident in 'racimo de soñadores de un nuevo mundo' and 'encuentra la libertad todo aquel que la sueña'.",
+      "provenance": {
+        "created_at": "2026-02-19T15:48:03.427000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:854",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+      "rel_type": "EVOKES",
+      "weight": 0.832,
+      "raw_weight": 0.832,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+      "reasoning": "Explicitly mentioned ('La esperanza lloró', 'cegará nuestra esperanza').",
+      "provenance": {
+        "created_at": "2026-02-19T16:09:11.337000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4523",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "rel_type": "EXPLORES",
+      "weight": 0.787,
+      "raw_weight": 0.787,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "reasoning": "Similarity: 71% in Weaviate (AudioSpace). Semantic Transfer: [Nach - Si Yo Fuera.mp3] -> [Nach - Disparos De Silencio.mp3].",
+      "provenance": {
+        "created_at": "2026-02-26T22:55:09.228000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3039",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.796,
+      "raw_weight": 0.796,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+      "reasoning": "Pervasive emotional undertone throughout the lyrics, combining grief, despair, and resignation.",
+      "provenance": {
+        "created_at": "2026-02-24T16:10:13.929000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:595",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.83,
+      "raw_weight": 0.83,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+      "reasoning": "Similarity: 75% in Weaviate (AudioSpace). Semantic Transfer: [Stratovarius - Soul of a Vagabond.mp3] -> [Nargaroth - I Got My Dead Man Sleep.mp3].",
+      "provenance": {
+        "created_at": "2026-02-25T05:27:39.137000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3561",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.848,
+      "raw_weight": 0.848,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "reasoning": "Directly described in the lyrics ('gente sufriendo').",
+      "provenance": {
+        "created_at": "2026-02-26T04:03:46.780000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2413",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.775,
+      "raw_weight": 0.775,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "reasoning": "Implied by 'bomba de tiempo', 'radioactividad', 'era nuclear', and 'misiles'.",
+      "provenance": {
+        "created_at": "2026-02-26T04:03:46.784000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4465",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+      "rel_type": "EXPLORES",
+      "weight": 0.706,
+      "raw_weight": 0.706,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+      "reasoning": "Similarity: 72% in Weaviate (AudioSpace). Semantic Transfer: [Nach - Si Yo Fuera.mp3] -> [Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3].",
+      "provenance": {
+        "created_at": "2026-02-26T22:33:07.621000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+      "rel_type": "EXPLORES",
+      "weight": 0.7,
+      "raw_weight": 0.7,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+      "reasoning": "Desire to be 'lejos de esta esfera callejera', 'si no fuera quien soy', implies a search for true self.",
+      "provenance": {
+        "created_at": "2026-02-17T18:25:03.428000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:8",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "rel_type": "EXPLORES",
+      "weight": 0.838,
+      "raw_weight": 0.838,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+      "reasoning": "Mentioned with 'soldado', 'fusil de asalto', 'guerra fría', 'odio'.",
+      "provenance": {
+        "created_at": "2026-02-17T18:25:03.189000000+00:00"
+      }
+    }
+  ],
+  "path_length": 6,
+  "mode": "lateral",
+  "paths": [
+    {
+      "id": "route-1-139d27a9fb0b",
+      "rank": 1,
+      "mode": "lateral",
+      "signature": "139d27a9fb0b805a3ba3a5f9a0043d47361d8d609e410f13efe365b0a4a8750e",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "label": "Tristeza y Melancolía",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "label": "Metallica - Fade To Black.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/a48e38dc_Metallica - Fade To Black.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "label": "Resignación",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "label": "Espécimen - Este Es Mi Mundo.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "645d95bc576fdd2d45fbd4d3bb8cd004d9e43cc3136a3bed90686a97d8fbc5bc",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/645d95bc_Espécimen - Este Es Mi Mundo.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "label": "Guerra",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "reasoning": "Tema explícito y sujeto principal del texto poético",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.361000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4986",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "reasoning": "El tempo lento inicial, la progresión armónica en modo menor y las letras generan un tono melancólico sostenido.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:02.530000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1390",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "rel_type": "EVOKES",
+          "weight": 0.7138,
+          "raw_weight": 0.7138,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 6 (penalty: 0.91x). Transfer: [Warcry - Capitán Lawrence.mp3] -> [Metallica - Fade To Black.mp3].",
+          "provenance": {
+            "created_at": "2026-03-19T18:01:13.139000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3455",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "reasoning": "The repeated phrase 'Pero en fin este es mi mundo' conveys a sense of acceptance of the negative reality described.",
+          "provenance": {
+            "created_at": "2026-02-26T04:07:43.703000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4468",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "rel_type": "EXPLORES",
+          "weight": 0.801,
+          "raw_weight": 0.801,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "reasoning": "Similarity: 63% in Weaviate (AudioSpace). Semantic Transfer: [Nach - Si Yo Fuera.mp3] -> [Espécimen - Este Es Mi Mundo.mp3].",
+          "provenance": {
+            "created_at": "2026-02-26T22:33:49.268000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        }
+      ],
+      "hop_count": 6,
+      "metrics": {
+        "cost": 6.955144898868091,
+        "min_weight": 0.7,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-2-139d27a9fb0b",
+      "rank": 2,
+      "mode": "lateral",
+      "signature": "139d27a9fb0b805a3ba3a5f9a0043d47361d8d609e410f13efe365b0a4a8750e",
+      "duplicate_of": "route-1-139d27a9fb0b",
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "label": "Tristeza y Melancolía",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "label": "Metallica - Fade To Black.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/a48e38dc_Metallica - Fade To Black.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "label": "Resignación",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "label": "Espécimen - Este Es Mi Mundo.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "645d95bc576fdd2d45fbd4d3bb8cd004d9e43cc3136a3bed90686a97d8fbc5bc",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/645d95bc_Espécimen - Este Es Mi Mundo.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "label": "Guerra",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "reasoning": "Tema explícito y sujeto principal del texto poético",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.361000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4986",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "reasoning": "El tempo lento inicial, la progresión armónica en modo menor y las letras generan un tono melancólico sostenido.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:02.530000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1390",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "rel_type": "EVOKES",
+          "weight": 0.7138,
+          "raw_weight": 0.7138,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 6 (penalty: 0.91x). Transfer: [Warcry - Capitán Lawrence.mp3] -> [Metallica - Fade To Black.mp3].",
+          "provenance": {
+            "created_at": "2026-03-19T18:01:13.139000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3455",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "reasoning": "The repeated phrase 'Pero en fin este es mi mundo' conveys a sense of acceptance of the negative reality described.",
+          "provenance": {
+            "created_at": "2026-02-26T04:07:43.703000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2414",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.801,
+          "raw_weight": 0.801,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2541",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "reasoning": "Explicitly mentioned in the lyrics ('pruebas nucleares en el suelo').",
+          "provenance": {
+            "created_at": "2026-02-26T04:07:43.699000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 6,
+      "metrics": {
+        "cost": 6.955144898868091,
+        "min_weight": 0.7,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-3-a123c84336d4",
+      "rank": 3,
+      "mode": "lateral",
+      "signature": "a123c84336d4548887d65f3893d0e91c00d2bb570212c1b7b6f53b8e1beb377a",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "label": "Tristeza y Melancolía",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "label": "Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "5eed2194b64fe1c6233d2651fb084fabc44e112722dcc87d6bd0c6ff45d94c99",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/5eed2194_Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+          "label": "Esperanza",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+          "label": "Nach - Disparos De Silencio.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "6bce8c5865b70863494bdfc4becef0eae8001147ca1338b02b572d09a489a29c",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/6bce8c58_Nach - Disparos De Silencio.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "label": "Guerra",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "reasoning": "Tema explícito y sujeto principal del texto poético",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.361000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4615",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.729,
+          "raw_weight": 0.729,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 19 (penalty: 0.75x). Transfer: [Espécimen - Este Es Mi Mundo.mp3] -> [Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3].",
+          "provenance": {
+            "created_at": "2026-03-01T15:47:03.812000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:745",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+          "rel_type": "EVOKES",
+          "weight": 0.836,
+          "raw_weight": 0.836,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+          "reasoning": "Evident in 'racimo de soñadores de un nuevo mundo' and 'encuentra la libertad todo aquel que la sueña'.",
+          "provenance": {
+            "created_at": "2026-02-19T15:48:03.427000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:854",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+          "rel_type": "EVOKES",
+          "weight": 0.832,
+          "raw_weight": 0.832,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:124",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+          "reasoning": "Explicitly mentioned ('La esperanza lloró', 'cegará nuestra esperanza').",
+          "provenance": {
+            "created_at": "2026-02-19T16:09:11.337000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4523",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "rel_type": "EXPLORES",
+          "weight": 0.787,
+          "raw_weight": 0.787,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:661",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "reasoning": "Similarity: 71% in Weaviate (AudioSpace). Semantic Transfer: [Nach - Si Yo Fuera.mp3] -> [Nach - Disparos De Silencio.mp3].",
+          "provenance": {
+            "created_at": "2026-02-26T22:55:09.228000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        }
+      ],
+      "hop_count": 6,
+      "metrics": {
+        "cost": 6.9982004446248425,
+        "min_weight": 0.729,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-4-ad54f86ba25a",
+      "rank": 4,
+      "mode": "lateral",
+      "signature": "ad54f86ba25ac5ad86c31a746285e51d0a79a1988a6e849d6952beb3c20bb60f",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "label": "Tristeza y Melancolía",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+          "label": "Nargaroth - I Got My Dead Man Sleep.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "1661cc8574a47715fe35db3ab5878450c14f2c1cd659ffdd6261843699df3d57",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/1661cc85_Nargaroth - I Got My Dead Man Sleep.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+          "label": "Salud y Enfermedad",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+          "label": "Espécimen - Tecnología.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "8cc817ed0cc253f9b1cf249997721056d805cfd77cd7241ff11fbd27933a84bc",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/8cc817ed_Espécimen - Tecnología.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "label": "Guerra",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "reasoning": "Tema explícito y sujeto principal del texto poético",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.361000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3039",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.796,
+          "raw_weight": 0.796,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+          "reasoning": "Pervasive emotional undertone throughout the lyrics, combining grief, despair, and resignation.",
+          "provenance": {
+            "created_at": "2026-02-24T16:10:13.929000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:595",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.83,
+          "raw_weight": 0.83,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1601",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+          "reasoning": "Similarity: 75% in Weaviate (AudioSpace). Semantic Transfer: [Stratovarius - Soul of a Vagabond.mp3] -> [Nargaroth - I Got My Dead Man Sleep.mp3].",
+          "provenance": {
+            "created_at": "2026-02-25T05:27:39.137000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:3561",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.848,
+          "raw_weight": 0.848,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1825",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+          "reasoning": "Directly described in the lyrics ('gente sufriendo').",
+          "provenance": {
+            "created_at": "2026-02-26T04:03:46.780000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2413",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.775,
+          "raw_weight": 0.775,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2590",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "reasoning": "Implied by 'bomba de tiempo', 'radioactividad', 'era nuclear', and 'misiles'.",
+          "provenance": {
+            "created_at": "2026-02-26T04:03:46.784000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 6,
+      "metrics": {
+        "cost": 7.059563102669555,
+        "min_weight": 0.775,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-5-8e907915bb1c",
+      "rank": 5,
+      "mode": "lateral",
+      "signature": "8e907915bb1c363948e1963b7d744a3c8196d10971fb3b040553ab3a57d7cee2",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "label": "Tristeza y Melancolía",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "label": "Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "5eed2194b64fe1c6233d2651fb084fabc44e112722dcc87d6bd0c6ff45d94c99",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/5eed2194_Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+          "label": "Autenticidad",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+          "label": "Nach - Si Yo Fuera.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "71a09ed763c947fe50ed8c82b034ba4b879f871f6eac12b8f002c6d840d95b69",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/71a09ed7_Nach - Si Yo Fuera.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "label": "Guerra",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "reasoning": "Tema explícito y sujeto principal del texto poético",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.361000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4615",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.729,
+          "raw_weight": 0.729,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 19 (penalty: 0.75x). Transfer: [Espécimen - Este Es Mi Mundo.mp3] -> [Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3].",
+          "provenance": {
+            "created_at": "2026-03-01T15:47:03.812000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4465",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+          "rel_type": "EXPLORES",
+          "weight": 0.706,
+          "raw_weight": 0.706,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+          "reasoning": "Similarity: 72% in Weaviate (AudioSpace). Semantic Transfer: [Nach - Si Yo Fuera.mp3] -> [Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3].",
+          "provenance": {
+            "created_at": "2026-02-26T22:33:07.621000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:23",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+          "rel_type": "EXPLORES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:40",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+          "reasoning": "Desire to be 'lejos de esta esfera callejera', 'si no fuera quien soy', implies a search for true self.",
+          "provenance": {
+            "created_at": "2026-02-17T18:25:03.428000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:8",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "rel_type": "EXPLORES",
+          "weight": 0.838,
+          "raw_weight": 0.838,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:17",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+          "reasoning": "Mentioned with 'soldado', 'fusil de asalto', 'guerra fría', 'odio'.",
+          "provenance": {
+            "created_at": "2026-02-17T18:25:03.189000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 6,
+      "metrics": {
+        "cost": 7.0698236441484275,
+        "min_weight": 0.7,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    }
+  ],
+  "raw_result_count": 5,
+  "unique_route_count": 4,
+  "generated_at": "2026-10-07T04:19:17.934460+00:00",
+  "algorithm_version": "pathfinder-cypher-v1",
+  "parameters": {
+    "k_paths": 5,
+    "requested_k_paths": 5,
+    "max_hops": 8,
+    "lateral_threshold": 0.85,
+    "topological_threshold": null
+  },
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+    "label": "Astrónomo ciego",
+    "node_type": "Concept",
+    "weight_to_next": null,
+    "file_hash": null,
+    "mime_type": null,
+    "minio_path": null
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:25",
+    "label": "Guerra",
+    "node_type": "Concept",
+    "weight_to_next": null,
+    "file_hash": null,
+    "mime_type": null,
+    "minio_path": null
+  },
+  "schema_version": 2,
+  "tool": "pathfinder",
+  "exported_at": "2026-10-07T04:20:17.627Z",
+  "llm_explanation": null,
+  "explanation_path_id": null,
+  "explanations": [],
+  "options": {
+    "privacy_mode": false
+  }
+}

@@ -77,9 +77,9 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
         query_project = """
         MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
         WHERE id(c1) < id(c2) 
-          AND coalesce(r1.weight, 1.0) >= $min_weight 
-          AND coalesce(r2.weight, 1.0) >= $min_weight
-        WITH c1, c2, sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight
+          AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
+        WITH c1, c2, sum(CASE WHEN toFloatOrNull(r1.weight) < toFloatOrNull(r2.weight) THEN toFloatOrNull(r1.weight) ELSE toFloatOrNull(r2.weight) END) AS weight
         WITH gds.graph.project(
           'conceptCommunities',
           c1, c2,
@@ -88,13 +88,13 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
         ) AS g
         RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
         """
-        node_size_clause = "MATCH (n)<-[r]-(:DigitalAsset) WHERE coalesce(r.weight, 1.0) >= $min_weight WITH n, communityId, round(sum(r.weight), 2) AS degree"
+        node_size_clause = "MATCH (n)<-[r]-(:DigitalAsset) WHERE coalesce(toFloatOrNull(r.weight), 1.0) >= $min_weight WITH n, communityId, round(sum(toFloatOrNull(r.weight)), 2) AS degree"
     else:
         query_project = """
         MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
         WHERE id(c1) < id(c2)
-          AND coalesce(r1.weight, 1.0) >= $min_weight 
-          AND coalesce(r2.weight, 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         WITH c1, c2, count(a) AS weight
         WITH gds.graph.project(
           'conceptCommunities',
@@ -104,7 +104,7 @@ def analyze_communities(method: str = "standard", min_weight: float = 0.9):
         ) AS g
         RETURN g.graphName AS graphName, g.nodeCount AS nodeCount, g.relationshipCount AS relationshipCount
         """
-        node_size_clause = "MATCH (n)<-[r]-(a:DigitalAsset) WHERE coalesce(r.weight, 1.0) >= $min_weight WITH n, communityId, count(distinct a) AS degree"
+        node_size_clause = "MATCH (n)<-[r]-(a:DigitalAsset) WHERE coalesce(toFloatOrNull(r.weight), 1.0) >= $min_weight WITH n, communityId, count(distinct a) AS degree"
 
     # --- Louvain + enriquecer con tamaÃ±o real ---
     query_louvain = f"""
@@ -189,10 +189,10 @@ def analyze_bridges(method: str = "standard", min_weight: float = 0.9):
         cypher_query = """
         MATCH (bridge:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(other)
         WHERE elementId(bridge) <> elementId(other)
-          AND coalesce(r1.weight, 1.0) >= $min_weight 
-          AND coalesce(r2.weight, 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         WITH bridge, other,
-             CASE WHEN coalesce(r1.weight, 1.0) < coalesce(r2.weight, 1.0) THEN coalesce(r1.weight, 1.0) ELSE coalesce(r2.weight, 1.0) END AS fuzzy_w
+             CASE WHEN coalesce(toFloatOrNull(r1.weight), 1.0) < coalesce(toFloatOrNull(r2.weight), 1.0) THEN coalesce(toFloatOrNull(r1.weight), 1.0) ELSE coalesce(toFloatOrNull(r2.weight), 1.0) END AS fuzzy_w
         WITH bridge, sum(fuzzy_w) AS fuzzy_degree,
              count(distinct labels(other)) AS diversity
         WITH bridge, round(fuzzy_degree * diversity, 2) AS score
@@ -200,8 +200,8 @@ def analyze_bridges(method: str = "standard", min_weight: float = 0.9):
 
         MATCH (bridge)<-[r1]-(:DigitalAsset)-[r2]->(o)
         WHERE elementId(bridge) <> elementId(o)
-          AND coalesce(r1.weight, 1.0) >= $min_weight 
-          AND coalesce(r2.weight, 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         RETURN bridge.name AS id, score,
                collect(distinct o.name)[0..6] AS context
         ORDER BY score DESC
@@ -210,8 +210,8 @@ def analyze_bridges(method: str = "standard", min_weight: float = 0.9):
         cypher_query = """
         MATCH (bridge:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(other)
         WHERE elementId(bridge) <> elementId(other)
-          AND coalesce(r1.weight, 1.0) >= $min_weight 
-          AND coalesce(r2.weight, 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         WITH bridge, count(distinct other) AS degree,
              count(distinct labels(other)) AS diversity
         WITH bridge, round(toFloat(degree * diversity), 2) AS score
@@ -219,8 +219,8 @@ def analyze_bridges(method: str = "standard", min_weight: float = 0.9):
 
         MATCH (bridge)<-[r1]-(:DigitalAsset)-[r2]->(o)
         WHERE elementId(bridge) <> elementId(o)
-          AND coalesce(r1.weight, 1.0) >= $min_weight 
-          AND coalesce(r2.weight, 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight
+          AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         RETURN bridge.name AS id, score,
                collect(distinct o.name)[0..6] AS context
         ORDER BY score DESC
@@ -337,9 +337,9 @@ def pathfind(request: PathfinderRequest):
              // 1. COSTO DE ARISTAS: Soft Bounding (Rango de Oro)
              REDUCE(cost = 0.0, r IN relationships(p) |
                cost + CASE 
-                 WHEN toFloat(coalesce(r.weight, 0.5)) > $threshold THEN 2.0
-                 WHEN toFloat(coalesce(r.weight, 0.5)) < ($threshold - 0.3) THEN 1.5
-                 ELSE (1.0 - toFloat(coalesce(r.weight, 0.5))) 
+                 WHEN coalesce(toFloatOrNull(r.weight), 0.5) > $threshold THEN 2.0
+                 WHEN coalesce(toFloatOrNull(r.weight), 0.5) < ($threshold - 0.3) THEN 1.5
+                 ELSE (1.0 - coalesce(toFloatOrNull(r.weight), 0.5))
                END
              ) AS edgeCost,
              
@@ -415,7 +415,7 @@ def pathfind(request: PathfinderRequest):
             MATCH (src) WHERE elementId(src) = $source
             MATCH (tgt) WHERE elementId(tgt) = $target
             MATCH p = (src)-[*1..8]-(tgt)
-            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloat(r.weight), 1.0) >= $topo_threshold)
+            WHERE ALL(r IN relationships(p) WHERE coalesce(toFloatOrNull(r.weight), 1.0) >= $topo_threshold)
             WITH p, length(p) AS totalCost
             ORDER BY totalCost ASC
             LIMIT {k}
@@ -438,7 +438,7 @@ def pathfind(request: PathfinderRequest):
         MATCH p = (src)-[*1..8]-(tgt)
         WITH p,
              REDUCE(cost = 0.0, r IN relationships(p) |
-               cost + (1.0 - toFloat(coalesce(r.weight, 0.5)))
+               cost + (1.0 - coalesce(toFloatOrNull(r.weight), 0.5))
              ) AS totalCost
         ORDER BY totalCost ASC
         LIMIT {k}
@@ -484,7 +484,7 @@ def analyze_serendipity():
     cypher_query = """
     // 1. Elegir un nodo de inicio aleatorio con al menos una conexiÃ³n no obvia
     MATCH (start:Concept)<-[r]-(:DigitalAsset)
-    WHERE coalesce(r.weight, 1.0) < 0.9
+    WHERE coalesce(toFloatOrNull(r.weight), 1.0) < 0.9
     WITH start ORDER BY rand() LIMIT 1
 
     // 2. Trazar el camino de 5 nodos: Concept -> Asset -> Concept -> Asset -> Concept
@@ -496,8 +496,8 @@ def analyze_serendipity():
       AND elementId(mid)   <> elementId(end)
       AND elementId(a1)    <> elementId(a2)
       // Factor Serendipia: al menos una arista dÃ©bil/latente
-      AND (coalesce(r1.weight, 1.0) <= 0.79 OR coalesce(r2.weight, 1.0) <= 0.79
-        OR coalesce(r3.weight, 1.0) <= 0.79 OR coalesce(r4.weight, 1.0) <= 0.79)
+      AND (coalesce(toFloatOrNull(r1.weight), 1.0) <= 0.79 OR coalesce(toFloatOrNull(r2.weight), 1.0) <= 0.79
+        OR coalesce(toFloatOrNull(r3.weight), 1.0) <= 0.79 OR coalesce(toFloatOrNull(r4.weight), 1.0) <= 0.79)
 
     // 4. Calcular el grado del nodo puente (hub) â€” penaliza mega-hubs
     CALL {
@@ -518,24 +518,24 @@ def analyze_serendipity():
         elementId(start)            AS step1_id,
         start.name                  AS step1_node,
         'Concept'                   AS step1_type,
-        coalesce(r1.weight, 1.0)   AS edge1_weight,
+        coalesce(toFloatOrNull(r1.weight), 1.0)   AS edge1_weight,
         elementId(a1)               AS step2_id,
         coalesce(a1.name, a1.filename) AS step2_node,
         'Asset'                     AS step2_type,
         a1.file_hash                AS a1_hash,
         a1.mime_type                AS a1_mime,
-        coalesce(r2.weight, 1.0)   AS edge2_weight,
+        coalesce(toFloatOrNull(r2.weight), 1.0)   AS edge2_weight,
         elementId(mid)              AS step3_id,
         mid.name                    AS step3_node,
         'Concept'                   AS step3_type,
         mid_degree                  AS mid_hub_degree,
-        coalesce(r3.weight, 1.0)   AS edge3_weight,
+        coalesce(toFloatOrNull(r3.weight), 1.0)   AS edge3_weight,
         elementId(a2)               AS step4_id,
         coalesce(a2.name, a2.filename) AS step4_node,
         'Asset'                     AS step4_type,
         a2.file_hash                AS a2_hash,
         a2.mime_type                AS a2_mime,
-        coalesce(r4.weight, 1.0)   AS edge4_weight,
+        coalesce(toFloatOrNull(r4.weight), 1.0)   AS edge4_weight,
         elementId(end)              AS step5_id,
         end.name                    AS step5_node,
         'Concept'                   AS step5_type
@@ -614,38 +614,29 @@ class PathExplanationResponse(BaseModel):
 @router.post("/explain-path", response_model=PathExplanationResponse)
 def explain_analytical_path(req: PathExplanationRequest):
     """
-    Takes a graph path (nodes + edges) and asks the LLM to write a narrative 
-    explanation of how and why the start node connects to the end node.
+    Evaluate supplied associations and evidence, returning a validated JSON string.
     """
     if not req.nodes or not req.edges:
-        return PathExplanationResponse(status="error", explanation="El camino estÃ¡ vacÃ­o.")
+        return PathExplanationResponse(status="error", explanation="El camino está vacío.")
+
+    from shared.path_explanation import (
+        LEGACY_ROUTE_ID, PATH_EXPLANATION_PROMPT_VERSION,
+        PATH_EXPLANATION_TEMPERATURE, build_explanation_prompts, validate_explanation,
+    )
 
     try:
-        # 1. Reconstruct path as a readable string
-        path_str_parts = []
-        node_map = {n.get("id"): n for n in req.nodes}
-        
-        # Sort edges assuming they are mostly sequential, but handle flexibly
-        for edge in req.edges:
-            src = node_map.get(edge.get("source"), {})
-            tgt = node_map.get(edge.get("target"), {})
-            
-            src_name = src.get("name") or src.get("label") or "Unknown"
-            tgt_name = tgt.get("name") or tgt.get("label") or "Unknown"
-            src_type = src.get("type") or src.get("node_type") or "Node"
-            tgt_type = tgt.get("type") or tgt.get("node_type") or "Node"
-            
-            rel = edge.get("rel_type") or edge.get("type") or "CONECTADO_A"
-            weight = edge.get("weight")
-            w_str = f" (peso: {weight})" if weight is not None else ""
-            
-            step = f"♦ Conexión: [{src_type}] '{src_name}' <---({rel}){w_str}---> [{tgt_type}] '{tgt_name}'"
-            path_str_parts.append(step)
-
-        path_context = "\n".join(path_str_parts)
-        if req.paths:
-            # Keep route boundaries and traversal order, including parallel variants.
-            path_context = json.dumps(req.paths, ensure_ascii=False)
+        # Preserve supplied routes and relationship metadata; do not infer routes
+        # from a legacy union graph or alter the path discovery algorithms.
+        explanation_routes = req.paths or [{
+            "id": LEGACY_ROUTE_ID, "nodes": req.nodes, "edges": req.edges,
+        }]
+        route_ids = [route["id"] for route in explanation_routes]
+        if not all(isinstance(route_id, str) and route_id for route_id in route_ids) or len(set(route_ids)) != len(route_ids):
+            return PathExplanationResponse(status="error", explanation="Las rutas necesitan IDs únicos y no vacíos.")
+        path_context = json.dumps(
+            req.paths if req.paths else {"nodes": req.nodes, "edges": req.edges},
+            ensure_ascii=False,
+        )
 
         # 1.5 Fetch minio sidecars for contextual richness
         minio_contexts = []
@@ -734,12 +725,12 @@ def explain_analytical_path(req: PathExplanationRequest):
                             lyrics = analysis_json.get("audio_specifics", {}).get('lyrics_summary', '') or ""
                             
                             content_parts = []
-                            if summary: content_parts.append(f"Resumen: {summary}")
+                            if summary: content_parts.append(f"Resumen previo (no cita literal): {summary}")
                             if text_content: content_parts.append(f"Contenido texto: {text_content}")
-                            if transcript: content_parts.append(f"TranscripciÃ³n de audio: {transcript}")
+                            if transcript: content_parts.append(f"Transcripción de audio: {transcript}")
                             if ocr: content_parts.append(f"Texto ocr: {ocr}")
-                            if img_desc: content_parts.append(f"DescripciÃ³n de imagen: {img_desc}")
-                            if lyrics: content_parts.append(f"Letra de canciÃ³n: {lyrics}")
+                            if img_desc: content_parts.append(f"Descripción previa de imagen: {img_desc}")
+                            if lyrics: content_parts.append(f"Resumen previo de letra (no letra literal): {lyrics}")
                             
                             content = "\n".join(content_parts)
                             
@@ -747,38 +738,15 @@ def explain_analytical_path(req: PathExplanationRequest):
                                 if len(content) > 3000:
                                     content = content[:3000] + "..."
                                 
-                                minio_contexts.append(f"Archivo '{n.get('name') or n.get('label', 'Unknown')}':\n{content}")
+                                minio_contexts.append(f"Archivo source_id={n.get('id')} '{n.get('name') or n.get('label', 'Unknown')}':\n{content}")
                         except Exception as inner_e:
                             logger.debug(f"Could not load minio sidecar for {f_hash}: {inner_e}")
         except Exception as e:
             logger.debug(f"Minio client error: {e}")
             
-        context_block = ""
-        if minio_contexts:
-            joined_contexts = "\n\n---\n\n".join(minio_contexts)
-            context_block = f"\n\n<CONTEXTO_ARCHIVOS>\n{joined_contexts}\n</CONTEXTO_ARCHIVOS>\n\nUsa este contexto de los archivos para explicar mÃ¡s a fondo DE QUÃ‰ tratan y dar sentido narrativo a las asociaciones conceptuales."
-
-        # 2. Build Prompt
-        system_prompt = f"""Eres un analista de datos y experto en grafos de conocimiento.
-                            Tu tarea es explicar un camino asociativo (serendipia) descubierto por la herramienta '{req.tool_name}'.
-
-                            CRÍTICO: Los caminos en un grafo de conocimiento no siempre son narrativamente lineales. Aunque recibas los nodos en un orden específico (del Nodo A al Nodo Z), la relación causal, psicológica o lógica puede explicarse mejor en sentido inverso (del Nodo Z al Nodo A) o partiendo del centro hacia los extremos.
-
-                            Instrucciones:
-                            1. Analiza el camino completo y EVALÚA cuál es la dirección narrativa más coherente (causa -> efecto, problema -> síntoma, o de lo mundano a lo profundo). 
-                            2. Construye tu explicación siguiendo la dirección que elegiste como la más lógica, indicando claramente desde qué punto estás partiendo y hacia dónde te diriges.
-                            3. Usa la información de <CONTEXTO_ARCHIVOS> para fundamentar la conexión (ej. letras de canciones, descripciones de imágenes, resúmenes). Es vital utilizar este contenido.
-                            4. Escribe una narrativa fluida explicando paso a paso la conexión en la dirección seleccionada.
-                            5. Menciona los pesos (weights) si son bajos (< 0.8), indicando que es una conexión "latente", "débil" o "sorprendente".
-                            6. Si el camino pasa por un Concepto central (hub), menciónalo como el "puente conceptual".
-                            7. OBLIGATORIO: Finaliza con un párrafo llamado "Conclusión del Subsistema" resumiendo el hallazgo general, la idea central que une todo el camino y justificando brevemente por qué la dirección narrativa elegida tiene sentido.
-                            8. Mantén un tono analítico, profundo y fluido.
-                            9. Responde en Español.
-                            """
-
-        user_prompt = f"Aquí tienes el conjunto de conexiones no direccionales extraídas del grafo de conocimiento:\n\n{path_context}{context_block}\n\nAnaliza este conjunto en su totalidad. Determina libremente cuál es la dirección narrativa o causal más lógica y explica detalladamente la cadena de asociaciones siguiendo esa dirección elegida, integrando la información de los archivos."
-        if req.paths:
-            user_prompt += "\nLas rutas JSON son recorridos independientes y ordenados. Explica cada ruta por su ID y rango, respeta sus límites y distingue tramos compartidos y divergentes. Si tienen la misma secuencia de nodos, descríbelas como variantes de relaciones. No inventes una única cadena combinando rutas. Las asociaciones son pistas para evaluación humana, no demuestran causalidad; los pesos no son probabilidades de verdad."
+        system_prompt, user_prompt = build_explanation_prompts(
+            req.tool_name, path_context, minio_contexts, route_ids, explanation_routes,
+        )
 
         # 3. Request to LLM Gateway
         url = f"{LLM_GATEWAY_URL}/v1/chat/completions"
@@ -791,18 +759,36 @@ def explain_analytical_path(req: PathExplanationRequest):
             "task": "chat",
             "privacy_mode": "strict" if req.privacy_mode else "flexible",
             "messages": json.dumps(messages),
-            "temperature": 0.6,
-            "provider": "openai" # Default explicitly to cloud for better reasoning
+            "temperature": PATH_EXPLANATION_TEMPERATURE,
         }
         
-        logger.info(f"Requesting path explanation for {len(req.nodes)} nodes via {LLM_GATEWAY_URL}")
+        logger.info(
+            "Requesting path explanation prompt_version=%s routes=%s nodes=%s privacy=%s",
+            PATH_EXPLANATION_PROMPT_VERSION, len(route_ids), len(req.nodes), data["privacy_mode"],
+        )
         response = requests.post(url, data=data, timeout=(10, 900 if req.privacy_mode else 60))
         
         if response.status_code == 200:
             result = response.json()
-            answer = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+            choices = result.get("choices") or []
+            choice = choices[0] if choices else {}
+            logger.info(
+                "Path explanation response prompt_version=%s model=%s finish_reason=%s",
+                PATH_EXPLANATION_PROMPT_VERSION, result.get("model"), choice.get("finish_reason"),
+            )
+            if result.get("usage") is not None:
+                logger.debug("Path explanation usage=%s", result["usage"])
+            if choice.get("finish_reason") == "length":
+                return PathExplanationResponse(status="error", explanation="La respuesta del LLM quedó truncada; no se recibió un análisis JSON completo.")
+            answer = (choice.get("message") or {}).get("content")
             if not answer:
-                answer = "Error: El LLM devolviÃ³ una respuesta vacÃ­a."
+                return PathExplanationResponse(status="error", explanation="El LLM devolvió una respuesta vacía.")
+            try:
+                answer = validate_explanation(answer, route_ids, explanation_routes)
+            except ValueError:
+                logger.warning("Invalid path explanation JSON/route contract prompt_version=%s", PATH_EXPLANATION_PROMPT_VERSION)
+                return PathExplanationResponse(status="error", explanation="El LLM no devolvió un análisis JSON válido y completo para las rutas solicitadas. Intenta generar la explicación de nuevo.")
+            # Keep explanation as a JSON string for the generic renderer and Saved Paths.
             return PathExplanationResponse(status="success", explanation=answer)
         else:
             logger.error(f"LLM Gateway error: HTTP {response.status_code} - {response.text}")
@@ -823,8 +809,9 @@ def analyze_fog_of_war():
         with driver.session() as session:
             query = """
                 MATCH ()-[r]->()
-                WHERE r.weight IS NOT NULL
-                WITH toInteger(r.weight * 10) as decile, count(r) as c
+                WITH toFloatOrNull(r.weight) AS weight
+                WHERE weight >= 0.0 AND weight <= 1.0
+                WITH CASE WHEN weight = 1.0 THEN 9 ELSE toInteger(weight * 10) END as decile, count(*) as c
                 RETURN decile, c ORDER BY decile
             """
             result = session.run(query)
@@ -971,19 +958,19 @@ def analyze_chord(method: str = "standard", min_weight: float = 0.0):
         cypher_query = """
         WITH $categories as allowed_labels
         MATCH (n1)<-[r1]-(a:DigitalAsset)-[r2]->(n2)
-        WHERE elementId(n1) < elementId(n2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
+        WHERE elementId(n1) < elementId(n2) AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         WITH n1, n2, r1, r2, allowed_labels,
              head([lbl IN labels(n1) WHERE lbl IN allowed_labels]) as l1,
              head([lbl IN labels(n2) WHERE lbl IN allowed_labels]) as l2
         WHERE l1 IS NOT NULL AND l2 IS NOT NULL
         RETURN l1 as source, l2 as target,
-               round(sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END), 2) as weight
+               round(sum(CASE WHEN toFloatOrNull(r1.weight) < toFloatOrNull(r2.weight) THEN toFloatOrNull(r1.weight) ELSE toFloatOrNull(r2.weight) END), 2) as weight
         """
     else:
         cypher_query = """
         WITH $categories as allowed_labels
         MATCH (n1)<-[r1]-(a:DigitalAsset)-[r2]->(n2)
-        WHERE elementId(n1) < elementId(n2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
+        WHERE elementId(n1) < elementId(n2) AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         WITH n1, n2, a, allowed_labels,
              head([lbl IN labels(n1) WHERE lbl IN allowed_labels]) as l1,
              head([lbl IN labels(n2) WHERE lbl IN allowed_labels]) as l2
@@ -1067,9 +1054,9 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard", 
             if method == "fuzzy":
                 l1_query = """
                     MATCH (root {name: $rootName})<-[r1]-(a:DigitalAsset)-[r2]->(l1)
-                    WHERE elementId(root) <> elementId(l1) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
+                    WHERE elementId(root) <> elementId(l1) AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
                     WITH root, l1,
-                         sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight,
+                         sum(CASE WHEN toFloatOrNull(r1.weight) < toFloatOrNull(r2.weight) THEN toFloatOrNull(r1.weight) ELSE toFloatOrNull(r2.weight) END) AS weight,
                          labels(l1)[0] AS ltype
                     ORDER BY weight DESC LIMIT 8
                     RETURN l1.name AS name, round(weight, 2) AS weight, ltype
@@ -1077,7 +1064,7 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard", 
             else:
                 l1_query = """
                     MATCH (root {name: $rootName})<-[r1]-(a:DigitalAsset)-[r2]->(l1)
-                    WHERE elementId(root) <> elementId(l1) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
+                    WHERE elementId(root) <> elementId(l1) AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
                     WITH root, l1, count(distinct a) AS weight, labels(l1)[0] AS ltype
                     ORDER BY weight DESC LIMIT 8
                     RETURN l1.name AS name, weight, ltype
@@ -1113,9 +1100,9 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard", 
                     l2_query = """
                         UNWIND $l1Names AS parentName
                         MATCH (parent {name: parentName})<-[r1]-(a:DigitalAsset)-[r2]->(l2)
-                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
+                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2) AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
                         WITH parentName, l2,
-                             sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight,
+                             sum(CASE WHEN toFloatOrNull(r1.weight) < toFloatOrNull(r2.weight) THEN toFloatOrNull(r1.weight) ELSE toFloatOrNull(r2.weight) END) AS weight,
                              labels(l2)[0] AS ltype
                         ORDER BY parentName, weight DESC
                         WITH parentName, collect({name: l2.name, weight: round(weight, 2), ltype: ltype})[0..3] AS children
@@ -1126,7 +1113,7 @@ def analyze_radial(payload: RadialTreeRequest = None, method: str = "standard", 
                     l2_query = """
                         UNWIND $l1Names AS parentName
                         MATCH (parent {name: parentName})<-[r1]-(a:DigitalAsset)-[r2]->(l2)
-                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
+                        WHERE NOT l2.name IN $seen AND elementId(parent) <> elementId(l2) AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
                         WITH parentName, l2, count(distinct a) AS weight, labels(l2)[0] AS ltype
                         ORDER BY parentName, weight DESC
                         WITH parentName, collect({name: l2.name, weight: weight, ltype: ltype})[0..3] AS children
@@ -1180,8 +1167,10 @@ def analyze_abstract_concepts():
 
     cypher_query = """
     MATCH (c:Concept)<-[r]-(a:DigitalAsset)
-    WITH c, count(r) as degree, avg(r.weight) as avg_weight
-    WHERE degree >= 2
+    WITH c, count(r) as degree,
+         avg(CASE WHEN toFloatOrNull(r.weight) >= 0.0 AND toFloatOrNull(r.weight) <= 1.0
+                  THEN toFloatOrNull(r.weight) END) as avg_weight
+    WHERE degree >= 2 AND avg_weight IS NOT NULL
     RETURN c.name as id, degree as x, round(avg_weight, 2) as y
     ORDER BY degree DESC
     LIMIT 100
@@ -1229,8 +1218,8 @@ def analyze_pagerank(method: str = "standard", min_weight: float = 0.0):
     if method == "fuzzy":
         query_project = """
         MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
-        WHERE elementId(c1) <> elementId(c2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
-        WITH c1, c2, sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) AS weight
+        WHERE elementId(c1) <> elementId(c2) AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
+        WITH c1, c2, sum(CASE WHEN toFloatOrNull(r1.weight) < toFloatOrNull(r2.weight) THEN toFloatOrNull(r1.weight) ELSE toFloatOrNull(r2.weight) END) AS weight
         WITH gds.graph.project(
           'conceptPR', c1, c2,
           { relationshipProperties: { weight: weight } }
@@ -1240,7 +1229,7 @@ def analyze_pagerank(method: str = "standard", min_weight: float = 0.0):
     else:
         query_project = """
         MATCH (c1:Concept)<-[r1]-(a:DigitalAsset)-[r2]->(c2:Concept)
-        WHERE elementId(c1) <> elementId(c2) AND coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
+        WHERE elementId(c1) <> elementId(c2) AND coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         WITH c1, c2, count(a) AS weight
         WITH gds.graph.project(
           'conceptPR', c1, c2,
@@ -1332,8 +1321,8 @@ def analyze_weight_distribution(step: float = 0.1):
             # Histogram of edge weights
             query = f"""
                 MATCH ()-[r]->()
-                WHERE r.weight IS NOT NULL
-                WITH toInteger(toFloat(r.weight) * {multiplier}) as bucket, count(*) as count
+                WHERE toFloatOrNull(r.weight) IS NOT NULL
+                WITH toInteger(toFloatOrNull(r.weight) * {multiplier}) as bucket, count(*) as count
                 RETURN bucket, count
                 ORDER BY bucket ASC
             """
@@ -1394,7 +1383,7 @@ def analyze_heatmap(method: str = "standard", min_weight: float = 0.0):
     MATCH (c:Concept)<--(d:DigitalAsset)
     // In standard, we might not have explicit weights on all relations, but if we do, filter them
     OPTIONAL MATCH (c)<-[r]-(d)
-    WITH c, d, coalesce(r.weight, 1.0) as w
+    WITH c, d, coalesce(toFloatOrNull(r.weight), 1.0) as w
     WHERE w >= $min_weight
     WITH c, count(d) as degree
     ORDER BY degree DESC LIMIT 20
@@ -1406,12 +1395,12 @@ def analyze_heatmap(method: str = "standard", min_weight: float = 0.0):
     CALL {
         WITH c1, c2
         MATCH (c1)<-[r1]-(a:DigitalAsset)-[r2]->(c2)
-        WHERE coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
+        WHERE coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
         RETURN count(distinct a) as intersection
     }
 
-    CALL { WITH c1 MATCH (c1)<-[r1]-(a1:DigitalAsset) WHERE coalesce(r1.weight, 1.0) >= $min_weight RETURN count(distinct a1) as degree1 }
-    CALL { WITH c2 MATCH (c2)<-[r2]-(a2:DigitalAsset) WHERE coalesce(r2.weight, 1.0) >= $min_weight RETURN count(distinct a2) as degree2 }
+    CALL { WITH c1 MATCH (c1)<-[r1]-(a1:DigitalAsset) WHERE coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight RETURN count(distinct a1) as degree1 }
+    CALL { WITH c2 MATCH (c2)<-[r2]-(a2:DigitalAsset) WHERE coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight RETURN count(distinct a2) as degree2 }
     
     WITH c1.name as x, c2.name as y, intersection, degree1, degree2
     WITH x, y, (degree1 + degree2 - intersection) as union_count, intersection
@@ -1428,8 +1417,8 @@ def analyze_heatmap(method: str = "standard", min_weight: float = 0.0):
     # Query para Fuzzy Jaccard (Basado en pesos de relaciones difusas)
     query_fuzzy = """
     MATCH (c:Concept)<-[r]-(d:DigitalAsset)
-    WHERE coalesce(r.weight, 1.0) >= $min_weight
-    WITH c, sum(r.weight) as weighted_degree
+    WHERE coalesce(toFloatOrNull(r.weight), 1.0) >= $min_weight
+    WITH c, sum(toFloatOrNull(r.weight)) as weighted_degree
     ORDER BY weighted_degree DESC LIMIT 20
     WITH collect(c) as topConcepts
 
@@ -1439,12 +1428,12 @@ def analyze_heatmap(method: str = "standard", min_weight: float = 0.0):
     CALL {
         WITH c1, c2
         MATCH (c1)<-[r1]-(a:DigitalAsset)-[r2]->(c2)
-        WHERE coalesce(r1.weight, 1.0) >= $min_weight AND coalesce(r2.weight, 1.0) >= $min_weight
-        RETURN sum(CASE WHEN r1.weight < r2.weight THEN r1.weight ELSE r2.weight END) as fuzzy_intersection
+        WHERE coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight AND coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight
+        RETURN sum(CASE WHEN toFloatOrNull(r1.weight) < toFloatOrNull(r2.weight) THEN toFloatOrNull(r1.weight) ELSE toFloatOrNull(r2.weight) END) as fuzzy_intersection
     }
 
-    CALL { WITH c1 MATCH (c1)<-[r1]-(:DigitalAsset) WHERE coalesce(r1.weight, 1.0) >= $min_weight RETURN sum(r1.weight) as sum_w1 }
-    CALL { WITH c2 MATCH (c2)<-[r2]-(:DigitalAsset) WHERE coalesce(r2.weight, 1.0) >= $min_weight RETURN sum(r2.weight) as sum_w2 }
+    CALL { WITH c1 MATCH (c1)<-[r1]-(:DigitalAsset) WHERE coalesce(toFloatOrNull(r1.weight), 1.0) >= $min_weight RETURN sum(toFloatOrNull(r1.weight)) as sum_w1 }
+    CALL { WITH c2 MATCH (c2)<-[r2]-(:DigitalAsset) WHERE coalesce(toFloatOrNull(r2.weight), 1.0) >= $min_weight RETURN sum(toFloatOrNull(r2.weight)) as sum_w2 }
     
     WITH c1.name as x, c2.name as y, fuzzy_intersection, sum_w1, sum_w2
     WITH x, y, (sum_w1 + sum_w2 - fuzzy_intersection) as fuzzy_union, fuzzy_intersection

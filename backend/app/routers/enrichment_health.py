@@ -4,6 +4,7 @@ import logging
 import json
 
 from shared.clients import get_neo4j_driver, get_minio_client
+from shared.weights import normalize_weight
 from config.settings import get_settings
 
 router = APIRouter(
@@ -205,7 +206,7 @@ def backfill_projects():
                     session.run(q, file_hash=file_hash, name=event_name,
                                event_type=event.get("type", event.get("event_type", "unknown")),
                                date=event.get("date", None),
-                               weight=event.get("confidence", event.get("weight", 1.0)))
+                               weight=normalize_weight(event.get("confidence", event.get("weight", 1.0))))
                     events_created += 1
 
                 # --- PROJECTS ---
@@ -236,7 +237,7 @@ def backfill_projects():
                     session.run(q, file_hash=file_hash, title=project_title,
                                project_type=project.get("type", project.get("project_type", "unknown")),
                                year=project.get("year", None),
-                               weight=project.get("confidence", project.get("weight", 1.0)))
+                               weight=normalize_weight(project.get("confidence", project.get("weight", 1.0))))
                     projects_created += 1
 
         return RepairResponse(

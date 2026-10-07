@@ -2,7 +2,9 @@
 
 [Español (principal)](README.md) · **English**
 
-Explore your files through associations, analogies, and unexpected connections.
+From retrieval to association and serendipitous discovery.
+
+GraphRAG Multimodal / The Associative Engine is an experimental knowledge observatory combining multimodal retrieval, a knowledge graph, and fuzzy weighted relationships.
 
 The project begins with a research question:
 
@@ -24,6 +26,14 @@ Fuzzy weighted graphs are one experimental response: the computational hypothesi
 Conventional retrieval primarily optimizes for relevance. GraphRAG combines that search with exploration of weaker, indirect, and unexpected relationships through fuzzy graph traversal, Pathfinder, and Serendipity.
 
 The system combines multimodal search, a knowledge graph, and fuzzy weighted relationships to explore documents, images, audio, and video. Its purpose is to retrieve relevant material and make possible connections between files, concepts, and entities visible: from files to discoveries.
+
+Three ways to explore the same corpus:
+
+- **Retrieval:** find what is relevant to a query.
+- **Pathfinder:** choose a source and a destination and inspect different possible routes between them.
+- **Serendipity:** leave the destination open and let its own exploration rules suggest an unexpected association. It is not another version of Pathfinder, and Pathfinder need not reproduce its results.
+
+The public example **Astrónomo ciego ↔ Abandono de lo superficial** contains five saved node sequences. Home condenses two; complete routes, assets, and relationships remain inspectable. This illustrates corpus behavior, not general validation. See the Spanish [curation and caveats](docs/presentation/CANONICAL_EXAMPLE.md), [3–5 minute demo](docs/presentation/DEMO.md), [capture checklist](docs/presentation/CAPTURES.md), and [future research directions](docs/research/FUTURE_WORK.md).
 
 ![Observatory home with Serendipity and Pathfinder entry points](docs/images/inicio.jpg)
 

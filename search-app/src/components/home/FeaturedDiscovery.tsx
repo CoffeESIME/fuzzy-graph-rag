@@ -1,80 +1,74 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { readSavedPathfinder, routeGroups } from '../../lib/pathfinderRoutes';
+import type { PathfinderResponse } from '../../types/pathfinder';
 
-// Editorial selection from the existing corpus. Fetch the original rather than
-// embedding a copy: other installations may not have this saved discovery.
-const FEATURED_PATH = 'serendipity_path_1773992550430.json';
+// Curated presentation only: never changes Pathfinder selection or ranking.
+// The source export stays in Saved Paths; installations without it show no invented result.
+const FEATURED_PATH = 'pathfinder_astr_nomo_ciego_to_abandono_de_lo_superficial_1791347443292.json';
+const FEATURED_ROUTES = ['route-1-c39324b8f0ea', 'route-3-bf6db450d548'];
 
-interface PathStep {
-    id: string;
-    name: string;
-    type: string;
-    weight: number | null;
+function conceptualBranches(result: PathfinderResponse) {
+    const branches = FEATURED_ROUTES.map(id => result.paths?.find(p => p.id === id)?.nodes.filter(n => n.node_type === 'Concept'));
+    if (branches.some(p => !p || p.length !== 5)) return null;
+    const [a, b] = branches as NonNullable<typeof branches[number]>[];
+    if (a[0].id !== b[0].id || a[3].id !== b[3].id || a[4].id !== b[4].id) return null;
+    return [a, b];
 }
 
-function isSavedDiscovery(value: unknown): value is { tool: string; path: PathStep[] } {
-    if (!value || typeof value !== 'object' || !('tool' in value) || value.tool !== 'serendipity_path' || !('path' in value) || !Array.isArray(value.path)) return false;
-    return value.path.length >= 2 && value.path.length <= 8 && value.path.every((step: unknown, index: number) => {
-        if (!step || typeof step !== 'object') return false;
-        const node = step as Partial<PathStep>;
-        return typeof node.id === 'string' && typeof node.name === 'string' && node.name.trim().length > 0 && typeof node.type === 'string'
-            && (index === 0 || (typeof node.weight === 'number' && Number.isFinite(node.weight) && node.weight >= 0 && node.weight <= 1));
-    });
-}
-
-const example: PathStep[] = [
-    { id: 'city', name: 'CIUDAD', type: 'Concept', weight: null },
-    { id: 'streets', name: 'calles', type: 'Concept', weight: null },
-    { id: 'veins', name: 'venas', type: 'Concept', weight: null },
-    { id: 'circulation', name: 'circulación', type: 'Concept', weight: null },
-    { id: 'organism', name: 'ORGANISMO', type: 'Concept', weight: null },
-];
-
-function AssociativePath({ path, saved }: { path: PathStep[]; saved: boolean }) {
-    const minimum = saved ? Math.min(...path.slice(1).map(step => step.weight!)) : null;
-    return (
-        <figure className="home-associative-path">
-            <figcaption>{saved ? 'RECORRIDO GUARDADO' : 'EJEMPLO CONCEPTUAL · NO ES UN RESULTADO'}</figcaption>
-            <ol>{path.map((step, index) => {
-                const lateral = saved ? step.weight === minimum : index === 2;
-                return <li key={`${index}-${step.id}`}>
-                    {index > 0 && <div className="home-path-edge">
-                        <svg width="20" height="26" viewBox="0 0 20 26" aria-hidden="true"><path d="M10 0V26" stroke="currentColor" strokeWidth="1.5" strokeDasharray={lateral ? '2 4' : undefined} /></svg>
-                        <span>{saved ? `peso ${step.weight!.toFixed(2)}` : lateral ? 'asociación lateral' : ''}</span>
-                    </div>}
-                    <div className="home-path-step"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className="home-map-node">{step.type === 'Asset' ? <rect x="2" y="2" width="8" height="8" rx="1" /> : <circle cx="6" cy="6" r="4" />}</svg><span>{step.name}</span></div>
-                </li>;
-            })}</ol>
-            <p className="home-path-key">{saved ? 'Línea punteada: menor peso en este recorrido. Los pesos indican fuerza de relación, no probabilidad de verdad.' : 'Línea continua: relación directa. Punteada: asociación lateral por explorar.'}</p>
-        </figure>
-    );
+function ConceptualRoutes({ result }: { result: PathfinderResponse }) {
+    const branches = conceptualBranches(result)!;
+    const [a, b] = branches;
+    return <figure className="home-conceptual-routes">
+        <figcaption>Vista conceptual de recorridos reales</figcaption>
+        <svg viewBox="0 0 380 324" role="img" aria-label={`Dos recorridos desde ${a[0].label}: uno por ${a[1].label} y ${a[2].label}; otro por ${b[1].label} y ${b[2].label}. Ambos pasan por ${a[3].label} hasta ${a[4].label}. Los archivos intermedios están omitidos.`}>
+            <g className="home-conceptual-links" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="3 5">
+                <path d="M190 38 C190 64 95 58 95 84 M190 38 C190 64 285 58 285 84 M95 116 V152 M285 116 V152 M95 182 C95 214 190 194 190 222 M285 182 C285 214 190 194 190 222 M190 248 V282" />
+            </g>
+            <g textAnchor="middle" fill="currentColor">
+                <text x="190" y="28" className="home-conceptual-endpoint">{a[0].label}</text>
+                <text x="95" y="102">{a[1].label}</text>
+                <text x="285" y="94"><tspan x="285">{b[1].label.split(' ').slice(0, -1).join(' ')}</tspan><tspan x="285" dy="18">{b[1].label.split(' ').at(-1)}</tspan></text>
+                <text x="95" y="172">{a[2].label}</text>
+                <text x="285" y="172">{b[2].label}</text>
+                <text x="190" y="240">{a[3].label}</text>
+                <text x="190" y="304" className="home-conceptual-endpoint">{a[4].label}</text>
+            </g>
+        </svg>
+        <p>Registros 1 y 3. Cada tramo punteado resume un paso por un archivo; no representa una relación directa entre conceptos.</p>
+    </figure>;
 }
 
 export default function FeaturedDiscovery() {
-    const [path, setPath] = useState<PathStep[] | null>(null);
+    const [result, setResult] = useState<PathfinderResponse | null>(null);
     useEffect(() => {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
         fetch(`/api/analysis/saved-paths/${FEATURED_PATH}`, { signal: controller.signal })
             .then(response => response.ok ? response.json() : null)
-            .then((data: unknown) => { if (!controller.signal.aborted && isSavedDiscovery(data)) setPath(data.path); })
-            .catch(() => { /* The labelled conceptual example also works offline. */ })
+            .then((data: unknown) => {
+                const parsed = readSavedPathfinder(data);
+                if (!controller.signal.aborted && parsed && conceptualBranches(parsed)) setResult(parsed);
+            })
+            .catch(() => { /* No substitute corpus or synthetic paths. */ })
             .finally(() => clearTimeout(timeout));
         return () => { controller.abort(); clearTimeout(timeout); };
     }, []);
-
-    return (
-        <article className={`home-discovery${path ? ' home-discovery-featured' : ''}`}>
-            <div className="home-discovery-copy">
-                <span className="home-eyebrow">SERENDIPITY{path ? ' / HALLAZGO' : ''}</span>
-                <h3>{path ? <>{path[0].name}<span className="home-discovery-between" aria-label="hacia">→</span>{path[path.length - 1].name}</> : <>Encuentra lo<br />inesperado.</>}</h3>
-                {path && <p className="home-discovery-metadata">{path.length - 1} saltos · recorrido del corpus</p>}
-                <p>{path ? 'Una asociación para investigar: inspecciona cada vínculo y vuelve a sus fuentes.' : 'Sigue asociaciones más allá de la similitud directa. Cada conexión es una pista para investigar.'}</p>
-                <Link className="home-action" to={path ? `/analysis/saved-paths?path=${encodeURIComponent(FEATURED_PATH)}` : '/analysis/serendipity'}>{path ? 'Explorar recorrido' : 'Descubrir un recorrido'}<ArrowRight size={18} aria-hidden="true" /></Link>
-                {path && <Link className="home-discovery-more" to="/analysis/serendipity">Buscar otro hallazgo →</Link>}
-            </div>
-            <AssociativePath path={path ?? example} saved={path !== null} />
-        </article>
-    );
+    return <article className="home-discovery home-discovery-featured home-discovery-canonical">
+        <div className="home-discovery-copy">
+            <span className="home-eyebrow">PATHFINDER / RECORRIDOS REALES</span>
+            <h3>Un origen.<br />Un destino.</h3>
+            <p>Distintas formas de atravesar el corpus.</p>
+            {result ? <>
+                <p className="home-discovery-metadata">{routeGroups(result.paths ?? []).length} recorridos distintos en el resultado guardado</p>
+                <p>De la imagen de un astrónomo ciego al abandono de lo superficial. Dos recorridos para abrir, contrastar y volver a sus fuentes.</p>
+                <Link className="home-action" to={`/analysis/saved-paths?path=${encodeURIComponent(FEATURED_PATH)}`}>Inspeccionar las rutas completas<ArrowRight size={18} aria-hidden="true" /></Link>
+            </> : <>
+                <p>El ejemplo curado no está disponible en esta instalación. Elige dos ideas de tu corpus para explorar sus conexiones.</p>
+                <Link className="home-action" to="/analysis/pathfinder">Abrir Pathfinder<ArrowRight size={18} aria-hidden="true" /></Link>
+            </>}
+        </div>
+        {result && <ConceptualRoutes result={result} />}
+    </article>;
 }

@@ -1,0 +1,1503 @@
+{
+  "status": "success",
+  "message": "5 resultado(s), 5 secuencia(s) de nodos distinta(s).",
+  "nodes": [
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+      "label": "Astrónomo ciego",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+      "mime_type": "text/plain",
+      "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+      "label": "Ausencia",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+      "label": "text_2ee2a56e.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "2ee2a56e1a3202fd5b3addeb8263d00e789accd1c43035098f212698dc44ca29",
+      "mime_type": "text/plain",
+      "minio_path": "master_records/texts/2ee2a56e1a3202fd5b3addeb8263d00e789accd1c43035098f212698dc44ca29.txt"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "label": "Duelo y Pérdida",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "label": "Warcry - Capitán Lawrence.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "973c11eebaf474a570e24d508314e7f8b5365d13226abddbdca3adcdfe3ffa9e",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/973c11ee_Warcry - Capitán Lawrence.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "label": "Amor",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+      "label": "text_Tumblr_Post_-_190221726333html_c6ac4846.txt",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54",
+      "mime_type": "text/plain",
+      "minio_path": "master_records/texts/c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54.txt"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+      "label": "Abandono de lo superficial",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+      "label": "Tom Waits - Flowers Grave.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "572a56a8b243c4327878e404f17764df94aa09b003cfb7b1ec40cd3b8338baf4",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/572a56a8_Tom Waits - Flowers Grave.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "label": "Tristeza y Melancolía",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "label": "Metallica - Fade To Black.mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/a48e38dc_Metallica - Fade To Black.mp3"
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "label": "Resignación",
+      "node_type": "Concept",
+      "weight_to_next": null,
+      "file_hash": null,
+      "mime_type": null,
+      "minio_path": null
+    },
+    {
+      "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "label": "Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3",
+      "node_type": "DigitalAsset",
+      "weight_to_next": null,
+      "file_hash": "5eed2194b64fe1c6233d2651fb084fabc44e112722dcc87d6bd0c6ff45d94c99",
+      "mime_type": "audio/mpeg",
+      "minio_path": "raw/audio/5eed2194_Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+      "rel_type": "EVOKES",
+      "weight": 0.9,
+      "raw_weight": 0.9,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+      "provenance": {
+        "created_at": "2026-03-17T22:15:16.368000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5361",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+      "rel_type": "EVOKES",
+      "weight": 0.7,
+      "raw_weight": 0.7,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+      "reasoning": "Implícito en la comparación entre ausencias: tierra para el trabajador, visión para el astrónomo",
+      "provenance": {
+        "created_at": "2026-03-17T22:15:16.371000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1250",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+      "rel_type": "EVOKES",
+      "weight": 0.9,
+      "raw_weight": 0.9,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+      "reasoning": "Explicitly questioned ('¿Acaso ha muerto?') and implied by the waiting objects.",
+      "provenance": {
+        "created_at": "2026-02-21T07:23:44.660000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:637",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.78,
+      "raw_weight": 0.78,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "reasoning": "Implied by the focus on the absent mother and her belongings, suggesting a state of mourning.",
+      "provenance": {
+        "created_at": "2026-02-21T07:23:44.661000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1529",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.837,
+      "raw_weight": 0.837,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "reasoning": "Las frases 'Perdóname por partir así' y 'no verte más' son centrales.",
+      "provenance": {
+        "created_at": "2026-02-26T00:01:11.536000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2930",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES",
+      "weight": 0.796,
+      "raw_weight": 0.796,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "reasoning": "El personaje se dirige a 'Mi amor' y expresa 'sabes que te quiero'.",
+      "provenance": {
+        "created_at": "2026-02-26T00:01:11.534000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5008",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.8,
+      "raw_weight": 0.8,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+      "reasoning": "El tono y las imágenes (Señor del corazón, muerte como compañera, victoria en las luchas) evocan la poesía devocional india. No se declara explícitamente, pero es una inferencia fuerte del contexto de Gitanjali.",
+      "provenance": {
+        "created_at": "2026-03-16T18:30:14.474000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1775",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+      "rel_type": "EVOKES",
+      "weight": 0.9,
+      "raw_weight": 0.9,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+      "reasoning": "Declarado directamente: 'I leave off all petty decorations' / 'Lejos de mí, los adornos de muñeca'. Explícito y reiterado.",
+      "provenance": {
+        "created_at": "2026-03-16T18:30:14.493000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:308",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.765,
+      "raw_weight": 0.765,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+      "reasoning": "Implied by the imagery of a 'flower's grave' and questions about love 'bleeding in Dreamland'.",
+      "provenance": {
+        "created_at": "2026-02-25T00:57:30.926000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2663",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.653,
+      "raw_weight": 0.653,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+      "reasoning": "Direct metaphorical phrase 'does love lie bleeding in Dreamland?'.",
+      "provenance": {
+        "created_at": "2026-02-25T00:57:30.936000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "rel_type": "EVOKES",
+      "weight": 1,
+      "raw_weight": 1,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "reasoning": "Tema explícito y sujeto principal del texto poético",
+      "provenance": {
+        "created_at": "2026-03-17T22:15:16.361000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4986",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "rel_type": "EVOKES",
+      "weight": 0.85,
+      "raw_weight": 0.85,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "reasoning": "El tempo lento inicial, la progresión armónica en modo menor y las letras generan un tono melancólico sostenido.",
+      "provenance": {
+        "created_at": "2026-03-16T18:41:02.530000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1390",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "rel_type": "EVOKES",
+      "weight": 0.7138,
+      "raw_weight": 0.7138,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 6 (penalty: 0.91x). Transfer: [Warcry - Capitán Lawrence.mp3] -> [Metallica - Fade To Black.mp3].",
+      "provenance": {
+        "created_at": "2026-03-19T18:01:13.139000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2937",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "rel_type": "EVOKES",
+      "weight": 0.8,
+      "raw_weight": 0.8,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+      "reasoning": "El personaje toma una decisión final y se obliga a caminar, aceptando su destino.",
+      "provenance": {
+        "created_at": "2026-02-26T00:01:11.587000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4615",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.729,
+      "raw_weight": 0.729,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 19 (penalty: 0.75x). Transfer: [Espécimen - Este Es Mi Mundo.mp3] -> [Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3].",
+      "provenance": {
+        "created_at": "2026-03-01T15:47:03.812000000+00:00",
+        "source": "interactive_latent_explorer"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.844,
+      "raw_weight": 0.844,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+      "reasoning": "Explicitly mentioned: 'Perdí a mi familia', 'Straciłem ojczyznę'.",
+      "provenance": {
+        "created_at": "2026-02-19T15:48:03.354000000+00:00"
+      }
+    },
+    {
+      "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:630",
+      "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+      "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "rel_type": "EVOKES_CONCEPT",
+      "weight": 0.772,
+      "raw_weight": 0.772,
+      "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+      "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+      "reasoning": "The overall tone of reflection on death, absence, and the lingering presence of objects.",
+      "provenance": {
+        "created_at": "2026-02-21T07:23:44.668000000+00:00"
+      }
+    }
+  ],
+  "path_length": 8,
+  "mode": "lateral",
+  "paths": [
+    {
+      "id": "route-1-c39324b8f0ea",
+      "rank": 1,
+      "mode": "lateral",
+      "signature": "c39324b8f0ea183c7990e7f2b723e495e23fbac55fa58f57bf2aa1e7cd1203e8",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "label": "Ausencia",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "label": "text_2ee2a56e.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "2ee2a56e1a3202fd5b3addeb8263d00e789accd1c43035098f212698dc44ca29",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/2ee2a56e1a3202fd5b3addeb8263d00e789accd1c43035098f212698dc44ca29.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "label": "Duelo y Pérdida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "label": "Warcry - Capitán Lawrence.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "973c11eebaf474a570e24d508314e7f8b5365d13226abddbdca3adcdfe3ffa9e",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/973c11ee_Warcry - Capitán Lawrence.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "label": "Amor",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "label": "text_Tumblr_Post_-_190221726333html_c6ac4846.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "label": "Abandono de lo superficial",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5361",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "reasoning": "Implícito en la comparación entre ausencias: tierra para el trabajador, visión para el astrónomo",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.371000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1250",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "reasoning": "Explicitly questioned ('¿Acaso ha muerto?') and implied by the waiting objects.",
+          "provenance": {
+            "created_at": "2026-02-21T07:23:44.660000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:637",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.78,
+          "raw_weight": 0.78,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "reasoning": "Implied by the focus on the absent mother and her belongings, suggesting a state of mourning.",
+          "provenance": {
+            "created_at": "2026-02-21T07:23:44.661000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1529",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.837,
+          "raw_weight": 0.837,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "reasoning": "Las frases 'Perdóname por partir así' y 'no verte más' son centrales.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.536000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2930",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES",
+          "weight": 0.796,
+          "raw_weight": 0.796,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "reasoning": "El personaje se dirige a 'Mi amor' y expresa 'sabes que te quiero'.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.534000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5008",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "reasoning": "El tono y las imágenes (Señor del corazón, muerte como compañera, victoria en las luchas) evocan la poesía devocional india. No se declara explícitamente, pero es una inferencia fuerte del contexto de Gitanjali.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.474000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1775",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "reasoning": "Declarado directamente: 'I leave off all petty decorations' / 'Lejos de mí, los adornos de muñeca'. Explícito y reiterado.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.493000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 8,
+      "metrics": {
+        "cost": 9.120125680984481,
+        "min_weight": 0.7,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-2-c9c19feef1ff",
+      "rank": 2,
+      "mode": "lateral",
+      "signature": "c9c19feef1ff1da62fcb0311216795c37c4d98e5da2157ebea4f85df13e71a0b",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "label": "Ausencia",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "label": "text_2ee2a56e.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "2ee2a56e1a3202fd5b3addeb8263d00e789accd1c43035098f212698dc44ca29",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/2ee2a56e1a3202fd5b3addeb8263d00e789accd1c43035098f212698dc44ca29.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "label": "Duelo y Pérdida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+          "label": "Tom Waits - Flowers Grave.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "572a56a8b243c4327878e404f17764df94aa09b003cfb7b1ec40cd3b8338baf4",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/572a56a8_Tom Waits - Flowers Grave.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "label": "Amor",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "label": "text_Tumblr_Post_-_190221726333html_c6ac4846.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "label": "Abandono de lo superficial",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5361",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "rel_type": "EVOKES",
+          "weight": 0.7,
+          "raw_weight": 0.7,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "reasoning": "Implícito en la comparación entre ausencias: tierra para el trabajador, visión para el astrónomo",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.371000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1250",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1070",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "reasoning": "Explicitly questioned ('¿Acaso ha muerto?') and implied by the waiting objects.",
+          "provenance": {
+            "created_at": "2026-02-21T07:23:44.660000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:637",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.78,
+          "raw_weight": 0.78,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "reasoning": "Implied by the focus on the absent mother and her belongings, suggesting a state of mourning.",
+          "provenance": {
+            "created_at": "2026-02-21T07:23:44.661000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:308",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.765,
+          "raw_weight": 0.765,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+          "reasoning": "Implied by the imagery of a 'flower's grave' and questions about love 'bleeding in Dreamland'.",
+          "provenance": {
+            "created_at": "2026-02-25T00:57:30.926000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2663",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.653,
+          "raw_weight": 0.653,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1649",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "reasoning": "Direct metaphorical phrase 'does love lie bleeding in Dreamland?'.",
+          "provenance": {
+            "created_at": "2026-02-25T00:57:30.936000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5008",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "reasoning": "El tono y las imágenes (Señor del corazón, muerte como compañera, victoria en las luchas) evocan la poesía devocional india. No se declara explícitamente, pero es una inferencia fuerte del contexto de Gitanjali.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.474000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1775",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "reasoning": "Declarado directamente: 'I leave off all petty decorations' / 'Lejos de mí, los adornos de muñeca'. Explícito y reiterado.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.493000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 8,
+      "metrics": {
+        "cost": 9.335125680984481,
+        "min_weight": 0.653,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-3-bf6db450d548",
+      "rank": 3,
+      "mode": "lateral",
+      "signature": "bf6db450d5482eb8784dfb403b5156a556876f0d3a216e5466d291089dfe284f",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "label": "Tristeza y Melancolía",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "label": "Metallica - Fade To Black.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a48e38dc6526b40c033de3b07e8fad65ea8840a9f41dcde6c1d2c58460edd630",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/a48e38dc_Metallica - Fade To Black.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "label": "Resignación",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "label": "Warcry - Capitán Lawrence.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "973c11eebaf474a570e24d508314e7f8b5365d13226abddbdca3adcdfe3ffa9e",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/973c11ee_Warcry - Capitán Lawrence.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "label": "Amor",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "label": "text_Tumblr_Post_-_190221726333html_c6ac4846.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "label": "Abandono de lo superficial",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "reasoning": "Tema explícito y sujeto principal del texto poético",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.361000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4986",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 0.85,
+          "raw_weight": 0.85,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "reasoning": "El tempo lento inicial, la progresión armónica en modo menor y las letras generan un tono melancólico sostenido.",
+          "provenance": {
+            "created_at": "2026-03-16T18:41:02.530000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1390",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "rel_type": "EVOKES",
+          "weight": 0.7138,
+          "raw_weight": 0.7138,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:761",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 6 (penalty: 0.91x). Transfer: [Warcry - Capitán Lawrence.mp3] -> [Metallica - Fade To Black.mp3].",
+          "provenance": {
+            "created_at": "2026-03-19T18:01:13.139000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2937",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "rel_type": "EVOKES",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:168",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "reasoning": "El personaje toma una decisión final y se obliga a caminar, aceptando su destino.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.587000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2930",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES",
+          "weight": 0.796,
+          "raw_weight": 0.796,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "reasoning": "El personaje se dirige a 'Mi amor' y expresa 'sabes que te quiero'.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.534000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5008",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "reasoning": "El tono y las imágenes (Señor del corazón, muerte como compañera, victoria en las luchas) evocan la poesía devocional india. No se declara explícitamente, pero es una inferencia fuerte del contexto de Gitanjali.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.474000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1775",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "reasoning": "Declarado directamente: 'I leave off all petty decorations' / 'Lejos de mí, los adornos de muñeca'. Explícito y reiterado.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.493000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 8,
+      "metrics": {
+        "cost": 9.423644262836223,
+        "min_weight": 0.7138,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-4-22ccd7a81a77",
+      "rank": 4,
+      "mode": "lateral",
+      "signature": "22ccd7a81a77b301de3ad60291dabd7d1ad49aae420756063ea87a6d76d3b4a0",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "label": "Tristeza y Melancolía",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "label": "Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "5eed2194b64fe1c6233d2651fb084fabc44e112722dcc87d6bd0c6ff45d94c99",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/5eed2194_Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "label": "Duelo y Pérdida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "label": "Warcry - Capitán Lawrence.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "973c11eebaf474a570e24d508314e7f8b5365d13226abddbdca3adcdfe3ffa9e",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/973c11ee_Warcry - Capitán Lawrence.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "label": "Amor",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "label": "text_Tumblr_Post_-_190221726333html_c6ac4846.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "label": "Abandono de lo superficial",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "reasoning": "Tema explícito y sujeto principal del texto poético",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.361000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:4615",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.729,
+          "raw_weight": 0.729,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "reasoning": "Similarity: 74% (AudioSpace). Hub degree: 19 (penalty: 0.75x). Transfer: [Espécimen - Este Es Mi Mundo.mp3] -> [Rafael Lechowski - De Paso por Lo Eterno (Canción del Extranjero).mp3].",
+          "provenance": {
+            "created_at": "2026-03-01T15:47:03.812000000+00:00",
+            "source": "interactive_latent_explorer"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1884",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.844,
+          "raw_weight": 0.844,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:651",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "reasoning": "Explicitly mentioned: 'Perdí a mi familia', 'Straciłem ojczyznę'.",
+          "provenance": {
+            "created_at": "2026-02-19T15:48:03.354000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1529",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.837,
+          "raw_weight": 0.837,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "reasoning": "Las frases 'Perdóname por partir así' y 'no verte más' son centrales.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.536000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2930",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES",
+          "weight": 0.796,
+          "raw_weight": 0.796,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "reasoning": "El personaje se dirige a 'Mi amor' y expresa 'sabes que te quiero'.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.534000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5008",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "reasoning": "El tono y las imágenes (Señor del corazón, muerte como compañera, victoria en las luchas) evocan la poesía devocional india. No se declara explícitamente, pero es una inferencia fuerte del contexto de Gitanjali.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.474000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1775",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "reasoning": "Declarado directamente: 'I leave off all petty decorations' / 'Lejos de mí, los adornos de muñeca'. Explícito y reiterado.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.493000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 8,
+      "metrics": {
+        "cost": 9.457294684269979,
+        "min_weight": 0.729,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    },
+    {
+      "id": "route-5-b212101441bd",
+      "rank": 5,
+      "mode": "lateral",
+      "signature": "b212101441bd604047b89262ac7c02b3b5ebcdefdeb6529aa0c9849d431d19f4",
+      "duplicate_of": null,
+      "nodes": [
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "label": "Astrónomo ciego",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "label": "text_Tumblr_Post_-_159517803909html_a0cc15b3.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/a0cc15b3a5ab4b4a93c0a1ea8ee8cb1c2628506bbe2712139f06ebb9b34a7f4c.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "label": "Tristeza y Melancolía",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "label": "text_2ee2a56e.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "2ee2a56e1a3202fd5b3addeb8263d00e789accd1c43035098f212698dc44ca29",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/2ee2a56e1a3202fd5b3addeb8263d00e789accd1c43035098f212698dc44ca29.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "label": "Duelo y Pérdida",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "label": "Warcry - Capitán Lawrence.mp3",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "973c11eebaf474a570e24d508314e7f8b5365d13226abddbdca3adcdfe3ffa9e",
+          "mime_type": "audio/mpeg",
+          "minio_path": "raw/audio/973c11ee_Warcry - Capitán Lawrence.mp3"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "label": "Amor",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "label": "text_Tumblr_Post_-_190221726333html_c6ac4846.txt",
+          "node_type": "DigitalAsset",
+          "weight_to_next": null,
+          "file_hash": "c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54",
+          "mime_type": "text/plain",
+          "minio_path": "master_records/texts/c6ac484685b7b3ba2acdf14026f90062481b51c64722ed12ea9446b5668c6e54.txt"
+        },
+        {
+          "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "label": "Abandono de lo superficial",
+          "node_type": "Concept",
+          "weight_to_next": null,
+          "file_hash": null,
+          "mime_type": null,
+          "minio_path": null
+        }
+      ],
+      "edges": [
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5360",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "reasoning": "Metáfora explícita que representa un tipo diferente de tristeza - la del que busca sin poder encontrar",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.368000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5358",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES",
+          "weight": 1,
+          "raw_weight": 1,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2550",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "reasoning": "Tema explícito y sujeto principal del texto poético",
+          "provenance": {
+            "created_at": "2026-03-17T22:15:16.361000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:630",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.772,
+          "raw_weight": 0.772,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1691",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "reasoning": "The overall tone of reflection on death, absence, and the lingering presence of objects.",
+          "provenance": {
+            "created_at": "2026-02-21T07:23:44.668000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:637",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.78,
+          "raw_weight": 0.78,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:883",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "reasoning": "Implied by the focus on the absent mother and her belongings, suggesting a state of mourning.",
+          "provenance": {
+            "created_at": "2026-02-21T07:23:44.661000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1529",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.837,
+          "raw_weight": 0.837,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:1826",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "reasoning": "Las frases 'Perdóname por partir así' y 'no verte más' son centrales.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.536000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:2930",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES",
+          "weight": 0.796,
+          "raw_weight": 0.796,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:2167",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "reasoning": "El personaje se dirige a 'Mi amor' y expresa 'sabes que te quiero'.",
+          "provenance": {
+            "created_at": "2026-02-26T00:01:11.534000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:5008",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "rel_type": "EVOKES_CONCEPT",
+          "weight": 0.8,
+          "raw_weight": 0.8,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:157",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "reasoning": "El tono y las imágenes (Señor del corazón, muerte como compañera, victoria en las luchas) evocan la poesía devocional india. No se declara explícitamente, pero es una inferencia fuerte del contexto de Gitanjali.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.474000000+00:00"
+          }
+        },
+        {
+          "id": "5:efba7236-ddba-4937-a2b8-5b780ed8279a:1775",
+          "source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "rel_type": "EVOKES",
+          "weight": 0.9,
+          "raw_weight": 0.9,
+          "traversal_source": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:471",
+          "traversal_target": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+          "reasoning": "Declarado directamente: 'I leave off all petty decorations' / 'Lejos de mí, los adornos de muñeca'. Explícito y reiterado.",
+          "provenance": {
+            "created_at": "2026-03-16T18:30:14.493000000+00:00"
+          }
+        }
+      ],
+      "hop_count": 8,
+      "metrics": {
+        "cost": 9.478294684269978,
+        "min_weight": 0.772,
+        "missing_weight_count": 0
+      },
+      "parameters": {
+        "k_paths": 5,
+        "requested_k_paths": 5,
+        "max_hops": 8,
+        "lateral_threshold": 0.85,
+        "topological_threshold": null
+      }
+    }
+  ],
+  "raw_result_count": 5,
+  "unique_route_count": 5,
+  "generated_at": "2026-10-07T04:30:35.298221+00:00",
+  "algorithm_version": "pathfinder-cypher-v1",
+  "parameters": {
+    "k_paths": 5,
+    "requested_k_paths": 5,
+    "max_hops": 8,
+    "lateral_threshold": 0.85,
+    "topological_threshold": null
+  },
+  "source": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:252",
+    "label": "Astrónomo ciego",
+    "node_type": "Concept",
+    "weight_to_next": null,
+    "file_hash": null,
+    "mime_type": null,
+    "minio_path": null
+  },
+  "target": {
+    "id": "4:efba7236-ddba-4937-a2b8-5b780ed8279a:829",
+    "label": "Abandono de lo superficial",
+    "node_type": "Concept",
+    "weight_to_next": null,
+    "file_hash": null,
+    "mime_type": null,
+    "minio_path": null
+  },
+  "schema_version": 2,
+  "tool": "pathfinder",
+  "exported_at": "2026-10-07T04:30:43.291Z",
+  "llm_explanation": null,
+  "explanation_path_id": null,
+  "explanations": [],
+  "options": {
+    "privacy_mode": false
+  }
+}

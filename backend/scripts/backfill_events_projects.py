@@ -15,6 +15,7 @@ import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.clients import get_neo4j_driver, get_minio_client
+from shared.weights import normalize_weight
 from config.settings import get_settings
 
 settings = get_settings()
@@ -146,7 +147,7 @@ def backfill():
                     name=event_name,
                     event_type=event.get("type", event.get("event_type", "unknown")),
                     date=event.get("date", None),
-                    weight=event.get("confidence", event.get("weight", 1.0))
+                    weight=normalize_weight(event.get("confidence", event.get("weight", 1.0)))
                 )
                 if result.single():
                     events_created += 1
@@ -186,7 +187,7 @@ def backfill():
                     title=project_title,
                     project_type=project.get("type", project.get("project_type", "unknown")),
                     year=project.get("year", None),
-                    weight=project.get("confidence", project.get("weight", 1.0))
+                    weight=normalize_weight(project.get("confidence", project.get("weight", 1.0)))
                 )
                 if result.single():
                     projects_created += 1

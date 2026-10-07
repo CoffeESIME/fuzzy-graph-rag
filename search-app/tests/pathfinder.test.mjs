@@ -57,7 +57,7 @@ test('export removes expiring asset URLs but retains hashes and permanent metada
     assert.equal(out.paths[0].nodes[1].file_hash, result.paths[0].nodes[1].file_hash);
 });
 
-test('all existing Pathfinder saved unions remain readable without inferred routes', async () => {
+test('saved Pathfinder files preserve v2 routes and never infer routes for legacy unions', async () => {
     const directory = new URL('../../backend/data/saved_paths/', import.meta.url);
     const files = (await readdir(directory)).filter(f => f.startsWith('pathfinder_') && f.endsWith('.json'));
     assert.ok(files.length >= 1);
@@ -65,7 +65,8 @@ test('all existing Pathfinder saved unions remain readable without inferred rout
         const old = JSON.parse(await readFile(new URL(file, directory), 'utf8'));
         const read = readSavedPathfinder(old);
         assert.ok(read, file);
-        assert.equal(read.paths.length, 0);
+        if (old.schema_version === 2) assert.deepEqual(read.paths, old.paths);
+        else assert.equal(read.paths.length, 0);
         assert.deepEqual(read.nodes, old.nodes);
         assert.deepEqual(read.edges, old.edges);
         assert.equal(routeView(read, null).nodes.length, old.nodes.length);

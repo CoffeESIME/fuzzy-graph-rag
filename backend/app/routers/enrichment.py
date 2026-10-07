@@ -690,7 +690,7 @@ def merge_concepts(request: MergeConceptsRequest, session: Session = Depends(get
     // Only merge relation if there was actually an incoming one
     CALL apoc.do.when(
         r IS NOT NULL,
-        'MERGE (o)-[new_r:EVOKES_CONCEPT]->(t) ON CREATE SET new_r = rel, new_r.weight = coalesce(rel.weight, 1.0) ON MATCH SET new_r.weight = CASE WHEN coalesce(new_r.weight, 1.0) + coalesce(rel.weight, 1.0) > 1.0 THEN 1.0 ELSE coalesce(new_r.weight, 1.0) + coalesce(rel.weight, 1.0) END DELETE rel RETURN new_r',
+        'MERGE (o)-[new_r:EVOKES_CONCEPT]->(t) ON CREATE SET new_r = rel, new_r.weight = coalesce(toFloatOrNull(rel.weight), 1.0) ON MATCH SET new_r.weight = CASE WHEN coalesce(toFloatOrNull(new_r.weight), 1.0) + coalesce(toFloatOrNull(rel.weight), 1.0) > 1.0 THEN 1.0 ELSE coalesce(toFloatOrNull(new_r.weight), 1.0) + coalesce(toFloatOrNull(rel.weight), 1.0) END DELETE rel RETURN new_r',
         '',
         {o: other, t: target, rel: r}
     ) YIELD value

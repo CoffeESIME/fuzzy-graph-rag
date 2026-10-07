@@ -12,13 +12,14 @@ Endpoints:
 """
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
 import logging
 import re
 from shared.clients import get_neo4j_driver
+from shared.weights import normalize_entities, normalize_suggestions
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -101,6 +102,16 @@ class ApprovalPayload(BaseModel):
         default_factory=list,
         description="Final approved tags"
     )
+
+    @field_validator("entities")
+    @classmethod
+    def validate_entity_confidence(cls, value):
+        return normalize_entities(value)
+
+    @field_validator("concepts")
+    @classmethod
+    def validate_concept_confidence(cls, value):
+        return normalize_suggestions(value, 0.5)
 
 
 class ApprovalResponse(BaseModel):
@@ -213,6 +224,8 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
     """
     Promote approved entities/concepts using DYNAMIC relationships.
     """
+    entities = normalize_entities(entities)
+    concepts = normalize_suggestions(concepts, 0.5)
     nodes_created = 0
     relationships_created = 0
     
@@ -253,7 +266,7 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             ON MATCH SET
                 r.last_seen = datetime(),
                 r.count = coalesce(r.count, 0) + 1,
-                r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
+                r.weight = CASE WHEN $weight > coalesce(toFloatOrNull(r.weight), 0.0) THEN $weight ELSE coalesce(toFloatOrNull(r.weight), 0.0) END
             """
             
             session.run(query, 
@@ -283,7 +296,7 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             ON CREATE SET l.created_at = datetime(), l.source = 'ai_extraction'
             MERGE (a)-[r:{rel_type}]->(l)
             ON CREATE SET r.weight = $weight, r.created_at = datetime()
-            ON MATCH SET r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
+            ON MATCH SET r.weight = CASE WHEN $weight > coalesce(toFloatOrNull(r.weight), 0.0) THEN $weight ELSE coalesce(toFloatOrNull(r.weight), 0.0) END
             """
             session.run(query, file_hash=file_hash, name=loc_name, 
                         weight=location.get("confidence", 1.0))
@@ -306,7 +319,7 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
             ON CREATE SET o.created_at = datetime(), o.source = 'ai_extraction'
             MERGE (a)-[r:{rel_type}]->(o)
             ON CREATE SET r.weight = $weight, r.created_at = datetime()
-            ON MATCH SET r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
+            ON MATCH SET r.weight = CASE WHEN $weight > coalesce(toFloatOrNull(r.weight), 0.0) THEN $weight ELSE coalesce(toFloatOrNull(r.weight), 0.0) END
             """
             session.run(query, file_hash=file_hash, name=org_name,
                         weight=org.get("confidence", 1.0))
@@ -333,7 +346,7 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
                 e.source = 'ai_extraction'
             MERGE (a)-[r:{rel_type}]->(e)
             ON CREATE SET r.weight = $weight, r.created_at = datetime()
-            ON MATCH SET r.weight = CASE WHEN $weight > r.weight THEN $weight ELSE r.weight END
+            ON MATCH SET r.weight = CASE WHEN $weight > coalesce(toFloatOrNull(r.weight), 0.0) THEN $weight ELSE coalesce(toFloatOrNull(r.weight), 0.0) END
             """
             session.run(query, file_hash=file_hash, name=event_name,
                         event_type=event.get("type", "unknown"),
@@ -410,7 +423,7 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
                     r.weight = $weight,
                     r.reasoning = 'Mapped via hub tag: ' + $name
                 ON MATCH SET
-                    r.weight = CASE WHEN coalesce(r.weight, 1.0) + coalesce($weight, 0.5) > 1.0 THEN 1.0 ELSE coalesce(r.weight, 1.0) + coalesce($weight, 0.5) END
+                    r.weight = CASE WHEN coalesce(toFloatOrNull(r.weight), 1.0) + coalesce($weight, 0.5) > 1.0 THEN 1.0 ELSE coalesce(toFloatOrNull(r.weight), 1.0) + coalesce($weight, 0.5) END
                 """
                 session.run(hub_link_query, 
                     file_hash=file_hash, 
@@ -448,8 +461,8 @@ def promote_inbox_to_graph(driver, file_hash: str, entities: dict, concepts: lis
                     r.weight = $weight,
                     r.reasoning = $reasoning
                 ON MATCH SET
-                    r.weight = CASE WHEN coalesce(r.weight, 1.0) + coalesce($weight, 0.5) > 1.0 THEN 1.0 ELSE coalesce(r.weight, 1.0) + coalesce($weight, 0.5) END,
-                    r.reasoning = CASE WHEN $weight > coalesce(r.weight, 0.0) THEN $reasoning ELSE r.reasoning END
+                    r.weight = CASE WHEN coalesce(toFloatOrNull(r.weight), 1.0) + coalesce($weight, 0.5) > 1.0 THEN 1.0 ELSE coalesce(toFloatOrNull(r.weight), 1.0) + coalesce($weight, 0.5) END,
+                    r.reasoning = CASE WHEN $weight > coalesce(toFloatOrNull(r.weight), 0.0) THEN $reasoning ELSE r.reasoning END
                 """
                 session.run(query, 
                     file_hash=file_hash, name=c_name,

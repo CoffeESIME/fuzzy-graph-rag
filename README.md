@@ -2,7 +2,9 @@
 
 **Español** · [English](README.en.md)
 
-Explora tus archivos a través de asociaciones, analogías y conexiones inesperadas.
+De la recuperación a la asociación y el descubrimiento serendípico.
+
+GraphRAG Multimodal / The Associative Engine es un observatorio de conocimiento experimental que combina recuperación multimodal, un grafo de conocimiento y relaciones con pesos difusos.
 
 El proyecto parte de una pregunta de investigación:
 
@@ -24,6 +26,14 @@ Los grafos con pesos difusos son una respuesta experimental: la hipótesis compu
 La recuperación convencional optimiza principalmente la relevancia. GraphRAG combina esa búsqueda con la exploración de relaciones más débiles, indirectas e inesperadas mediante recorridos por el grafo difuso, Pathfinder y Serendipity.
 
 El sistema combina búsqueda multimodal, un grafo de conocimiento y relaciones con pesos difusos para explorar documentos, imágenes, audio y video. Su propósito es recuperar material relevante y hacer visibles posibles conexiones entre archivos, conceptos y entidades: del archivo al hallazgo.
+
+Tres formas de explorar el mismo corpus:
+
+- **Recuperación:** buscar lo relevante para una consulta.
+- **Pathfinder:** elegir un origen y un destino e inspeccionar distintos recorridos posibles entre ambos.
+- **Serendipity:** dejar abierto el destino para que sus propias reglas de exploración propongan una asociación inesperada. No es otra versión de Pathfinder ni requiere que este reproduzca sus resultados.
+
+El ejemplo público **Astrónomo ciego ↔ Abandono de lo superficial** muestra cinco secuencias guardadas. La Home condensa dos; los archivos y relaciones completos permanecen inspeccionables. Ilustra un comportamiento del corpus, no una validación general. Consulta la [curaduría y sus límites](docs/presentation/CANONICAL_EXAMPLE.md), el [guion de 3–5 minutos](docs/presentation/DEMO.md), la [lista de capturas](docs/presentation/CAPTURES.md) y las [direcciones de investigación futura](docs/research/FUTURE_WORK.md).
 
 ![Inicio del observatorio con accesos a Serendipity y Pathfinder](docs/images/inicio.jpg)
 
