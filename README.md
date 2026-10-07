@@ -35,9 +35,9 @@ Tres formas de explorar el mismo corpus:
 
 El ejemplo público **Astrónomo ciego ↔ Abandono de lo superficial** muestra cinco secuencias guardadas. La Home condensa dos; los archivos y relaciones completos permanecen inspeccionables. Ilustra un comportamiento del corpus, no una validación general. Consulta la [curaduría y sus límites](docs/presentation/CANONICAL_EXAMPLE.md), el [guion de 3–5 minutos](docs/presentation/DEMO.md), la [lista de capturas](docs/presentation/CAPTURES.md) y las [direcciones de investigación futura](docs/research/FUTURE_WORK.md).
 
-![Inicio del observatorio con accesos a Serendipity y Pathfinder](docs/images/inicio.jpg)
+![Home actual en modo claro: vista conceptual de Astrónomo ciego a Abandono de lo superficial](docs/images/home-light.jpg)
 
-*La portada propone buscar con una intención o seguir conexiones para encontrar algo inesperado.*
+*Home en modo claro: dos recorridos reales condensados entre Astrónomo ciego y Abandono de lo superficial. Las líneas punteadas omiten archivos intermedios; no son relaciones directas entre conceptos.*
 
 ## ¿Para qué sirve?
 
@@ -81,7 +81,7 @@ Un peso difuso entre 0 y 1 representa la fuerza de una relación según el méto
 
 El análisis incluye comunidades, puentes semánticos, Pathfinder, Serendipity, niebla de guerra, matriz de calor, cuerdas, árbol radial, PageRank, conceptos abstractos, huérfanos, distribución de pesos y caminos guardados. Enriquecimiento reúne ajustes de pesos, expansión de conexiones y limpieza de entidades.
 
-Las capturas son de la app local, con su interfaz en español y algunos nombres en inglés. Muestran navegación y configuración, sin simular resultados. La [guía visual](docs/general/USAGE_GUIDE.md) explica ingesta y Pathfinder paso a paso.
+Las capturas son de la app local, con su interfaz en español y algunos nombres en inglés. La Home muestra el ejemplo real guardado; las demás capturas muestran navegación y configuración, sin simular resultados. La [guía visual](docs/general/USAGE_GUIDE.md) explica ingesta y Pathfinder paso a paso.
 
 ## Puesta en marcha
 

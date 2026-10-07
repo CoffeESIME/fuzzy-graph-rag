@@ -35,9 +35,9 @@ Three ways to explore the same corpus:
 
 The public example **Astrónomo ciego ↔ Abandono de lo superficial** contains five saved node sequences. Home condenses two; complete routes, assets, and relationships remain inspectable. This illustrates corpus behavior, not general validation. See the Spanish [curation and caveats](docs/presentation/CANONICAL_EXAMPLE.md), [3–5 minute demo](docs/presentation/DEMO.md), [capture checklist](docs/presentation/CAPTURES.md), and [future research directions](docs/research/FUTURE_WORK.md).
 
-![Observatory home with Serendipity and Pathfinder entry points](docs/images/inicio.jpg)
+![Current Home in light mode: conceptual routes from Astrónomo ciego to Abandono de lo superficial](docs/images/home-light.jpg)
 
-*The home page offers two starting points: search with an intention, or follow connections toward an unexpected discovery.*
+*Home in light mode: two condensed real routes between Astrónomo ciego and Abandono de lo superficial. Dotted lines omit intermediate assets; they are not direct relationships between concepts.*
 
 ## What is it for?
 
@@ -81,7 +81,7 @@ A fuzzy weight between 0 and 1 describes relationship strength according to the 
 
 Analysis includes communities, semantic bridges, Pathfinder, Serendipity, fog of war, heatmaps, chord diagrams, radial trees, PageRank, abstract concepts, orphans, weight distributions, and saved paths. Enrichment provides weight adjustment, connection expansion, and entity cleanup.
 
-These are actual local-app screenshots showing navigation and configuration, without simulated results. The interface remains mainly Spanish, with some English names. The [visual user guide](docs/en/USAGE_GUIDE.md) explains ingestion and Pathfinder step by step.
+These are actual local-app screenshots. Home shows the real saved example; the other screenshots show navigation and configuration, without simulated results. The interface remains mainly Spanish, with some English names. The [visual user guide](docs/en/USAGE_GUIDE.md) explains ingestion and Pathfinder step by step.
 
 ## Getting started
 
