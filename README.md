@@ -149,6 +149,8 @@ GNU AGPL v3. Consulta [LICENSE](LICENSE).
 
 Si utilizas **hechoconcafeina** o la arquitectura de Graph RAG con lógica difusa en tu investigación, por favor cita nuestro trabajo:
 
+DOI: [10.5281/zenodo.23228850](https://doi.org/10.5281/zenodo.23228850).
+
 ```bibtex
 @misc{hechoconcafeina2026,
   author    = {Romero Hernandez, Fabian},
@@ -157,6 +159,6 @@ Si utilizas **hechoconcafeina** o la arquitectura de Graph RAG con lógica difus
   publisher = {GitHub / Zenodo},
   journal   = {GitHub repository},
   howpublished = {\url{https://github.com/CoffeESIME/fuzzy-graph-rag}},
-  doi       = {[DOI-generado-por-Zenodo-proximamente]}
+  doi       = {10.5281/zenodo.23228850}
 }
 ```
