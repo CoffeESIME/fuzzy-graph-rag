@@ -1,5 +1,7 @@
 # GraphRAG Multimodal — Observatorio de conocimiento
 
+[![DOI](https://zenodo.org/badge/1153050483.svg)](https://doi.org/10.5281/zenodo.23228850)
+
 **Español** · [English](README.en.md)
 
 De la recuperación a la asociación y el descubrimiento serendípico.

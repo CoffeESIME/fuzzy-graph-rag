@@ -1,5 +1,7 @@
 # Documentation — GraphRAG
 
+[![DOI](https://zenodo.org/badge/1153050483.svg)](https://doi.org/10.5281/zenodo.23228850)
+
 [Español (principal)](../README.md) · **English**
 
 Start with the [project overview](../../README.en.md), then follow the setup and visual walkthrough.

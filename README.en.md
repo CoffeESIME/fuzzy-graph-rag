@@ -1,5 +1,7 @@
 # GraphRAG Multimodal — Knowledge Observatory
 
+[![DOI](https://zenodo.org/badge/1153050483.svg)](https://doi.org/10.5281/zenodo.23228850)
+
 [Español (principal)](README.md) · **English**
 
 From retrieval to association and serendipitous discovery.
